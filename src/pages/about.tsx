@@ -9,5 +9,5 @@ export default function About() {
         <span>We love Solid</span>
       </p>
     </section>
-  );
+  )
 }

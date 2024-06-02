@@ -1,17 +1,19 @@
 /* @refresh reload */
-import "./index.css";
+import './index.css'
 
-import { lazy } from "solid-js";
-import { render } from "solid-js/web";
-import { Route, Router, RouteSectionProps } from "@solidjs/router";
-import Home from "./pages/home";
+import { lazy } from 'solid-js'
+import { render } from 'solid-js/web'
+import { Route, Router, RouteSectionProps } from '@solidjs/router'
+import Home from './pages/home'
 
-const root = document.getElementById("app");
+const root = document.getElementById('app')
 
 if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
+  console.log('test')
+
   throw new Error(
-    "Root element not found. Did you forget to add it to your index.html? Or maybe the id attribute got misspelled?",
-  );
+    'Root element not found. Did you forget to add it to your index.html? Or maybe the id attribute got misspelled?',
+  )
 }
 
 const Nav = (props: RouteSectionProps<unknown>) => (
@@ -48,15 +50,15 @@ const Nav = (props: RouteSectionProps<unknown>) => (
 
     {props.children}
   </>
-);
+)
 
 render(
   () => (
     <Router root={Nav}>
       <Route path="/" component={Home} />
-      <Route path="/about" component={lazy(() => import("./pages/about"))} />
-      <Route path="*404" component={lazy(() => import("./errors/404"))} />
+      <Route path="/about" component={lazy(() => import('./pages/about'))} />
+      <Route path="*404" component={lazy(() => import('./errors/404'))} />
     </Router>
   ),
   root || document.body,
-);
+)
