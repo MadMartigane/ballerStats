@@ -3,7 +3,7 @@ import './index.css'
 
 import { lazy } from 'solid-js'
 import { render } from 'solid-js/web'
-import { Route, Router, RouteSectionProps } from '@solidjs/router'
+import { Route, HashRouter, RouteSectionProps } from '@solidjs/router'
 import Home from './pages/home'
 
 const root = document.getElementById('app')
@@ -35,7 +35,7 @@ const Nav = (props: RouteSectionProps<unknown>) => (
         </li>
 
         <li class="text-sm flex items-center space-x-1 ml-auto">
-          <span>URL:</span>
+          <span>PATH:</span>
           <input
             class="w-75px p-1 bg-white text-sm rounded-lg"
             type="text"
@@ -52,11 +52,11 @@ const Nav = (props: RouteSectionProps<unknown>) => (
 
 render(
   () => (
-    <Router root={Nav}>
-      <Route path="/" component={Home} />
+    <HashRouter root={Nav}>
       <Route path="/about" component={lazy(() => import('./pages/about'))} />
-      <Route path="*404" component={lazy(() => import('./errors/404'))} />
-    </Router>
+      <Route path="/" component={Home} />
+      <Route path="/*" component={lazy(() => import('./errors/404'))} />
+    </HashRouter>
   ),
   root || document.body,
 )
