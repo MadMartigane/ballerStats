@@ -11,7 +11,7 @@
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|tsx|json)\"",
     "lint": "eslint --color --cache --ignore-path .eslintignore --ext .js,.ts,.tsx",
     "pre-prod": "npm run build && npm run pre-prod-only",
-    "pre-prod-only": "npm run build && npm run pre-prod-clean && npm run pre-rod-push",
+    "pre-prod-only": "npm run pre-prod-clean && npm run pre-prod-push",
     "pre-prod-clean": "rm -rf /var/www/marius.click/html/baller-stats-preprod/*",
     "pre-prod-push": "cp -r dist/* /var/www/marius.click/html/baller-stats-preprod/",
     "prod-clean": "rm -rf /var/www/marius.click/html/baller-stats/*",
