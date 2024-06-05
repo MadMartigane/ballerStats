@@ -9,6 +9,6 @@ export default defineConfig({
     port: 3000,
   },
   build: {
-    target: 'es2018',
+    target: 'modules',
   },
 })
