@@ -1,0 +1,41 @@
+{
+  "name": "baller-stats",
+  "version": "0.0.1",
+  "description": "Web app to collect and visualize your player statistics.",
+  "type": "module",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|tsx|json)\"",
+    "lint": "eslint --color --cache --ignore-path .eslintignore --ext .js,.ts,.tsx",
+    "pre-prod": "npm run build && npm run pre-prod-only",
+    "pre-prod-only": "npm run build && npm run pre-prod-clean && npm run pre-rod-push",
+    "pre-prod-clean": "rm -rf /var/www/marius.click/html/baller-stats-preprod/*",
+    "pre-prod-push": "cp -r dist/* /var/www/marius.click/html/baller-stats-preprod/",
+    "prod-clean": "rm -rf /var/www/marius.click/html/baller-stats/*",
+    "prod-push": "cp -r dist/* /var/www/marius.click/html/baller-stats/",
+    "prod": "npm run build && npm run prod-only",
+    "prod-only": "npm run prod-clean && npm run prod-push"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@solidjs/router": "^0.13.3",
+    "@suid/icons-material": "^0.7.0",
+    "@suid/material": "^0.16.0",
+    "@suid/vite-plugin": "^0.2.0",
+    "@typescript-eslint/eslint-plugin": "^7.10.0",
+    "@typescript-eslint/parser": "^7.10.0",
+    "autoprefixer": "^10.4.19",
+    "globals": "^15.3.0",
+    "postcss": "^8.4.38",
+    "prettier": "^3.3.0",
+    "solid-js": "^1.8.17",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^7.10.0",
+    "vite": "^5.2.11",
+    "vite-plugin-solid": "^2.10.2"
+  }
+}
