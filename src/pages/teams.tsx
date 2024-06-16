@@ -7,6 +7,7 @@ export default function About() {
 
       <p>
         <span>We love Solid</span>
+        <button> button </button>
       </p>
     </section>
   )
