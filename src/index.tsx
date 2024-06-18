@@ -15,23 +15,8 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   )
 }
 
-const [anchorEl, setAnchorEl] = createSignal<null | HTMLElement>(null)
-
-function open() {
-  return Boolean(anchorEl())
-}
-
-function handleClose() {
-  setAnchorEl(null)
-}
-
-function goTo(path: string) {
-  console.log('[GO TO]: ', path)
-  window.location.hash = path
-}
-
 function suidNav(props: RouteSectionProps<unknown>) {
-  const appBar = new AppBarE(props)
+  const appBar = new AppBarE()
   return (
     <>
       {appBar.render()}
