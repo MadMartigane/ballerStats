@@ -1,8 +1,11 @@
-import MadSignal from '../libs/mad-signal'
+import MadSignal from '../../libs/mad-signal'
+import CloseIcon from '@suid/icons-material/Close'
+import GroupIcon from '@suid/icons-material/Group'
+import HomeIcon from '@suid/icons-material/Home'
+import InsightsIcon from '@suid/icons-material/Insights'
 import MenuIcon from '@suid/icons-material/Menu'
 import PersonIcon from '@suid/icons-material/Person'
-import GroupIcon from '@suid/icons-material/Group'
-import CloseIcon from '@suid/icons-material/Close'
+import SportsBasketballIcon from '@suid/icons-material/SportsBasketball'
 import {
   AppBar,
   Box,
@@ -18,8 +21,17 @@ import {
   Toolbar,
   Typography,
 } from '@suid/material'
+import { AppBarMenuEntry } from './app-bar.d'
 
 const hashReplacePattern = /^#\//
+
+const NavigationMenuItem: Array<AppBarMenuEntry> = [
+  { path: '/', label: 'Acceuil', icon: () => <HomeIcon /> },
+  { path: '/users', label: 'Utilisateurs', icon: () => <PersonIcon /> },
+  { path: '/teams', label: 'Équipes', icon: () => <GroupIcon /> },
+  { path: '/matchs', label: 'Matches', icon: () => <SportsBasketballIcon /> },
+  { path: '/stats', label: 'Statistiques', icon: () => <InsightsIcon /> },
+]
 
 export default class AppBarE {
   private hash: MadSignal<string> = new MadSignal('')
@@ -53,6 +65,15 @@ export default class AppBarE {
     window.location.hash = path
   }
 
+  private findMenuItemFromHash(hash: string | null) {
+    if (!hash) {
+      return NavigationMenuItem[0].label
+    }
+
+    const item = NavigationMenuItem.find(item => item.path.endsWith(hash))
+    return (item && item.label) || '404'
+  }
+
   private renderMenu() {
     return (
       <Box
@@ -63,26 +84,14 @@ export default class AppBarE {
         onKeyDown={() => this.toggleMenu(false)}
       >
         <List>
-          <ListItem disablePadding>
-            <ListItemButton
-                onClick={() => this.goTo("/users")}
-            >
-              <ListItemIcon>
-                <PersonIcon />
-              </ListItemIcon>
-              <ListItemText primary="Users" />
-            </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton
-                onClick={() => this.goTo("/teams")}
-            >
-              <ListItemIcon>
-                <GroupIcon />
-              </ListItemIcon>
-              <ListItemText primary="Teams" />
-            </ListItemButton>
-          </ListItem>
+          {NavigationMenuItem.map(item => (
+            <ListItem disablePadding>
+              <ListItemButton onClick={() => this.goTo(item.path)}>
+                <ListItemIcon>{item.icon()}</ListItemIcon>
+                <ListItemText primary={item.label} />
+              </ListItemButton>
+            </ListItem>
+          ))}
         </List>
         <Divider />
         <List>
@@ -91,7 +100,7 @@ export default class AppBarE {
               <ListItemIcon>
                 <CloseIcon />
               </ListItemIcon>
-              <ListItemText primary="Close" />
+              <ListItemText primary="Fermer le menu" />
             </ListItemButton>
           </ListItem>
         </List>
@@ -116,8 +125,7 @@ export default class AppBarE {
                 <MenuIcon />
               </IconButton>
               <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                {this.hash.get()}
-                {this.isMenuOpen.get() ? ' open' : null}
+                {this.findMenuItemFromHash(this.hash.get())}
               </Typography>
               <Button color="inherit">Login</Button>
             </Toolbar>

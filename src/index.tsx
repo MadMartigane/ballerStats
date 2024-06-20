@@ -1,11 +1,11 @@
 /* @refresh reload */
 import './index.css'
 
-import { createSignal, lazy } from 'solid-js'
+import { lazy } from 'solid-js'
 import { render } from 'solid-js/web'
 import { Route, HashRouter, RouteSectionProps } from '@solidjs/router'
 import Home from './pages/home'
-import AppBarE from './components/app-bar'
+import AppBarE from './components/app-bar/app-bar'
 
 const root = document.getElementById('app')
 
