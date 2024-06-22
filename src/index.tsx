@@ -1,10 +1,10 @@
 /* @refresh reload */
 import './index.css'
 
-import { lazy } from 'solid-js'
+import { For, lazy, Show } from 'solid-js'
 import { render } from 'solid-js/web'
 import { Route, HashRouter, RouteSectionProps } from '@solidjs/router'
-import Home from './pages/home'
+import AppBarEl, { NavigationMenuItem } from './components/app-bar/app-bar'
 
 const root = document.getElementById('app')
 
@@ -14,48 +14,34 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   )
 }
 
-const Nav = (props: RouteSectionProps<unknown>) => (
-  <>
-    <nav class="bg-gray-200 text-gray-900 px-4">
-      <ul class="flex items-center">
-        <li class="py-2 px-4">
-          <a href="/" class="no-underline hover:underline">
-            Home
-          </a>
-        </li>
-        <li class="py-2 px-4">
-          <a href="/about" class="no-underline hover:underline">
-            About
-          </a>
-        </li>
-        <li class="py-2 px-4">
-          <a href="/404" class="no-underline hover:underline">
-            Error
-          </a>
-        </li>
-
-        <li class="text-sm flex items-center space-x-1 ml-auto">
-          <span>PATH:</span>
-          <input
-            class="w-75px p-1 bg-white text-sm rounded-lg"
-            type="text"
-            readOnly
-            value={props.location.pathname}
-          />
-        </li>
-      </ul>
-    </nav>
-
-    {props.children}
-  </>
-)
+function suidNav(props: RouteSectionProps<unknown>) {
+  const appBar = new AppBarEl()
+  return (
+    <>
+      {appBar.render()}
+      {props.children}
+    </>
+  )
+}
 
 render(
   () => (
-    <HashRouter root={Nav}>
-      <Route path="/about" component={lazy(() => import('./pages/about'))} />
-      <Route path="/" component={Home} />
-      <Route path="/*" component={lazy(() => import('./errors/404'))} />
+    <HashRouter root={suidNav}>
+      <For each={NavigationMenuItem}>
+        {menuItem => (
+          <>
+            <Show when={menuItem.lazy}>
+              <Route
+                path={menuItem.path}
+                component={lazy(() => import(menuItem.lazy))}
+              />
+            </Show>
+            <Show when={menuItem.component}>
+              <Route path={menuItem.path} component={menuItem.component} />
+            </Show>
+          </>
+        )}
+      </For>
     </HashRouter>
   ),
   root || document.body,
