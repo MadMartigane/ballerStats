@@ -1,7 +1,7 @@
 /* @refresh reload */
 import './index.css'
 
-import { For, lazy } from 'solid-js'
+import { For, lazy, Show } from 'solid-js'
 import { render } from 'solid-js/web'
 import { Route, HashRouter, RouteSectionProps } from '@solidjs/router'
 import AppBarEl, { NavigationMenuItem } from './components/app-bar/app-bar'
@@ -28,8 +28,18 @@ render(
   () => (
     <HashRouter root={suidNav}>
       <For each={NavigationMenuItem}>
-        {(menuItem) => (
-          <Route path={menuItem.path} component={menuItem.lazy ? lazy(() => import(menuItem.lazy)) : menuItem.component} />
+        {menuItem => (
+          <>
+            <Show when={menuItem.lazy}>
+              <Route
+                path={menuItem.path}
+                component={lazy(() => import(menuItem.lazy))}
+              />
+            </Show>
+            <Show when={menuItem.component}>
+              <Route path={menuItem.path} component={menuItem.component} />
+            </Show>
+          </>
         )}
       </For>
     </HashRouter>
