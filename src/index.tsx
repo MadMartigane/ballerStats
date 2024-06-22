@@ -5,6 +5,7 @@ import { For } from 'solid-js'
 import { render } from 'solid-js/web'
 import { Route, HashRouter, RouteSectionProps } from '@solidjs/router'
 import AppBarEl, { NavigationMenuItem } from './components/app-bar/app-bar'
+import { Box } from '@suid/material'
 
 const root = document.getElementById('app')
 
@@ -19,7 +20,7 @@ function suidNav(props: RouteSectionProps<unknown>) {
   return (
     <>
       {appBar.render()}
-      {props.children}
+      <Box class="pt-12">{props.children}</Box>
     </>
   )
 }

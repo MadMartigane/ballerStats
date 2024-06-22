@@ -161,7 +161,7 @@ export default class AppBarEl {
     return (
       <>
         <Box sx={{ flexGrow: 1 }}>
-          <AppBar position="static">
+          <AppBar position="fixed">
             <Toolbar>
               <IconButton
                 size="large"
