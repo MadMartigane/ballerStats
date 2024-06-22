@@ -21,6 +21,7 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@fontsource/roboto": "^5.0.13",
     "@solidjs/router": "^0.13.3",
     "@suid/icons-material": "^0.7.0",
     "@suid/material": "^0.16.0",

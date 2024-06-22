@@ -7,6 +7,15 @@ import { Route, HashRouter, RouteSectionProps } from '@solidjs/router'
 import AppBarEl, { NavigationMenuItem } from './components/app-bar/app-bar'
 import { Box } from '@suid/material'
 
+import { ThemeProvider, createTheme } from '@suid/material/styles'
+import CssBaseline from '@suid/material/CssBaseline'
+
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+})
+
 const root = document.getElementById('app')
 
 if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
@@ -18,10 +27,11 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 function suidNav(props: RouteSectionProps<unknown>) {
   const appBar = new AppBarEl()
   return (
-    <>
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
       {appBar.render()}
-      <Box class="pt-12">{props.children}</Box>
-    </>
+      <Box class="pt-16">{props.children}</Box>
+    </ThemeProvider>
   )
 }
 
