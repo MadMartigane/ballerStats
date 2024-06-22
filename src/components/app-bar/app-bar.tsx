@@ -24,7 +24,7 @@ import {
 } from '@suid/material'
 import { AppBarMenuEntry } from './app-bar.d'
 import Home from './../../pages/home'
-import { Show } from 'solid-js'
+import { lazy, Show } from 'solid-js'
 
 const hashReplacePattern = /^#\//
 
@@ -34,49 +34,48 @@ export const NavigationMenuItem: Array<AppBarMenuEntry> = [
     label: 'Acceuil',
     icon: () => <HomeIcon />,
     component: Home,
-    lazy: '',
     isMenuEntry: true,
   },
   {
     path: '/users',
     label: 'Utilisateurs',
     icon: () => <PersonIcon />,
-    lazy: './pages/users',
+    component: lazy(() => import('./../../pages/users')),
     isMenuEntry: true,
   },
   {
     path: '/user',
     label: 'Profile',
     icon: () => <PersonIcon />,
-    lazy: './pages/user',
+    component: lazy(() => import('./../../pages/user')),
     isMenuEntry: false,
   },
   {
     path: '/teams',
     label: 'Équipes',
     icon: () => <GroupIcon />,
-    lazy: './pages/teams',
+    component: lazy(() => import('./../../pages/teams')),
     isMenuEntry: true,
   },
   {
     path: '/matchs',
     label: 'Matches',
     icon: () => <SportsBasketballIcon />,
-    lazy: './pages/matchs',
+    component: lazy(() => import('./../../pages/matchs')),
     isMenuEntry: true,
   },
   {
     path: '/stats',
     label: 'Statistiques',
     icon: () => <InsightsIcon />,
-    lazy: './pages/stats',
+    component: lazy(() => import('./../../pages/stats')),
     isMenuEntry: true,
   },
   {
     path: '/*',
     label: '404 Not Found',
     icon: () => <CrisisAlertIcon />,
-    lazy: './pages/404',
+    component: lazy(() => import('./../../pages/404')),
     isMenuEntry: false,
   },
 ]

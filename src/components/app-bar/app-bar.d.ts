@@ -6,8 +6,7 @@ export type AppBarMenuEntry = {
   label: string
   icon: () => JSXElement
   isMenuEntry: boolean
-  lazy: string
-  component?: () => JSXElement
+  component: () => JSXElement
 }
 
 export default AppBarEl
