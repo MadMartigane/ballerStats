@@ -1,11 +1,10 @@
 /* @refresh reload */
 import './index.css'
 
-import { lazy } from 'solid-js'
+import { For, lazy } from 'solid-js'
 import { render } from 'solid-js/web'
 import { Route, HashRouter, RouteSectionProps } from '@solidjs/router'
-import Home from './pages/home'
-import AppBarE from './components/app-bar/app-bar'
+import AppBarEl, { NavigationMenuItem } from './components/app-bar/app-bar'
 
 const root = document.getElementById('app')
 
@@ -16,7 +15,7 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 }
 
 function suidNav(props: RouteSectionProps<unknown>) {
-  const appBar = new AppBarE()
+  const appBar = new AppBarEl()
   return (
     <>
       {appBar.render()}
@@ -28,10 +27,11 @@ function suidNav(props: RouteSectionProps<unknown>) {
 render(
   () => (
     <HashRouter root={suidNav}>
-      <Route path="/teams" component={lazy(() => import('./pages/teams'))} />
-      <Route path="/users" component={lazy(() => import('./pages/users'))} />
-      <Route path="/" component={Home} />
-      <Route path="/*" component={lazy(() => import('./pages/404'))} />
+      <For each={NavigationMenuItem}>
+        {(menuItem) => (
+          <Route path={menuItem.path} component={menuItem.lazy ? lazy(() => import(menuItem.lazy)) : menuItem.component} />
+        )}
+      </For>
     </HashRouter>
   ),
   root || document.body,

@@ -1,10 +1,14 @@
-import { JSXElement } from 'solid-js';
-import AppBarE from './app-bar'
+import { JSXElement } from 'solid-js'
+import AppBarEl from './app-bar'
 
 export type AppBarMenuEntry = {
-    path: string;
-    label: string;
-    icon: () => JSXElement;
+  path: string
+  label: string
+  icon: () => JSXElement
+  isMenuEntry: boolean
+  lazy: string
+  component?: () => JSXElement
 }
 
-export default AppBarE;
+export default AppBarEl
+

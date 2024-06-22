@@ -1,4 +1,5 @@
 import MadSignal from '../../libs/mad-signal'
+import CrisisAlertIcon from '@suid/icons-material/CrisisAlert'
 import CloseIcon from '@suid/icons-material/Close'
 import GroupIcon from '@suid/icons-material/Group'
 import HomeIcon from '@suid/icons-material/Home'
@@ -22,18 +23,65 @@ import {
   Typography,
 } from '@suid/material'
 import { AppBarMenuEntry } from './app-bar.d'
+import Home from './../../pages/home'
+import { Show } from 'solid-js'
 
 const hashReplacePattern = /^#\//
 
-const NavigationMenuItem: Array<AppBarMenuEntry> = [
-  { path: '/', label: 'Acceuil', icon: () => <HomeIcon /> },
-  { path: '/users', label: 'Utilisateurs', icon: () => <PersonIcon /> },
-  { path: '/teams', label: 'Équipes', icon: () => <GroupIcon /> },
-  { path: '/matchs', label: 'Matches', icon: () => <SportsBasketballIcon /> },
-  { path: '/stats', label: 'Statistiques', icon: () => <InsightsIcon /> },
+export const NavigationMenuItem: Array<AppBarMenuEntry> = [
+  {
+    path: '/',
+    label: 'Acceuil',
+    icon: () => <HomeIcon />,
+    component: Home,
+    lazy: '',
+    isMenuEntry: true,
+  },
+  {
+    path: '/users',
+    label: 'Utilisateurs',
+    icon: () => <PersonIcon />,
+    lazy: './pages/users',
+    isMenuEntry: true,
+  },
+  {
+    path: '/user',
+    label: 'Profile',
+    icon: () => <PersonIcon />,
+    lazy: './pages/user',
+    isMenuEntry: false,
+  },
+  {
+    path: '/teams',
+    label: 'Équipes',
+    icon: () => <GroupIcon />,
+    lazy: './pages/teams',
+    isMenuEntry: true,
+  },
+  {
+    path: '/matchs',
+    label: 'Matches',
+    icon: () => <SportsBasketballIcon />,
+    lazy: './pages/matchs',
+    isMenuEntry: true,
+  },
+  {
+    path: '/stats',
+    label: 'Statistiques',
+    icon: () => <InsightsIcon />,
+    lazy: './pages/stats',
+    isMenuEntry: true,
+  },
+  {
+    path: '/*',
+    label: '404 Not Found',
+    icon: () => <CrisisAlertIcon />,
+    lazy: './pages/404',
+    isMenuEntry: false,
+  },
 ]
 
-export default class AppBarE {
+export default class AppBarEl {
   private hash: MadSignal<string> = new MadSignal('')
   private isMenuOpen: MadSignal<boolean> = new MadSignal(false)
 
@@ -85,12 +133,14 @@ export default class AppBarE {
       >
         <List>
           {NavigationMenuItem.map(item => (
-            <ListItem disablePadding>
-              <ListItemButton onClick={() => this.goTo(item.path)}>
-                <ListItemIcon>{item.icon()}</ListItemIcon>
-                <ListItemText primary={item.label} />
-              </ListItemButton>
-            </ListItem>
+            <Show when={item.isMenuEntry}>
+              <ListItem disablePadding>
+                <ListItemButton onClick={() => this.goTo(item.path)}>
+                  <ListItemIcon>{item.icon()}</ListItemIcon>
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              </ListItem>
+            </Show>
           ))}
         </List>
         <Divider />
