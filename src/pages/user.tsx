@@ -1,9 +1,11 @@
-export default function About() {
+import { Box } from '@suid/material'
+
+export default function User() {
   return (
-    <section class="bg-green-100 text-gray-700 p-8">
+    <Box>
       <h1 class="text-2xl font-bold">User</h1>
 
       <p class="mt-4">Only one user :)</p>
-    </section>
+    </Box>
   )
 }

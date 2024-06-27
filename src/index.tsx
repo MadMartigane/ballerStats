@@ -30,7 +30,7 @@ function suidNav(props: RouteSectionProps<unknown>) {
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       {appBar.render()}
-      <Box class="pt-16">{props.children}</Box>
+      <Box class="px-14 py-20">{props.children}</Box>
     </ThemeProvider>
   )
 }

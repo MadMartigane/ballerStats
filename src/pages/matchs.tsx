@@ -1,3 +1,4 @@
+import { Box } from '@suid/material'
 import { For } from 'solid-js'
 
 const lorem = [
@@ -12,16 +13,16 @@ Nunc consequat interdum varius sit amet mattis vulputate. Morbi leo urna molesti
 Commodo quis imperdiet massa tincidunt nunc pulvinar sapien et ligula. Mi sit amet mauris commodo quis imperdiet. Vitae aliquet nec ullamcorper sit. Diam maecenas sed enim ut sem viverra aliquet. Faucibus a pellentesque sit amet porttitor eget. Massa vitae tortor condimentum lacinia quis vel eros donec ac. Faucibus scelerisque eleifend donec pretium vulputate sapien nec sagittis. Pellentesque diam volutpat commodo sed egestas egestas. Placerat vestibulum lectus mauris ultrices eros in cursus turpis massa. Sit amet risus nullam eget. Faucibus turpis in eu mi bibendum neque egestas congue. Arcu felis bibendum ut tristique et egestas quis.',
 ]
 
-export default function About() {
+export default function Matchs() {
   return (
-    <section class="bg-blue-100 text-yellow-700 p-8">
+    <Box>
       <h1 class="text-2xl font-bold">Matchs</h1>
 
-      <p class="mt-4">//TODO: List your matchs here !</p>
+      <p class="mt-4">TODO: List your matchs here !</p>
 
       <For each={lorem} fallback={<div>Loading...</div>}>
         {item => <p>{item}</p>}
       </For>
-    </section>
+    </Box>
   )
 }

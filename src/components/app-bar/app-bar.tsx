@@ -2,6 +2,7 @@ import MadSignal from '../../libs/mad-signal'
 import CrisisAlertIcon from '@suid/icons-material/CrisisAlert'
 import CloseIcon from '@suid/icons-material/Close'
 import GroupIcon from '@suid/icons-material/Group'
+import GroupsIcon from '@suid/icons-material/Groups'
 import HomeIcon from '@suid/icons-material/Home'
 import InsightsIcon from '@suid/icons-material/Insights'
 import MenuIcon from '@suid/icons-material/Menu'
@@ -51,9 +52,24 @@ export const NavigationMenuItem: Array<AppBarMenuEntry> = [
     isMenuEntry: false,
   },
   {
+    path: '/players',
+    label: 'Joueurs',
+    icon: () => <GroupIcon />,
+    component: lazy(() => import('./../../pages/players')),
+    isMenuEntry: true,
+  },
+  {
+    path: '/joueur',
+    label: 'Joueur',
+    icon: () => <PersonIcon />,
+    component: lazy(() => import('./../../pages/player')),
+    isMenuEntry: false,
+  },
+
+  {
     path: '/teams',
     label: 'Équipes',
-    icon: () => <GroupIcon />,
+    icon: () => <GroupsIcon />,
     component: lazy(() => import('./../../pages/teams')),
     isMenuEntry: true,
   },

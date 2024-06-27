@@ -1,6 +1,8 @@
-export default function About() {
+import { Box } from '@suid/material'
+
+export default function teams() {
   return (
-    <section class="bg-pink-100 text-gray-700 p-8">
+    <Box>
       <h1 class="text-2xl font-bold">Teams</h1>
 
       <p class="mt-4">Rocks your teams !!.</p>
@@ -8,6 +10,6 @@ export default function About() {
       <p>
         <span>We love Solid too ;)</span>
       </p>
-    </section>
+    </Box>
   )
 }

@@ -1,11 +1,11 @@
 import { createSignal } from 'solid-js'
-import { Button, Icon, Typography } from '@suid/material'
+import { Button, Box, Icon, Typography } from '@suid/material'
 
 export default function Home() {
   const [count, setCount] = createSignal(0)
 
   return (
-    <section class="p-8">
+    <Box>
       <Typography variant="h1" gutterBottom>
         Home
       </Typography>
@@ -26,6 +26,6 @@ export default function Home() {
           <Icon fontSize="large">add</Icon>
         </Button>
       </div>
-    </section>
+    </Box>
   )
 }
