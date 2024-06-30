@@ -1,4 +1,9 @@
 import { Box } from '@suid/material'
+import BsPlayers from '../libs/players'
+console.log('BsPlayers: ', BsPlayers)
+
+const bsPlayers = new BsPlayers()
+console.log('BsPlayers: ', bsPlayers)
 
 export default function players() {
   return (
