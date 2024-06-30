@@ -5,3 +5,6 @@
 
 /* ####### TAILWIND CSS ########## */
 @import './global/tailwind.css';
+
+/* ####### CRAYONS CSS ########## */
+@import './global/crayons.css';

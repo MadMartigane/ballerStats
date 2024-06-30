@@ -12,6 +12,7 @@ export default function Home() {
       <p class="mt-4">This is the home page.</p>
 
       <div class="flex items-center space-x-2">
+        <fw-button color="primary"> OK </fw-button>
         <Button
           color="success"
           variant="contained"

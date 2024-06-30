@@ -1,6 +1,8 @@
 /* @refresh reload */
 import './index.css'
 
+import './global/crayons'
+
 import { For } from 'solid-js'
 import { render } from 'solid-js/web'
 import { Route, HashRouter, RouteSectionProps } from '@solidjs/router'
