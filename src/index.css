@@ -5,3 +5,6 @@
 
 /* ####### TAILWIND CSS ########## */
 @import './global/tailwind.css';
+
+/* ####### CARBON IBM Web Components CSS ########## */
+@import './global/carbon.css';
