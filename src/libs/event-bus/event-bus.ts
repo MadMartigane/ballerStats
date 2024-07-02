@@ -1,27 +1,23 @@
 import { BsEventBusType } from './event-bus.d'
 
 export class BsEventBus {
-  #bus: Element = new Element()
+  #bus: Element = document.createElement('div')
 
-  public addEventListener(
-    eventType: BsEventBusType,
-    callback: () => void,
-  ) {
+  public addEventListener(eventType: BsEventBusType, callback: () => void) {
     this.#bus.addEventListener(eventType, callback, { capture: true })
   }
 
-  public removeEventListener(
-    eventType: BsEventBusType,
-    callback: () => void,
-  ) {
+  public removeEventListener(eventType: BsEventBusType, callback: () => void) {
     this.#bus.removeEventListener(eventType, callback, { capture: true })
   }
 
   public dispatchEvent(eventType: BsEventBusType, data: unknown | null = null) {
-    const event = new CustomEvent(eventType, { detail: data });
+    const event = new CustomEvent(eventType, { detail: data })
     this.#bus.dispatchEvent(event)
   }
 }
 
+console.log('BsEventBus: ', BsEventBus)
 const bsEventBus = new BsEventBus()
+console.log('bsEventBus: ', bsEventBus)
 export default bsEventBus

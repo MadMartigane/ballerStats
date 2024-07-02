@@ -9,9 +9,7 @@ import { Box } from '@suid/material'
 
 import { ThemeProvider, createTheme } from '@suid/material/styles'
 import CssBaseline from '@suid/material/CssBaseline'
-import orchestrator from './libs/orchestrator'
 
-orchestrator.init();
 const root = document.getElementById('app')
 
 

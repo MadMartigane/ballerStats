@@ -6,7 +6,7 @@ export default function Home() {
 
   return (
     <Box>
-      <Typography variant="h1" gutterBottom>
+      <Typography variant="h3" gutterBottom>
         Home
       </Typography>
       <p class="mt-4">This is the home page.</p>

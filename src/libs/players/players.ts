@@ -1,16 +1,16 @@
 import BsPlayer, { BsPlayerRawData } from '../player'
 
 export default class BsPlayers {
-  #users: Array<BsPlayer> = []
+  #players: Array<BsPlayer> = []
   #onUpdateCallbacks: Array<() => void> = []
 
-  constructor(userDatas?: Array<BsPlayerRawData>) {
-    if (userDatas) {
-      this.setUsersFromRawData(userDatas)
+  constructor(playerDatas?: Array<BsPlayerRawData>) {
+    if (playerDatas) {
+      this.setPlayersFromRawData(playerDatas)
     }
   }
 
-  private throwUpdatedUser() {
+  private throwUpdatedPlayer() {
     this.#onUpdateCallbacks.forEach(callback => {
       setTimeout(() => {
         callback()
@@ -18,30 +18,30 @@ export default class BsPlayers {
     })
   }
 
-  public get users(): Array<BsPlayer> {
-    return this.#users.map((user: BsPlayer): BsPlayer => {
-      return new BsPlayer(user.getRowData())
+  public get players(): Array<BsPlayer> {
+    return this.#players.map((player: BsPlayer): BsPlayer => {
+      return new BsPlayer(player.getRowData())
     })
   }
 
-  public setUsersFromRawData(data: Array<BsPlayerRawData>) {
-    this.#users = data.map(
-      (userData: BsPlayerRawData) => new BsPlayer(userData),
+  public setPlayersFromRawData(data: Array<BsPlayerRawData>) {
+    this.#players = data.map(
+      (playerData: BsPlayerRawData) => new BsPlayer(playerData),
     )
   }
 
-  public updateUser(newUser: BsPlayer) {
-    const oldUser = this.#users.find(
-      currentUser => currentUser.id === newUser.id,
+  public updatePlayer(newPlayer: BsPlayer) {
+    const oldPlayer = this.#players.find(
+      currentPlayer => currentPlayer.id === newPlayer.id,
     )
-    if (!oldUser) {
+    if (!oldPlayer) {
       throw new Error(
-        `[BsUsers.updateUser()] The user id ${newUser.id} doesn't exist, Please use .add() method instead.`,
+        `[BsPlayers.updatePlayer()] The player id ${newPlayer.id} doesn't exist, Please use .add() method instead.`,
       )
     }
 
-    oldUser.setFromRawData(newUser.getRowData())
-    this.throwUpdatedUser()
+    oldPlayer.setFromRawData(newPlayer.getRowData())
+    this.throwUpdatedPlayer()
   }
 
   public onUpdate(callback: () => void) {

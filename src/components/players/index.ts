@@ -1,4 +1,3 @@
-export * from './players';
-import BsPalyerComponent from './players'
-export default BsPalyerComponent
+import BsPalyerEl from './players'
+export default BsPalyerEl
 
