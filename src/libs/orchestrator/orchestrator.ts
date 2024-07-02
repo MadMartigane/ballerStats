@@ -1,9 +1,21 @@
+import BsPlayers from '../players'
 import utils from '../utils/utils'
 export class Orchestrator {
   #id: number = utils.getUniqId()
+  #players: BsPlayers = new BsPlayers()
+
 
   constructor() {
-    console.log('Orchestrator id: ', this.#id)
+    console.log('#constructor - Orchestrator id: ', this.#id)
+  }
+
+  public init() {
+    console.log('#init - Orchestrator id: ', this.#id)
+
+  }
+
+  public get players() {
+    return this.#players;
   }
 }
 

@@ -9,20 +9,23 @@ import { Box } from '@suid/material'
 
 import { ThemeProvider, createTheme } from '@suid/material/styles'
 import CssBaseline from '@suid/material/CssBaseline'
+import orchestrator from './libs/orchestrator'
 
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
-})
-
+orchestrator.init();
 const root = document.getElementById('app')
+
 
 if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   throw new Error(
     'Root element not found. Did you forget to add it to your index.html? Or maybe the id attribute got misspelled?',
   )
 }
+
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+})
 
 function suidNav(props: RouteSectionProps<unknown>) {
   const appBar = new AppBarEl()

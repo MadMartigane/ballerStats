@@ -1,4 +1,4 @@
 export type BsEventBusType =
-  | 'BsSynchroSuccess'
-  | 'BsSynchroFail'
-  | 'BsPlayersUpdate'
+  | 'BS::SYNCHRO::SUCCESS'
+  | 'BS::SYNCHRO::FAIL'
+  | 'BS::PLAYERS::CHANGE'

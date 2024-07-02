@@ -1,7 +1,7 @@
 import utils from '../utils/utils'
 import { BsPlayerRawData } from './player.d'
 
-class BsPlayer {
+export default class BsPlayer {
   #id: number
   public firstName: string | null = null
   public lastName: string | null = null
@@ -49,4 +49,3 @@ class BsPlayer {
   }
 }
 
-export default BsPlayer
