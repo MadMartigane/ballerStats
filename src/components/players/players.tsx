@@ -1,10 +1,10 @@
-import { Grid, Box, Button } from '@suid/material'
+import { MessageCircleWarning, UserPlus, X } from 'lucide-solid'
 import bsEventBus from '../../libs/event-bus'
 import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import BsPlayers from '../../libs/players'
 import { For, Show } from 'solid-js'
-import { Close, PersonAdd, Report } from '@suid/icons-material'
+import button from '../button'
 
 const players: MadSignal<BsPlayers> = new MadSignal(orchestrator.players)
 const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
@@ -20,67 +20,70 @@ function onAddPlayer(value: boolean) {
 
 function renderPlayerFallback() {
   return (
-    <Box>
+    <div>
       <h4>
-        <Report fontSize="large" color="warning" />
+        <MessageCircleWarning size={42} color="warning" />
         <span class="px-2">Aucun joueur enregistré.</span>
       </h4>
-    </Box>
+    </div>
   )
 }
 
 function renderAddPlayerButton() {
   return (
     <div>
-      <Grid container spacing={2}>
-        <Grid item xs={6} md={8}>
-          <Button
-            variant="contained"
-            startIcon={<Close />}
-            onClick={() => {
+      <div>
+        <div>
+          {button({
+            element: (
+              <span>
+                <X /> Annuler
+              </span>
+            ),
+            onClick: () => {
               onAddPlayer(true)
-            }}
-          >
-            Annuler
-          </Button>
-        </Grid>
+            },
+          })}
+        </div>
 
-        <Grid item xs={6} md={8}>
-          <Button
-            variant="contained"
-            startIcon={<PersonAdd />}
-            disabled={!canAddPlayer.get()}
-            onClick={() => {
+        <div>
+          {button({
+            element: (
+              <span>
+                <UserPlus /> Ajouter un joueur
+              </span>
+            ),
+            disabled: !canAddPlayer.get(),
+            onClick: () => {
               onAddPlayer(true)
-            }}
-          >
-            Ajouter un joueur
-          </Button>
-        </Grid>
-      </Grid>
+            },
+          })}
+        </div>
+      </div>
     </div>
   )
 }
 
-function renderAddingPlayerBox() {
+function renderAddingPlayerdiv() {
   return (
     <div>
-      <Button
-        variant="contained"
-        startIcon={<PersonAdd />}
-        onClick={() => {
-          onAddPlayer(false)
-        }}
-      >
-        Ajouter
-      </Button>
+      {button({
+        element: (
+          <span>
+            <UserPlus /> Ajouter
+          </span>
+        ),
+        onClick: () => {
+          onAddPlayer(true)
+        },
+      })}
     </div>
   )
 }
 
 export default function BsPlayersEl() {
   return (
-    <Box class="justify-center">
+    <div class="justify-center">
       <h3>Gestion des joueurs</h3>
 
       <Show
@@ -103,8 +106,8 @@ export default function BsPlayersEl() {
         </ul>
       </Show>
       <Show when={isAddingPlayer.get()} fallback={renderAddPlayerButton()}>
-        {renderAddingPlayerBox()}
+        {renderAddingPlayerdiv()}
       </Show>
-    </Box>
+    </div>
   )
 }

@@ -7,6 +7,7 @@ const defaultButtonOptions: ButtonOptions = {
   variant: 'primary',
   wide: false,
   pills: false,
+  disabled: false,
 }
 
 const classes: PrelineComponentClasses = {
@@ -41,12 +42,13 @@ function adaptor(options: ButtonOptions) {
 
   return {
     class: prelineClass,
-    element: options.element,
+    element: newOptions.element,
     onClick:
-      options.onClick ||
+      newOptions.onClick ||
       function () {
         return
       },
+    disabled: newOptions.disabled,
   }
 }
 
@@ -54,7 +56,7 @@ export default function button(options: ButtonOptions) {
   const data = adaptor(options)
 
   return (
-    <button type="button" class={data.class} onClick={() => data.onClick()}>
+    <button type="button" class={data.class} onClick={() => data.onClick()} disabled={data.disabled}>
       {data.element}
     </button>
   )

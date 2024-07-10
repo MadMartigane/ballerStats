@@ -30,4 +30,5 @@ export type PrelineBaseOptions = {
   size?: PrelineComponentSize
   pills?: boolean
   wide?: boolean
+  disabled?: boolean
 }

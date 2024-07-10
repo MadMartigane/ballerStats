@@ -1,10 +1,10 @@
-import { Box } from '@suid/material'
+import { Divide } from 'lucide-solid'
 import bsPlayersEl from '../components/players'
 
 export default function players() {
   return (
-    <Box>
+    <div>
       {bsPlayersEl()}
-    </Box>
+    </div>
   )
 }

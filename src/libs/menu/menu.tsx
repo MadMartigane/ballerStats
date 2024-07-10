@@ -2,13 +2,8 @@ import { MenuEntry } from './menu.d'
 import { lazy } from 'solid-js'
 import Home from '../../pages/home'
 
-import CrisisAlertIcon from '@suid/icons-material/CrisisAlert'
-import GroupIcon from '@suid/icons-material/Group'
-import GroupsIcon from '@suid/icons-material/Groups'
-import HomeIcon from '@suid/icons-material/Home'
-import InsightsIcon from '@suid/icons-material/Insights'
-import PersonIcon from '@suid/icons-material/Person'
-import SportsBasketballIcon from '@suid/icons-material/SportsBasketball'
+
+import { House, User, Users, UserRound, UsersRound, ScatterChart, Boxes, FileSliders, BadgeAlert } from 'lucide-solid'
 
 export const HASH_REPLACE_PATTERN = /^#\//
 
@@ -16,35 +11,35 @@ export const NAVIGATION_MENU_ENTRIES: Array<MenuEntry> = [
   {
     path: '/',
     label: 'Acceuil',
-    icon: () => <HomeIcon />,
+    icon: () => <House />,
     component: Home,
     isMenuEntry: true,
   },
   {
     path: '/users',
     label: 'Utilisateurs',
-    icon: () => <PersonIcon />,
+    icon: () => <Users />,
     component: lazy(() => import('../../pages/users')),
     isMenuEntry: true,
   },
   {
     path: '/user',
     label: 'Profile',
-    icon: () => <PersonIcon />,
+    icon: () => <User />,
     component: lazy(() => import('../../pages/user')),
     isMenuEntry: false,
   },
   {
     path: '/players',
     label: 'Joueurs',
-    icon: () => <GroupIcon />,
+    icon: () => <UsersRound />,
     component: lazy(() => import('../../pages/players')),
     isMenuEntry: true,
   },
   {
     path: '/joueur',
     label: 'Joueur',
-    icon: () => <PersonIcon />,
+    icon: () => <UserRound />,
     component: lazy(() => import('../../pages/player')),
     isMenuEntry: false,
   },
@@ -52,28 +47,28 @@ export const NAVIGATION_MENU_ENTRIES: Array<MenuEntry> = [
   {
     path: '/teams',
     label: 'Équipes',
-    icon: () => <GroupsIcon />,
+    icon: () => <Boxes />,
     component: lazy(() => import('../../pages/teams')),
     isMenuEntry: true,
   },
   {
     path: '/matchs',
     label: 'Matches',
-    icon: () => <SportsBasketballIcon />,
+    icon: () => <FileSliders />,
     component: lazy(() => import('../../pages/matchs')),
     isMenuEntry: true,
   },
   {
     path: '/stats',
     label: 'Statistiques',
-    icon: () => <InsightsIcon />,
+    icon: () => <ScatterChart />,
     component: lazy(() => import('../../pages/stats')),
     isMenuEntry: true,
   },
   {
     path: '/*',
     label: '404 Not Found',
-    icon: () => <CrisisAlertIcon />,
+    icon: () => <BadgeAlert />,
     component: lazy(() => import('../../pages/404')),
     isMenuEntry: false,
   },

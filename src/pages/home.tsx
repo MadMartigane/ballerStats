@@ -1,6 +1,6 @@
 import { createSignal } from 'solid-js'
-import { Icon } from '@suid/material'
 import button from '../components/button'
+import { Minus, Plus } from 'lucide-solid';
 
 export default function Home() {
   const [count, setCount] = createSignal(0)
@@ -13,14 +13,14 @@ export default function Home() {
       <div class="flex items-center space-x-2">
         {button({
           variant: 'success',
-          element: (<Icon fontSize="large">remove</Icon>),
+          element: (<Minus />),
           onClick:() => setCount(count() - 1)
         })}
 
         <output class="p-10px">Count: {count()}</output>
 
         {button({
-          element: (<Icon fontSize="large">add</Icon>),
+          element: (<Plus />),
           onClick:() => setCount(count() + 1)
         })}
 

@@ -11,4 +11,5 @@ export type ButtonOptions = {
   size?: PrelineComponentSize
   wide?: boolean
   pills?: boolean
+  disabled?: boolean
 }

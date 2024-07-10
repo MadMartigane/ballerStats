@@ -1,8 +1,7 @@
-import { Box } from '@suid/material'
 
 export default function teams() {
   return (
-    <Box>
+    <div>
       <h1 class="text-2xl font-bold">Teams</h1>
 
       <p class="mt-4">Rocks your teams !!.</p>
@@ -10,6 +9,6 @@ export default function teams() {
       <p>
         <span>We love Solid too ;)</span>
       </p>
-    </Box>
+    </div>
   )
 }
