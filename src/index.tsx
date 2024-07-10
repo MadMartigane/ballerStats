@@ -3,15 +3,11 @@ import './index.css'
 
 import { For } from 'solid-js'
 import { render } from 'solid-js/web'
-import { Route, HashRouter, RouteSectionProps } from '@solidjs/router'
-import AppBarEl, { NavigationMenuItem } from './components/app-bar/app-bar'
-import { Box } from '@suid/material'
-
-import { ThemeProvider, createTheme } from '@suid/material/styles'
-import CssBaseline from '@suid/material/CssBaseline'
+import { Route, HashRouter, useLocation } from '@solidjs/router'
+import appBar from './components/app-bar'
+import { NAVIGATION_MENU_ENTRIES } from './libs/menu'
 
 const root = document.getElementById('app')
-
 
 if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   throw new Error(
@@ -19,32 +15,27 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   )
 }
 
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
-})
+/*
+    const location = useLocation();
+    console.log("location: ", location);
+const locationSig = new MadSignal(location.hash);
+  createEffect(() => {
+    locationSig.set(location.hash);
+    console.log("effect location.pathname: ", location.pathname);
+    console.log("effect location.hash: ", location.hash);
 
-function suidNav(props: RouteSectionProps<unknown>) {
-  const appBar = new AppBarEl()
+    window.HSStaticMethods.autoInit();
+  });
+*/
+
+render(() => {
   return (
-    <ThemeProvider theme={darkTheme}>
-      <CssBaseline />
-      {appBar.render()}
-      <Box class="px-14 py-20">{props.children}</Box>
-    </ThemeProvider>
-  )
-}
-
-render(
-  () => (
-    <HashRouter root={suidNav}>
-      <For each={NavigationMenuItem}>
+    <HashRouter root={appBar}>
+      <For each={NAVIGATION_MENU_ENTRIES}>
         {menuItem => (
           <Route path={menuItem.path} component={menuItem.component} />
         )}
       </For>
     </HashRouter>
-  ),
-  root || document.body,
-)
+  )
+}, root || document.body)

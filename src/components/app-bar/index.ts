@@ -1,1 +1,2 @@
-export * from './app-bar.d';
+import appBar from './app-bar';
+export default appBar

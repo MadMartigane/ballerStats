@@ -1,0 +1,61 @@
+import { ButtonOptions } from './button.d'
+import { getPrelineClass, PrelineComponentClasses } from '../../libs/preline'
+
+const defaultButtonOptions: ButtonOptions = {
+  element: <span>button</span>,
+  size: 'base',
+  variant: 'primary',
+  wide: false,
+  pills: false,
+}
+
+const classes: PrelineComponentClasses = {
+  common: 'inline-flex items-center gap-x-2 text-sm font-semibold',
+  rounded: 'rounded-lg',
+  roundedFull: 'rounded-full',
+  wide: '',
+  wideFull: 'w-full',
+  primary: 'border border-transparent bg-blue-600 text-white hover:bg-blue-900 disabled:opacity-50 disabled:pointer-events-none',
+  secondary: 'border border-transparent bg-teal-100 text-teal-800 hover:bg-teal-200 disabled:opacity-50 disabled:pointer-events-none dark:hover:bg-teal-900 dark:text-teal-500 dark:hover:text-teal-400',
+  light: 'border border-transparent bg-blue-100 text-blue-800 hover:bg-blue-200 disabled:opacity-50 disabled:pointer-events-none dark:hover:bg-blue-900 dark:text-blue-400',
+  success: 'border border-transparent bg-teal-500 text-white hover:bg-teal-700 disabled:opacity-50 disabled:pointer-events-none',
+  warning: 'border border-transparent bg-yellow-500 text-white hover:bg-yellow-700 disabled:opacity-50 disabled:pointer-events-none',
+  error: 'border border-transparent bg-red-500 text-white hover:bg-red-700 disabled:opacity-50 disabled:pointer-events-none',
+  sm: 'py-2 px-3',
+  base: 'py-3 px-4',
+  lg: 'p-4 sm:p-5',
+}
+
+function adaptor(options: ButtonOptions) {
+  const newOptions = {
+    ...defaultButtonOptions,
+    ...options,
+  }
+
+  const prelineClass = getPrelineClass({
+    variant: newOptions.variant,
+    size: newOptions.size,
+    pills: newOptions.pills,
+    wide: newOptions.wide
+  }, classes)
+
+  return {
+    class: prelineClass,
+    element: options.element,
+    onClick:
+      options.onClick ||
+      function () {
+        return
+      },
+  }
+}
+
+export default function button(options: ButtonOptions) {
+  const data = adaptor(options)
+
+  return (
+    <button type="button" class={data.class} onClick={() => data.onClick()}>
+      {data.element}
+    </button>
+  )
+}
