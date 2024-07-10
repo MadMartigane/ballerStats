@@ -1,7 +1,7 @@
-import { For, Show } from 'solid-js'
+import { createEffect, For, Show } from 'solid-js'
 import MadSignal from '../../libs/mad-signal'
 import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
-import { RouteSectionProps } from '@solidjs/router'
+import { RouteSectionProps, useLocation } from '@solidjs/router'
 
 import logoSmallUrl from '/img/logo_small.png'
 
@@ -10,13 +10,7 @@ const isMainMenuOpen: MadSignal<boolean> = new MadSignal(false)
 const currentHash: MadSignal<string> = new MadSignal('')
 
 function isCurrentPath(candidatPath: string, currentPath: string) {
-  console.log('%s endsWith %s', currentPath, candidatPath)
-  return currentPath.endsWith(candidatPath)
-}
-
-function updatePath() {
-  console.log('setting currentHash: ', window.location.hash)
-  currentHash.set(window.location.hash)
+  return currentPath === candidatPath
 }
 
 function renderMasterTitle(currentPath: string) {
@@ -31,16 +25,15 @@ function renderMasterTitle(currentPath: string) {
 }
 
 function installEventHandlers() {
-  console.log('install event handler "hashchange"')
-  window.addEventListener('hashchange', () => {
-    console.log('#1 hashchange')
-    updatePath()
+  const location = useLocation()
+
+  createEffect(() => {
+    currentHash.set(location.pathname)
   })
 }
 
 export default function appBar(props: RouteSectionProps<unknown>) {
   installEventHandlers()
-  updatePath()
 
   return (
     <div class="min-h-full">
@@ -50,11 +43,11 @@ export default function appBar(props: RouteSectionProps<unknown>) {
             <div class="flex items-center">
               <div class="flex-shrink-0">
                 <a href="#/" aria-current="page">
-                <img
-                  class="h-16 w-16"
-                  src={logoSmallUrl}
-                  alt="Baller stats logo"
-                />
+                  <img
+                    class="h-16 w-16"
+                    src={logoSmallUrl}
+                    alt="Baller stats logo"
+                  />
                 </a>
               </div>
               <div class="hidden md:block">
