@@ -4,6 +4,7 @@ import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
 import { RouteSectionProps, useLocation } from '@solidjs/router'
 
 import logoSmallUrl from '/img/logo_small.png'
+import { UserCog } from 'lucide-solid'
 
 const isUserMenuOpen: MadSignal<boolean> = new MadSignal(false)
 const isMainMenuOpen: MadSignal<boolean> = new MadSignal(false)
@@ -99,18 +100,16 @@ export default function appBar(props: RouteSectionProps<unknown>) {
                   <div>
                     <button
                       type="button"
-                      class="relative flex max-w-xs items-center rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                      class="relative flex max-w-xs items-center rounded-full bg-gray-800 text-sm text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                       id="user-menu-button"
                       aria-expanded="false"
                       aria-haspopup="true"
+                      onClick={() => { isUserMenuOpen.set(!isUserMenuOpen.get())}}
+                      onBlur={() => { setTimeout(() => {isUserMenuOpen.set(false)}, 100)}}
                     >
                       <span class="absolute -inset-1.5"></span>
                       <span class="sr-only">Open user menu</span>
-                      <img
-                        class="h-8 w-8 rounded-full"
-                        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                        alt=""
-                      />
+                      <UserCog size="24" />
                     </button>
                   </div>
 
@@ -134,7 +133,7 @@ export default function appBar(props: RouteSectionProps<unknown>) {
                     >
                       {/* Active: "bg-gray-100", Not Active: "" */}
                       <a
-                        href="#"
+                        href="/user"
                         class="block px-4 py-2 text-sm text-gray-700"
                         role="menuitem"
                         tabindex="-1"
@@ -143,7 +142,7 @@ export default function appBar(props: RouteSectionProps<unknown>) {
                         Your Profile
                       </a>
                       <a
-                        href="#"
+                        href="/config"
                         class="block px-4 py-2 text-sm text-gray-700"
                         role="menuitem"
                         tabindex="-1"
@@ -152,7 +151,7 @@ export default function appBar(props: RouteSectionProps<unknown>) {
                         Settings
                       </a>
                       <a
-                        href="#"
+                        href="/"
                         class="block px-4 py-2 text-sm text-gray-700"
                         role="menuitem"
                         tabindex="-1"
