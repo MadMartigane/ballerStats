@@ -31,6 +31,7 @@ function renderMasterTitle(currentPath: string) {
 }
 
 function installEventHandlers() {
+  console.log('install event handler "hashchange"')
   window.addEventListener('hashchange', () => {
     console.log('#1 hashchange')
     updatePath()
