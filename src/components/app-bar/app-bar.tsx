@@ -1,7 +1,9 @@
 import { For, Show } from 'solid-js'
 import MadSignal from '../../libs/mad-signal'
-import { HASH_REPLACE_PATTERN, NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
+import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
 import { RouteSectionProps } from '@solidjs/router'
+
+import logoSmallUrl from '/img/logo_small.png'
 
 const isUserMenuOpen: MadSignal<boolean> = new MadSignal(false)
 const isMainMenuOpen: MadSignal<boolean> = new MadSignal(false)
@@ -49,7 +51,7 @@ export default function appBar(props: RouteSectionProps<unknown>) {
                 <a href="#/" aria-current="page">
                 <img
                   class="h-16 w-16"
-                  src="/img/logo_small.png"
+                  src={logoSmallUrl}
                   alt="Baller stats logo"
                 />
                 </a>
