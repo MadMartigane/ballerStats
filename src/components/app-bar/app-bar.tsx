@@ -46,11 +46,13 @@ export default function appBar(props: RouteSectionProps<unknown>) {
           <div class="flex h-16 items-center justify-between">
             <div class="flex items-center">
               <div class="flex-shrink-0">
+                <a href="#/" aria-current="page">
                 <img
-                  class="h-8 w-8"
-                  src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
+                  class="h-16 w-16"
+                  src="/img/logo_small.png"
                   alt="Baller stats logo"
                 />
+                </a>
               </div>
               <div class="hidden md:block">
                 <div class="ml-10 flex items-baseline space-x-4">
@@ -60,9 +62,10 @@ export default function appBar(props: RouteSectionProps<unknown>) {
                       <Show when={menuEntry.isMenuEntry}>
                         <a
                           href={menuEntry.path}
-                          class={`rounded-md px-3 py-2 text-sm font-medium ${String(currentHash.get()).endsWith(menuEntry.path) ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                          class={`flex flex-row items-center gap-2 rounded-md px-3 py-2 text-sm font-medium ${String(currentHash.get()).endsWith(menuEntry.path) ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
                           aria-current="page"
                         >
+                          {menuEntry.icon()}
                           {menuEntry.label}
                         </a>
                       </Show>
@@ -125,42 +128,44 @@ export default function appBar(props: RouteSectionProps<unknown>) {
                         From: "transform opacity-100 scale-100"
                         To: "transform opacity-0 scale-95"
                     */}
-                  <div
-                    class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                    role="menu"
-                    aria-orientation="vertical"
-                    aria-labelledby="user-menu-button"
-                    tabindex="-1"
-                  >
-                    {/* Active: "bg-gray-100", Not Active: "" */}
-                    <a
-                      href="#"
-                      class="block px-4 py-2 text-sm text-gray-700"
-                      role="menuitem"
+                  <Show when={isUserMenuOpen.get()}>
+                    <div
+                      class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                      role="menu"
+                      aria-orientation="vertical"
+                      aria-labelledby="user-menu-button"
                       tabindex="-1"
-                      id="user-menu-item-0"
                     >
-                      Your Profile
-                    </a>
-                    <a
-                      href="#"
-                      class="block px-4 py-2 text-sm text-gray-700"
-                      role="menuitem"
-                      tabindex="-1"
-                      id="user-menu-item-1"
-                    >
-                      Settings
-                    </a>
-                    <a
-                      href="#"
-                      class="block px-4 py-2 text-sm text-gray-700"
-                      role="menuitem"
-                      tabindex="-1"
-                      id="user-menu-item-2"
-                    >
-                      Sign out
-                    </a>
-                  </div>
+                      {/* Active: "bg-gray-100", Not Active: "" */}
+                      <a
+                        href="#"
+                        class="block px-4 py-2 text-sm text-gray-700"
+                        role="menuitem"
+                        tabindex="-1"
+                        id="user-menu-item-0"
+                      >
+                        Your Profile
+                      </a>
+                      <a
+                        href="#"
+                        class="block px-4 py-2 text-sm text-gray-700"
+                        role="menuitem"
+                        tabindex="-1"
+                        id="user-menu-item-1"
+                      >
+                        Settings
+                      </a>
+                      <a
+                        href="#"
+                        class="block px-4 py-2 text-sm text-gray-700"
+                        role="menuitem"
+                        tabindex="-1"
+                        id="user-menu-item-2"
+                      >
+                        Sign out
+                      </a>
+                    </div>
+                  </Show>
                 </div>
               </div>
             </div>
@@ -309,8 +314,8 @@ export default function appBar(props: RouteSectionProps<unknown>) {
       </nav>
 
       <header class="bg-white shadow">
-        <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <h1 class="text-3xl font-bold tracking-tight text-gray-900">
+        <div class="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+          <h1 class="text-2xl font-bold tracking-tight text-gray-900">
             {renderMasterTitle(String(currentHash.get()))}
           </h1>
         </div>

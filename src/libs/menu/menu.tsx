@@ -3,7 +3,7 @@ import { lazy } from 'solid-js'
 import Home from '../../pages/home'
 
 
-import { House, User, Users, UserRound, UsersRound, ScatterChart, Boxes, FileSliders, BadgeAlert } from 'lucide-solid'
+import { House, User, Users, ScatterChart, Boxes, FileSliders, BadgeAlert } from 'lucide-solid'
 
 export const HASH_REPLACE_PATTERN = /^#\//
 
@@ -11,16 +11,16 @@ export const NAVIGATION_MENU_ENTRIES: Array<MenuEntry> = [
   {
     path: '/',
     label: 'Acceuil',
-    icon: () => <House />,
+    icon: () => <img class="w-8 h-8" src="/img/logo_tiny.png" />,
     component: Home,
-    isMenuEntry: true,
+    isMenuEntry: false,
   },
   {
     path: '/users',
     label: 'Utilisateurs',
     icon: () => <Users />,
     component: lazy(() => import('../../pages/users')),
-    isMenuEntry: true,
+    isMenuEntry: false,
   },
   {
     path: '/user',
@@ -32,14 +32,14 @@ export const NAVIGATION_MENU_ENTRIES: Array<MenuEntry> = [
   {
     path: '/players',
     label: 'Joueurs',
-    icon: () => <UsersRound />,
+    icon: () => <Users />,
     component: lazy(() => import('../../pages/players')),
     isMenuEntry: true,
   },
   {
     path: '/joueur',
     label: 'Joueur',
-    icon: () => <UserRound />,
+    icon: () => <User />,
     component: lazy(() => import('../../pages/player')),
     isMenuEntry: false,
   },
