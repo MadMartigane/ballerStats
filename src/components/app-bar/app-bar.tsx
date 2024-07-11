@@ -4,10 +4,11 @@ import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
 import { RouteSectionProps, useLocation } from '@solidjs/router'
 
 import logoSmallUrl from '/img/logo_small.png'
-import { UserCog } from 'lucide-solid'
+import { Bell, UserCog } from 'lucide-solid'
 
 const isUserMenuOpen: MadSignal<boolean> = new MadSignal(false)
 const isMainMenuOpen: MadSignal<boolean> = new MadSignal(false)
+const isNotificationBoxOpen: MadSignal<boolean> = new MadSignal(false)
 const currentHash: MadSignal<string> = new MadSignal('')
 
 function isCurrentPath(candidatPath: string, currentPath: string) {
@@ -75,25 +76,35 @@ export default function appBar(props: RouteSectionProps<unknown>) {
               <div class="ml-4 flex items-center md:ml-6">
                 <button
                   type="button"
+                  id="notifications-box-button"
                   class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                  onClick={() => {
+                    isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => {
+                      isNotificationBoxOpen.set(false)
+                    }, 10)
+                  }}
                 >
                   <span class="absolute -inset-1.5"></span>
-                  <span class="sr-only">View notifications</span>
-                  <svg
-                    class="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
-                    />
-                  </svg>
+                  <span class="sr-only">Afficher les notifications</span>
+                  <Bell />
                 </button>
+
+                {/* Notifications dropdown */}
+                <Show when={isNotificationBoxOpen.get()}>
+                  <div
+                    id="notifications-box"
+                    class="absolute right-1 top-16 mt-1 z-10 p-6 w-72 origin-top-right rounded-md bg-gray-800 text-gray-400 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    role="menu"
+                    aria-orientation="vertical"
+                    aria-labelledby="notifications-box-button"
+                    tabindex="-1"
+                  >
+                    Aucune notification
+                  </div>
+                </Show>
 
                 {/* Profile dropdown */}
                 <div class="relative ml-3">
@@ -104,8 +115,14 @@ export default function appBar(props: RouteSectionProps<unknown>) {
                       id="user-menu-button"
                       aria-expanded="false"
                       aria-haspopup="true"
-                      onClick={() => { isUserMenuOpen.set(!isUserMenuOpen.get())}}
-                      onBlur={() => { setTimeout(() => {isUserMenuOpen.set(false)}, 100)}}
+                      onClick={() => {
+                        isUserMenuOpen.set(!isUserMenuOpen.get())
+                      }}
+                      onBlur={() => {
+                        setTimeout(() => {
+                          isUserMenuOpen.set(false)
+                        }, 10)
+                      }}
                     >
                       <span class="absolute -inset-1.5"></span>
                       <span class="sr-only">Open user menu</span>

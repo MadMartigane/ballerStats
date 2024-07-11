@@ -7,6 +7,8 @@ declare global {
   }
 }
 
+window.HSStaticMethods.autoInit()
+
 export * from './preline.d'
 export * from './preline'
 
