@@ -11,7 +11,7 @@ const defaultButtonOptions: ButtonOptions = {
 }
 
 const classes: PrelineComponentClasses = {
-  common: 'inline-flex items-center gap-x-2 text-sm font-semibold',
+  common: 'text-sm font-semibold',
   rounded: 'rounded-lg',
   roundedFull: 'rounded-full',
   wide: '',
@@ -22,7 +22,7 @@ const classes: PrelineComponentClasses = {
   success: 'border border-transparent bg-teal-500 text-white hover:bg-teal-700 disabled:opacity-50 disabled:pointer-events-none',
   warning: 'border border-transparent bg-yellow-500 text-white hover:bg-yellow-700 disabled:opacity-50 disabled:pointer-events-none',
   error: 'border border-transparent bg-red-500 text-white hover:bg-red-700 disabled:opacity-50 disabled:pointer-events-none',
-  sm: 'py-2 px-3',
+  sm: 'py-1 px-2',
   base: 'py-3 px-4',
   lg: 'p-4 sm:p-5',
 }
@@ -42,7 +42,9 @@ function adaptor(options: ButtonOptions) {
 
   return {
     class: prelineClass,
+    slotStart: newOptions.slotStart,
     element: newOptions.element,
+    slotEnd: newOptions.slotEnd,
     onClick:
       newOptions.onClick ||
       function () {
@@ -57,7 +59,11 @@ export default function button(options: ButtonOptions) {
 
   return (
     <button type="button" class={data.class} onClick={() => data.onClick()} disabled={data.disabled}>
+      <span class="inline-flex items-end gap-2">
+      {data.slotStart}
       {data.element}
+      {data.slotEnd}
+      </span>
     </button>
   )
 }

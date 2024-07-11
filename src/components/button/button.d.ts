@@ -5,7 +5,9 @@ import {
 } from '../../libs/preline'
 
 export type ButtonOptions = {
+  slotStart?: JSXElement
   element: JSXElement
+  slotEnd?: JSXElement
   onClick?: () => void
   variant?: PrelineComponentVariant
   size?: PrelineComponentSize

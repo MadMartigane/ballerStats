@@ -5,6 +5,7 @@ import orchestrator from '../../libs/orchestrator/orchestrator'
 import BsPlayers from '../../libs/players'
 import { For, Show } from 'solid-js'
 import button from '../button'
+import card from '../card'
 
 const players: MadSignal<BsPlayers> = new MadSignal(orchestrator.players)
 const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
@@ -14,15 +15,15 @@ bsEventBus.addEventListener('BS::PLAYERS::CHANGE', () => {
   players.set(orchestrator.players)
 })
 
-function onAddPlayer(value: boolean) {
+function toggleAddPlayer(value: boolean) {
   isAddingPlayer.set(value)
 }
 
 function renderPlayerFallback() {
   return (
     <div>
-      <h4>
-        <MessageCircleWarning size={42} color="warning" />
+      <h4 class="inline-flex items-end my-4">
+        <MessageCircleWarning size={42} />
         <span class="px-2">Aucun joueur enregistré.</span>
       </h4>
     </div>
@@ -35,27 +36,10 @@ function renderAddPlayerButton() {
       <div>
         <div>
           {button({
-            element: (
-              <span>
-                <X /> Annuler
-              </span>
-            ),
+            slotStart: <UserPlus />,
+            element: 'Ajouter un jouer',
             onClick: () => {
-              onAddPlayer(true)
-            },
-          })}
-        </div>
-
-        <div>
-          {button({
-            element: (
-              <span>
-                <UserPlus /> Ajouter un joueur
-              </span>
-            ),
-            disabled: !canAddPlayer.get(),
-            onClick: () => {
-              onAddPlayer(true)
+              toggleAddPlayer(true)
             },
           })}
         </div>
@@ -64,49 +48,62 @@ function renderAddPlayerButton() {
   )
 }
 
-function renderAddingPlayerdiv() {
-  return (
-    <div>
-      {button({
-        element: (
-          <span>
-            <UserPlus /> Ajouter
-          </span>
-        ),
-        onClick: () => {
-          onAddPlayer(true)
-        },
-      })}
-    </div>
-  )
+function renderAddingPlayerCard() {
+  return card({
+    title: 'Saisissez les informations du nouveau joueur',
+    info: 'simple information',
+    body: 'the form to add player',
+    footer: (
+      <div class="grid grid-cols-2 gap-2">
+        {button({
+          wide: true,
+          slotStart: <X />,
+          element: 'Annuler',
+          onClick: () => {
+            toggleAddPlayer(false)
+          },
+        })}
+
+        {button({
+          wide: true,
+          slotStart: <UserPlus />,
+          element: 'Ajouter',
+          disabled: !canAddPlayer.get(),
+          onClick: () => {
+            toggleAddPlayer(false)
+          },
+        })}
+      </div>
+    ),
+  })
 }
 
 export default function BsPlayersEl() {
   return (
-    <div class="justify-center">
-      <h3>Gestion des joueurs</h3>
-
-      <Show
-        when={players.get()?.players.length || 0 > 0}
-        fallback={renderPlayerFallback()}
-      >
-        <ul>
-          <For each={players.get()?.players}>
-            {(player, index) => (
-              <li
-                style={{
-                  color: index() % 2 === 0 ? 'red' : 'blue',
-                }}
-              >
-                #{player.jersayNumber} {player.firstName} - {player.lastName} (
-                {player.jersayNumber})
-              </li>
-            )}
-          </For>
-        </ul>
+    <div>
+      <Show when={!isAddingPlayer.get()}>
+        <Show
+          when={players.get()?.players.length || 0 > 0}
+          fallback={renderPlayerFallback()}
+        >
+          <ul>
+            <For each={players.get()?.players}>
+              {(player, index) => (
+                <li
+                  style={{
+                    color: index() % 2 === 0 ? 'red' : 'blue',
+                  }}
+                >
+                  #{player.jersayNumber} {player.firstName} - {player.lastName}{' '}
+                  ({player.jersayNumber})
+                </li>
+              )}
+            </For>
+          </ul>
+        </Show>
       </Show>
       <Show when={isAddingPlayer.get()} fallback={renderAddPlayerButton()}>
-        {renderAddingPlayerdiv()}
+        {renderAddingPlayerCard()}
       </Show>
     </div>
   )
