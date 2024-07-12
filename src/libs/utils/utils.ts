@@ -1,12 +1,11 @@
-export class Utils {
-  private readonly antropyFator = 3
+const antropyFator = 3
 
-  public getUniqId(): number {
-    const array = new Uint32Array(this.antropyFator)
-    crypto.getRandomValues(array)
-    return array[Math.floor(Math.random() * this.antropyFator)]
-  }
+export function getUniqId(): number {
+  const array = new Uint32Array(antropyFator)
+  crypto.getRandomValues(array)
+  return array[Math.floor(Math.random() * antropyFator)]
 }
 
-const utils = new Utils()
-export default utils
+export function getShortId(): number {
+  return Math.floor(Math.random() * 100000)
+}

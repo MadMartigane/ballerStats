@@ -1,4 +1,4 @@
-import { MessageCircleWarning, UserPlus, X } from 'lucide-solid'
+import { Contact, MessageCircleWarning, UserPlus, X } from 'lucide-solid'
 import bsEventBus from '../../libs/event-bus'
 import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
@@ -6,6 +6,7 @@ import BsPlayers from '../../libs/players'
 import { For, Show } from 'solid-js'
 import button from '../button'
 import card from '../card'
+import input from '../input'
 
 const players: MadSignal<BsPlayers> = new MadSignal(orchestrator.players)
 const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
@@ -50,9 +51,16 @@ function renderAddPlayerButton() {
 
 function renderAddingPlayerCard() {
   return card({
-    title: 'Saisissez les informations du nouveau joueur',
+    title: (<p class="flex flex-row gap-1"><Contact />Nouveau joueur</p>),
     info: 'simple information',
-    body: 'the form to add player',
+    body: (<div>
+      {input({
+        type: 'text',
+        label: 'Nom',
+        placeholder: 'Charlie'
+
+      })}
+    </div>),
     footer: (
       <div class="grid grid-cols-2 gap-2">
         {button({

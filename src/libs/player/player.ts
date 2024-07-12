@@ -1,4 +1,4 @@
-import utils from '../utils/utils'
+import { getUniqId } from '../utils'
 import { BsPlayerRawData } from './player.d'
 
 export default class BsPlayer {
@@ -12,7 +12,7 @@ export default class BsPlayer {
   public nicName?: string
 
   constructor(data?: BsPlayerRawData) {
-    this.#id = data?.id || utils.getUniqId()
+    this.#id = data?.id || getUniqId()
 
     if (data) {
       this.setFromRawData(data)
@@ -24,7 +24,7 @@ export default class BsPlayer {
   }
 
   public setFromRawData(data: BsPlayerRawData) {
-    this.#id = data.id || utils.getUniqId()
+    this.#id = data.id || getUniqId()
     this.firstName = data?.firstName
     this.lastName = data?.lastName
   }
