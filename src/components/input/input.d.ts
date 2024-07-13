@@ -1,9 +1,14 @@
 export type InputComponentOptionsType = 'text' | 'email'
 
+export type InputComponentOnChangeEvent = Event & { currentTarget: HTMLInputElement; target: HTMLInputElement; }
+
 export type InputComponentOptions = {
-  type: InputComponentOptionsType
+  id?: string
+  type?: InputComponentOptionsType
   value?: string
   label?: string
   placeholder?: string
-  onChange?: () => string
+  onChange?: (value: string) => void
+  onBlur?: () => void
+  onFocus?: () => void
 }

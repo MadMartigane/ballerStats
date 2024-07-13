@@ -3,11 +3,10 @@ import { BsPlayerRawData } from './player.d'
 
 export default class BsPlayer {
   #id: number
-  public firstName: string | null = null
-  public lastName: string | null = null
-  public jersayNumber: string | null = null
-  public licenseNumber: string | null = null
-
+  public firstName?: string
+  public lastName?: string
+  public jersayNumber?: string
+  public licenseNumber?: string
   public birthDay?: Date
   public nicName?: string
 
@@ -24,18 +23,37 @@ export default class BsPlayer {
   }
 
   public setFromRawData(data: BsPlayerRawData) {
-    this.#id = data.id || getUniqId()
-    this.firstName = data?.firstName
-    this.lastName = data?.lastName
+    this.#id = data.id || this.#id
+    this.firstName = data.firstName
+    this.lastName = data.lastName
+    this.jersayNumber = data.jersayNumber
+    this.licenseNumber = data.licenseNumber
+    this.nicName = data.nicName
+
+    if (data.birthDay) {
+      this.birthDay = new Date(data.birthDay)
+    }
   }
 
   public getRowData(): BsPlayerRawData {
     const data: BsPlayerRawData = {
       id: this.#id,
-      firstName: this.firstName,
-      lastName: this.lastName,
-      jersayNumber: this.jersayNumber,
-      licenseNumber: this.licenseNumber,
+    };
+
+    if(this.firstName) {
+      data.firstName = this.firstName
+    }
+
+    if (this.lastName) {
+      data.lastName = this.lastName
+    }
+
+    if (this.jersayNumber) {
+      data.jersayNumber = this.jersayNumber
+    }
+
+    if (this.licenseNumber) {
+      data.licenseNumber = this.licenseNumber
     }
 
     if (this.nicName) {
@@ -43,9 +61,16 @@ export default class BsPlayer {
     }
 
     if (this.birthDay) {
-      data.birthDay = this.birthDay.toString()
+      data.birthDay = this.birthDay.getTime()
     }
+
     return data
   }
-}
 
+  public update(data: BsPlayerRawData) {
+    this.setFromRawData({
+      ...this.getRowData(),
+      ...data,
+    })
+  }
+}
