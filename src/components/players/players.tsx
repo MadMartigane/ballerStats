@@ -9,6 +9,7 @@ import button from '../button'
 import card from '../card'
 import input from '../input'
 import { BsPlayerRawData } from '../../libs/player'
+import datePicker from '../date-picker'
 
 const players: MadSignal<BsPlayers> = new MadSignal(orchestrator.players)
 const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
@@ -107,6 +108,23 @@ function renderAddingPlayerCard() {
             setNewPlayerData({ jersayNumber: value })
           },
         })}
+        {input({
+          type: 'text',
+          label: 'Numéro de license',
+          placeholder: '0123456789-abc',
+          onChange: (value: string) => {
+            setNewPlayerData({ licenseNumber: value })
+          },
+        })}
+       {input({
+          type: 'text',
+          label: 'Surnom',
+          placeholder: 'The B',
+          onChange: (value: string) => {
+            setNewPlayerData({ nicName: value })
+          },
+        })}
+        {datePicker()}
       </div>
     ),
     footer: (
