@@ -1,20 +1,25 @@
 /* @refresh reload */
 import './index.css'
+import 'preline/preline'
 
 import { For } from 'solid-js'
 import { render } from 'solid-js/web'
 import { Route, HashRouter } from '@solidjs/router'
-import appBar from './components/app-bar'
+import AppBar from './components/app-bar'
 import { NAVIGATION_MENU_ENTRIES } from './libs/menu'
+import { initDarkMode } from './libs/preline'
 
 import relAppleTouchIconUrl from '/img/apple-touch-icon.png'
 import relIconUrl from '/img/favicon.ico'
 
-const relAppleTouchIcon: HTMLLinkElement | null = document.querySelector('link[rel="apple-touch-icon"]');
+const relAppleTouchIcon: HTMLLinkElement | null = document.querySelector(
+  'link[rel="apple-touch-icon"]',
+)
 if (relAppleTouchIcon) {
   relAppleTouchIcon.href = relAppleTouchIconUrl
 }
-const relIcon : HTMLLinkElement | null = document.querySelector('link[rel="icon"]');
+const relIcon: HTMLLinkElement | null =
+  document.querySelector('link[rel="icon"]')
 if (relIcon) {
   relIcon.href = relIconUrl
 }
@@ -27,23 +32,11 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   )
 }
 
-
-/*
-    const location = useLocation();
-    console.log("location: ", location);
-const locationSig = new MadSignal(location.hash);
-  createEffect(() => {
-    locationSig.set(location.hash);
-    console.log("effect location.pathname: ", location.pathname);
-    console.log("effect location.hash: ", location.hash);
-
-    window.HSStaticMethods.autoInit();
-  });
-*/
-
 render(() => {
+  initDarkMode()
+
   return (
-    <HashRouter root={appBar}>
+    <HashRouter root={AppBar}>
       <For each={NAVIGATION_MENU_ENTRIES}>
         {menuItem => (
           <Route path={menuItem.path} component={menuItem.component} />

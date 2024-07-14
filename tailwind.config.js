@@ -5,6 +5,7 @@ export default {
     './src/**/*.{js,ts,jsx,tsx}',
     './node_modules/preline/preline.js',
   ],
+  darkMode: 'selector',
   theme: {
     extend: {},
   },

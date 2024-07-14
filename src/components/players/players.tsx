@@ -124,7 +124,6 @@ function renderAddingPlayerCard() {
             setNewPlayerData({ nicName: value })
           },
         })}
-        {datePicker()}
       </div>
     ),
     footer: (

@@ -1,7 +1,12 @@
-import { PrelineComponentClasses } from "./preline.d"
-import { PrelineBaseOptions } from "./preline.d"
+import { PrelineComponentClasses } from './preline.d'
+import { PrelineBaseOptions } from './preline.d'
 
-export function getPrelineClass(newOptions: PrelineBaseOptions, classes: PrelineComponentClasses) {
+const HS_PREF_THEME_STORAGE_KEY = 'hs_theme'
+
+export function getPrelineClass(
+  newOptions: PrelineBaseOptions,
+  classes: PrelineComponentClasses,
+) {
   const classTab = [classes.common]
 
   switch (newOptions.variant) {
@@ -48,4 +53,60 @@ export function getPrelineClass(newOptions: PrelineBaseOptions, classes: Preline
     : classTab.push(classes.wide)
 
   return classTab.join(' ')
+}
+
+export function initDarkMode() {
+  // This code should be added to <head>.
+  // It's used to prevent page load glitches.
+  const html: HTMLHtmlElement | null = document.querySelector('html')
+
+  if (!html) {
+    throw new Error(
+      '[preline::initDarkMode()] unable to find THE html element.',
+    )
+  }
+
+  const isLightOrAuto =
+    localStorage.getItem(HS_PREF_THEME_STORAGE_KEY) === 'light' ||
+    (localStorage.getItem(HS_PREF_THEME_STORAGE_KEY) === 'auto' &&
+      !window.matchMedia('(prefers-color-scheme: dark)').matches)
+
+  const isDarkOrAuto =
+    localStorage.getItem(HS_PREF_THEME_STORAGE_KEY) === 'dark' ||
+    (localStorage.getItem(HS_PREF_THEME_STORAGE_KEY) === 'auto' &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches)
+
+  if (isLightOrAuto && html.classList.contains('dark')) {
+    html.classList.remove('dark')
+  }
+
+  if (isDarkOrAuto && html.classList.contains('light')) {
+    html.classList.remove('light')
+  }
+
+  if (isDarkOrAuto && !html.classList.contains('dark')) {
+    html.classList.add('dark')
+  }
+
+  if (isLightOrAuto && !html.classList.contains('light')) {
+    html.classList.add('light')
+  }
+}
+
+export function setDarkMode(darkMode: string | null) {
+  if (darkMode === null) {
+    localStorage.setItem(HS_PREF_THEME_STORAGE_KEY, 'auto')
+  } else {
+    localStorage.setItem(HS_PREF_THEME_STORAGE_KEY, darkMode)
+  }
+
+  initDarkMode()
+}
+
+export function resetDarkMode() {
+  setDarkMode(null)
+}
+
+export function getDarkThemeValue() {
+  return localStorage.getItem(HS_PREF_THEME_STORAGE_KEY) || null
 }

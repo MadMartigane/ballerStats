@@ -23,3 +23,6 @@ h4 {
   @apply font-sans font-bold text-lg my-2;
 }
 
+.base-component {
+  @apply p-2 text-blue-950 bg-gray-200 dark:text-blue-100 dark:bg-gray-800;
+}

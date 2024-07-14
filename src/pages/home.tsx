@@ -1,6 +1,7 @@
 import { createSignal } from 'solid-js'
 import button from '../components/button'
-import { Minus, Plus } from 'lucide-solid';
+import { Minus, Plus } from 'lucide-solid'
+import DarkThemeSwitch from '../components/dark-theme-switch'
 
 export default function Home() {
   const [count, setCount] = createSignal(0)
@@ -10,20 +11,21 @@ export default function Home() {
       <h3>Home</h3>
       <p class="mt-4">This is the home page.</p>
 
+      <DarkThemeSwitch />
+
       <div class="flex items-center space-x-2">
         {button({
           variant: 'success',
-          element: (<Minus />),
-          onClick:() => setCount(count() - 1)
+          element: <Minus />,
+          onClick: () => setCount(count() - 1),
         })}
 
         <output class="p-10px">Count: {count()}</output>
 
         {button({
-          element: (<Plus />),
-          onClick:() => setCount(count() + 1)
+          element: <Plus />,
+          onClick: () => setCount(count() + 1),
         })}
-
       </div>
       <div class="flex items-center space-x-2 space-y-2">
         {button({
@@ -35,10 +37,10 @@ export default function Home() {
         {button({
           variant: 'warning',
           size: 'lg',
-          onClick: () => setCount(count() -2),
+          onClick: () => setCount(count() - 2),
           element: <span>warning lg Count: {count()}</span>,
         })}
- 
+
         {button({
           variant: 'primary',
           size: 'sm',
@@ -68,7 +70,6 @@ export default function Home() {
           onClick: () => setCount(count() + 1),
           element: <span>secondary base Count: {count()}</span>,
         })}
-
       </div>
     </div>
   )

@@ -2,6 +2,14 @@ import { createEffect, For, Show } from 'solid-js'
 import MadSignal from '../../libs/mad-signal'
 import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
 import { RouteSectionProps, useLocation } from '@solidjs/router'
+import { IStaticMethods } from "preline/preline";
+
+declare global {
+  interface Window {
+    HSStaticMethods: IStaticMethods;
+  }
+}
+
 
 import logoSmallUrl from '/img/logo_small.png'
 import { Bell, Menu, UserCog, X } from 'lucide-solid'
@@ -31,15 +39,17 @@ function installEventHandlers() {
 
   createEffect(() => {
     currentHash.set(location.pathname)
+
+    window.HSStaticMethods.autoInit();
   })
 }
 
-export default function appBar(props: RouteSectionProps<unknown>) {
+export default function AppBar(props: RouteSectionProps<unknown>) {
   installEventHandlers()
 
   return (
     <div class="min-h-full">
-      <nav class="bg-gray-800 sticky top-0">
+      <nav class="bg-gray-800 sticky top-0 z-50">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="flex h-16 items-center justify-between">
             <div class="flex items-center">
@@ -296,14 +306,14 @@ export default function appBar(props: RouteSectionProps<unknown>) {
         </Show>
       </nav>
 
-      <header class="bg-white shadow">
-        <div class="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-          <h1 class="text-2xl font-bold tracking-tight text-gray-900">
+      <header class="bg-white shadow dark:bg-sky-950">
+        <div class="mx-auto max-w-7xl px-3 py-2 sm:px-4 lg:px-6">
+          <h1 class="text-xl font-bold tracking-tight text-gray-900 dark:text-gray-300">
             {renderMasterTitle(String(currentHash.get()))}
           </h1>
         </div>
       </header>
-      <main>
+      <main class="base-component min-h-screen">
         <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           {props.children}
         </div>
