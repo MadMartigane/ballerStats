@@ -26,6 +26,10 @@ export default function Home() {
 
       </div>
       <div class="flex items-center space-x-2 space-y-2">
+        <cds-button
+          onClick={() => setCount(count() + 10)}>Test</cds-button>
+      </div>
+      <div class="flex items-center space-x-2 space-y-2">
         {button({
           variant: 'success',
           onClick: () => setCount(count() + 1),

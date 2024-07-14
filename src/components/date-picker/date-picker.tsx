@@ -1,4 +1,15 @@
-export function datePicker() {
+export default function datePicker() {
+  return (
+    <cds-date-picker>
+      <cds-date-picker-input
+        kind="single"
+        label-text="Date Picker label"
+        placeholder="mm/dd/yyyy"
+      ></cds-date-picker-input>
+    </cds-date-picker>
+  )
+}
+export function datePicker2() {
   return (
     <div class="space-y-0.5">
       {/* Months */}
