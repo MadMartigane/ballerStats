@@ -54,7 +54,7 @@ function adaptor(options: ButtonOptions) {
   }
 }
 
-export default function button(options: ButtonOptions) {
+export default function Button(options: ButtonOptions) {
   const data = adaptor(options)
 
   return (

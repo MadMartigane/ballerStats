@@ -1,5 +1,5 @@
 import { createSignal } from 'solid-js'
-import button from '../components/button'
+import Button from '../components/button'
 import { Minus, Plus } from 'lucide-solid'
 import DarkThemeSwitch from '../components/dark-theme-switch'
 
@@ -14,7 +14,7 @@ export default function Home() {
       <DarkThemeSwitch />
 
       <div class="flex items-center space-x-2">
-        {button({
+        {Button({
           variant: 'success',
           element: <Minus />,
           onClick: () => setCount(count() - 1),
@@ -22,54 +22,10 @@ export default function Home() {
 
         <output class="p-10px">Count: {count()}</output>
 
-        {button({
-          element: <Plus />,
-          onClick: () => setCount(count() + 1),
-        })}
-      </div>
-      <div class="flex items-center space-x-2 space-y-2">
-        {button({
-          variant: 'success',
-          onClick: () => setCount(count() + 1),
-          element: <span>success Count: {count()}</span>,
-        })}
-
-        {button({
-          variant: 'warning',
-          size: 'lg',
-          onClick: () => setCount(count() - 2),
-          element: <span>warning lg Count: {count()}</span>,
-        })}
-
-        {button({
-          variant: 'primary',
-          size: 'sm',
-          onClick: () => setCount(count() + 1),
-          element: <span>primary sm Count: {count()}</span>,
-        })}
-
-        {button({
-          variant: 'light',
-          size: 'base',
-          onClick: () => setCount(count() + 1),
-          element: <span>light base Count: {count()}</span>,
-        })}
-
-        {button({
-          variant: 'error',
-          size: 'base',
-          pills: true,
-          onClick: () => setCount(count() + 1),
-          element: <span>error base Count: {count()}</span>,
-        })}
-
-        {button({
-          variant: 'secondary',
-          size: 'base',
-          wide: true,
-          onClick: () => setCount(count() + 1),
-          element: <span>secondary base Count: {count()}</span>,
-        })}
+        <Button 
+          element={<Plus />}
+          onClick={() => setCount(count() + 1)}
+        />
       </div>
     </div>
   )

@@ -1,4 +1,4 @@
 export * from './input.d'
 
-import input from './input'
-export default input
+import Input from './input'
+export default Input

@@ -5,11 +5,10 @@ import orchestrator from '../../libs/orchestrator/orchestrator'
 import BsPlayer from '../../libs/player'
 import BsPlayers from '../../libs/players'
 import { For, Show } from 'solid-js'
-import button from '../button'
-import card from '../card'
-import input from '../input'
+import Button from '../button'
+import Card from '../card'
+import Input from '../input'
 import { BsPlayerRawData } from '../../libs/player'
-import datePicker from '../date-picker'
 
 const players: MadSignal<BsPlayers> = new MadSignal(orchestrator.players)
 const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
@@ -60,7 +59,7 @@ function renderAddPlayerButton() {
     <div>
       <div>
         <div>
-          {button({
+          {Button({
             slotStart: <UserPlus />,
             element: 'Ajouter un jouer',
             onClick: () => {
@@ -74,7 +73,7 @@ function renderAddPlayerButton() {
 }
 
 function renderAddingPlayerCard() {
-  return card({
+  return Card({
     title: (
       <p class="flex flex-row gap-1">
         <Contact />
@@ -84,7 +83,7 @@ function renderAddingPlayerCard() {
     info: 'Les nom, prénom et numéro de maillot sont obligatoires',
     body: (
       <div class="flex flex-col gap-2">
-        {input({
+        {Input({
           type: 'text',
           label: 'Nom',
           placeholder: 'Dupont',
@@ -92,7 +91,7 @@ function renderAddingPlayerCard() {
             setNewPlayerData({ lastName: value })
           },
         })}
-        {input({
+        {Input({
           type: 'text',
           label: 'Prénom',
           placeholder: 'Charlie',
@@ -100,7 +99,7 @@ function renderAddingPlayerCard() {
             setNewPlayerData({ firstName: value })
           },
         })}
-        {input({
+        {Input({
           type: 'text',
           label: 'Numéro de maillot',
           placeholder: '01',
@@ -108,7 +107,7 @@ function renderAddingPlayerCard() {
             setNewPlayerData({ jersayNumber: value })
           },
         })}
-        {input({
+        {Input({
           type: 'text',
           label: 'Numéro de license',
           placeholder: '0123456789-abc',
@@ -116,7 +115,7 @@ function renderAddingPlayerCard() {
             setNewPlayerData({ licenseNumber: value })
           },
         })}
-       {input({
+       {Input({
           type: 'text',
           label: 'Surnom',
           placeholder: 'The B',
@@ -128,7 +127,7 @@ function renderAddingPlayerCard() {
     ),
     footer: (
       <div class="grid grid-cols-2 gap-2">
-        {button({
+        {Button({
           wide: true,
           slotStart: <X />,
           element: 'Annuler',
@@ -137,7 +136,7 @@ function renderAddingPlayerCard() {
           },
         })}
 
-        {button({
+        {Button({
           wide: true,
           slotStart: <UserPlus />,
           element: 'Ajouter',
@@ -151,7 +150,7 @@ function renderAddingPlayerCard() {
   })
 }
 
-export default function BsPlayersEl() {
+export default function Players() {
   return (
     <div>
       <Show when={!isAddingPlayer.get()}>

@@ -1,3 +1,3 @@
 export * from './card.d'
-import card from './card'
-export default card
+import Card from './card'
+export default Card

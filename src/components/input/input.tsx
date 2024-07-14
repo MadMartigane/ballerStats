@@ -76,7 +76,7 @@ function renderClassic(options: InputComponentOptions) {
   )
 }
 
-export default function input(options: InputComponentOptions) {
+export default function Input(options: InputComponentOptions) {
   const newOpions = adapter(options)
 
   return renderClassic(newOpions)
