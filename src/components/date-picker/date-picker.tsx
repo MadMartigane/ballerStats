@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-solid";
 
-export default function datePicker() {
+export default function DatePicker() {
   return (
     <cds-date-picker>
       <cds-date-picker-input
@@ -11,7 +11,7 @@ export default function datePicker() {
     </cds-date-picker>
   )
 }
-export function datePicker2() {
+export function DatePicker2() {
 
   return (
     <div class="space-y-0.5 max-w-fit">

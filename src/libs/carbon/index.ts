@@ -1,3 +1,6 @@
+import '@carbon/web-components/es/components/button/button';
+import '@carbon/web-components/es/components/date-picker/index.js';
+
 
 declare global {
   namespace JSX {
@@ -11,10 +14,11 @@ declare global {
 
     interface IntrinsicElements {
       "cds-button": CDSButton;
+      "cds-date-picker": CDSButton;
+      "cds-date-picker-input": CDSButton;
     }
 
   }
 }
 
-import '@carbon/web-components/es/components/button/button';
-import '@carbon/web-components/es/components/date-picker/index.js';
+

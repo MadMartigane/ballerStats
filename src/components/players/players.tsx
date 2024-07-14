@@ -9,7 +9,7 @@ import button from '../button'
 import card from '../card'
 import input from '../input'
 import { BsPlayerRawData } from '../../libs/player'
-import datePicker from '../date-picker'
+import DatePicker, { DatePicker2 } from '../date-picker'
 
 const players: MadSignal<BsPlayers> = new MadSignal(orchestrator.players)
 const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
@@ -124,7 +124,8 @@ function renderAddingPlayerCard() {
             setNewPlayerData({ nicName: value })
           },
         })}
-        {datePicker()}
+        <DatePicker />
+        <DatePicker2 />
       </div>
     ),
     footer: (
