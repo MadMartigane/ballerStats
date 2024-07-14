@@ -1,6 +1,8 @@
+import { ChevronLeft, ChevronRight } from "lucide-solid";
+
 export function datePicker() {
   return (
-    <div class="space-y-0.5">
+    <div class="space-y-0.5 max-w-fit">
       {/* Months */}
       <div class="grid grid-cols-5 items-center gap-x-3 mx-1.5 pb-3">
         {/* Prev Button */}
@@ -9,20 +11,7 @@ export function datePicker() {
             type="button"
             class="size-8 flex justify-center items-center text-gray-800 hover:bg-gray-100 rounded-full disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-400 dark:hover:bg-neutral-800"
           >
-            <svg
-              class="flex-shrink-0 size-4"
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="m15 18-6-6 6-6"></path>
-            </svg>
+            <ChevronLeft />
           </button>
         </div>
         {/* End Prev Button */}
@@ -90,19 +79,7 @@ export function datePicker() {
             type="button"
             class="size-8 flex justify-center items-center text-gray-800 hover:bg-gray-100 rounded-full disabled:opacity-50 disabled:pointer-events-none dark:text-neutral-400 dark:hover:bg-neutral-800"
           >
-            <svg
-              class="flex-shrink-0 size-4"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="m9 18 6-6-6-6"></path>
-            </svg>
+            <ChevronRight />
           </button>
         </div>
         {/* End Next Button */}
