@@ -1,7 +1,37 @@
 import { getUniqId } from '../utils'
-import { BsPlayerRawData } from './player.d'
+import { PlayerRawData } from './player.d'
 
-export default class BsPlayer {
+const scoreFields: {
+  [key: string]: { score: number; isSet: (player: Player) => boolean }
+} = {
+  firstName: {
+    score: 10,
+    isSet: (player: Player) => {
+      return Boolean(player.firstName)
+    },
+  },
+  lastName: {
+    score: 10,
+    isSet: (player: Player) => {
+      return Boolean(player.lastName)
+    },
+  },
+  nicName: {
+    score: 20,
+    isSet: (player: Player) => {
+      return Boolean(player.nicName)
+    },
+  },
+  jersayNumber: {
+    score: 10,
+    isSet: (player: Player) => {
+      return Boolean(player.jersayNumber)
+    },
+  },
+}
+const minimalSoreToBeRegisterable = 30
+
+export default class Player {
   #id: number
   public firstName?: string
   public lastName?: string
@@ -10,7 +40,7 @@ export default class BsPlayer {
   public birthDay?: Date
   public nicName?: string
 
-  constructor(data?: BsPlayerRawData) {
+  constructor(data?: PlayerRawData) {
     this.#id = data?.id || getUniqId()
 
     if (data) {
@@ -22,7 +52,22 @@ export default class BsPlayer {
     return this.#id
   }
 
-  public setFromRawData(data: BsPlayerRawData) {
+  public get isRegisterable() {
+    let score = Object.keys(scoreFields).reduce(
+      (previousScore: number, field: string) => {
+        if (scoreFields[field].isSet(this)) {
+          return previousScore + scoreFields[field].score
+        }
+
+        return previousScore
+      },
+      0,
+    )
+
+    return score >= minimalSoreToBeRegisterable
+  }
+
+  public setFromRawData(data: PlayerRawData) {
     this.#id = data.id || this.#id
     this.firstName = data.firstName
     this.lastName = data.lastName
@@ -35,12 +80,12 @@ export default class BsPlayer {
     }
   }
 
-  public getRowData(): BsPlayerRawData {
-    const data: BsPlayerRawData = {
+  public getRowData(): PlayerRawData {
+    const data: PlayerRawData = {
       id: this.#id,
-    };
+    }
 
-    if(this.firstName) {
+    if (this.firstName) {
       data.firstName = this.firstName
     }
 
@@ -67,7 +112,7 @@ export default class BsPlayer {
     return data
   }
 
-  public update(data: BsPlayerRawData) {
+  public update(data: PlayerRawData) {
     this.setFromRawData({
       ...this.getRowData(),
       ...data,

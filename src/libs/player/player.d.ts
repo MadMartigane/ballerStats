@@ -1,4 +1,4 @@
-export type BsPlayerRawData = {
+export type PlayerRawData = {
   id?: number
   firstName?: string
   lastName?: string

@@ -1,2 +1,2 @@
-import BsPlayers from './players'
-export default BsPlayers
+import Players from './players'
+export default Players

@@ -1,10 +1,9 @@
-import { Divide } from 'lucide-solid'
-import bsPlayersEl from '../components/players'
+import PlayersEl from '../components/players'
 
 export default function players() {
   return (
     <div>
-      {bsPlayersEl()}
+      <PlayersEl />
     </div>
   )
 }

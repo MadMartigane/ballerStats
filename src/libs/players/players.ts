@@ -1,36 +1,38 @@
-import BsPlayer, { BsPlayerRawData } from '../player'
+import Player, { PlayerRawData } from '../player'
+import bsEventBus from '../event-bus'
 
-export default class BsPlayers {
-  #players: Array<BsPlayer> = []
-  #onUpdateCallbacks: Array<() => void> = []
+export default class Players {
+  #players: Array<Player> = []
 
-  constructor(playerDatas?: Array<BsPlayerRawData>) {
+  constructor(playerDatas?: Array<PlayerRawData>) {
     if (playerDatas) {
       this.setPlayersFromRawData(playerDatas)
     }
   }
 
-  private throwUpdatedPlayer() {
-    this.#onUpdateCallbacks.forEach(callback => {
-      setTimeout(() => {
-        callback()
-      })
-    })
+  private throwUpdatedPlayerEvent() {
+    bsEventBus.dispatchEvent('BS::PLAYERS::CHANGE')
   }
 
-  public get players(): Array<BsPlayer> {
-    return this.#players.map((player: BsPlayer): BsPlayer => {
-      return new BsPlayer(player.getRowData())
-    })
-  }
-
-  public setPlayersFromRawData(data: Array<BsPlayerRawData>) {
-    this.#players = data.map(
-      (playerData: BsPlayerRawData) => new BsPlayer(playerData),
+  private getPlayer(newPlayer: Player) {
+    return this.#players.find(
+      currentPlayer => currentPlayer.id === newPlayer.id,
     )
   }
 
-  public updatePlayer(newPlayer: BsPlayer) {
+  public get players(): Array<Player> {
+    return this.#players.map((player: Player): Player => {
+      return new Player(player.getRowData())
+    })
+  }
+
+  public setPlayersFromRawData(data: Array<PlayerRawData>) {
+    this.#players = data.map(
+      (playerData: PlayerRawData) => new Player(playerData),
+    )
+  }
+
+  public updatePlayer(newPlayer: Player) {
     const oldPlayer = this.#players.find(
       currentPlayer => currentPlayer.id === newPlayer.id,
     )
@@ -41,10 +43,28 @@ export default class BsPlayers {
     }
 
     oldPlayer.setFromRawData(newPlayer.getRowData())
-    this.throwUpdatedPlayer()
+    this.throwUpdatedPlayerEvent()
   }
 
-  public onUpdate(callback: () => void) {
-    this.#onUpdateCallbacks.push(callback)
+  public add(newPlayer: Player) {
+    if (!newPlayer.isRegisterable) {
+      throw new Error(
+        `[BsPlayers.add()] The player id ${newPlayer.id} is not registerable, Please complete the data.`,
+      )
+    }
+
+    const alreadyRegisteredPlayer = this.getPlayer(newPlayer)
+    if (alreadyRegisteredPlayer) {
+      throw new Error(
+        `[BsPlayers.add()] The player id ${newPlayer.id} already exist, Please use .updatePlayer() method instead.`,
+      )
+    }
+
+    this.#players.push(newPlayer)
+    this.throwUpdatedPlayerEvent()
+  }
+
+  public getPlayersRawData() {
+    return this.#players.map((player: Player) => player.getRowData())
   }
 }

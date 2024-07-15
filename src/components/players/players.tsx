@@ -2,40 +2,36 @@ import { Contact, MessageCircleWarning, UserPlus, X } from 'lucide-solid'
 import bsEventBus from '../../libs/event-bus'
 import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
-import BsPlayer from '../../libs/player'
-import BsPlayers from '../../libs/players'
+import Player from '../../libs/player'
+import Players from '../../libs/players'
 import { For, Show } from 'solid-js'
 import Button from '../button'
 import Card from '../card'
 import Input from '../input'
-import { BsPlayerRawData } from '../../libs/player'
+import { PlayerRawData } from '../../libs/player'
 
-const players: MadSignal<BsPlayers> = new MadSignal(orchestrator.players)
+const players: MadSignal<Players> = new MadSignal(orchestrator.players)
 const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
 const canAddPlayer: MadSignal<boolean> = new MadSignal(false)
-const mandatoryNewPlayerFields = ['lastName', 'firstName', 'jersayNumber']
 
-let newPlayer: BsPlayer | null = null
+let newPlayer: Player | null = null
 
 bsEventBus.addEventListener('BS::PLAYERS::CHANGE', () => {
+  console.log('received BS::PLAYERS::CHANGE event')
   players.set(orchestrator.players)
+  console.log('Update new players: ', orchestrator.players)
 })
 
-function setNewPlayerData(data: BsPlayerRawData) {
+function setNewPlayerData(data: PlayerRawData) {
   if (!newPlayer) {
-    newPlayer = new BsPlayer(data)
+    newPlayer = new Player(data)
   } else {
     newPlayer.update(data)
   }
 
   console.log('Update new player: ', newPlayer)
   console.log('new player rawData: ', newPlayer.getRowData())
-  const newPlayerRawData: { [key: string]: unknown } = newPlayer.getRowData()
-  canAddPlayer.set(
-    mandatoryNewPlayerFields.every(
-      field => newPlayerRawData[field] !== undefined,
-    ),
-  )
+  canAddPlayer.set(newPlayer.isRegisterable)
   console.log('canAddPlayer: ', canAddPlayer.get())
 }
 
@@ -43,11 +39,22 @@ function toggleAddPlayer(value: boolean) {
   isAddingPlayer.set(value)
 }
 
+function registerNewPlayer() {
+  console.log("register new player.")
+  if (!newPlayer || !newPlayer.isRegisterable) {
+    throw new Error('<Players::registerNewPlayer()> the new player is not registerable, please fill up more data.')
+  }
+
+  console.log('adding new player: ', newPlayer)
+  orchestrator.players.add(newPlayer)
+  isAddingPlayer.set(false)
+}
+
 function renderPlayerFallback() {
   return (
     <div>
       <h4 class="inline-flex items-end my-4">
-        <MessageCircleWarning size={42} />
+        <MessageCircleWarning class="w-14 h-14" />
         <span class="px-2">Aucun joueur enregistré.</span>
       </h4>
     </div>
@@ -142,7 +149,7 @@ function renderAddingPlayerCard() {
           element: 'Ajouter',
           disabled: !canAddPlayer.get(),
           onClick: () => {
-            toggleAddPlayer(false)
+            registerNewPlayer()
           },
         })}
       </div>
@@ -150,7 +157,7 @@ function renderAddingPlayerCard() {
   })
 }
 
-export default function Players() {
+export default function PlayersEl() {
   return (
     <div>
       <Show when={!isAddingPlayer.get()}>

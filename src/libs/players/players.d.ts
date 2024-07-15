@@ -1,5 +1,5 @@
 import BsPlayer from '../player'
 
-export type BsPlayersOptions = {
+export type PlayersOptions = {
   list: Array<BsPlayer>
 }
