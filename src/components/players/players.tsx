@@ -4,16 +4,16 @@ import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import Player from '../../libs/player'
 import Players from '../../libs/players'
-import { For, Show } from 'solid-js'
-import Button from '../button'
+import { createSignal, For, Show } from 'solid-js'
+import BsButton from '../button'
 import Card from '../card'
 import Input from '../input'
 import { PlayerRawData } from '../../libs/player'
-import PlayerEl from '../player/player'
+import BsPlayer from '../player'
 
 const players: MadSignal<Players> = new MadSignal(orchestrator.players)
 const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
-const canAddPlayer: MadSignal<boolean> = new MadSignal(false)
+const [canAddPlayer, canAddPlayerSet] = createSignal(false)
 
 let newPlayer: Player | null = null
 
@@ -32,12 +32,15 @@ function setNewPlayerData(data: PlayerRawData) {
 
   console.log('Update new player: ', newPlayer)
   console.log('new player rawData: ', newPlayer.getRowData())
-  canAddPlayer.set(newPlayer.isRegisterable)
-  console.log('canAddPlayer: ', canAddPlayer.get())
+  canAddPlayerSet(newPlayer.isRegisterable)
+  console.log('canAddPlayer: ', canAddPlayer())
 }
 
 function toggleAddPlayer(value: boolean) {
   isAddingPlayer.set(value)
+  if (!value) {
+    newPlayer = null
+  }
 }
 
 function registerNewPlayer() {
@@ -51,6 +54,7 @@ function registerNewPlayer() {
   console.log('adding new player: ', newPlayer)
   orchestrator.players.add(newPlayer)
   isAddingPlayer.set(false)
+  newPlayer = null
 }
 
 function renderPlayerFallback() {
@@ -69,15 +73,13 @@ function renderAddPlayerButton() {
     <div>
       <hr />
       <div class="p-4">
-        <div>
-          {Button({
-            slotStart: <UserPlus />,
-            children: 'Ajouter un jouer',
-            onClick: () => {
-              toggleAddPlayer(true)
-            },
-          })}
-        </div>
+        {BsButton({
+          slotStart: <UserPlus />,
+          children: 'Ajouter un jouer',
+          onClick: () => {
+            toggleAddPlayer(true)
+          },
+        })}
       </div>
     </div>
   )
@@ -138,31 +140,29 @@ function renderAddingPlayerCard() {
     ),
     footer: (
       <div class="grid grid-cols-2 gap-2">
-        <Button
-          wide={true}
-          slotStart={<X />}
-          onClick={() => {
+        {BsButton({
+          wide: true,
+          slotStart: <X />,
+          onClick: () => {
             toggleAddPlayer(false)
-          }}
-        >
-          Annuler
-        </Button>
-        <Button
-          wide={true}
-          slotStart={<UserPlus />}
-          disabled={!canAddPlayer.get()}
-          onClick={() => {
+          },
+          children: 'Annuler',
+        })}
+        {BsButton({
+          wide: true,
+          slotStart: <UserPlus />,
+          disabled: !canAddPlayer(),
+          onClick: () => {
             registerNewPlayer()
-          }}
-        >
-          Ajouter
-        </Button>
+          },
+          children: 'Ajouter',
+        })}
       </div>
     ),
   })
 }
 
-export default function PlayersEl() {
+export default function BsPlayers() {
   return (
     <div>
       <Show when={!isAddingPlayer.get()}>
@@ -170,9 +170,13 @@ export default function PlayersEl() {
           when={players.get()?.players.length || 0 > 0}
           fallback={renderPlayerFallback()}
         >
-          <div class="flex flex-row gap-4">
+          <div class="flex flex-wrap gap-4 justify-stretch">
             <For each={players.get()?.players}>
-              {player => <PlayerEl player={player} />}
+              {player => (
+                <div class="mx-auto md:mx-0 w-fit">
+                  <BsPlayer player={player} />
+                </div>
+              )}
             </For>
           </div>
         </Show>

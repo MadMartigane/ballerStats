@@ -1,5 +1,5 @@
 import { createSignal } from 'solid-js'
-import Button from '../components/button'
+import BsButton from '../components/button'
 import { Minus, Plus } from 'lucide-solid'
 import DarkThemeSwitch from '../components/dark-theme-switch'
 
@@ -14,18 +14,24 @@ export default function Home() {
       <DarkThemeSwitch />
 
       <div class="flex items-center space-x-2">
-        {Button({
-          variant: 'success',
-          element: <Minus />,
-          onClick: () => setCount(count() - 1),
-        })}
+        <BsButton
+          variant="success"
+          onClick={() => {
+            setCount(count() - 1)
+          }}
+        >
+          <Minus />
+        </BsButton>
 
         <output class="p-10px">Count: {count()}</output>
 
-        <Button 
-          element={<Plus />}
-          onClick={() => setCount(count() + 1)}
-        />
+        <BsButton
+          onClick={() => {
+            setCount(count() + 1)
+          }}
+        >
+          <Plus />
+        </BsButton>
       </div>
     </div>
   )

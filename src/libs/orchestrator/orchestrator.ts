@@ -59,7 +59,7 @@ export class Orchestrator {
       return
     }
 
-    // TODO: add lastRecord (timestamp) in the player and compare each record
+    // TODO: add lastRecord (timestamp) in the player and compare each records
     if (!this.#lastPlayersRecrod || stored.lastRecord > this.#lastPlayersRecrod) {
       this.#players = new Players(stored.players)
 

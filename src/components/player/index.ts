@@ -1,4 +1,4 @@
 export * from './player.d'
 
-import PlayerEl from './player'
-export default PlayerEl
+import BsPlayer from './player'
+export default BsPlayer

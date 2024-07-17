@@ -1,14 +1,12 @@
-import { Moon, Sun, SunMoon } from 'lucide-solid'
 import MadSignal from '../../libs/mad-signal'
 import { getDarkThemeValue, setDarkMode } from '../../libs/preline'
 import { getShortId } from '../../libs/utils'
 
 function onThemeChange(event: Event) {
-  console.log('onThemeChange event: ', event)
 
   const target: HTMLSelectElement | null = (event.target ||
     event.currentTarget) as HTMLSelectElement
-  console.log('onThemeChange value: ', target.value)
+
   if (!target) {
     throw new Error(
       '<DarkThemeSwitch::onThemeChange()> Unable to get the target of "onChage" event.',
@@ -44,7 +42,7 @@ export default function DarkThemeSwitch() {
             Auto (système)
           </option>
           <option value="dark" selected={darkThemeValue.get() === 'dark'}>
-            Dark 2
+            Dark
           </option>
           <option value="light" selected={darkThemeValue.get() === 'light'}>
             Light

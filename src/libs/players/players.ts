@@ -73,7 +73,8 @@ export default class Players {
       (candidate: Player) => candidate.id === player.id,
     )
 
-    if (!idx) {
+    if (idx === -1) {
+      console.log('remove player - idx: ', idx)
       throw new Error(
         `[BsPlayers.remove()] The player id ${player.id} not found, Unable to remove it.`,
       )

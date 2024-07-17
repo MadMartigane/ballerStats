@@ -3,8 +3,9 @@ import {
   PrelineComponentSize,
   PrelineComponentVariant,
 } from '../../libs/preline'
+import MadSignal from '../../libs/mad-signal'
 
-export type ButtonOptions = {
+export type BsButtonProps = {
   children: JSXElement
   slotStart?: JSXElement
   slotEnd?: JSXElement

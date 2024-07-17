@@ -1,2 +1,2 @@
-import Button from './button'
-export default Button
+import BsButton from './button'
+export default BsButton
