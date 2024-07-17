@@ -9,6 +9,7 @@ import Button from '../button'
 import Card from '../card'
 import Input from '../input'
 import { PlayerRawData } from '../../libs/player'
+import PlayerEl from '../player/player'
 
 const players: MadSignal<Players> = new MadSignal(orchestrator.players)
 const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
@@ -40,9 +41,11 @@ function toggleAddPlayer(value: boolean) {
 }
 
 function registerNewPlayer() {
-  console.log("register new player.")
+  console.log('register new player.')
   if (!newPlayer || !newPlayer.isRegisterable) {
-    throw new Error('<Players::registerNewPlayer()> the new player is not registerable, please fill up more data.')
+    throw new Error(
+      '<Players::registerNewPlayer()> the new player is not registerable, please fill up more data.',
+    )
   }
 
   console.log('adding new player: ', newPlayer)
@@ -64,11 +67,12 @@ function renderPlayerFallback() {
 function renderAddPlayerButton() {
   return (
     <div>
-      <div>
+      <hr />
+      <div class="p-4">
         <div>
           {Button({
             slotStart: <UserPlus />,
-            element: 'Ajouter un jouer',
+            children: 'Ajouter un jouer',
             onClick: () => {
               toggleAddPlayer(true)
             },
@@ -122,7 +126,7 @@ function renderAddingPlayerCard() {
             setNewPlayerData({ licenseNumber: value })
           },
         })}
-       {Input({
+        {Input({
           type: 'text',
           label: 'Surnom',
           placeholder: 'The B',
@@ -134,24 +138,25 @@ function renderAddingPlayerCard() {
     ),
     footer: (
       <div class="grid grid-cols-2 gap-2">
-        {Button({
-          wide: true,
-          slotStart: <X />,
-          element: 'Annuler',
-          onClick: () => {
+        <Button
+          wide={true}
+          slotStart={<X />}
+          onClick={() => {
             toggleAddPlayer(false)
-          },
-        })}
-
-        {Button({
-          wide: true,
-          slotStart: <UserPlus />,
-          element: 'Ajouter',
-          disabled: !canAddPlayer.get(),
-          onClick: () => {
+          }}
+        >
+          Annuler
+        </Button>
+        <Button
+          wide={true}
+          slotStart={<UserPlus />}
+          disabled={!canAddPlayer.get()}
+          onClick={() => {
             registerNewPlayer()
-          },
-        })}
+          }}
+        >
+          Ajouter
+        </Button>
       </div>
     ),
   })
@@ -165,20 +170,11 @@ export default function PlayersEl() {
           when={players.get()?.players.length || 0 > 0}
           fallback={renderPlayerFallback()}
         >
-          <ul>
+          <div class="flex flex-row gap-4">
             <For each={players.get()?.players}>
-              {(player, index) => (
-                <li
-                  style={{
-                    color: index() % 2 === 0 ? 'red' : 'blue',
-                  }}
-                >
-                  #{player.jersayNumber} {player.firstName} - {player.lastName}{' '}
-                  ({player.jersayNumber})
-                </li>
-              )}
+              {player => <PlayerEl player={player} />}
             </For>
-          </ul>
+          </div>
         </Show>
       </Show>
       <Show when={isAddingPlayer.get()} fallback={renderAddPlayerButton()}>

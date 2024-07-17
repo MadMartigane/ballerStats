@@ -1,6 +1,7 @@
 import Players from '../players'
 import bsEventBus from '../event-bus'
 import { getStoredPlayers, storePlayers } from '../store'
+import Player from '../player'
 
 export class Orchestrator {
   #players: Players = new Players()
@@ -69,6 +70,10 @@ export class Orchestrator {
 
   public get players() {
     return this.#players
+  }
+
+  public removePlayer(player: Player) {
+    return this.#players.remove(player)
   }
 }
 

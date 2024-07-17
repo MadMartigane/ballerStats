@@ -2,7 +2,7 @@ import { ButtonOptions } from './button.d'
 import { getPrelineClass, PrelineComponentClasses } from '../../libs/preline'
 
 const defaultButtonOptions: ButtonOptions = {
-  element: <span>button</span>,
+  children: <span>button</span>,
   size: 'base',
   variant: 'primary',
   wide: false,
@@ -43,7 +43,7 @@ function adaptor(options: ButtonOptions) {
   return {
     class: prelineClass,
     slotStart: newOptions.slotStart,
-    element: newOptions.element,
+    children: newOptions.children,
     slotEnd: newOptions.slotEnd,
     onClick:
       newOptions.onClick ||
@@ -54,14 +54,14 @@ function adaptor(options: ButtonOptions) {
   }
 }
 
-export default function Button(options: ButtonOptions) {
-  const data = adaptor(options)
+export default function Button(props: ButtonOptions) {
+  const data = adaptor(props)
 
   return (
     <button type="button" class={data.class} onClick={() => data.onClick()} disabled={data.disabled}>
       <span class="inline-flex items-end gap-2">
       {data.slotStart}
-      {data.element}
+      {data.children}
       {data.slotEnd}
       </span>
     </button>

@@ -22,7 +22,7 @@ export default function Card(options: CardComponentOptions) {
 
 
         <Show when={options.footer}>
-          <hr class="my-6 w-11/12 mx-auto" />
+          <hr />
 
           <div>{options.footer}</div>
         </Show>

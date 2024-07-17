@@ -1,12 +1,12 @@
-import { JSXElement } from 'solid-js'
+import { JSXElement, type JSX } from 'solid-js'
 import {
   PrelineComponentSize,
   PrelineComponentVariant,
 } from '../../libs/preline'
 
 export type ButtonOptions = {
+  children: JSXElement
   slotStart?: JSXElement
-  element: JSXElement
   slotEnd?: JSXElement
   onClick?: () => void
   variant?: PrelineComponentVariant
@@ -14,4 +14,4 @@ export type ButtonOptions = {
   wide?: boolean
   pills?: boolean
   disabled?: boolean
-}
+} & JSX.HTMLAttributes<HTMLDivElement>

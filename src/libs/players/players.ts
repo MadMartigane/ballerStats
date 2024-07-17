@@ -67,4 +67,19 @@ export default class Players {
   public getPlayersRawData() {
     return this.#players.map((player: Player) => player.getRowData())
   }
+
+  public remove(player: Player) {
+    const idx = this.#players.findIndex(
+      (candidate: Player) => candidate.id === player.id,
+    )
+
+    if (!idx) {
+      throw new Error(
+        `[BsPlayers.remove()] The player id ${player.id} not found, Unable to remove it.`,
+      )
+    }
+
+    this.#players.splice(idx, 1)
+    this.throwUpdatedPlayerEvent()
+  }
 }

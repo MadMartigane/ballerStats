@@ -23,6 +23,10 @@ h4 {
   @apply font-sans font-bold text-lg my-2;
 }
 
+hr {
+  @apply my-6 w-11/12 mx-auto;
+}
+
 .base-component {
   @apply p-2 text-blue-950 bg-gray-200 dark:text-blue-100 dark:bg-gray-800;
 }
