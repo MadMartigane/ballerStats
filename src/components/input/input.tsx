@@ -1,15 +1,15 @@
 import { getShortId } from '../../libs/utils'
-import { InputComponentOnChangeEvent, InputComponentOptions } from './input.d'
+import { BsInputOnChangeEvent, BsInputProps } from './input.d'
 
 let debounceOnInput: number | null;
 
-const defaultOptions: InputComponentOptions = {
+const defaultOptions: BsInputProps = {
   type: 'text',
   onBlur: () => { return },
   onFocus: () => { return },
 }
 
-function onInput(event: InputComponentOnChangeEvent, callback?: (value: string) => void) {
+function onInput(event: BsInputOnChangeEvent, callback?: (value: string) => void) {
   if (debounceOnInput) {
     clearTimeout(debounceOnInput)
   }
@@ -20,7 +20,7 @@ function onInput(event: InputComponentOnChangeEvent, callback?: (value: string) 
   }, 300)
 }
 
-function onChange(event: InputComponentOnChangeEvent, callback?: (value: string) => void) {
+function onChange(event: BsInputOnChangeEvent, callback?: (value: string) => void) {
   if (!callback) {
     return;
   }
@@ -30,7 +30,7 @@ function onChange(event: InputComponentOnChangeEvent, callback?: (value: string)
   callback(target.value)
 }
 
-function adapter(options: InputComponentOptions): InputComponentOptions {
+function adapter(options: BsInputProps): BsInputProps {
   const number = getShortId()
   const id = `hs-floating-gray-input-${options.type}-${number}`
 
@@ -41,7 +41,7 @@ function adapter(options: InputComponentOptions): InputComponentOptions {
   }
 }
 
-function renderClassic(options: InputComponentOptions) {
+function renderClassic(options: BsInputProps) {
   return (
     <div class="relative">
       <input
@@ -76,7 +76,7 @@ function renderClassic(options: InputComponentOptions) {
   )
 }
 
-export default function Input(options: InputComponentOptions) {
+export default function BsInput(options: BsInputProps) {
   const newOpions = adapter(options)
 
   return renderClassic(newOpions)

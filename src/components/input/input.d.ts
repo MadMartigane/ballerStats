@@ -1,10 +1,10 @@
-export type InputComponentOptionsType = 'text' | 'email'
+export type BsInputPropsType = 'text' | 'email'
 
-export type InputComponentOnChangeEvent = Event & { currentTarget: HTMLInputElement; target: HTMLInputElement; }
+export type BsInputOnChangeEvent = Event & { currentTarget: HTMLInputElement; target: HTMLInputElement; }
 
-export type InputComponentOptions = {
+export type BsInputProps = {
   id?: string
-  type?: InputComponentOptionsType
+  type?: BsInputPropsType
   value?: string
   label?: string
   placeholder?: string

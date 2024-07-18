@@ -3,24 +3,24 @@ import bsEventBus from '../../libs/event-bus'
 import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import Player from '../../libs/player'
-import Players from '../../libs/players'
-import { createSignal, For, Show } from 'solid-js'
+import { For, Show } from 'solid-js'
 import BsButton from '../button'
-import Card from '../card'
-import Input from '../input'
+import BsCard from '../card'
+import BsInput from '../input'
 import { PlayerRawData } from '../../libs/player'
 import BsPlayer from '../player'
+import { createStore } from 'solid-js/store'
 
-const players: MadSignal<Players> = new MadSignal(orchestrator.players)
 const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
-const [canAddPlayer, canAddPlayerSet] = createSignal(false)
+const canAddPlayer: MadSignal<boolean> = new MadSignal(false)
+const playerLength: MadSignal<number> = new MadSignal(orchestrator.Players.length)
+const [players, setPlayers] = createStore(orchestrator.Players.players)
 
 let newPlayer: Player | null = null
 
 bsEventBus.addEventListener('BS::PLAYERS::CHANGE', () => {
-  console.log('received BS::PLAYERS::CHANGE event')
-  players.set(orchestrator.players)
-  console.log('Update new players: ', orchestrator.players)
+  playerLength.set(orchestrator.Players.length)
+  setPlayers(orchestrator.Players.players)
 })
 
 function setNewPlayerData(data: PlayerRawData) {
@@ -30,10 +30,7 @@ function setNewPlayerData(data: PlayerRawData) {
     newPlayer.update(data)
   }
 
-  console.log('Update new player: ', newPlayer)
-  console.log('new player rawData: ', newPlayer.getRowData())
-  canAddPlayerSet(newPlayer.isRegisterable)
-  console.log('canAddPlayer: ', canAddPlayer())
+  canAddPlayer.set(newPlayer.isRegisterable)
 }
 
 function toggleAddPlayer(value: boolean) {
@@ -44,15 +41,13 @@ function toggleAddPlayer(value: boolean) {
 }
 
 function registerNewPlayer() {
-  console.log('register new player.')
   if (!newPlayer || !newPlayer.isRegisterable) {
     throw new Error(
       '<Players::registerNewPlayer()> the new player is not registerable, please fill up more data.',
     )
   }
 
-  console.log('adding new player: ', newPlayer)
-  orchestrator.players.add(newPlayer)
+  orchestrator.Players.add(newPlayer)
   isAddingPlayer.set(false)
   newPlayer = null
 }
@@ -86,7 +81,7 @@ function renderAddPlayerButton() {
 }
 
 function renderAddingPlayerCard() {
-  return Card({
+  return BsCard({
     title: (
       <p class="flex flex-row gap-1">
         <Contact />
@@ -96,7 +91,7 @@ function renderAddingPlayerCard() {
     info: 'Les nom, prénom et numéro de maillot sont obligatoires',
     body: (
       <div class="flex flex-col gap-2">
-        {Input({
+        {BsInput({
           type: 'text',
           label: 'Nom',
           placeholder: 'Dupont',
@@ -104,7 +99,7 @@ function renderAddingPlayerCard() {
             setNewPlayerData({ lastName: value })
           },
         })}
-        {Input({
+        {BsInput({
           type: 'text',
           label: 'Prénom',
           placeholder: 'Charlie',
@@ -112,7 +107,7 @@ function renderAddingPlayerCard() {
             setNewPlayerData({ firstName: value })
           },
         })}
-        {Input({
+        {BsInput({
           type: 'text',
           label: 'Numéro de maillot',
           placeholder: '01',
@@ -120,7 +115,7 @@ function renderAddingPlayerCard() {
             setNewPlayerData({ jersayNumber: value })
           },
         })}
-        {Input({
+        {BsInput({
           type: 'text',
           label: 'Numéro de license',
           placeholder: '0123456789-abc',
@@ -128,7 +123,7 @@ function renderAddingPlayerCard() {
             setNewPlayerData({ licenseNumber: value })
           },
         })}
-        {Input({
+        {BsInput({
           type: 'text',
           label: 'Surnom',
           placeholder: 'The B',
@@ -151,7 +146,7 @@ function renderAddingPlayerCard() {
         {BsButton({
           wide: true,
           slotStart: <UserPlus />,
-          disabled: !canAddPlayer(),
+          disabled: !canAddPlayer.get(),
           onClick: () => {
             registerNewPlayer()
           },
@@ -167,11 +162,11 @@ export default function BsPlayers() {
     <div>
       <Show when={!isAddingPlayer.get()}>
         <Show
-          when={players.get()?.players.length || 0 > 0}
+          when={(playerLength.get() || 0) > 0}
           fallback={renderPlayerFallback()}
         >
           <div class="flex flex-wrap gap-4 justify-stretch">
-            <For each={players.get()?.players}>
+            <For each={players}>
               {player => (
                 <div class="mx-auto md:mx-0 w-fit">
                   <BsPlayer player={player} />

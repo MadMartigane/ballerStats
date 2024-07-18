@@ -16,7 +16,7 @@ function onThemeChange(event: Event) {
   setDarkMode(target.value)
 }
 
-export default function DarkThemeSwitch() {
+export default function BsDarkThemeSwitch() {
   const id = `dark-theme-switch-${getShortId()}`
   const darkThemeValue: MadSignal<string | null> = new MadSignal(
     getDarkThemeValue(),

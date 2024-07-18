@@ -1,6 +1,6 @@
 import { JSXElement } from "solid-js"
 
-export type CardComponentOptions = {
+export type BsCardProps = {
   title?: JSXElement
   info?: JSXElement
   body?: JSXElement

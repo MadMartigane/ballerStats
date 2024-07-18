@@ -5,7 +5,7 @@ import 'preline/preline'
 import { For } from 'solid-js'
 import { render } from 'solid-js/web'
 import { Route, HashRouter } from '@solidjs/router'
-import AppBar from './components/app-bar'
+import BsAppBar from './components/app-bar'
 import { NAVIGATION_MENU_ENTRIES } from './libs/menu'
 import { initDarkMode } from './libs/preline'
 
@@ -36,7 +36,7 @@ render(() => {
   initDarkMode()
 
   return (
-    <HashRouter root={AppBar}>
+    <HashRouter root={BsAppBar}>
       <For each={NAVIGATION_MENU_ENTRIES}>
         {menuItem => (
           <Route path={menuItem.path} component={menuItem.component} />

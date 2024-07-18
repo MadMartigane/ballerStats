@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-solid";
 
-export function datePicker() {
+export function DsdatePicker() {
   return (
     <div class="space-y-0.5 max-w-fit">
       {/* Months */}

@@ -44,7 +44,7 @@ function installEventHandlers() {
   })
 }
 
-export default function AppBar(props: RouteSectionProps<unknown>) {
+export default function BsAppBar(props: RouteSectionProps<unknown>) {
   installEventHandlers()
 
   return (

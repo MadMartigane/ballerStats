@@ -26,6 +26,10 @@ export default class Players {
     })
   }
 
+  public get length() {
+    return this.#players.length
+  }
+
   public setPlayersFromRawData(data: Array<PlayerRawData>) {
     this.#players = data.map(
       (playerData: PlayerRawData) => new Player(playerData),
@@ -46,6 +50,10 @@ export default class Players {
     this.throwUpdatedPlayerEvent()
   }
 
+  public getPlayersRawData() {
+    return this.#players.map((player: Player) => player.getRowData())
+  }
+
   public add(newPlayer: Player) {
     if (!newPlayer.isRegisterable) {
       throw new Error(
@@ -62,10 +70,6 @@ export default class Players {
 
     this.#players.push(newPlayer)
     this.throwUpdatedPlayerEvent()
-  }
-
-  public getPlayersRawData() {
-    return this.#players.map((player: Player) => player.getRowData())
   }
 
   public remove(player: Player) {

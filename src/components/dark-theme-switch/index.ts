@@ -1,2 +1,2 @@
-import DarkThemeSwitch from "./dark-theme-switch";
-export default DarkThemeSwitch
+import BsDarkThemeSwitch from "./dark-theme-switch";
+export default BsDarkThemeSwitch

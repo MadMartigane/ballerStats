@@ -38,7 +38,7 @@ export class Orchestrator {
   }
 
   private storePlayers() {
-    storePlayers(this.players.getPlayersRawData())
+    storePlayers(this.#players.getPlayersRawData())
       .then(() => {
         this.throwPlayersSynchroSuccessEvent()
       })
@@ -68,12 +68,8 @@ export class Orchestrator {
     this.throwPlayersUpdatedEvent()
   }
 
-  public get players() {
+  public get Players() {
     return this.#players
-  }
-
-  public removePlayer(player: Player) {
-    return this.#players.remove(player)
   }
 }
 

@@ -1,8 +1,8 @@
 import { Show } from 'solid-js'
-import { CardComponentOptions } from './card.d'
+import { BsCardProps } from './card.d'
 import { Info } from 'lucide-solid'
 
-export default function Card(options: CardComponentOptions) {
+export default function BsCard(options: BsCardProps) {
   return (
     <div class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70">
       <div class="p-4 md:p-7">

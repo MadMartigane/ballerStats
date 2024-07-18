@@ -6,7 +6,7 @@ import Player from '../../libs/player'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 
 function removePlayer(player: Player) {
-  orchestrator.removePlayer(player)
+  orchestrator.Players.remove(player)
 }
 
 export default function BsPlayer(props: BsPlayerProps) {
