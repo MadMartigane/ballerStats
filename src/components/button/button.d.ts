@@ -3,10 +3,10 @@ import {
   PrelineComponentSize,
   PrelineComponentVariant,
 } from '../../libs/preline'
-import MadSignal from '../../libs/mad-signal'
 
 export type BsButtonProps = {
   children: JSXElement
+  type?: 'button' | 'submit'
   slotStart?: JSXElement
   slotEnd?: JSXElement
   onClick?: () => void
@@ -15,4 +15,4 @@ export type BsButtonProps = {
   wide?: boolean
   pills?: boolean
   disabled?: boolean
-} & JSX.HTMLAttributes<HTMLDivElement>
+} & JSX.HTMLAttributes<HTMLButtonElement>

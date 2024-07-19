@@ -1,4 +1,4 @@
-import { Contact, MessageCircleWarning, UserPlus, X } from 'lucide-solid'
+import { Contact, MessageCircleWarning, Save, UserPlus, X } from 'lucide-solid'
 import bsEventBus from '../../libs/event-bus'
 import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
@@ -11,12 +11,15 @@ import { PlayerRawData } from '../../libs/player'
 import BsPlayer from '../player'
 import { createStore } from 'solid-js/store'
 
+let isEditingNewPlayer: boolean = false
 const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
 const canAddPlayer: MadSignal<boolean> = new MadSignal(false)
-const playerLength: MadSignal<number> = new MadSignal(orchestrator.Players.length)
+const playerLength: MadSignal<number> = new MadSignal(
+  orchestrator.Players.length,
+)
 const [players, setPlayers] = createStore(orchestrator.Players.players)
 
-let newPlayer: Player | null = null
+let currentPlayer: Player | null = null
 
 bsEventBus.addEventListener('BS::PLAYERS::CHANGE', () => {
   playerLength.set(orchestrator.Players.length)
@@ -24,32 +27,49 @@ bsEventBus.addEventListener('BS::PLAYERS::CHANGE', () => {
 })
 
 function setNewPlayerData(data: PlayerRawData) {
-  if (!newPlayer) {
-    newPlayer = new Player(data)
+  if (!currentPlayer) {
+    currentPlayer = new Player(data)
   } else {
-    newPlayer.update(data)
+    currentPlayer.update(data)
   }
 
-  canAddPlayer.set(newPlayer.isRegisterable)
+  canAddPlayer.set(currentPlayer.isRegisterable)
 }
 
 function toggleAddPlayer(value: boolean) {
   isAddingPlayer.set(value)
-  if (!value) {
-    newPlayer = null
-  }
 }
 
-function registerNewPlayer() {
-  if (!newPlayer || !newPlayer.isRegisterable) {
-    throw new Error(
-      '<Players::registerNewPlayer()> the new player is not registerable, please fill up more data.',
-    )
+function registerPlayer() {
+  if (!currentPlayer || !currentPlayer.isRegisterable) {
+    return
   }
 
-  orchestrator.Players.add(newPlayer)
-  isAddingPlayer.set(false)
-  newPlayer = null
+  if (isEditingNewPlayer) {
+    orchestrator.Players.add(currentPlayer)
+  } else {
+    orchestrator.Players.updatePlayer(currentPlayer)
+  }
+
+  toggleAddPlayer(false)
+  currentPlayer = null
+  canAddPlayer.set(false)
+}
+
+function editPlayer(player: Player) {
+  isEditingNewPlayer = false
+  currentPlayer = new Player(player.getRowData())
+  canAddPlayer.set(currentPlayer.isRegisterable)
+
+  toggleAddPlayer(true)
+}
+
+function onSubmit(event: KeyboardEvent) {
+  if (event.key !== 'Enter') {
+    return
+  }
+
+  registerPlayer()
 }
 
 function renderPlayerFallback() {
@@ -72,6 +92,7 @@ function renderAddPlayerButton() {
           slotStart: <UserPlus />,
           children: 'Ajouter un jouer',
           onClick: () => {
+            isEditingNewPlayer = true
             toggleAddPlayer(true)
           },
         })}
@@ -85,15 +106,16 @@ function renderAddingPlayerCard() {
     title: (
       <p class="flex flex-row gap-1">
         <Contact />
-        Nouveau joueur
+        {isEditingNewPlayer ? 'Nouveau joueur' : 'Édition du joueur'}
       </p>
     ),
     info: 'Les nom, prénom et numéro de maillot sont obligatoires',
     body: (
-      <div class="flex flex-col gap-2">
+      <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
         {BsInput({
           type: 'text',
           label: 'Nom',
+          value: currentPlayer?.lastName,
           placeholder: 'Dupont',
           onChange: (value: string) => {
             setNewPlayerData({ lastName: value })
@@ -102,6 +124,7 @@ function renderAddingPlayerCard() {
         {BsInput({
           type: 'text',
           label: 'Prénom',
+          value: currentPlayer?.firstName,
           placeholder: 'Charlie',
           onChange: (value: string) => {
             setNewPlayerData({ firstName: value })
@@ -110,6 +133,7 @@ function renderAddingPlayerCard() {
         {BsInput({
           type: 'text',
           label: 'Numéro de maillot',
+          value: currentPlayer?.jersayNumber,
           placeholder: '01',
           onChange: (value: string) => {
             setNewPlayerData({ jersayNumber: value })
@@ -117,21 +141,22 @@ function renderAddingPlayerCard() {
         })}
         {BsInput({
           type: 'text',
-          label: 'Numéro de license',
-          placeholder: '0123456789-abc',
-          onChange: (value: string) => {
-            setNewPlayerData({ licenseNumber: value })
-          },
-        })}
-        {BsInput({
-          type: 'text',
           label: 'Surnom',
+          value: currentPlayer?.nicName,
           placeholder: 'The B',
           onChange: (value: string) => {
             setNewPlayerData({ nicName: value })
           },
         })}
-      </div>
+        {/* BsInput({
+          type: 'text',
+          label: 'Numéro de license',
+          placeholder: '0123456789-abc',
+          onChange: (value: string) => {
+            setNewPlayerData({ licenseNumber: value })
+          },
+        }) */}
+      </form>
     ),
     footer: (
       <div class="grid grid-cols-2 gap-2">
@@ -140,17 +165,19 @@ function renderAddingPlayerCard() {
           slotStart: <X />,
           onClick: () => {
             toggleAddPlayer(false)
+            currentPlayer = null
+            canAddPlayer.set(false)
           },
           children: 'Annuler',
         })}
         {BsButton({
           wide: true,
-          slotStart: <UserPlus />,
+          slotStart: isEditingNewPlayer ? <UserPlus /> : <Save />,
           disabled: !canAddPlayer.get(),
           onClick: () => {
-            registerNewPlayer()
+            registerPlayer()
           },
-          children: 'Ajouter',
+          children: isEditingNewPlayer ? 'Ajouter' : 'Enregistrer',
         })}
       </div>
     ),
@@ -169,7 +196,12 @@ export default function BsPlayers() {
             <For each={players}>
               {player => (
                 <div class="mx-auto md:mx-0 w-fit">
-                  <BsPlayer player={player} />
+                  <BsPlayer
+                    player={player}
+                    onEdit={player => {
+                      editPlayer(player)
+                    }}
+                  />
                 </div>
               )}
             </For>

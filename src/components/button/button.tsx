@@ -6,6 +6,7 @@ const ANIMATION_TOKEN_CLASS = 'animate-ping'
 const ANIMATION_DURATION = 75
 
 const defaultButtonOptions: BsButtonProps = {
+  type: 'button',
   children: <span>button</span>,
   size: 'base',
   variant: 'primary',
@@ -64,7 +65,7 @@ function onClick(data: BsButtonProps, buttonEl?: HTMLButtonElement) {
 }
 
 function adaptor(options: BsButtonProps) {
-  const newOptions = {
+  const newOptions: BsButtonProps = {
     ...defaultButtonOptions,
     ...options,
   }
@@ -79,40 +80,30 @@ function adaptor(options: BsButtonProps) {
     classes,
   )
 
-  const computedClass = options.class
+  newOptions.class = options.class
     ? `${options.class} ${prelineClass}`
     : prelineClass
 
-  return {
-    class: computedClass,
-    slotStart: newOptions.slotStart,
-    children: newOptions.children,
-    slotEnd: newOptions.slotEnd,
-    onClick:
-      newOptions.onClick ||
-      function () {
-        return
-      },
-    disabled: newOptions.disabled,
+  if(!newOptions.onClick) {
+    newOptions.onClick = function () {
+      return
+    }
   }
+
+  return newOptions
 }
 
 export default function BsButton(props: BsButtonProps) {
-  console.log("BUTTON props: ", props)
   const data = adaptor(props)
-  console.log("BUTTON data: ", data)
   let buttonEl: HTMLButtonElement | undefined = undefined
-  // TODO: let animationTimeout: number | null = null
-  const disabled = new MadSignal(data.disabled)
-  console.log("BUTTON disabled: ", disabled.get())
 
   return (
     <button
-      type="button"
+      type={data.type}
       class={data.class}
       ref={buttonEl}
       onClick={() => onClick(data, buttonEl)}
-      disabled={disabled.get() || false}
+      disabled={data.disabled}
     >
       <span class="inline-flex items-end gap-2">
         {data.slotStart}

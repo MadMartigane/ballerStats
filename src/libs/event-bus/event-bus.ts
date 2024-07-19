@@ -17,7 +17,5 @@ export class BsEventBus {
   }
 }
 
-console.log('BsEventBus: ', BsEventBus)
 const bsEventBus = new BsEventBus()
-console.log('bsEventBus: ', bsEventBus)
 export default bsEventBus

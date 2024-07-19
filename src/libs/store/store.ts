@@ -3,12 +3,12 @@ import { StoredPlayers } from './store.d'
 
 const STORAGE_PLAYERS_KEY = 'BS_PLAYERS'
 
-export async function storePlayers(players: Array<PlayerRawData>) {
+export async function storePlayers(players: Array<PlayerRawData>, lastRecord?:number | null) {
   const promise: Promise<void> = new Promise(resolve => {
     localStorage.setItem(
       STORAGE_PLAYERS_KEY,
       JSON.stringify({
-        lastRecord: Date.now(),
+        lastRecord: lastRecord || Date.now(),
         players: players,
       }),
     )

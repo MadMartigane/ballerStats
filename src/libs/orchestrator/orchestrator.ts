@@ -1,7 +1,6 @@
 import Players from '../players'
 import bsEventBus from '../event-bus'
 import { getStoredPlayers, storePlayers } from '../store'
-import Player from '../player'
 
 export class Orchestrator {
   #players: Players = new Players()
@@ -14,9 +13,6 @@ export class Orchestrator {
 
   private installEventHandlers() {
     bsEventBus.addEventListener('BS::PLAYERS::CHANGE', () => {
-      console.log(
-        'orchestrator received BS::PLAYERS::CHANGE event, storing players',
-      )
       this.storePlayers()
     })
   }
@@ -38,15 +34,15 @@ export class Orchestrator {
   }
 
   private storePlayers() {
-    storePlayers(this.#players.getPlayersRawData())
+    this.updateLastRecrod()
+
+    storePlayers(this.#players.getPlayersRawData(), this.#lastPlayersRecrod)
       .then(() => {
         this.throwPlayersSynchroSuccessEvent()
       })
       .catch(() => {
         this.throwPlayersSynchroFailEvent()
       })
-
-    this.updateLastRecrod()
   }
 
   private async getStoredPlayers() {

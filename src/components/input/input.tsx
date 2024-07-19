@@ -1,15 +1,22 @@
 import { getShortId } from '../../libs/utils'
 import { BsInputOnChangeEvent, BsInputProps } from './input.d'
 
-let debounceOnInput: number | null;
+let debounceOnInput: number | null
 
 const defaultOptions: BsInputProps = {
   type: 'text',
-  onBlur: () => { return },
-  onFocus: () => { return },
+  onBlur: () => {
+    return
+  },
+  onFocus: () => {
+    return
+  },
 }
 
-function onInput(event: BsInputOnChangeEvent, callback?: (value: string) => void) {
+function onInput(
+  event: BsInputOnChangeEvent,
+  callback?: (value: string) => void,
+) {
   if (debounceOnInput) {
     clearTimeout(debounceOnInput)
   }
@@ -20,13 +27,16 @@ function onInput(event: BsInputOnChangeEvent, callback?: (value: string) => void
   }, 300)
 }
 
-function onChange(event: BsInputOnChangeEvent, callback?: (value: string) => void) {
+function onChange(
+  event: BsInputOnChangeEvent,
+  callback?: (value: string) => void,
+) {
   if (!callback) {
-    return;
+    return
   }
 
   event.stopPropagation()
-  const target = event.target || event.currentTarget || { value: ''}
+  const target = event.target || event.currentTarget || { value: '' }
   callback(target.value)
 }
 
@@ -47,6 +57,7 @@ function renderClassic(options: BsInputProps) {
       <input
         type={options.type}
         id={options.id}
+        value={options.value || ''}
         class="peer p-4 block w-full border-gray-200 rounded-lg text-sm placeholder:text-transparent focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:focus:ring-neutral-600
     focus:pt-6
     focus:pb-2
@@ -55,8 +66,8 @@ function renderClassic(options: BsInputProps) {
     autofill:pt-6
     autofill:pb-2"
         placeholder={options.placeholder}
-        onChange={(event) => onChange(event, options.onChange)}
-        onInput={(event) => onInput(event, options.onChange)}
+        onChange={event => onChange(event, options.onChange)}
+        onInput={event => onInput(event, options.onChange)}
       />
       <label
         for={options.id}
