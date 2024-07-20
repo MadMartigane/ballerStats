@@ -58,7 +58,7 @@ function registerPlayer() {
 
 function editPlayer(player: Player) {
   isEditingNewPlayer = false
-  currentPlayer = new Player(player.getRowData())
+  currentPlayer = new Player(player.getRawData())
   canAddPlayer.set(currentPlayer.isRegisterable)
 
   toggleAddPlayer(true)

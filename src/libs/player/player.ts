@@ -80,7 +80,7 @@ export default class Player {
     }
   }
 
-  public getRowData(): PlayerRawData {
+  public getRawData(): PlayerRawData {
     const data: PlayerRawData = {
       id: this.#id,
     }
@@ -114,7 +114,7 @@ export default class Player {
 
   public update(data: PlayerRawData) {
     this.setFromRawData({
-      ...this.getRowData(),
+      ...this.getRawData(),
       ...data,
     })
   }

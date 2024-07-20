@@ -6,7 +6,7 @@ export default class Players {
 
   constructor(playerDatas?: Array<PlayerRawData>) {
     if (playerDatas) {
-      this.setPlayersFromRawData(playerDatas)
+      this.setFromRawData(playerDatas)
     }
   }
 
@@ -22,7 +22,7 @@ export default class Players {
 
   public get players(): Array<Player> {
     return this.#players.map((player: Player): Player => {
-      return new Player(player.getRowData())
+      return new Player(player.getRawData())
     })
   }
 
@@ -30,7 +30,7 @@ export default class Players {
     return this.#players.length
   }
 
-  public setPlayersFromRawData(data: Array<PlayerRawData>) {
+  public setFromRawData(data: Array<PlayerRawData>) {
     this.#players = data.map(
       (playerData: PlayerRawData) => new Player(playerData),
     )
@@ -46,12 +46,12 @@ export default class Players {
       )
     }
 
-    oldPlayer.setFromRawData(newPlayer.getRowData())
+    oldPlayer.setFromRawData(newPlayer.getRawData())
     this.throwUpdatedPlayerEvent()
   }
 
-  public getPlayersRawData() {
-    return this.#players.map((player: Player) => player.getRowData())
+  public getRawData() {
+    return this.#players.map((player: Player) => player.getRawData())
   }
 
   public add(newPlayer: Player) {

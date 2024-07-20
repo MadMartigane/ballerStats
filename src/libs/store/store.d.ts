@@ -1,6 +1,4 @@
-import { PlayerRawData } from '../player'
-
-export type StoredPlayers = {
-  lastRecord: number,
-  players: Array<PlayerRawData>
+export type StoredData<T> = {
+  lastRecord: number
+  data: Array<T>
 }
