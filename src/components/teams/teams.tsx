@@ -10,6 +10,7 @@ import BsInput from '../input'
 import { TeamRawData } from '../../libs/team'
 import BsTeam from '../team'
 import { createStore } from 'solid-js/store'
+import BsSelectMultiple from '../select-multiple/select-multiple'
 
 let isEditingNewTeam: boolean = false
 const isAddingTeam: MadSignal<boolean> = new MadSignal(false)
@@ -114,11 +115,12 @@ function renderAddingTeamCard() {
           type: 'text',
           label: 'Nom',
           value: currentTeam?.name || '',
-          placeholder: 'Dupont',
+          placeholder: 'BCC U09',
           onChange: (value: string) => {
             setNewTeamData({ name: value })
           },
         })}
+        <BsSelectMultiple placeholder='Sélection des joueurs' />
       </form>
     ),
     footer: (

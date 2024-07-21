@@ -31,6 +31,11 @@ export default class Teams {
   }
 
   public setFromRawData(data: Array<TeamRawData>) {
+    if (!data) {
+      this.#teams = []
+      return
+    }
+
     this.#teams = data.map(
       (teamData: TeamRawData) => new Team(teamData),
     )

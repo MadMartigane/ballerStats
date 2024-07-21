@@ -14,7 +14,7 @@ export async function storePlayers(
       STORAGE_PLAYERS_KEY,
       JSON.stringify({
         lastRecord: lastRecord || Date.now(),
-        players: players,
+        data: players,
       }),
     )
     resolve()

@@ -1,5 +1,12 @@
 import { PrelineComponentClasses } from './preline.d'
 import { PrelineBaseOptions } from './preline.d'
+import { IStaticMethods } from 'preline/preline'
+
+declare global {
+  interface Window {
+    HSStaticMethods: IStaticMethods
+  }
+}
 
 const HS_PREF_THEME_STORAGE_KEY = 'hs_theme'
 
@@ -109,4 +116,8 @@ export function resetDarkMode() {
 
 export function getDarkThemeValue() {
   return localStorage.getItem(HS_PREF_THEME_STORAGE_KEY) || null
+}
+
+export function initPrelineLib() {
+  window.HSStaticMethods.autoInit()
 }

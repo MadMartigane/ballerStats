@@ -2,13 +2,6 @@ import { createEffect, For, Show } from 'solid-js'
 import MadSignal from '../../libs/mad-signal'
 import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
 import { RouteSectionProps, useLocation } from '@solidjs/router'
-import { IStaticMethods } from "preline/preline";
-
-declare global {
-  interface Window {
-    HSStaticMethods: IStaticMethods;
-  }
-}
 
 
 import logoSmallUrl from '/img/logo_small.png'

@@ -31,9 +31,15 @@ export default class Players {
   }
 
   public setFromRawData(data: Array<PlayerRawData>) {
+    if (!data) {
+      this.#players = []
+      return
+    }
+
     this.#players = data.map(
       (playerData: PlayerRawData) => new Player(playerData),
     )
+    this.throwUpdatedPlayerEvent()
   }
 
   public updatePlayer(newPlayer: Player) {

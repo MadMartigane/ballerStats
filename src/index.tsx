@@ -7,10 +7,11 @@ import { render } from 'solid-js/web'
 import { Route, HashRouter } from '@solidjs/router'
 import BsAppBar from './components/app-bar'
 import { NAVIGATION_MENU_ENTRIES } from './libs/menu'
-import { initDarkMode } from './libs/preline'
+import { initDarkMode, initPrelineLib } from './libs/preline'
 
 import relAppleTouchIconUrl from '/img/apple-touch-icon.png'
 import relIconUrl from '/img/favicon.ico'
+
 
 const relAppleTouchIcon: HTMLLinkElement | null = document.querySelector(
   'link[rel="apple-touch-icon"]',
@@ -34,6 +35,7 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 
 render(() => {
   initDarkMode()
+  initPrelineLib()
 
   return (
     <HashRouter root={BsAppBar}>
