@@ -1,5 +1,6 @@
 import { getUniqId } from '../utils'
 import { TeamRawData } from './team.d'
+import { clone } from '../utils'
 
 export default class Team {
   #id: number = getUniqId()
@@ -22,22 +23,23 @@ export default class Team {
   }
 
   public get playerIds() {
-    return JSON.parse(JSON.stringify(this.#playerIds))
+    return clone(this.#playerIds) as number[]
   }
+
   public setFromRawData(data: TeamRawData) {
     if (data.id) {
       this.#id = data.id
     }
 
     this.name = data.name || null
-    this.#playerIds = data.teamIds || []
+    this.#playerIds = data.playerIds || []
   }
 
   public getRawData(): TeamRawData {
     return {
       id: this.#id,
       name: this.name,
-      teamIds: JSON.parse(JSON.stringify(this.#playerIds)),
+      playerIds: <number[]>clone(this.#playerIds),
     }
   }
 

@@ -107,12 +107,10 @@ export class Orchestrator {
   }
 
   public throwPlayersUpdatedEvent(mute: boolean = false) {
-    console.log("sending BS::PLAYERS::CHANGE")
     bsEventBus.dispatchEvent('BS::PLAYERS::CHANGE', mute)
   }
 
   public throwTeamsUpdatedEvent(mute: boolean = false) {
-    console.log("sending BS::TEAMS::CHANGE")
     bsEventBus.dispatchEvent('BS::TEAMS::CHANGE', mute)
   }
 

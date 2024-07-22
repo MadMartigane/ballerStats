@@ -5,6 +5,9 @@ import { IStaticMethods } from 'preline/preline'
 declare global {
   interface Window {
     HSStaticMethods: IStaticMethods
+    HSSelect: {
+      getInstance: (id: string) => { selectedItems: string[] }
+    }
   }
 }
 
@@ -129,4 +132,8 @@ function prelineAutoInit(modules?: string[] | string) {
 
 export function initPrelineLib(modules?: Array<string> | string) {
   setTimeout(prelineAutoInit, 0, modules)
+}
+
+export function getPrelineHSSelectInstance(id: string) {
+  return window.HSSelect.getInstance(`#${id}`)
 }

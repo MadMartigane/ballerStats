@@ -71,6 +71,15 @@ function onSubmit(event: KeyboardEvent) {
   registerTeam()
 }
 
+function updateCurrentTeamPlayerIds(playerIds: number[]) {
+  if (playerIds) {
+    currentTeam?.update({ playerIds: playerIds })
+    return
+  }
+
+  currentTeam?.update({ playerIds: [] })
+}
+
 function renderTeamFallback() {
   return (
     <div>
@@ -120,7 +129,14 @@ function renderAddingTeamCard() {
             setNewTeamData({ name: value })
           },
         })}
-        <BsSelectMultiple placeholder='Sélection des joueurs' />
+        <BsSelectMultiple
+          placeholder="Sélection des joueurs"
+          players={orchestrator.Players.players}
+          selectedPlayerIds={currentTeam?.playerIds}
+          onChange={(playerIds: number[]) => {
+            updateCurrentTeamPlayerIds(playerIds)
+          }}
+        />
       </form>
     ),
     footer: (
