@@ -118,6 +118,15 @@ export function getDarkThemeValue() {
   return localStorage.getItem(HS_PREF_THEME_STORAGE_KEY) || null
 }
 
-export function initPrelineLib() {
-  window.HSStaticMethods.autoInit()
+function prelineAutoInit(modules?: string[] | string) {
+  if (modules) {
+    window.HSStaticMethods.autoInit(modules)
+    return
+  }
+
+  window.HSStaticMethods.autoInit(modules)
+}
+
+export function initPrelineLib(modules?: Array<string> | string) {
+  setTimeout(prelineAutoInit, 0, modules)
 }

@@ -9,3 +9,7 @@ export function getUniqId(): number {
 export function getShortId(): number {
   return Math.floor(Math.random() * 100000)
 }
+
+export function clone(data: unknown): unknown {
+  return JSON.parse(JSON.stringify(data))
+}
