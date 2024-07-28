@@ -20,7 +20,7 @@ export default function BsTeam(props: BsTeamProps) {
     <div class="min-w-80 max-w-80 w-80 flex flex-col bg-white border border-t-4 border-t-blue-600 shadow-sm hover:shadow-xl rounded-xl hover:bg-zinc-100 hover:dark:bg-neutral-950 dark:bg-neutral-900 dark:border-neutral-700 dark:border-t-blue-500 dark:shadow-neutral-700/70">
       <div class="p-4 md:p-5 flex flex-row gap-4">
         <h3 class="text-lg grow truncate font-bold text-gray-800 dark:text-white">
-            {team.name}
+          {team.name}
         </h3>
       </div>
       <div class="px-4 py-1 md:px-5 text-sm">
@@ -29,11 +29,16 @@ export default function BsTeam(props: BsTeamProps) {
             const player = orchestrator.getPlayer(id)
 
             if (player) {
-            return (
-              <p class="text-gray-700 dark:text-neutral-300">{`${player.nicName || player.firstName} ${player.nicName && '' || player.lastName}`}</p>
-            )
+              return (
+                <p class="text-gray-700 dark:text-neutral-300">
+                  <span class="text-amber-600 dark:text-amber-400">
+                    {player.jersayNumber}
+                  </span>
+                  <span class="p-1">{`${player.nicName || player.firstName} ${(player.nicName && '') || player.lastName}`}</span>
+                </p>
+              )
             } else {
-              <p class="text-amber-600 dark:text-amber-400">{`Joueur id ${id} introuvable`}</p>
+              ;<p class="text-amber-600 dark:text-amber-400">{`Joueur id ${id} introuvable`}</p>
             }
           }}
         </For>

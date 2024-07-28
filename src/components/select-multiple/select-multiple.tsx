@@ -1,88 +1,198 @@
-import { getPrelineHSSelectInstance, initPrelineLib } from '../../libs/preline'
 import { clone, getShortId } from '../../libs/utils'
 import {
   BsSelectMultipleDataSelect,
   BsSelectMultipleProps,
 } from './select-multiple.d'
 import Player from '../../libs/player'
-import { For } from 'solid-js'
+import { For, Show } from 'solid-js'
+import { createStore, SetStoreFunction, unwrap } from 'solid-js/store'
 
 const defaultPlaceholder = 'Sélection…'
-const dataHsSelect: BsSelectMultipleDataSelect = {
-  placeholder: defaultPlaceholder,
-  toggleTag: '<button type="button"></button>',
-  toggleClasses:
-    'hs-select-disabled:pointer-events-none hs-select-disabled:opacity-50 relative flex text-nowrap w-full cursor-pointer bg-white border border-gray-200 rounded-lg text-start text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400',
-  dropdownClasses:
-    'mt-2 z-50 w-full max-h-72 p-1 space-y-0.5 bg-white border border-gray-200 rounded-lg overflow-hidden overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 dark:bg-neutral-900 dark:border-neutral-700',
-  optionClasses:
-    'py-2 px-4 w-full text-sm text-gray-800 cursor-pointer hover:bg-gray-100 rounded-lg focus:outline-none focus:bg-gray-100 dark:bg-neutral-900 dark:hover:bg-neutral-800 dark:text-neutral-200 dark:focus:bg-neutral-800',
-  mode: 'tags',
-  wrapperClasses:
-    'relative ps-0.5 pe-9 min-h-[46px] flex items-center flex-wrap text-nowrap w-full border border-gray-200 rounded-lg text-start text-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400',
-  tagsItemTemplate:
-    '<div class="flex flex-nowrap items-center relative z-10 bg-white border border-gray-200 rounded-full p-1 m-1 dark:bg-neutral-900 dark:border-neutral-700"><div class="size-6 me-1" data-icon></div><div class="whitespace-nowrap text-gray-800 dark:text-neutral-200" data-title></div><div class="inline-flex flex-shrink-0 justify-center items-center size-5 ms-2 rounded-full text-gray-800 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm dark:bg-neutral-700/50 dark:hover:bg-neutral-700 dark:text-neutral-400 cursor-pointer" data-remove><svg class="flex-shrink-0 size-3" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></div></div>',
-  tagsInputClasses:
-    'py-3 px-2 rounded-lg order-1 text-sm outline-none dark:bg-neutral-900 dark:placeholder-neutral-500 dark:text-neutral-400',
-  optionTemplate:
-    '<div class="flex items-center"><div class="size-8 me-2" data-icon></div><div><div class="text-sm font-semibold text-gray-800 dark:text-neutral-200" data-title></div><div class="text-xs text-gray-500 dark:text-neutral-500" data-description></div></div><div class="ms-auto"><span class="hidden hs-selected:block"><svg class="flex-shrink-0 size-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/></svg></span></div></div>',
-  extraMarkup:
-    '<div class="absolute top-1/2 end-3 -translate-y-1/2"><svg class="flex-shrink-0 size-3.5 text-gray-500 dark:text-neutral-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg></div>',
+
+function getAvailablePlayers(
+  allPlayers: Array<Player>,
+  alreadySelectedPlayers: Array<number>,
+) {
+  return allPlayers.reduce((result, currentPlayer) => {
+    if (!alreadySelectedPlayers.includes(currentPlayer.id)) {
+      result.push(currentPlayer)
+    }
+
+    return result
+  }, [] as Array<Player>)
 }
 
-function formatPlayerAsOption(player: Player) {
-  return JSON.stringify({
-    description: player.nicName
-      ? `${player.firstName} ${player.lastName}`
-      : player.lastName,
-    icon: `<span class="inline-flex items-center py-0 px-0.5 mx-0 rounded-full text-base font-semibold bg-amber-400 text-blue-600">${player.jersayNumber}</span>`,
-  })
+function getDataFromProps(props: BsSelectMultipleProps) {
+  return {
+    placeholder: defaultPlaceholder,
+    availablePlayers: getAvailablePlayers(
+      props.players || [],
+      props.selectedPlayerIds || [],
+    ),
+    ...props,
+    selectId: `bs-select-multiple-${getShortId()}`,
+  } as BsSelectMultipleDataSelect
 }
 
-function isSelectedPlayer(player: Player, list: number[] = []) {
-  return list.includes(player.id)
-}
+function onSelectionChange(setData: SetStoreFunction<BsSelectMultipleDataSelect>, data: BsSelectMultipleDataSelect) {
+  setData(
+    'availablePlayers',
+    getAvailablePlayers(data.players || [], data.selectedPlayerIds || []),
+  )
 
-function onChange(selectId: string, callback: (playerIds: number[]) => void) {
-  const select = getPrelineHSSelectInstance(selectId)
-
-  if (callback) {
-    if (select.selectedItems && select.selectedItems.length) {
-      callback(select.selectedItems.map((item) => parseInt(item, 10)))
+  if (data.onChange) {
+    if (data.selectedPlayerIds && data.selectedPlayerIds.length) {
+      data.onChange(data.selectedPlayerIds)
     } else {
-      callback([])
+      data.onChange([])
     }
   }
 }
 
-export default function BsSelectMultiple(props: BsSelectMultipleProps) {
-  const data = clone(dataHsSelect) as BsSelectMultipleDataSelect
-  if (props.placeholder) {
-    data.placeholder = props.placeholder
+function onSelect(
+  event: Event & { currentTarget: HTMLSelectElement; target: Element },
+  data: BsSelectMultipleDataSelect,
+  setData: SetStoreFunction<BsSelectMultipleDataSelect>,
+) {
+  const selectedId = parseInt(event.currentTarget.value, 10)
+
+  if (!data.selectedPlayerIds?.includes(selectedId)) {
+    setData(
+      'selectedPlayerIds',
+      data.selectedPlayerIds?.length || 0,
+      selectedId,
+    )
   }
 
-  const selectId = `bs-select-multiple-${getShortId()}`
-  initPrelineLib('select')
+  onSelectionChange(setData, data)
+}
+
+function unselectPlayer(
+  data: BsSelectMultipleDataSelect,
+  setData: SetStoreFunction<BsSelectMultipleDataSelect>,
+  player: Player,
+) {
+  if (!data.selectedPlayerIds || !data.selectedPlayerIds.includes(player.id)) {
+    return
+  }
+
+  const newSelection = data.selectedPlayerIds.filter(
+    currentId => currentId !== player.id,
+  )
+
+  setData('selectedPlayerIds', newSelection)
+
+  onSelectionChange(setData, data)
+}
+
+function renderPlayerBadge(
+  data: BsSelectMultipleDataSelect,
+  setData: SetStoreFunction<BsSelectMultipleDataSelect>,
+  player: Player,
+) {
+  return (
+    <div class="inline-flex flex-nowrap items-center bg-white border border-gray-200 rounded-full p-1.5 dark:bg-neutral-900 dark:border-neutral-700">
+      <span class="text-amber-600 dark:text-amber-400 p-2">
+        {player.jersayNumber}
+      </span>
+      <div class="whitespace-nowrap text-sm font-medium text-gray-800 dark:text-white">
+        {player.nicName
+          ? player.nicName
+          : `${player.firstName} ${player.lastName}`}
+      </div>
+      <button
+        type="button"
+        onClick={() => {
+          unselectPlayer(unwrap(data), setData, player)
+        }}
+        class="ms-2.5 inline-flex justify-center items-center size-5 rounded-full text-gray-800 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:bg-neutral-700/50 dark:hover:bg-neutral-700 dark:text-neutral-400 cursor-pointer"
+      >
+        <svg
+          class="shrink-0 size-3"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M18 6 6 18"></path>
+          <path d="m6 6 12 12"></path>
+        </svg>
+      </button>
+    </div>
+  )
+}
+
+export default function BsSelectMultiple(props: BsSelectMultipleProps) {
+  const [data, setData] = createStore(getDataFromProps(props))
 
   return (
     <>
-      <select
-        id={selectId}
-        multiple
-        data-hs-select={JSON.stringify(data)}
-        class="hidden"
-        onChange={() => {
-          onChange(selectId, props.onChange)
-        }}
+      <Show when={data.label}>
+        <label
+          class="block text-sm font-medium mb-2 dark:text-white"
+          for={data.selectId}
+        >
+          {data.label}
+        </label>
+      </Show>
+      <div
+        class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 dark:bg-neutral-800 dark:border-neutral-700"
+        role="alert"
+        tabindex="-1"
+        aria-labelledby="hs-discovery-label"
       >
-        <For each={props.players}>
-          {player => (
-            <option
-              selected={isSelectedPlayer(player, props.selectedPlayerIds)}
-              value={player.id}
-              data-hs-select-option={formatPlayerAsOption(player)}
+        <div class="flex">
+          <div class="ms-3">
+            <h3
+              id="hs-discovery-label"
+              class="text-gray-800 font-semibold dark:text-white"
             >
-              {player.nicName ? player.nicName : player.firstName}
+              Joueur(s) selectionné(s):
+            </h3>
+            <div class="mt-2 text-sm text-gray-700 dark:text-neutral-400">
+              <Show
+                when={data.selectedPlayerIds?.length}
+                fallback={'Aucun joueur sélectionné.'}
+              >
+                <For each={data.selectedPlayerIds}>
+                  {id => {
+                    const player = data.players?.find(
+                      candidate => candidate.id === id,
+                    )
+                    if (!player) {
+                      return
+                    }
+
+                    return renderPlayerBadge(data, setData, player)
+                  }}
+                </For>
+              </Show>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <select
+        onChange={event => {
+          onSelect(event, data, setData)
+        }}
+        disabled={data.availablePlayers.length === 0}
+        class="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
+      >
+        <option selected>
+          {data.availablePlayers.length
+            ? data.placeholder
+            : 'Aucun joueur disponible.'}
+        </option>
+        <For each={data.availablePlayers}>
+          {player => (
+            <option value={player.id}>
+              {`${player.jersayNumber} - ${player.nicName ? player.nicName : `${player.firstName} ${player.lastName}`}`}
             </option>
           )}
         </For>

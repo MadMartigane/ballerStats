@@ -1,22 +1,15 @@
 import Player from '../../libs/player'
 
 export type BsSelectMultipleProps = {
+  label?: string
   placeholder?: string
-  players: Player[]
+  players?: Player[]
   selectedPlayerIds?: number[]
-  onChange: (playerIds: number[]) => void
+  onChange?: (playerIds: number[]) => void
 }
 
 export type BsSelectMultipleDataSelect = {
-  mode: string
   placeholder: string
-  toggleTag: string
-  toggleClasses: string
-  dropdownClasses: string
-  optionClasses: string
-  optionTemplate: string
-  extraMarkup: string
-  tagsItemTemplate: string
-  tagsInputClasses: string
-  wrapperClasses: string
-}
+  selectId: string
+  availablePlayers: Player[]
+} & BsSelectMultipleProps
