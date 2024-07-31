@@ -5,9 +5,7 @@ export default function Home() {
 
   return (
     <div>
-      <h3>Dashbord</h3>
-
-      <div class="grid grid-cols-3 gap-4 content-start">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 content-start">
         <GlobalStats />
 
         <DarkThemeSwitch />

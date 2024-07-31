@@ -3,7 +3,6 @@ import MadSignal from '../../libs/mad-signal'
 import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
 import { RouteSectionProps, useLocation } from '@solidjs/router'
 
-
 import logoSmallUrl from '/img/logo_small.png'
 import { Bell, Menu, UserCog, X } from 'lucide-solid'
 
@@ -33,7 +32,7 @@ function installEventHandlers() {
   createEffect(() => {
     currentHash.set(location.pathname)
 
-    window.HSStaticMethods.autoInit();
+    window.HSStaticMethods.autoInit()
   })
 }
 
@@ -41,8 +40,8 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
   installEventHandlers()
 
   return (
-    <div class="min-h-full">
-      <nav class="bg-gray-800 sticky top-0 z-50">
+    <div class="min-h-full bg-slate-600">
+      <nav class="sticky top-0 z-50 w-full backdrop-blur flex-none transition-colors duration-500 border-b border-slate-50/[0.06] supports-backdrop-blur:bg-slate-200/95 bg-slate-900/75">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="flex h-16 items-center justify-between">
             <div class="flex items-center">
@@ -146,7 +145,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                     */}
                   <Show when={isUserMenuOpen.get()}>
                     <div
-                      class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                      class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-slate-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                       role="menu"
                       aria-orientation="vertical"
                       aria-labelledby="user-menu-button"
@@ -155,7 +154,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                       {/* Active: "bg-gray-100", Not Active: "" */}
                       <a
                         href="/user"
-                        class="block px-4 py-2 text-sm text-gray-700"
+                        class="block rounded-md px-3 py-2 text-base font-medium text-slate-100 hover:bg-slate-700 hover:text-white"
                         role="menuitem"
                         tabindex="-1"
                         id="user-menu-item-0"
@@ -164,7 +163,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                       </a>
                       <a
                         href="/config"
-                        class="block px-4 py-2 text-sm text-gray-700"
+                        class="block rounded-md px-3 py-2 text-base font-medium text-slate-100 hover:bg-slate-700 hover:text-white"
                         role="menuitem"
                         tabindex="-1"
                         id="user-menu-item-1"
@@ -263,23 +262,6 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
               </For>
             </div>
             <div class="border-t border-gray-700 pb-3 pt-4">
-              <div class="flex items-center px-5">
-                <div class="flex-shrink-0">
-                  <img
-                    class="h-10 w-10 rounded-full"
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                    alt=""
-                  />
-                </div>
-                <div class="ml-3">
-                  <div class="text-base font-medium leading-none text-white">
-                    Tom Cook
-                  </div>
-                  <div class="text-sm font-medium leading-none text-gray-400">
-                    tom@example.com
-                  </div>
-                </div>
-              </div>
               <div class="mt-3 space-y-1 px-2">
                 <a
                   href="/user"

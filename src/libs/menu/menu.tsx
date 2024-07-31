@@ -10,7 +10,7 @@ export const HASH_REPLACE_PATTERN = /^#\//
 export const NAVIGATION_MENU_ENTRIES: Array<MenuEntry> = [
   {
     path: '/',
-    label: 'Acceuil',
+    label: 'Dashbord',
     icon: () => <img class="w-8 h-8" src="/img/logo_tiny.png" />,
     component: Home,
     isMenuEntry: false,
