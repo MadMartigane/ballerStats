@@ -23,10 +23,10 @@ export function BsMatchTypeText(props: BsMatchTypeTextProps) {
   return (
     <>
       <Show when={type === 'home'}>
-        <span class="dark:text-lime-200 text-lime-800">🡫↗ Domicile</span>
+        <span class="dark:text-lime-200 text-lime-800">↗ Domicile</span>
       </Show>
       <Show when={type === 'outside'}>
-        <span class="dark:text-pink-200 text-pink-800">🡬↖ Extérieur</span>
+        <span class="dark:text-pink-200 text-pink-800">↖ Extérieur</span>
       </Show>
       <Show when={!type}>{'Type non renseigné'}</Show>
     </>
