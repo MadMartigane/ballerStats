@@ -173,7 +173,7 @@ export class Orchestrator {
     bsEventBus.dispatchEvent('BS::SYNCHRO::FAIL', mute)
   }
 
-  public getPlayer(id: number | null) {
+  public getPlayer(id: string | null) {
     if (id === null) {
       return null
     }
@@ -181,7 +181,7 @@ export class Orchestrator {
     return this.#players.players.find(candidate => candidate.id === id) || null
   }
 
-  public getTeam(id: number | null) {
+  public getTeam(id: string | null) {
     if (id === null) {
       return null
     }
@@ -189,16 +189,12 @@ export class Orchestrator {
     return this.#teams.teams.find(candidate => candidate.id === id) || null
   }
 
-  public getMatch(id: number | null) {
+  public getMatch(id: string | null) {
     if (id === null) {
       return null
     }
 
     return this.#matchs.matchs.find(candidate => candidate.id === id) || null
-  }
-
-  public goTo(path: string) {
-    window.location.hash = path;
   }
 }
 

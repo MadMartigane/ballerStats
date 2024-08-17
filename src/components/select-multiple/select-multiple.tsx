@@ -1,17 +1,17 @@
-import { clone, getShortId } from '../../libs/utils'
+import { For, Show } from 'solid-js'
+import { createStore, SetStoreFunction, unwrap } from 'solid-js/store'
+import Player from '../../libs/player'
+import { getShortId } from '../../libs/utils'
 import {
   BsSelectMultipleDataSelect,
   BsSelectMultipleProps,
 } from './select-multiple.d'
-import Player from '../../libs/player'
-import { For, Show } from 'solid-js'
-import { createStore, SetStoreFunction, unwrap } from 'solid-js/store'
 
 const defaultPlaceholder = 'Sélection…'
 
 function getAvailablePlayers(
   allPlayers: Array<Player>,
-  alreadySelectedPlayers: Array<number>,
+  alreadySelectedPlayers: Array<string>,
 ) {
   return allPlayers.reduce((result, currentPlayer) => {
     if (!alreadySelectedPlayers.includes(currentPlayer.id)) {
@@ -34,7 +34,10 @@ function getDataFromProps(props: BsSelectMultipleProps) {
   } as BsSelectMultipleDataSelect
 }
 
-function onSelectionChange(setData: SetStoreFunction<BsSelectMultipleDataSelect>, data: BsSelectMultipleDataSelect) {
+function onSelectionChange(
+  setData: SetStoreFunction<BsSelectMultipleDataSelect>,
+  data: BsSelectMultipleDataSelect,
+) {
   setData(
     'availablePlayers',
     getAvailablePlayers(data.players || [], data.selectedPlayerIds || []),
@@ -54,7 +57,7 @@ function onSelect(
   data: BsSelectMultipleDataSelect,
   setData: SetStoreFunction<BsSelectMultipleDataSelect>,
 ) {
-  const selectedId = parseInt(event.currentTarget.value, 10)
+  const selectedId = event.currentTarget.value
 
   if (!data.selectedPlayerIds?.includes(selectedId)) {
     setData(

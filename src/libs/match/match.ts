@@ -4,11 +4,11 @@ import { MatchRawData, MatchType } from './match.d'
 const defaultType: MatchType = 'home'
 
 export default class Match {
-  #id: number = getUniqId()
+  #id = getUniqId()
 
   public opponent: string | null = null
   public type: MatchType = defaultType
-  public teamId: number | null = null
+  public teamId: string | null = null
 
   constructor(data?: MatchRawData) {
     if (data) {

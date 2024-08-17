@@ -41,8 +41,8 @@ function onChange(
 }
 
 function adapter(options: BsInputProps): BsInputProps {
-  const number = getShortId()
-  const id = `hs-floating-gray-input-${options.type}-${number}`
+  const random = getShortId()
+  const id = `hs-floating-gray-input-${options.type}-${random}`
 
   return {
     ...defaultOptions,

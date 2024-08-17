@@ -71,7 +71,7 @@ function onSubmit(event: KeyboardEvent) {
   registerTeam()
 }
 
-function updateCurrentTeamPlayerIds(playerIds: number[]) {
+function updateCurrentTeamPlayerIds(playerIds: string[]) {
   if (playerIds) {
     currentTeam?.update({ playerIds: playerIds })
     return
@@ -133,7 +133,7 @@ function renderAddingTeamCard() {
           placeholder="Sélection des joueurs"
           players={orchestrator.Players.players}
           selectedPlayerIds={currentTeam?.playerIds}
-          onChange={(playerIds: number[]) => {
+          onChange={(playerIds: string[]) => {
             updateCurrentTeamPlayerIds(playerIds)
           }}
         />

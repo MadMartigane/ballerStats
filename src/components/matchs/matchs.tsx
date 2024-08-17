@@ -19,6 +19,7 @@ import BsMatch from '../match-tile'
 import { createStore } from 'solid-js/store'
 import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
 import { BsMatchTypeText } from '../match-tile/match-tile'
+import { goTo } from '../../libs/utils'
 
 let isEditingNewMatch: boolean = false
 const isAddingMatch: MadSignal<boolean> = new MadSignal(false)
@@ -83,7 +84,7 @@ function editMatch(match: Match) {
 
 function startMatch(match: Match) {
   toggleAddMatch(false)
-  orchestrator.goTo(`/match/${match.id}`)
+  goTo(`/match/${match.id}`)
 }
 
 function onTypeChange(
@@ -105,7 +106,7 @@ function onTeamChange(
   },
 ) {
   const select = event.target
-  const value = parseInt(select.value)
+  const value = select.value
 
   setNewMatchData({ teamId: value })
 }

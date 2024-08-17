@@ -1,8 +1,8 @@
 export type MatchType = 'home' | 'outside'
 
 export type MatchRawData = {
-  id?: number
+  id?: string
   opponent?: string | null
   type?: MatchType
-  teamId?: number | null
+  teamId?: string | null
 }

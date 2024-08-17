@@ -32,7 +32,7 @@ const scoreFields: {
 const minimalSoreToBeRegisterable = 30
 
 export default class Player {
-  #id: number
+  #id: string
   public firstName?: string
   public lastName?: string
   public jersayNumber?: string
@@ -48,7 +48,7 @@ export default class Player {
     }
   }
 
-  public get id(): number {
+  public get id() {
     return this.#id
   }
 

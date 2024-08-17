@@ -1,5 +1,5 @@
 import Match from '../match'
-import type MatchRawData from '../match'
+import type { MatchRawData } from '../match'
 import bsEventBus from '../event-bus'
 
 export default class Matchs {

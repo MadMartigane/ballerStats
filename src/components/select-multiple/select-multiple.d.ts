@@ -4,8 +4,8 @@ export type BsSelectMultipleProps = {
   label?: string
   placeholder?: string
   players?: Player[]
-  selectedPlayerIds?: number[]
-  onChange?: (playerIds: number[]) => void
+  selectedPlayerIds?: string[]
+  onChange?: (playerIds: string[]) => void
 }
 
 export type BsSelectMultipleDataSelect = {

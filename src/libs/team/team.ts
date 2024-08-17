@@ -3,8 +3,8 @@ import { TeamRawData } from './team.d'
 import { clone } from '../utils'
 
 export default class Team {
-  #id: number = getUniqId()
-  #playerIds: Array<number> = []
+  #id = getUniqId()
+  #playerIds: Array<string> = []
 
   public name: string | null = null
 
@@ -23,7 +23,7 @@ export default class Team {
   }
 
   public get playerIds() {
-    return clone(this.#playerIds) as number[]
+    return clone(this.#playerIds) as string[]
   }
 
   public setFromRawData(data: TeamRawData) {
@@ -39,7 +39,7 @@ export default class Team {
     return {
       id: this.#id,
       name: this.name,
-      playerIds: <number[]>clone(this.#playerIds),
+      playerIds: <string[]>clone(this.#playerIds),
     }
   }
 
