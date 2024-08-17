@@ -23,10 +23,19 @@ function renderMasterTitle(currentPath: string | null) {
   )
 
   if (!menuEntry) {
-    menuEntry = NAVIGATION_MENU_ENTRIES[0]
+    menuEntry = NAVIGATION_MENU_ENTRIES.find(candidate => candidate.path === '/*')
   }
 
-  return (<span><span class='inline-flex px-1'>{menuEntry.icon()}</span><span class='inline-flex'>{menuEntry.label}</span></span>)
+  if (!menuEntry) {
+    menuEntry = NAVIGATION_MENU_ENTRIES[NAVIGATION_MENU_ENTRIES.length -1];
+  }
+
+  return (
+    <span>
+      <span class="inline-flex px-1">{menuEntry.icon()}</span>
+      <span class="inline-flex">{menuEntry.label}</span>
+    </span>
+  )
 }
 
 function installEventHandlers() {
