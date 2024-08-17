@@ -3,3 +3,4 @@ export type BsEventBusType =
   | 'BS::SYNCHRO::FAIL'
   | 'BS::PLAYERS::CHANGE'
   | 'BS::TEAMS::CHANGE'
+  | 'BS::MATCHS::CHANGE'

@@ -1,9 +1,11 @@
-import { PlayerRawData } from '../player'
-import { TeamRawData } from '../team'
+import type { PlayerRawData } from '../player'
+import type { TeamRawData } from '../team'
+import type { MatchRawData } from '../match'
 import { StoredData } from './store.d'
 
 const STORAGE_PLAYERS_KEY = 'BS_PLAYERS'
 const STORAGE_TEAMS_KEY = 'BS_TEAMS'
+const STORAGE_MATCHS_KEY = 'BS_MATCHS'
 
 export async function storePlayers(
   players: Array<PlayerRawData>,
@@ -41,6 +43,24 @@ export async function storeTeams(
   return promise
 }
 
+export async function storeMatchs(
+  matchs: Array<MatchRawData>,
+  lastRecord?: number | null,
+) {
+  const promise: Promise<void> = new Promise(resolve => {
+    localStorage.setItem(
+      STORAGE_MATCHS_KEY,
+      JSON.stringify({
+        lastRecord: lastRecord || Date.now(),
+        data: matchs,
+      }),
+    )
+    resolve()
+  })
+
+  return promise
+}
+
 export async function getStoredPlayers(): Promise<StoredData<PlayerRawData> | null> {
   const promise: Promise<StoredData<PlayerRawData> | null> = new Promise(
     resolve => {
@@ -69,6 +89,23 @@ export async function getStoredTeams(): Promise<StoredData<TeamRawData> | null> 
 
       const storedTeams: StoredData<TeamRawData> = JSON.parse(stringTeams)
       resolve(storedTeams)
+    },
+  )
+
+  return promise
+}
+
+export async function getStoredMatchs(): Promise<StoredData<MatchRawData> | null> {
+  const promise: Promise<StoredData<MatchRawData> | null> = new Promise(
+    resolve => {
+      const stringMatchs = localStorage.getItem(STORAGE_MATCHS_KEY)
+      if (!stringMatchs) {
+        resolve(null)
+        return
+      }
+
+      const storedMatchs: StoredData<MatchRawData> = JSON.parse(stringMatchs)
+      resolve(storedMatchs)
     },
   )
 

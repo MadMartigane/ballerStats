@@ -3,20 +3,26 @@ import bsEventBus from '../event-bus'
 import {
   getStoredPlayers,
   getStoredTeams,
+  getStoredMatchs,
   storePlayers,
   storeTeams,
+  storeMatchs,
 } from '../store'
 import Teams from '../teams'
+import Matchs from '../matchs'
 
 export class Orchestrator {
   #players: Players = new Players()
   #teams = new Teams()
+  #matchs = new Matchs()
   #lastPlayersRecrod: number | null = null
   #lastTeamsRecrod: number | null = null
+  #lastMatchsRecrod: number | null = null
 
   constructor() {
     this.getStoredPlayers()
     this.getStoredTeams()
+    this.getStoredMatchs()
     this.installEventHandlers()
   }
 
@@ -28,6 +34,10 @@ export class Orchestrator {
     bsEventBus.addEventListener('BS::TEAMS::CHANGE', () => {
       this.storeTeams()
     })
+
+    bsEventBus.addEventListener('BS::MATCHS::CHANGE', () => {
+      this.storeMatchs()
+    })
   }
   private updateLastPlayersRecrod() {
     this.#lastPlayersRecrod = Date.now()
@@ -35,6 +45,10 @@ export class Orchestrator {
 
   private updateLastTeamsRecrod() {
     this.#lastTeamsRecrod = Date.now()
+  }
+
+  private updateLastMatchsRecrod() {
+    this.#lastMatchsRecrod = Date.now()
   }
 
   private storePlayers() {
@@ -53,6 +67,18 @@ export class Orchestrator {
     this.updateLastTeamsRecrod()
 
     storeTeams(this.#teams.getRawData(), this.#lastTeamsRecrod)
+      .then(() => {
+        this.throwSynchroSuccessEvent()
+      })
+      .catch(() => {
+        this.throwSynchroFailEvent()
+      })
+  }
+
+  private storeMatchs() {
+    this.updateLastMatchsRecrod()
+
+    storeMatchs(this.#matchs.getRawData(), this.#lastMatchsRecrod)
       .then(() => {
         this.throwSynchroSuccessEvent()
       })
@@ -98,12 +124,33 @@ export class Orchestrator {
     }
   }
 
+  private async getStoredMatchs() {
+    const stored = await getStoredMatchs().catch(() => {
+      this.throwSynchroFailEvent()
+    })
+
+    if (!stored) {
+      this.throwSynchroSuccessEvent()
+      return
+    }
+
+    // TODO: add lastRecord (timestamp) in the match and compare each records
+    if (!this.#lastMatchsRecrod || stored.lastRecord > this.#lastMatchsRecrod) {
+      this.#matchs = new Matchs(stored.data)
+      this.throwTeamsUpdatedEvent()
+    }
+  }
+
   public get Players() {
     return this.#players
   }
 
   public get Teams() {
     return this.#teams
+  }
+
+  public get Matchs() {
+    return this.#matchs
   }
 
   public throwPlayersUpdatedEvent(mute: boolean = false) {
@@ -114,6 +161,10 @@ export class Orchestrator {
     bsEventBus.dispatchEvent('BS::TEAMS::CHANGE', mute)
   }
 
+  public throwMatchsUpdatedEvent(mute: boolean = false) {
+    bsEventBus.dispatchEvent('BS::MATCHS::CHANGE', mute)
+  }
+
   public throwSynchroSuccessEvent(mute: boolean = false) {
     bsEventBus.dispatchEvent('BS::SYNCHRO::SUCCESS', mute)
   }
@@ -122,12 +173,32 @@ export class Orchestrator {
     bsEventBus.dispatchEvent('BS::SYNCHRO::FAIL', mute)
   }
 
-  public getPlayer(id: number) {
-    return this.#players.players.find(candidate => candidate.id === id)
+  public getPlayer(id: number | null) {
+    if (id === null) {
+      return null
+    }
+
+    return this.#players.players.find(candidate => candidate.id === id) || null
   }
 
-  public getTeam(id: number) {
-    return this.#teams.teams.find(candidate => candidate.id === id)
+  public getTeam(id: number | null) {
+    if (id === null) {
+      return null
+    }
+
+    return this.#teams.teams.find(candidate => candidate.id === id) || null
+  }
+
+  public getMatch(id: number | null) {
+    if (id === null) {
+      return null
+    }
+
+    return this.#matchs.matchs.find(candidate => candidate.id === id) || null
+  }
+
+  public goTo(path: string) {
+    window.location.hash = path;
   }
 }
 
