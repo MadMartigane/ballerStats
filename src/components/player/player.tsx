@@ -35,7 +35,7 @@ export default function BsPlayer(props: BsPlayerProps) {
 
       <hr />
 
-      <div class="py-4 w-11/12 text-sm flex flex-row gap-2 content-end justify-end">
+      <div class="py-4 w-11/12 text-sm flex flex-row gap-4 content-end justify-end">
         <Show when={props.onEdit}>
           <BsButton size="sm" variant="light">
             <UserPen

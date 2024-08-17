@@ -10,20 +10,23 @@ const isUserMenuOpen: MadSignal<boolean> = new MadSignal(false)
 const isMainMenuOpen: MadSignal<boolean> = new MadSignal(false)
 const isNotificationBoxOpen: MadSignal<boolean> = new MadSignal(false)
 const currentHash: MadSignal<string> = new MadSignal('')
+const idInUrlPattern = /\/\d+/
 
-function isCurrentPath(candidatPath: string, currentPath: string) {
-  return currentPath === candidatPath
+function isCurrentPath(candidatPath: string, currentPath: string | null) {
+  const cleanPath = currentPath?.replace(idInUrlPattern, '/:id')
+  return cleanPath === candidatPath
 }
 
-function renderMasterTitle(currentPath: string) {
-  const menuEntry = NAVIGATION_MENU_ENTRIES.find(entryCandidate =>
+function renderMasterTitle(currentPath: string | null) {
+  let menuEntry = NAVIGATION_MENU_ENTRIES.find(entryCandidate =>
     isCurrentPath(entryCandidate.path, currentPath),
   )
+
   if (!menuEntry) {
-    return NAVIGATION_MENU_ENTRIES[0].label
+    menuEntry = NAVIGATION_MENU_ENTRIES[0]
   }
 
-  return menuEntry.label
+  return (<span><span class='inline-flex px-1'>{menuEntry.icon()}</span><span class='inline-flex'>{menuEntry.label}</span></span>)
 }
 
 function installEventHandlers() {
@@ -283,8 +286,8 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
 
       <header class="bg-white shadow dark:bg-sky-950">
         <div class="mx-auto max-w-7xl px-3 py-2 sm:px-4 lg:px-6">
-          <h1 class="text-xl font-bold tracking-tight text-gray-900 dark:text-gray-300">
-            {renderMasterTitle(String(currentHash.get()))}
+          <h1 class="text-lg font-bold tracking-tight text-gray-900 dark:text-gray-300">
+            {renderMasterTitle(currentHash.get())}
           </h1>
         </div>
       </header>

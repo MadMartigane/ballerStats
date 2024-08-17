@@ -9,6 +9,7 @@ import {
   Boxes,
   FileSliders,
   BadgeAlert,
+  MonitorDot,
 } from 'lucide-solid'
 
 export const HASH_REPLACE_PATTERN = /^#\//
@@ -17,7 +18,8 @@ export const NAVIGATION_MENU_ENTRIES: Array<MenuEntry> = [
   {
     path: '/',
     label: 'Dashbord',
-    icon: () => <img class="w-8 h-8" src="/img/logo_tiny.png" />,
+    icon: () => <MonitorDot />,
+    // icon: () => <img class="w-8 h-8" src="/img/logo_tiny.png" />,
     component: Home,
     isMenuEntry: false,
   },

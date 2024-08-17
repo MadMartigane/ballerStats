@@ -57,7 +57,7 @@ export default function BsMatchTile(props: BsMatchTileProps) {
 
       <hr />
 
-      <div class="p-4 md:p-5 w-11/12 text-sm flex flex-row gap-2 content-end justify-end">
+      <div class="p-4 md:p-5 w-11/12 text-sm flex flex-row gap-4 content-end justify-end">
         <Show when={props.onStart}>
           <BsButton
             size="sm"
