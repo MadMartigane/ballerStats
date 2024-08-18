@@ -4,7 +4,6 @@ import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import Player from '../../libs/player'
 import { For, Show } from 'solid-js'
-import BsButton from '../button'
 import BsCard from '../card'
 import BsInput from '../input'
 import { PlayerRawData } from '../../libs/player'
@@ -88,14 +87,16 @@ function renderAddPlayerButton() {
     <div>
       <hr />
       <div class="p-4">
-        {BsButton({
-          slotStart: <UserPlus />,
-          children: 'Ajouter un jouer',
-          onClick: () => {
+        <button
+          class="btn btn-primary"
+          onClick={() => {
             isEditingNewPlayer = true
             toggleAddPlayer(true)
-          },
-        })}
+          }}
+        >
+          <UserPlus />
+          Ajouter un jouer
+        </button>
       </div>
     </div>
   )
@@ -160,25 +161,28 @@ function renderAddingPlayerCard() {
     ),
     footer: (
       <div class="grid grid-cols-2 gap-2">
-        {BsButton({
-          wide: true,
-          slotStart: <X />,
-          onClick: () => {
+        <button
+          class="btn btn-primary btn-wide"
+          onClick={() => {
             toggleAddPlayer(false)
             currentPlayer = null
             canAddPlayer.set(false)
-          },
-          children: 'Annuler',
-        })}
-        {BsButton({
-          wide: true,
-          slotStart: isEditingNewPlayer ? <UserPlus /> : <Save />,
-          disabled: !canAddPlayer.get(),
-          onClick: () => {
+          }}
+        >
+          <X />
+          Annuler
+        </button>
+
+        <button
+          class="btn btn-primary btn-wide"
+          disabled={!canAddPlayer.get()}
+          onClick={() => {
             registerPlayer()
-          },
-          children: isEditingNewPlayer ? 'Ajouter' : 'Enregistrer',
-        })}
+          }}
+        >
+          {isEditingNewPlayer ? 'Ajouter' : 'Enregistrer'}
+          {isEditingNewPlayer ? <UserPlus /> : <Save />}
+        </button>
       </div>
     ),
   })

@@ -1,7 +1,6 @@
 import { Shirt, Trash, UserPen } from 'lucide-solid'
 import { For, Show } from 'solid-js'
 import { BsTeamProps } from './team.d'
-import BsButton from '../button'
 import Team from '../../libs/team'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 
@@ -48,23 +47,23 @@ export default function BsTeam(props: BsTeamProps) {
 
       <div class="py-4 w-11/12 text-sm flex flex-row gap-4 content-end justify-end">
         <Show when={props.onEdit}>
-          <BsButton size="sm" variant="light">
-            <UserPen
-              onClick={() => {
-                editTeam(team, props.onEdit)
-              }}
-            />
-          </BsButton>
+          <button
+            class="btn btn-square btn-secondary"
+            onClick={() => {
+              editTeam(team, props.onEdit)
+            }}
+          >
+            <UserPen />
+          </button>
         </Show>
-        <BsButton
-          size="sm"
-          variant="light"
+        <button
+          class="btn btn-square btn-secondary"
           onClick={() => {
             removeTeam(team)
           }}
         >
           <Trash />
-        </BsButton>
+        </button>
       </div>
     </div>
   )

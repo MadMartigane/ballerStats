@@ -1,13 +1,15 @@
 /* @refresh reload */
 import './index.css'
+import './global/daisy'
 import 'preline/preline'
+
 
 import { For } from 'solid-js'
 import { render } from 'solid-js/web'
 import { Route, HashRouter } from '@solidjs/router'
 import BsAppBar from './components/app-bar'
 import { NAVIGATION_MENU_ENTRIES } from './libs/menu'
-import { initDarkMode, initPrelineLib } from './libs/preline'
+import { initPrelineLib } from './libs/preline'
 
 import relAppleTouchIconUrl from '/img/apple-touch-icon.png'
 import relIconUrl from '/img/favicon.ico'
@@ -34,8 +36,7 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 }
 
 render(() => {
-  initDarkMode()
-  initPrelineLib()
+  initPrelineLib();
 
   return (
     <HashRouter root={BsAppBar}>

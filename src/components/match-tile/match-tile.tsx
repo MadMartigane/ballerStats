@@ -1,7 +1,6 @@
 import { FilePenLine, Play, Trash } from 'lucide-solid'
 import { Show } from 'solid-js'
 import type { BsMatchTileProps, BsMatchTypeTextProps } from './match-tile.d'
-import BsButton from '../button'
 import Match from '../../libs/match'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 
@@ -59,38 +58,35 @@ export default function BsMatchTile(props: BsMatchTileProps) {
 
       <div class="p-4 md:p-5 w-11/12 text-sm flex flex-row gap-4 content-end justify-end">
         <Show when={props.onStart}>
-          <BsButton
-            size="sm"
-            variant="light"
+          <button
+            class="btn btn-secondary btn-square"
             onClick={() => {
               callCallback(match, props?.onStart)
             }}
           >
             <Play />
-          </BsButton>
+          </button>
         </Show>
 
         <Show when={props.onEdit}>
-          <BsButton
-            size="sm"
-            variant="light"
+          <button
+            class="btn btn-secondary btn-square"
             onClick={() => {
               callCallback(match, props?.onEdit)
             }}
           >
             <FilePenLine />
-          </BsButton>
+          </button>
         </Show>
 
-        <BsButton
-          size="sm"
-          variant="light"
+        <button
+          class="btn btn-secondary btn-square"
           onClick={() => {
             removeMatch(match)
           }}
         >
           <Trash />
-        </BsButton>
+        </button>
       </div>
     </div>
   )

@@ -4,7 +4,6 @@ import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import Team from '../../libs/team'
 import { For, Show } from 'solid-js'
-import BsButton from '../button'
 import BsCard from '../card'
 import BsInput from '../input'
 import { TeamRawData } from '../../libs/team'
@@ -96,14 +95,16 @@ function renderAddTeamButton() {
     <div>
       <hr />
       <div class="p-4">
-        {BsButton({
-          slotStart: <Users />,
-          children: 'Ajouter une équipe',
-          onClick: () => {
+        <button
+          class="btn btn-primary"
+          onClick={() => {
             isEditingNewTeam = true
             toggleAddTeam(true)
-          },
-        })}
+          }}
+        >
+          <Users />
+          Ajouter une équipe
+        </button>
       </div>
     </div>
   )
@@ -141,25 +142,28 @@ function renderAddingTeamCard() {
     ),
     footer: (
       <div class="grid grid-cols-2 gap-2">
-        {BsButton({
-          wide: true,
-          slotStart: <X />,
-          onClick: () => {
+        <button
+          class="btn btn-primary btn-wide"
+          onClick={() => {
             toggleAddTeam(false)
             currentTeam = null
             canAddTeam.set(false)
-          },
-          children: 'Annuler',
-        })}
-        {BsButton({
-          wide: true,
-          slotStart: isEditingNewTeam ? <Users /> : <Save />,
-          disabled: !canAddTeam.get(),
-          onClick: () => {
+          }}
+        >
+          <X />
+          Annuler
+        </button>
+
+        <button
+          class="btn btn-primary btn-wide"
+          disabled={!canAddTeam.get()}
+          onClick={() => {
             registerTeam()
-          },
-          children: isEditingNewTeam ? 'Ajouter' : 'Enregistrer',
-        })}
+          }}
+        >
+          {isEditingNewTeam ? <Users /> : <Save />}
+          {isEditingNewTeam ? 'Ajouter' : 'Enregistrer'}
+        </button>
       </div>
     ),
   })

@@ -1,7 +1,6 @@
 import { Shirt, Trash, UserPen } from 'lucide-solid'
 import { Show } from 'solid-js'
 import { BsPlayerProps } from './player.d'
-import BsButton from '../button'
 import Player from '../../libs/player'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 
@@ -37,23 +36,23 @@ export default function BsPlayer(props: BsPlayerProps) {
 
       <div class="py-4 w-11/12 text-sm flex flex-row gap-4 content-end justify-end">
         <Show when={props.onEdit}>
-          <BsButton size="sm" variant="light">
-            <UserPen
-              onClick={() => {
-                editPlayer(player, props.onEdit)
-              }}
-            />
-          </BsButton>
+          <button
+            class="btn btn-secondary btn-square"
+            onClick={() => {
+              editPlayer(player, props.onEdit)
+            }}
+          >
+            <UserPen />
+          </button>
         </Show>
-        <BsButton
-          size="sm"
-          variant="light"
+        <button
+          class="btn btn-secondary btn-square"
           onClick={() => {
             removePlayer(player)
           }}
         >
           <Trash />
-        </BsButton>
+        </button>
       </div>
     </div>
   )
