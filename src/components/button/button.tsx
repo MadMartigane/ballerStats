@@ -1,6 +1,5 @@
 import { BsButtonProps } from './button.d'
 import { getPrelineClass, PrelineComponentClasses } from '../../libs/preline'
-import MadSignal from '../../libs/mad-signal'
 
 const ANIMATION_TOKEN_CLASS = 'animate-ping'
 const ANIMATION_DURATION = 75

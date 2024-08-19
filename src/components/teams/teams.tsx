@@ -141,7 +141,7 @@ function renderAddingTeamCard() {
       </form>
     ),
     footer: (
-      <div class="grid grid-cols-2 gap-2">
+      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <button
           class="btn btn-primary btn-wide"
           onClick={() => {

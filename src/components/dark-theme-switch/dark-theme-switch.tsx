@@ -21,14 +21,10 @@ export default function BsDarkThemeSwitch() {
   const themeValue: MadSignal<string | null | undefined> = new MadSignal(
     getTheme(),
   )
-  console.log("getTheme(): ", getTheme());
 
   return (
     <div class="relative w-fit mx-0 my-4">
       <label for={id} class="form-control w-full max-w-xs">
-        <div class="label">
-          <span class="label-text">Thème:</span>
-        </div>
         <select
           id={id}
           class="select select-bordered w-full max-w-xs"

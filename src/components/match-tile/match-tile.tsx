@@ -3,6 +3,7 @@ import { Show } from 'solid-js'
 import type { BsMatchTileProps, BsMatchTypeTextProps } from './match-tile.d'
 import Match from '../../libs/match'
 import orchestrator from '../../libs/orchestrator/orchestrator'
+import BsTile from '../tile'
 
 function removeMatch(match: Match) {
   orchestrator.Matchs.remove(match)
@@ -20,15 +21,15 @@ export function BsMatchTypeText(props: BsMatchTypeTextProps) {
   const type = props.type
 
   return (
-    <>
+    <span class="text-base inline-block">
       <Show when={type === 'home'}>
-        <span class="dark:text-lime-200 text-lime-800">↗ Domicile</span>
+        <span class="text-success">↗ Domicile</span>
       </Show>
       <Show when={type === 'outside'}>
-        <span class="dark:text-pink-200 text-pink-800">↖ Extérieur</span>
+        <span class="text-warning">↖ Extérieur</span>
       </Show>
       <Show when={!type}>{'Type non renseigné'}</Show>
-    </>
+    </span>
   )
 }
 
@@ -37,57 +38,49 @@ export default function BsMatchTile(props: BsMatchTileProps) {
   const team = orchestrator.getTeam(match.teamId)
 
   return (
-    <div class="min-w-80 max-w-80 w-80 flex flex-col bg-white border border-t-4 border-t-blue-600 shadow-sm hover:shadow-xl rounded-xl hover:bg-zinc-100 hover:dark:bg-neutral-950 dark:bg-neutral-900 dark:border-neutral-700 dark:border-t-blue-500 dark:shadow-neutral-700/70">
-      <div class="p-4 md:p-5 flex flex-row gap-4">
-        <h3 class="text-lg grow text-balance font-bold text-gray-800 dark:text-white">
-          {match.opponent}
-        </h3>
-        <div>
-          <div>
-            <BsMatchTypeText type={match.type} />
-          </div>
-        </div>
-      </div>
+    <BsTile
+      title={match.opponent || ''}
+      badge={<BsMatchTypeText type={match.type} />}
+      footer={
+        <>
+          <Show when={props.onStart}>
+            <button
+              class="btn btn-secondary btn-square"
+              onClick={() => {
+                callCallback(match, props?.onStart)
+              }}
+            >
+              <Play />
+            </button>
+          </Show>
+
+          <Show when={props.onEdit}>
+            <button
+              class="btn btn-secondary btn-square"
+              onClick={() => {
+                callCallback(match, props?.onEdit)
+              }}
+            >
+              <FilePenLine />
+            </button>
+          </Show>
+
+          <button
+            class="btn btn-secondary btn-square"
+            onClick={() => {
+              removeMatch(match)
+            }}
+          >
+            <Trash />
+          </button>
+        </>
+      }
+    >
       <Show when={team}>
         <p class="px-4 md:px-5">
           {team?.name} ({team?.playerIds.length})
         </p>
       </Show>
-
-      <hr />
-
-      <div class="p-4 md:p-5 w-11/12 text-sm flex flex-row gap-4 content-end justify-end">
-        <Show when={props.onStart}>
-          <button
-            class="btn btn-secondary btn-square"
-            onClick={() => {
-              callCallback(match, props?.onStart)
-            }}
-          >
-            <Play />
-          </button>
-        </Show>
-
-        <Show when={props.onEdit}>
-          <button
-            class="btn btn-secondary btn-square"
-            onClick={() => {
-              callCallback(match, props?.onEdit)
-            }}
-          >
-            <FilePenLine />
-          </button>
-        </Show>
-
-        <button
-          class="btn btn-secondary btn-square"
-          onClick={() => {
-            removeMatch(match)
-          }}
-        >
-          <Trash />
-        </button>
-      </div>
-    </div>
+    </BsTile>
   )
 }

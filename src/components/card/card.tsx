@@ -23,8 +23,8 @@ export default function BsCard(options: BsCardProps) {
 
         <Show when={options.footer}>
           <hr />
-          <div class="card-actions justify-end">
-            <div>{options.footer}</div>
+          <div class="card-actions justify-center">
+            {options.footer}
           </div>
         </Show>
       </div>

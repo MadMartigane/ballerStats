@@ -57,10 +57,10 @@ function renderDaisy(options: BsInputProps) {
     <label class="form-control w-full">
       <div class="label">
         <Show when={options.label}>
-          <span class="label-text w-full max-w-xs">{options.label}</span>
+          <span class="w-full max-w-xs">{options.label}</span>
         </Show>
         <input
-          class="input input-bordered w-full input-primary"
+          class="input input-bordered w-full input-ghost"
           type={options.type}
           placeholder={options.placeholder}
           value={options.value || ''}
