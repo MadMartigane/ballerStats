@@ -19,6 +19,7 @@ import { createStore } from 'solid-js/store'
 import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
 import { BsMatchTypeText } from '../match-tile/match-tile'
 import { goTo } from '../../libs/utils'
+import BsSelect from '../select/select'
 
 let isEditingNewMatch: boolean = false
 const isAddingMatch: MadSignal<boolean> = new MadSignal(false)
@@ -86,27 +87,11 @@ function startMatch(match: Match) {
   goTo(`/match/${match.id}`)
 }
 
-function onTypeChange(
-  event: Event & {
-    currentTarget: HTMLSelectElement
-    target: HTMLSelectElement
-  },
-) {
-  const select = event.target
-  const value = select.value as MatchType
-
+function onTypeChange(value: MatchType) {
   setNewMatchData({ type: value })
 }
 
-function onTeamChange(
-  event: Event & {
-    currentTarget: HTMLSelectElement
-    target: HTMLSelectElement
-  },
-) {
-  const select = event.target
-  const value = select.value
-
+function onTeamChange(value: string) {
   setNewMatchData({ teamId: value })
 }
 
@@ -160,65 +145,37 @@ function renderAddingMatchCard() {
     info: 'Saisissez les info nécessaires pour identifier le match.',
     body: (
       <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
+        <BsSelect
+          label="Mon Équipe"
+          placeholder="Sélectionnez l’équipe"
+          value={currentMatch && currentMatch.teamId}
+          datas={teams.map(team => ({ value: team.id, label: team.name }))}
+          onValueChange={(value: string) => {
+            onTeamChange(value)
+          }}
+        />
+
         <BsInput
-          type='text'
-          label='Nom de l’adversaire'
+          type="text"
+          label="Nom de l’adversaire"
           value={currentMatch?.opponent || ''}
-          placeholder='OGS U09'
+          placeholder="…"
           onChange={(value: string) => {
             setNewMatchData({ opponent: value })
           }}
         />
-        <label
-          for="new-match-type-select"
-          class="block text-sm font-medium mb-2 dark:text-white"
-        >
-          Localité
-        </label>
-        <select
-          id="new-match-type-select"
-          class="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
-          onChange={event => {
-            onTypeChange(event)
+
+        <BsSelect
+          label="Localité"
+          default={currentMatch && (currentMatch.type as string)}
+          datas={[
+            { value: 'home', label: <BsMatchTypeText type="home" /> },
+            { value: 'outside', label: <BsMatchTypeText type="outside" /> },
+          ]}
+          onValueChange={(value: string) => {
+            onTypeChange(value as MatchType)
           }}
-        >
-          <option
-            value="home"
-            selected={!currentMatch || currentMatch.type === 'home'}
-          >
-            <BsMatchTypeText type="home" />
-          </option>
-          <option value="outside" selected={currentMatch?.type === 'outside'}>
-            <BsMatchTypeText type="outside" />
-          </option>
-        </select>
-        <label
-          for="new-match-team-select"
-          class="block text-sm font-medium mb-2 dark:text-white"
-        >
-          Équipe
-        </label>
-        <select
-          id="new-match-team-select"
-          class="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
-          onChange={event => {
-            onTeamChange(event)
-          }}
-        >
-          <Show when={!currentMatch || !currentMatch.teamId}>
-            <option selected>{'Sélectionnez l’équipe'}</option>
-          </Show>
-          <For each={teams}>
-            {team => (
-              <option
-                value={team.id}
-                selected={currentMatch?.teamId === team.id}
-              >
-                {team.name}
-              </option>
-            )}
-          </For>
-        </select>
+        />
       </form>
     ),
     footer: (

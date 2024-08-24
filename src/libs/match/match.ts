@@ -21,7 +21,7 @@ export default class Match {
   }
 
   public get isRegisterable() {
-    return Boolean(this.opponent) && Boolean(this.type)
+    return Boolean(this.opponent) && Boolean(this.type) && Boolean(this.teamId)
   }
 
   public setFromRawData(data: MatchRawData) {

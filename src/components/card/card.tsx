@@ -4,7 +4,7 @@ import { Info } from 'lucide-solid'
 
 export default function BsCard(options: BsCardProps) {
   return (
-    <div class="card bg-neutral text-neutral-content">
+    <div class="card bg-base-300 text-base-content">
       <div class="card-body">
         <Show when={options.title}>
           <h2 class="my-4 card-title">{options.title}</h2>

@@ -8,7 +8,7 @@ export default function BsMatch(props: BsMatchProps) {
   console.log('match: ', match)
 
   return (
-    <div class='w-full border rounded border-zinc-50 dark:border-zinc-950'>
+    <div class='w-full border rounded border-info'>
       <pre>{JSON.stringify(match, null, 4)}</pre>
     </div>
   )

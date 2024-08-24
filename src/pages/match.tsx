@@ -9,7 +9,7 @@ export default function Matchs() {
   return (
     <div class="w-full">
       <button
-        class='btn'
+        class='btn btn-secondary'
         onClick={() => {
           goBack()
         }}
