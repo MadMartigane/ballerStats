@@ -1,205 +1,194 @@
-import { For, Show } from 'solid-js'
+import { For, mergeProps, Show } from 'solid-js'
 import { createStore, SetStoreFunction, unwrap } from 'solid-js/store'
-import Player from '../../libs/player'
 import { getShortId } from '../../libs/utils'
 import {
+  BsSelectDataSet,
   BsSelectMultipleDataSelect,
   BsSelectMultipleProps,
 } from './select-multiple.d'
+import { CircleX } from 'lucide-solid'
+import BsSelect from '../select/select'
 
 const defaultPlaceholder = 'Sélection…'
 
-function getAvailablePlayers(
-  allPlayers: Array<Player>,
-  alreadySelectedPlayers: Array<string>,
+function getAvailableDataSets(
+  allDataSets: Array<BsSelectDataSet>,
+  alreadySelectedDataSets: Array<string>,
 ) {
-  return allPlayers.reduce((result, currentPlayer) => {
-    if (!alreadySelectedPlayers.includes(currentPlayer.id)) {
-      result.push(currentPlayer)
+  return allDataSets.reduce((result, currentDataSet) => {
+    if (!alreadySelectedDataSets.includes(currentDataSet.value)) {
+      result.push(currentDataSet)
     }
 
     return result
-  }, [] as Array<Player>)
+  }, [] as Array<BsSelectDataSet>)
+}
+
+function getSelectDataSetFromAvailableDataSets(
+  availableBsSelectDataSets: BsSelectDataSet[],
+  placeholder?: string,
+): BsSelectDataSet[] {
+  const data = placeholder
+    ? [
+        {
+          value: '',
+          label: availableBsSelectDataSets.length
+            ? placeholder
+            : 'Aucun joueur disponible.',
+          badge: <span>Error</span>,
+        },
+      ]
+    : []
+
+  return [...data, ...availableBsSelectDataSets]
 }
 
 function getDataFromProps(props: BsSelectMultipleProps) {
+  const availableDataSets = getAvailableDataSets(
+    props.data || [],
+    props.selectedIds || [],
+  )
+
+  const selectData = getSelectDataSetFromAvailableDataSets(
+    availableDataSets,
+    props.placeholder,
+  )
+  const [dataForSelect, setAvailables] = createStore(selectData)
+  const disable = dataForSelect.length < 2
+
   return {
     placeholder: defaultPlaceholder,
-    availablePlayers: getAvailablePlayers(
-      props.players || [],
-      props.selectedPlayerIds || [],
-    ),
-    ...props,
     selectId: `bs-select-multiple-${getShortId()}`,
+    ...props,
+    selectedIds: props.selectedIds || [],
+    disable,
+    availables: dataForSelect,
+    setAvailables,
   } as BsSelectMultipleDataSelect
 }
 
 function onSelectionChange(
-  setData: SetStoreFunction<BsSelectMultipleDataSelect>,
-  data: BsSelectMultipleDataSelect,
+  props: BsSelectMultipleDataSelect,
+  setProps: SetStoreFunction<BsSelectMultipleDataSelect>,
 ) {
-  setData(
-    'availablePlayers',
-    getAvailablePlayers(data.players || [], data.selectedPlayerIds || []),
+  const selectData = getSelectDataSetFromAvailableDataSets(
+    getAvailableDataSets(props.data || [], props.selectedIds || []),
+    props.placeholder,
   )
 
-  if (data.onChange) {
-    if (data.selectedPlayerIds && data.selectedPlayerIds.length) {
-      data.onChange(data.selectedPlayerIds)
+  props.setAvailables(selectData)
+
+  setProps('disable', selectData.length < 2)
+
+  if (props.onChange) {
+    if (props.selectedIds && props.selectedIds.length) {
+      props.onChange(props.selectedIds)
     } else {
-      data.onChange([])
+      props.onChange([])
     }
   }
 }
 
 function onSelect(
   event: Event & { currentTarget: HTMLSelectElement; target: Element },
-  data: BsSelectMultipleDataSelect,
-  setData: SetStoreFunction<BsSelectMultipleDataSelect>,
+  props: BsSelectMultipleDataSelect,
+  setProps: SetStoreFunction<BsSelectMultipleDataSelect>,
 ) {
   const selectedId = event.currentTarget.value
 
-  if (!data.selectedPlayerIds?.includes(selectedId)) {
-    setData(
-      'selectedPlayerIds',
-      data.selectedPlayerIds?.length || 0,
-      selectedId,
-    )
+  if (!props.selectedIds?.includes(selectedId)) {
+    // TODO: HERE !!!!
+    setProps('selectedIds', props.selectedIds?.length || 0, selectedId)
   }
 
-  onSelectionChange(setData, data)
+  onSelectionChange(props, setProps)
 }
 
-function unselectPlayer(
-  data: BsSelectMultipleDataSelect,
-  setData: SetStoreFunction<BsSelectMultipleDataSelect>,
-  player: Player,
+function unselectDataSet(
+  props: BsSelectMultipleDataSelect,
+  setProps: SetStoreFunction<BsSelectMultipleDataSelect>,
+  dataSet: BsSelectDataSet,
 ) {
-  if (!data.selectedPlayerIds || !data.selectedPlayerIds.includes(player.id)) {
+  if (!props.selectedIds || !props.selectedIds.includes(dataSet.value)) {
     return
   }
 
-  const newSelection = data.selectedPlayerIds.filter(
-    currentId => currentId !== player.id,
+  const newSelection = props.selectedIds.filter(
+    currentId => currentId !== dataSet.value,
   )
 
-  setData('selectedPlayerIds', newSelection)
+  setProps('selectedIds', newSelection)
 
-  onSelectionChange(setData, data)
+  onSelectionChange(props, setProps)
 }
 
-function renderPlayerBadge(
-  data: BsSelectMultipleDataSelect,
-  setData: SetStoreFunction<BsSelectMultipleDataSelect>,
-  player: Player,
+function renderBsSelectDataSetBadge(
+  props: BsSelectMultipleDataSelect,
+  setProps: SetStoreFunction<BsSelectMultipleDataSelect>,
+  dataSet: BsSelectDataSet,
 ) {
   return (
-    <div class="inline-flex flex-nowrap items-center bg-white border border-gray-200 rounded-full p-1.5 dark:bg-neutral-900 dark:border-neutral-700">
-      <span class="text-amber-600 dark:text-amber-400 p-2">
-        {player.jersayNumber}
-      </span>
-      <div class="whitespace-nowrap text-sm font-medium text-gray-800 dark:text-white">
-        {player.nicName
-          ? player.nicName
-          : `${player.firstName} ${player.lastName}`}
-      </div>
+    <div class="badge badge-outline p-4 m-1">
+      {dataSet.badge}
       <button
+        class="btn btn-circle btn-xs btn-ghost"
         type="button"
         onClick={() => {
-          unselectPlayer(unwrap(data), setData, player)
+          unselectDataSet(props, setProps, dataSet)
         }}
-        class="ms-2.5 inline-flex justify-center items-center size-5 rounded-full text-gray-800 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 dark:bg-neutral-700/50 dark:hover:bg-neutral-700 dark:text-neutral-400 cursor-pointer"
       >
-        <svg
-          class="shrink-0 size-3"
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M18 6 6 18"></path>
-          <path d="m6 6 12 12"></path>
-        </svg>
+        <CircleX />
       </button>
     </div>
   )
 }
 
 export default function BsSelectMultiple(props: BsSelectMultipleProps) {
-  const [data, setData] = createStore(getDataFromProps(props))
+  const [selectProps, setSelectProps] = createStore(getDataFromProps(props))
 
   return (
-    <>
-      <Show when={data.label}>
+    <div class="w-full">
+      <Show when={selectProps.label}>
         <label
-          class="block text-sm font-medium mb-2 dark:text-white"
-          for={data.selectId}
+          class="block text-sm font-medium mb-2"
+          for={selectProps.selectId}
         >
-          {data.label}
+          {selectProps.label}
         </label>
       </Show>
-      <div
-        class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 dark:bg-neutral-800 dark:border-neutral-700"
-        role="alert"
-        tabindex="-1"
-        aria-labelledby="hs-discovery-label"
-      >
-        <div class="flex">
-          <div class="ms-3">
-            <h3
-              id="hs-discovery-label"
-              class="text-gray-800 font-semibold dark:text-white"
-            >
-              Joueur(s) selectionné(s):
-            </h3>
-            <div class="mt-2 text-sm text-gray-700 dark:text-neutral-400">
-              <Show
-                when={data.selectedPlayerIds?.length}
-                fallback={'Aucun joueur sélectionné.'}
-              >
-                <For each={data.selectedPlayerIds}>
-                  {id => {
-                    const player = data.players?.find(
-                      candidate => candidate.id === id,
-                    )
-                    if (!player) {
-                      return
-                    }
+      <label class="label">Joueur(s) selectionné(s):</label>
+      <div class="bg-base-200 text-base-content border rounded border-base-100 mx-auto w-11/12 py-4">
+        <Show
+          when={selectProps.selectedIds?.length}
+          fallback={'Aucun joueur sélectionné.'}
+        >
+          <For each={selectProps.selectedIds}>
+            {value => {
+              const dataSet = selectProps.data?.find(
+                candidate => candidate.value === value,
+              )
+              if (!dataSet) {
+                return
+              }
 
-                    return renderPlayerBadge(data, setData, player)
-                  }}
-                </For>
-              </Show>
-            </div>
-          </div>
-        </div>
+              return renderBsSelectDataSetBadge(
+                selectProps,
+                setSelectProps,
+                dataSet,
+              )
+            }}
+          </For>
+        </Show>
       </div>
 
-      <select
+      <BsSelect
         onChange={event => {
-          onSelect(event, data, setData)
+          onSelect(event, selectProps, setSelectProps)
         }}
-        disabled={data.availablePlayers.length === 0}
-        class="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
-      >
-        <option selected>
-          {data.availablePlayers.length
-            ? data.placeholder
-            : 'Aucun joueur disponible.'}
-        </option>
-        <For each={data.availablePlayers}>
-          {player => (
-            <option value={player.id}>
-              {`${player.jersayNumber} - ${player.nicName ? player.nicName : `${player.firstName} ${player.lastName}`}`}
-            </option>
-          )}
-        </For>
-      </select>
-    </>
+        default=""
+        datas={selectProps.availables}
+        disabled={selectProps.disable}
+      />
+    </div>
   )
 }

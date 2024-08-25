@@ -1,15 +1,24 @@
-import Player from '../../libs/player'
+import { JSXElement } from 'solid-js'
+import { SetStoreFunction } from 'solid-js/store'
+
+export type BsSelectDataSet = {
+  value: string
+  label: string
+  badge: JSXElement
+}
 
 export type BsSelectMultipleProps = {
   label?: string
   placeholder?: string
-  players?: Player[]
-  selectedPlayerIds?: string[]
+  data?: BsSelectDataSet[]
+  selectedIds?: string[]
   onChange?: (playerIds: string[]) => void
 }
 
 export type BsSelectMultipleDataSelect = {
   placeholder: string
   selectId: string
-  availablePlayers: Player[]
+  availables: BsSelectDataSet[]
+  setAvailables: SetStoreFunction<BsSelectDataSet[]>
+  disable?: boolean
 } & BsSelectMultipleProps

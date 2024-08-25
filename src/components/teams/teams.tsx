@@ -10,6 +10,7 @@ import { TeamRawData } from '../../libs/team'
 import BsTeam from '../team'
 import { createStore } from 'solid-js/store'
 import BsSelectMultiple from '../select-multiple/select-multiple'
+import Player from '../../libs/player'
 
 let isEditingNewTeam: boolean = false
 const isAddingTeam: MadSignal<boolean> = new MadSignal(false)
@@ -79,6 +80,16 @@ function updateCurrentTeamPlayerIds(playerIds: string[]) {
   currentTeam?.update({ playerIds: [] })
 }
 
+function getSelectDataFromPlayer(players: Player[]) {
+  return orchestrator.Players.players.map(player => ({
+    value: player.id,
+    label: player.nicName
+      ? player.nicName
+      : `${player.firstName} ${player.lastName}`,
+    badge: renderPlayerBadge(player),
+  }))
+}
+
 function renderTeamFallback() {
   return (
     <div>
@@ -110,6 +121,19 @@ function renderAddTeamButton() {
   )
 }
 
+function renderPlayerBadge(player: Player) {
+  return (
+    <>
+      <span class="text-warning">{player.jersayNumber}</span>
+      <div class="whitespace-nowrap text-base font-medium m-2">
+        {player.nicName
+          ? player.nicName
+          : `${player.firstName} ${player.lastName}`}
+      </div>
+    </>
+  )
+}
+
 function renderAddingTeamCard() {
   return BsCard({
     title: (
@@ -132,8 +156,8 @@ function renderAddingTeamCard() {
         })}
         <BsSelectMultiple
           placeholder="Sélection des joueurs"
-          players={orchestrator.Players.players}
-          selectedPlayerIds={currentTeam?.playerIds}
+          data={getSelectDataFromPlayer(orchestrator.Players.players)}
+          selectedIds={currentTeam?.playerIds}
           onChange={(playerIds: string[]) => {
             updateCurrentTeamPlayerIds(playerIds)
           }}

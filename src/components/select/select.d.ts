@@ -1,4 +1,4 @@
-import { JSX, JSXElement } from 'solid-js'
+import type { JSX, JSXElement } from 'solid-js'
 
 export type BsSelectOnChangeEvent = Event & {
   currentTarget: HTMLSelectElement
@@ -11,8 +11,9 @@ export type BsSelectProps = {
   value?: string | null
   datas: Array<BsSelectData>
   label?: string
+  disabled?: boolean
   default?: string | null
-  placeholder?: string
+  placeholder?: string | null
   onValueChange?: (value: string) => void
   onChange?: (
     event: Event & {

@@ -1,20 +1,20 @@
-import { For, Show } from 'solid-js'
+import { For, mergeProps, Show } from 'solid-js'
 import { getShortId } from '../../libs/utils'
 import { BsSelectOnChangeEvent, BsSelectProps } from './select.d'
+import { createStore } from 'solid-js/store'
 
 const defaultOptions: BsSelectProps = {
   default: null,
+  disabled: false,
   datas: [],
 }
 
 function onChange(event: BsSelectOnChangeEvent, options: BsSelectProps) {
   event.stopPropagation()
 
-  const target = event.target || event.currentTarget || { value: '' }
-  options.value = target.value
-
   if (options.onValueChange) {
-    options.onValueChange(options.value)
+    const target = event.target || event.currentTarget || { value: '' }
+    options.onValueChange(target.value)
   }
 
   if (options.onChange) {
@@ -26,14 +26,19 @@ function adapter(options: BsSelectProps): BsSelectProps {
   const random = getShortId()
   const id = `bs-select-${random}`
 
-  return {
-    ...defaultOptions,
-    id,
-    ...options,
-  }
+  return mergeProps(
+    {
+      ...defaultOptions,
+      id,
+    },
+    options,
+  )
 }
 
-function renderDaisy(options: BsSelectProps) {
+function renderDaisy(props: BsSelectProps) {
+  const options = adapter(props)
+  const [datas] = createStore(props.datas)
+
   return (
     <label class="form-control w-full">
       <div class="label">
@@ -43,6 +48,7 @@ function renderDaisy(options: BsSelectProps) {
         <select
           class="select select-bordered w-full select-ghost"
           id={options.id}
+          disabled={options.disabled}
           onChange={event => onChange(event, options)}
         >
           <Show
@@ -51,7 +57,7 @@ function renderDaisy(options: BsSelectProps) {
             <option selected>{options.placeholder}</option>
           </Show>
 
-          <For each={options.datas}>
+          <For each={datas}>
             {data => (
               <option
                 value={data.value}
