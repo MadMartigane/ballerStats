@@ -18,7 +18,7 @@ import BsMatch from '../match-tile'
 import { createStore } from 'solid-js/store'
 import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
 import { BsMatchTypeText } from '../match-tile/match-tile'
-import { goTo } from '../../libs/utils'
+import { goTo, scrollBottom, scrollTop } from '../../libs/utils'
 import BsSelect from '../select/select'
 
 let isEditingNewMatch: boolean = false
@@ -80,6 +80,7 @@ function editMatch(match: Match) {
   canAddMatch.set(currentMatch.isRegisterable)
 
   toggleAddMatch(true)
+  scrollTop()
 }
 
 function startMatch(match: Match) {
@@ -124,6 +125,7 @@ function renderAddMatchButton() {
           onClick={() => {
             isEditingNewMatch = true
             toggleAddMatch(true)
+            scrollTop()
           }}
         >
           {matchIcon}
@@ -186,6 +188,7 @@ function renderAddingMatchCard() {
             toggleAddMatch(false)
             currentMatch = null
             canAddMatch.set(false)
+            scrollBottom()
           }}
         >
           <X />
@@ -197,6 +200,7 @@ function renderAddingMatchCard() {
           disabled={!canAddMatch.get()}
           onClick={() => {
             registerMatch()
+            scrollBottom()
           }}
         >
           {isEditingNewMatch ? matchIcon : <Save />}

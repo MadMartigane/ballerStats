@@ -14,10 +14,28 @@ export function clone(data: unknown): unknown {
   return JSON.parse(JSON.stringify(data))
 }
 
+export function scrollTop() {
+  setTimeout(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, 100)
+}
+
+export function scrollBottom() {
+  setTimeout(() => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight - window.innerHeight,
+      behavior: 'smooth',
+    })
+  }, 100)
+}
+
 export function goTo(path: string) {
   window.location.hash = path
+  scrollTop()
 }
 
 export function goBack() {
+  // Do not use timeout here
+  window.scrollTo({ top: 0, behavior: 'smooth' })
   window.history.back()
 }

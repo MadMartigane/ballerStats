@@ -1,9 +1,10 @@
-import { Shirt, Trash, UserPen } from 'lucide-solid'
+import { Trash, UserPen } from 'lucide-solid'
 import { For, Show } from 'solid-js'
 import { BsTeamProps } from './team.d'
 import Team from '../../libs/team'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import BsTile from '../tile'
+import { scrollTop } from '../../libs/utils'
 
 function removeTeam(team: Team) {
   orchestrator.Teams.remove(team)
@@ -27,6 +28,7 @@ export default function BsTeam(props: BsTeamProps) {
                 class="btn btn-square btn-secondary"
                 onClick={() => {
                   editTeam(team, props.onEdit)
+                  scrollTop()
                 }}
               >
                 <UserPen />

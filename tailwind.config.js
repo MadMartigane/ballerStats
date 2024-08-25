@@ -18,6 +18,7 @@ export default {
     themes: [
       'business',
       'aqua',
+      'corporate',
       {
         bsLight: {
           primary: '#2563eb',

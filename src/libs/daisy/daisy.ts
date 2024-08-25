@@ -4,7 +4,8 @@ const THEME_HTML_TAG = 'html'
 
 export const THEME_AUTO_KEY = 'auto'
 export const THEMES: {[name: string]: string} = {
-  light: 'bsLight',
+  light: 'corporate',
+  bslight: 'bsLight',
   dark: 'business',
   aqua: 'aqua',
 }

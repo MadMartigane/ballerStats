@@ -11,6 +11,7 @@ import BsTeam from '../team'
 import { createStore } from 'solid-js/store'
 import BsSelectMultiple from '../select-multiple/select-multiple'
 import Player from '../../libs/player'
+import { scrollBottom, scrollTop } from '../../libs/utils'
 
 let isEditingNewTeam: boolean = false
 const isAddingTeam: MadSignal<boolean> = new MadSignal(false)
@@ -111,6 +112,7 @@ function renderAddTeamButton() {
           onClick={() => {
             isEditingNewTeam = true
             toggleAddTeam(true)
+            scrollTop()
           }}
         >
           <Users />
@@ -172,6 +174,7 @@ function renderAddingTeamCard() {
             toggleAddTeam(false)
             currentTeam = null
             canAddTeam.set(false)
+            scrollBottom()
           }}
         >
           <X />
@@ -183,6 +186,7 @@ function renderAddingTeamCard() {
           disabled={!canAddTeam.get()}
           onClick={() => {
             registerTeam()
+            scrollBottom()
           }}
         >
           {isEditingNewTeam ? <Users /> : <Save />}

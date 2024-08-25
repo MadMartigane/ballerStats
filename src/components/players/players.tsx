@@ -9,6 +9,7 @@ import BsInput from '../input'
 import { PlayerRawData } from '../../libs/player'
 import BsPlayer from '../player'
 import { createStore } from 'solid-js/store'
+import { scrollBottom, scrollTop } from '../../libs/utils'
 
 let isEditingNewPlayer: boolean = false
 const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
@@ -92,6 +93,7 @@ function renderAddPlayerButton() {
           onClick={() => {
             isEditingNewPlayer = true
             toggleAddPlayer(true)
+            scrollTop()
           }}
         >
           <UserPlus />
@@ -167,6 +169,7 @@ function renderAddingPlayerCard() {
             toggleAddPlayer(false)
             currentPlayer = null
             canAddPlayer.set(false)
+            scrollBottom()
           }}
         >
           <X />
@@ -178,6 +181,7 @@ function renderAddingPlayerCard() {
           disabled={!canAddPlayer.get()}
           onClick={() => {
             registerPlayer()
+            scrollBottom()
           }}
         >
           {isEditingNewPlayer ? 'Ajouter' : 'Enregistrer'}
@@ -204,6 +208,7 @@ export default function BsPlayers() {
                     player={player}
                     onEdit={player => {
                       editPlayer(player)
+                      scrollTop()
                     }}
                   />
                 </div>
