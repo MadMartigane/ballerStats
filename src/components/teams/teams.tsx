@@ -4,13 +4,14 @@ import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import Team from '../../libs/team'
 import { For, Show } from 'solid-js'
-import BsButton from '../button'
 import BsCard from '../card'
 import BsInput from '../input'
 import { TeamRawData } from '../../libs/team'
 import BsTeam from '../team'
 import { createStore } from 'solid-js/store'
 import BsSelectMultiple from '../select-multiple/select-multiple'
+import Player from '../../libs/player'
+import { scrollBottom, scrollTop } from '../../libs/utils'
 
 let isEditingNewTeam: boolean = false
 const isAddingTeam: MadSignal<boolean> = new MadSignal(false)
@@ -80,6 +81,16 @@ function updateCurrentTeamPlayerIds(playerIds: string[]) {
   currentTeam?.update({ playerIds: [] })
 }
 
+function getSelectDataFromPlayer(players: Player[]) {
+  return orchestrator.Players.players.map(player => ({
+    value: player.id,
+    label: player.nicName
+      ? player.nicName
+      : `${player.firstName} ${player.lastName}`,
+    badge: renderPlayerBadge(player),
+  }))
+}
+
 function renderTeamFallback() {
   return (
     <div>
@@ -96,16 +107,32 @@ function renderAddTeamButton() {
     <div>
       <hr />
       <div class="p-4">
-        {BsButton({
-          slotStart: <Users />,
-          children: 'Ajouter une équipe',
-          onClick: () => {
+        <button
+          class="btn btn-primary"
+          onClick={() => {
             isEditingNewTeam = true
             toggleAddTeam(true)
-          },
-        })}
+            scrollTop()
+          }}
+        >
+          <Users />
+          Ajouter une équipe
+        </button>
       </div>
     </div>
+  )
+}
+
+function renderPlayerBadge(player: Player) {
+  return (
+    <>
+      <span class="text-warning">{player.jersayNumber}</span>
+      <div class="whitespace-nowrap text-base font-medium m-2">
+        {player.nicName
+          ? player.nicName
+          : `${player.firstName} ${player.lastName}`}
+      </div>
+    </>
   )
 }
 
@@ -131,8 +158,8 @@ function renderAddingTeamCard() {
         })}
         <BsSelectMultiple
           placeholder="Sélection des joueurs"
-          players={orchestrator.Players.players}
-          selectedPlayerIds={currentTeam?.playerIds}
+          data={getSelectDataFromPlayer(orchestrator.Players.players)}
+          selectedIds={currentTeam?.playerIds}
           onChange={(playerIds: string[]) => {
             updateCurrentTeamPlayerIds(playerIds)
           }}
@@ -140,26 +167,31 @@ function renderAddingTeamCard() {
       </form>
     ),
     footer: (
-      <div class="grid grid-cols-2 gap-2">
-        {BsButton({
-          wide: true,
-          slotStart: <X />,
-          onClick: () => {
+      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <button
+          class="btn btn-primary btn-wide"
+          onClick={() => {
             toggleAddTeam(false)
             currentTeam = null
             canAddTeam.set(false)
-          },
-          children: 'Annuler',
-        })}
-        {BsButton({
-          wide: true,
-          slotStart: isEditingNewTeam ? <Users /> : <Save />,
-          disabled: !canAddTeam.get(),
-          onClick: () => {
+            scrollBottom()
+          }}
+        >
+          <X />
+          Annuler
+        </button>
+
+        <button
+          class="btn btn-primary btn-wide"
+          disabled={!canAddTeam.get()}
+          onClick={() => {
             registerTeam()
-          },
-          children: isEditingNewTeam ? 'Ajouter' : 'Enregistrer',
-        })}
+            scrollBottom()
+          }}
+        >
+          {isEditingNewTeam ? <Users /> : <Save />}
+          {isEditingNewTeam ? 'Ajouter' : 'Enregistrer'}
+        </button>
       </div>
     ),
   })

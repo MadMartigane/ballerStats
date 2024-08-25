@@ -4,12 +4,12 @@ import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import Player from '../../libs/player'
 import { For, Show } from 'solid-js'
-import BsButton from '../button'
 import BsCard from '../card'
 import BsInput from '../input'
 import { PlayerRawData } from '../../libs/player'
 import BsPlayer from '../player'
 import { createStore } from 'solid-js/store'
+import { scrollBottom, scrollTop } from '../../libs/utils'
 
 let isEditingNewPlayer: boolean = false
 const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
@@ -88,14 +88,17 @@ function renderAddPlayerButton() {
     <div>
       <hr />
       <div class="p-4">
-        {BsButton({
-          slotStart: <UserPlus />,
-          children: 'Ajouter un jouer',
-          onClick: () => {
+        <button
+          class="btn btn-primary"
+          onClick={() => {
             isEditingNewPlayer = true
             toggleAddPlayer(true)
-          },
-        })}
+            scrollTop()
+          }}
+        >
+          <UserPlus />
+          Ajouter un jouer
+        </button>
       </div>
     </div>
   )
@@ -159,26 +162,31 @@ function renderAddingPlayerCard() {
       </form>
     ),
     footer: (
-      <div class="grid grid-cols-2 gap-2">
-        {BsButton({
-          wide: true,
-          slotStart: <X />,
-          onClick: () => {
+      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <button
+          class="btn btn-primary btn-wide"
+          onClick={() => {
             toggleAddPlayer(false)
             currentPlayer = null
             canAddPlayer.set(false)
-          },
-          children: 'Annuler',
-        })}
-        {BsButton({
-          wide: true,
-          slotStart: isEditingNewPlayer ? <UserPlus /> : <Save />,
-          disabled: !canAddPlayer.get(),
-          onClick: () => {
+            scrollBottom()
+          }}
+        >
+          <X />
+          Annuler
+        </button>
+
+        <button
+          class="btn btn-primary btn-wide"
+          disabled={!canAddPlayer.get()}
+          onClick={() => {
             registerPlayer()
-          },
-          children: isEditingNewPlayer ? 'Ajouter' : 'Enregistrer',
-        })}
+            scrollBottom()
+          }}
+        >
+          {isEditingNewPlayer ? 'Ajouter' : 'Enregistrer'}
+          {isEditingNewPlayer ? <UserPlus /> : <Save />}
+        </button>
       </div>
     ),
   })
@@ -200,6 +208,7 @@ export default function BsPlayers() {
                     player={player}
                     onEdit={player => {
                       editPlayer(player)
+                      scrollTop()
                     }}
                   />
                 </div>

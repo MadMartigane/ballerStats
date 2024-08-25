@@ -43,8 +43,6 @@ function installEventHandlers() {
 
   createEffect(() => {
     currentHash.set(location.pathname)
-
-    window.HSStaticMethods.autoInit()
   })
 }
 
@@ -52,7 +50,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
   installEventHandlers()
 
   return (
-    <div class="min-h-full bg-slate-600">
+    <div class="min-h-full">
       <nav class="sticky top-0 z-50 w-full backdrop-blur flex-none transition-colors duration-500 border-b border-slate-50/[0.06] supports-backdrop-blur:bg-slate-200/95 bg-slate-900/75">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="flex h-16 items-center justify-between">
@@ -293,14 +291,14 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
         </Show>
       </nav>
 
-      <header class="bg-white shadow dark:bg-sky-950">
+      <header class="shadow bg-primary text-primary-content">
         <div class="mx-auto max-w-7xl px-3 py-2 sm:px-4 lg:px-6">
-          <h1 class="text-lg font-bold tracking-tight text-gray-900 dark:text-gray-300">
+          <h1 class="text-lg font-bold">
             {renderMasterTitle(currentHash.get())}
           </h1>
         </div>
       </header>
-      <main class="base-component min-h-screen">
+      <main class="min-h-screen">
         <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           {props.children}
         </div>

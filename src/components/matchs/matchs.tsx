@@ -11,7 +11,6 @@ import orchestrator from '../../libs/orchestrator/orchestrator'
 import Match from '../../libs/match'
 import type { MatchType } from '../../libs/match'
 import { For, Show } from 'solid-js'
-import BsButton from '../button'
 import BsCard from '../card'
 import BsInput from '../input'
 import type { MatchRawData } from '../../libs/match'
@@ -19,7 +18,8 @@ import BsMatch from '../match-tile'
 import { createStore } from 'solid-js/store'
 import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
 import { BsMatchTypeText } from '../match-tile/match-tile'
-import { goTo } from '../../libs/utils'
+import { goTo, scrollBottom, scrollTop } from '../../libs/utils'
+import BsSelect from '../select/select'
 
 let isEditingNewMatch: boolean = false
 const isAddingMatch: MadSignal<boolean> = new MadSignal(false)
@@ -80,6 +80,7 @@ function editMatch(match: Match) {
   canAddMatch.set(currentMatch.isRegisterable)
 
   toggleAddMatch(true)
+  scrollTop()
 }
 
 function startMatch(match: Match) {
@@ -87,27 +88,11 @@ function startMatch(match: Match) {
   goTo(`/match/${match.id}`)
 }
 
-function onTypeChange(
-  event: Event & {
-    currentTarget: HTMLSelectElement
-    target: HTMLSelectElement
-  },
-) {
-  const select = event.target
-  const value = select.value as MatchType
-
+function onTypeChange(value: MatchType) {
   setNewMatchData({ type: value })
 }
 
-function onTeamChange(
-  event: Event & {
-    currentTarget: HTMLSelectElement
-    target: HTMLSelectElement
-  },
-) {
-  const select = event.target
-  const value = select.value
-
+function onTeamChange(value: string) {
   setNewMatchData({ teamId: value })
 }
 
@@ -124,7 +109,7 @@ function renderMatchFallback() {
     <div>
       <h4 class="inline-flex items-end my-4">
         <MessageCircleWarning class="w-14 h-14" />
-        <span class="px-2">Aucune match enregistrée.</span>
+        <span class="px-2">Aucun match enregistrée.</span>
       </h4>
     </div>
   )
@@ -135,14 +120,17 @@ function renderAddMatchButton() {
     <div>
       <hr />
       <div class="p-4">
-        {BsButton({
-          slotStart: matchIcon,
-          children: 'Ajouter une match',
-          onClick: () => {
+        <button
+          class="btn btn-primary btn-wide"
+          onClick={() => {
             isEditingNewMatch = true
             toggleAddMatch(true)
-          },
-        })}
+            scrollTop()
+          }}
+        >
+          {matchIcon}
+          Ajouter un match
+        </button>
       </div>
     </div>
   )
@@ -159,88 +147,65 @@ function renderAddingMatchCard() {
     info: 'Saisissez les info nécessaires pour identifier le match.',
     body: (
       <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
-        {BsInput({
-          type: 'text',
-          label: 'Nom de l’adversaire',
-          value: currentMatch?.opponent || '',
-          placeholder: 'OGS U09',
-          onChange: (value: string) => {
+        <BsSelect
+          label="Mon Équipe"
+          placeholder="Sélectionnez l’équipe"
+          value={currentMatch && currentMatch.teamId}
+          datas={teams.map(team => ({ value: team.id, label: team.name }))}
+          onValueChange={(value: string) => {
+            onTeamChange(value)
+          }}
+        />
+
+        <BsInput
+          type="text"
+          label="Nom de l’adversaire"
+          value={currentMatch?.opponent || ''}
+          placeholder="…"
+          onChange={(value: string) => {
             setNewMatchData({ opponent: value })
-          },
-        })}
-        <label
-          for="new-match-type-select"
-          class="block text-sm font-medium mb-2 dark:text-white"
-        >
-          Localité
-        </label>
-        <select
-          id="new-match-type-select"
-          class="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
-          onChange={event => {
-            onTypeChange(event)
           }}
-        >
-          <option
-            value="home"
-            selected={!currentMatch || currentMatch.type === 'home'}
-          >
-            <BsMatchTypeText type='home' />
-          </option>
-          <option value="outside" selected={currentMatch?.type === 'outside'}>
-            <BsMatchTypeText type='outside' />
-          </option>
-        </select>
-        <label
-          for="new-match-team-select"
-          class="block text-sm font-medium mb-2 dark:text-white"
-        >
-          Équipe
-        </label>
-        <select
-          id="new-match-team-select"
-          class="py-3 px-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
-          onChange={event => {
-            onTeamChange(event)
+        />
+
+        <BsSelect
+          label="Localité"
+          default={currentMatch && (currentMatch.type as string)}
+          datas={[
+            { value: 'home', label: <BsMatchTypeText type="home" /> },
+            { value: 'outside', label: <BsMatchTypeText type="outside" /> },
+          ]}
+          onValueChange={(value: string) => {
+            onTypeChange(value as MatchType)
           }}
-        >
-          <Show when={!currentMatch || !currentMatch.teamId}>
-            <option selected>{'Sélectionnez l’équipe'}</option>
-          </Show>
-          <For each={teams}>
-            {team => (
-              <option
-                value={team.id}
-                selected={currentMatch?.teamId === team.id}
-              >
-                {team.name}
-              </option>
-            )}
-          </For>
-        </select>
+        />
       </form>
     ),
     footer: (
-      <div class="grid grid-cols-2 gap-2">
-        {BsButton({
-          wide: true,
-          slotStart: <X />,
-          onClick: () => {
+      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <button
+          class="btn btn-primary btn-wide"
+          onClick={() => {
             toggleAddMatch(false)
             currentMatch = null
             canAddMatch.set(false)
-          },
-          children: 'Annuler',
-        })}
-        {BsButton({
-          wide: true,
-          slotStart: isEditingNewMatch ? matchIcon : <Save />,
-          disabled: !canAddMatch.get(),
-          onClick: () => {
+            scrollBottom()
+          }}
+        >
+          <X />
+          Annuler
+        </button>
+
+        <button
+          class="btn btn-primary btn-wide"
+          disabled={!canAddMatch.get()}
+          onClick={() => {
             registerMatch()
-          },
-          children: isEditingNewMatch ? 'Ajouter' : 'Enregistrer',
-        })}
+            scrollBottom()
+          }}
+        >
+          {isEditingNewMatch ? matchIcon : <Save />}
+          {isEditingNewMatch ? 'Ajouter' : 'Enregistrer'}
+        </button>
       </div>
     ),
   })

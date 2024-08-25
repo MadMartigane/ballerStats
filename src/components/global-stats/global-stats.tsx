@@ -27,39 +27,40 @@ export default function GlobalStats() {
     <div>
       <div class="overflow-x-auto">
         <h2>Enregistrements:</h2>
-        <table class="min-w-full divide-y-2 text-sm">
-          <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-            <tr class="bg-neutral-50 text-neutral-800 dark:text-neutral-200 dark:bg-neutral-900">
-              <td class="whitespace-nowrap px-4 py-2">
+        <table class="table table-zebra">
+          <tbody>
+            <tr>
+              <td>
                 <Dot class="h-8 w-8 text-purple-600 dark:text-purple-300" />
               </td>
-              <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <td>
                 Nombre de joueurs
               </td>
-              <td class="whitespace-nowrap px-4 py-2">{nbPlayers.get()}</td>
+              <td>{nbPlayers.get()}</td>
             </tr>
 
-            <tr class="bg-gray-100 text-gray-900 dark:text-gray-300 dark:bg-gray-900">
-              <td class="whitespace-nowrap px-4 py-2">
+            <tr>
+              <td>
                 <Dot class="h-8 w-8 text-orange-600 dark:text-orange-300" />
               </td>
-              <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <td>
                 Nombre d’équipes
               </td>
-              <td class="whitespace-nowrap px-4 py-2">{nbTeams.get()}</td>
+              <td>{nbTeams.get()}</td>
             </tr>
 
-            <tr class="bg-neutral-50 text-neutral-800 dark:text-neutral-200 dark:bg-neutral-900">
-              <td class="whitespace-nowrap px-4 py-2">
+            <tr>
+              <td>
                 <Dot class="h-8 w-8 text-purple-600 dark:text-purple-300" />
               </td>
-              <td class="whitespace-nowrap px-4 py-2 font-medium">
+              <td>
                 Nombre de matchs
               </td>
-              <td class="whitespace-nowrap px-4 py-2">{nbMatchs.get()}</td>
+              <td>{nbMatchs.get()}</td>
             </tr>
           </tbody>
         </table>
+
       </div>
     </div>
   )
