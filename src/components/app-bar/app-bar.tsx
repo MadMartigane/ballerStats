@@ -43,7 +43,6 @@ function installEventHandlers() {
 
   createEffect(() => {
     currentHash.set(location.pathname)
-    window.HSStaticMethods.autoInit()
   })
 }
 

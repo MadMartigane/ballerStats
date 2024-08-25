@@ -1,19 +1,15 @@
 /* @refresh reload */
 import './index.css'
 import './global/daisy'
-import 'preline/preline'
-
 
 import { For } from 'solid-js'
 import { render } from 'solid-js/web'
 import { Route, HashRouter } from '@solidjs/router'
 import BsAppBar from './components/app-bar'
 import { NAVIGATION_MENU_ENTRIES } from './libs/menu'
-import { initPrelineLib } from './libs/preline'
 
 import relAppleTouchIconUrl from '/img/apple-touch-icon.png'
 import relIconUrl from '/img/favicon.ico'
-
 
 const relAppleTouchIcon: HTMLLinkElement | null = document.querySelector(
   'link[rel="apple-touch-icon"]',
@@ -36,8 +32,6 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 }
 
 render(() => {
-  initPrelineLib();
-
   return (
     <HashRouter root={BsAppBar}>
       <For each={NAVIGATION_MENU_ENTRIES}>
