@@ -4,14 +4,17 @@ export default {
   content: [
     './index.html',
     './src/**/*.{js,ts,jsx,tsx}',
-    './node_modules/preline/preline.js',
   ],
   darkMode: 'selector',
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+          'rajdhani': ['Rajdhani', 'cursive']
+      }
+    },
   },
   plugins: [
-    require('@tailwindcss/forms'),
+    require('@tailwindcss/typography'),
     require('daisyui'),
   ],
   daisyui: {

@@ -4,7 +4,7 @@ import { Info } from 'lucide-solid'
 
 export default function BsTile(options: BsTileProps) {
   return (
-    <div class="card bg-primary text-primary-content min-w-80 max-w-80 w-80 shadow-xl shadow-neutral p-3 text-sm">
+    <div class="card bg-neutral text-neutral-content min-w-80 max-w-80 w-80 shadow-lg shadow-neutral p-3">
         <div class="flex flex-row justify-between">
           <Show when={options.title}>
             <h2 class="card-title">{options.title}</h2>

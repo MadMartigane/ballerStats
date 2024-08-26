@@ -1,6 +1,7 @@
 /* @refresh reload */
 import './index.css'
 import './global/daisy'
+import './global/font-family'
 
 import { For } from 'solid-js'
 import { render } from 'solid-js/web'

@@ -50,8 +50,8 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
   installEventHandlers()
 
   return (
-    <div class="min-h-full">
-      <nav class="sticky top-0 z-50 w-full backdrop-blur flex-none transition-colors duration-500 border-b border-slate-50/[0.06] supports-backdrop-blur:bg-slate-200/95 bg-slate-900/75">
+    <div class="min-h-full font-rajdhani">
+      <nav class="sticky top-0 z-50 w-full backdrop-blur flex-none transition-colors duration-500 border-b border-slate-50/[0.06] supports-backdrop-blur:bg-slate-200/95 bg-slate-900/75 shadow shadow-lg shadow-neutral">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="flex h-16 items-center justify-between">
             <div class="flex items-center">
@@ -291,7 +291,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
         </Show>
       </nav>
 
-      <header class="shadow bg-primary text-primary-content">
+      <header class="bg-neutral text-neutral-content">
         <div class="mx-auto max-w-7xl px-3 py-2 sm:px-4 lg:px-6">
           <h1 class="text-lg font-bold">
             {renderMasterTitle(currentHash.get())}
