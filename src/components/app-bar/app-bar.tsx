@@ -298,7 +298,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
           </h1>
         </div>
       </header>
-      <main class="min-h-screen">
+      <main>
         <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           {props.children}
         </div>
