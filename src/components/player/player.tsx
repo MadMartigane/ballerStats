@@ -4,9 +4,14 @@ import { BsPlayerProps } from './player.d'
 import Player from '../../libs/player'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import BsTile from '../tile'
+import { confirmAction } from '../../libs/utils'
 
-function removePlayer(player: Player) {
-  orchestrator.Players.remove(player)
+async function removePlayer(player: Player) {
+  const yes = await confirmAction()
+
+  if (yes) {
+    orchestrator.Players.remove(player)
+  }
 }
 
 function editPlayer(player: Player, callback: (player: Player) => void) {

@@ -4,10 +4,14 @@ import { BsTeamProps } from './team.d'
 import Team from '../../libs/team'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import BsTile from '../tile'
-import { scrollTop } from '../../libs/utils'
+import { confirmAction, scrollTop } from '../../libs/utils'
 
-function removeTeam(team: Team) {
-  orchestrator.Teams.remove(team)
+async function removeTeam(team: Team) {
+  const yes = await confirmAction()
+
+  if (yes) {
+    orchestrator.Teams.remove(team)
+  }
 }
 
 function editTeam(team: Team, callback: (team: Team) => void) {
@@ -52,9 +56,7 @@ export default function BsTeam(props: BsTeamProps) {
             if (player) {
               return (
                 <p class="">
-                  <span class="text-warning">
-                    {player.jersayNumber}
-                  </span>
+                  <span class="text-warning">{player.jersayNumber}</span>
                   <span class="p-1">{`${player.nicName || player.firstName} ${(player.nicName && '') || player.lastName}`}</span>
                 </p>
               )
@@ -64,6 +66,6 @@ export default function BsTeam(props: BsTeamProps) {
           }}
         </For>
       </BsTile>
-  </>
+    </>
   )
 }

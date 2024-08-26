@@ -4,9 +4,14 @@ import type { BsMatchTileProps, BsMatchTypeTextProps } from './match-tile.d'
 import Match from '../../libs/match'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import BsTile from '../tile'
+import { confirmAction } from '../../libs/utils'
 
-function removeMatch(match: Match) {
-  orchestrator.Matchs.remove(match)
+async function removeMatch(match: Match) {
+  const yes = await confirmAction()
+
+  if (yes) {
+    orchestrator.Matchs.remove(match)
+  }
 }
 
 function callCallback(match: Match, callback?: (match: Match) => void) {
