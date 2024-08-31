@@ -1,22 +1,20 @@
 # ballerStats
+
 Web app to collect and visualize your player statistics
 
-### Components Inspiration
-* SolidJS
-<https://docs.solidjs.com/>
+## Third part used library
 
-* Tailwindcss
-<https://tailwindcss.com/>
+- SolidJS
+  <https://docs.solidjs.com/>
 
-* Preline (CSS Components)
-<https://www.preline.co/index.html>
+- Tailwindcss
+  <https://tailwindcss.com/>
 
-* Lucide (icons)
-<https://lucide.dev/>
+- Lucide (icons)
+  <https://lucide.dev/>
 
-* Flowbite (CSS Components)
-<https://flowbite.com/>
+- DaisyUI
+  <https://daisyui.com/>
 
-* DaisyUI
-<https://daisyui.com/>
-
+- SVGrepo
+  <https://www.svgrepo.com/>
