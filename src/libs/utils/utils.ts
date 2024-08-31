@@ -78,7 +78,7 @@ export async function confirmAction(
 
   //    <p class="py-4">Press ESC key or click the button below to close</p>
   const questionEl: HTMLParagraphElement = document.createElement('p')
-  questionEl.innerText = `⚠ ${message}`
+  questionEl.innerText = message
   questionEl.classList.add('py-4', 'alert', 'my-4', 'alert-info')
   questionEl.role = 'alert'
   modalBox.append(questionEl)

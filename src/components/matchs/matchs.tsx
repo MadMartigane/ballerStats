@@ -31,7 +31,7 @@ const [teams, setTeams] = createStore(orchestrator.Teams.teams)
 const matchMenuEntry = NAVIGATION_MENU_ENTRIES.find(menuEntry => {
   return menuEntry.path === '/match/:id'
 })
-const matchIcon = matchMenuEntry ? matchMenuEntry.icon() : <BrainCircuit />
+const matchIcon = matchMenuEntry ? matchMenuEntry.icon('primary-content') : <BrainCircuit />
 
 let currentMatch: Match | null = null
 

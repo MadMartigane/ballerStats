@@ -1,45 +1,106 @@
-import type { BsIconProps } from './icons.d'
+import type { BsIconData, BsIconProps } from './icons.d'
+import { DaisyVariant, getTheme } from '../../libs/daisy'
+import { createStore } from 'solid-js/store'
+import bsEventBus from '../../libs/event-bus'
+import { clone } from '../../libs/utils'
+
+const VARIANT: { [key: string]: { [key in DaisyVariant]: string } } = {
+  default: {
+    // light
+    text: '#171929',
+    primary: '#e8e8e8',
+    "primary-content": '#171929',
+    secondary: '#7a91b1',
+    accent: '#66caa0',
+    neutral: '#171929',
+    "neutral-content": '#edf2f7',
+    success: '#00a96d',
+    warning: '#ffbd00',
+    error: '#ff5760',
+  },
+  business: {
+    text: '#cccccc',
+    primary: '#1b1b1b',
+    "primary-content": '#bdcdd0',
+    secondary: '#7b8f99',
+    accent: '#e86846',
+    neutral: '#22272d',
+    "neutral-content": '#bdcdd0',
+    success: '#6ab086',
+    warning: '#daad58',
+    error: '#ab3e31',
+  },
+  aqua: {
+    text: '#d3ddef',
+    primary: '#2d5496',
+    "primary-content": '#d3ddef',
+    secondary: '#956eb2',
+    accent: '#e8d48b',
+    neutral: '#3b89c3',
+    "neutral-content": '#09080d',
+    success: '#15a34a',
+    warning: '#d87605',
+    error: '#ff7164',
+  },
+}
+
+const SIZE: { [key: string]: string } = {
+  sx: '12px',
+  sm: '18px',
+  base: '24px',
+  lg: '30px',
+  xl: '36px',
+  '2xl': '42px',
+  '3xl': '48px',
+  '4xl': '54px',
+  '5xl': '60px',
+  '6xl': '66px',
+  '7xl': '72px',
+  '8xl': '78px',
+  '9xl': '84px',
+}
 
 const DEFAULT_ICON_DATA = {
-  class: '',
-  xmlns: 'http://www.w3.org/2000/svg',
-  height: '24px',
-  viewBox: '0 -960 960 960',
-  width: '24px',
+  height: SIZE.base,
+  width: SIZE.base,
+  fill: VARIANT.default.text,
 }
 
-const CLASSES: {[key: string]: string} = {
-  primary:
-    'stroke-slate-200 dark:stroke-slate-800',
-  secondary:
-    'stroke-emerald-800 dark:text-teal-500',
-  light:
-    'stroke-sky-800 dark:text-blue-400',
-  success:
-    'stroke-slate-200 dark:stroke-slate-800',
-  warning:
-    'stroke-slate-200 dark:stroke-slate-800',
-  error:
-    'stroke-slate-200 dark:stroke-slate-800',
-  sm: 'stroke-1',
-  base: 'stroke-2',
-  lg: 'stroke-3',
-}
-
-export function bsIconPropsToData(props: BsIconProps) {
+async function bsIconPropsToData(props: BsIconProps): Promise<BsIconData> {
+  const theme = (await getTheme()) || 'default'
+  const variant = VARIANT[theme] || VARIANT.default
 
   const data = {
     ...DEFAULT_ICON_DATA,
   }
 
   if (props.variant) {
-    data.class += CLASSES[props.variant]
+    data.fill = variant[props.variant] || variant.text
+  } else {
+    data.fill = variant.text
   }
 
   if (props.size) {
-    data.class += CLASSES[props.size]
+    data.width = SIZE[props.size]
+    data.height = SIZE[props.size]
   }
+  console.log('data: ', data)
 
   return data
 }
 
+export function bsIconPropsToDataStore(props: BsIconProps) {
+  const data = clone(DEFAULT_ICON_DATA) as BsIconData
+  const [store, setStore] = createStore(data)
+  bsEventBus.addEventListener('BS::THEME::CHANGE', () => {
+    bsIconPropsToData(props).then(data => {
+      setStore(data)
+    })
+  })
+
+  bsIconPropsToData(props).then(data => {
+    setStore(data)
+  })
+
+  return store
+}

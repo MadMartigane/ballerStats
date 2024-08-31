@@ -1,5 +1,15 @@
-import { JSX } from 'solid-js'
-import type { PrelineBaseOptions } from '../../libs/preline'
+// import { JSX } from 'solid-js'
 
+import { DaisyVariant } from "../../libs/daisy"
 
-export type BsIconProps = PrelineBaseOptions & JSX.HTMLAttributes<HTMLImageElement>
+export type BsIconProps = {
+  variant?: DaisyVariant
+  size?: string
+}
+//} & JSX.HTMLAttributes<HTMLImageElement>
+
+export type BsIconData = {
+  width: string
+  height: string
+  fill: string
+}
