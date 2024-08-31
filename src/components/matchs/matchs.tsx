@@ -12,6 +12,7 @@ import BsInput from '../input'
 import BsMatch from '../match-tile'
 import { BsMatchTypeText } from '../match-tile/match-tile'
 import BsSelect from '../select/select'
+import BsToggle from '../toggle/toggle'
 
 let isEditingNewMatch: boolean = false
 const isAddingMatch: MadSignal<boolean> = new MadSignal(false)
@@ -81,6 +82,10 @@ function onTypeChange(value: MatchType) {
 
 function onTeamChange(value: string) {
   setNewMatchData({ teamId: value })
+}
+
+function onStatusChange(isOpen: boolean) {
+  setNewMatchData({ status: isOpen ? 'unlocked' : 'locked' })
 }
 
 function onSubmit(event: KeyboardEvent) {
@@ -163,6 +168,15 @@ function renderAddingMatchCard() {
           ]}
           onValueChange={(value: string) => {
             onTypeChange(value as MatchType)
+          }}
+        />
+
+        <BsToggle
+          label="Match ouvert"
+          size='lg'
+          value={currentMatch?.status === 'unlocked'}
+          onChange={checked => {
+            onStatusChange(checked)
           }}
         />
       </form>

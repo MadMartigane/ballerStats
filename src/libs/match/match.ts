@@ -1,5 +1,10 @@
 import { clone, getUniqId } from '../utils'
-import { MatchRawData, MatchStatLogEntry, MatchType } from './match.d'
+import {
+  MatchRawData,
+  MatchStatLogEntry,
+  MatchType,
+  MatchStatus,
+} from './match.d'
 
 const defaultType: MatchType = 'home'
 
@@ -9,7 +14,8 @@ export default class Match {
   public opponent: string | null = null
   public type: MatchType = defaultType
   public teamId: string | null = null
-  public stats : Array<MatchStatLogEntry> = []
+  public stats: Array<MatchStatLogEntry> = []
+  public status: MatchStatus = 'unlocked'
 
   constructor(data?: MatchRawData) {
     if (data) {
@@ -34,6 +40,7 @@ export default class Match {
     this.type = data.type || defaultType
     this.teamId = data.teamId || null
     this.stats = data.stats || []
+    this.status = data.status || 'unlocked'
   }
 
   public getRawData(): MatchRawData {
@@ -42,6 +49,7 @@ export default class Match {
       opponent: this.opponent,
       type: this.type,
       teamId: this.teamId,
+      status: this.status,
       stats: clone(this.stats) as Array<MatchStatLogEntry>,
     }
   }

@@ -5,6 +5,7 @@ import {
   StatMatchActionItemType,
   StatMatchSummary,
   StatMatchSummaryPlayer,
+  StatMatchSummaryRebonds,
 } from './stats.d'
 
 function getPlayerIdsInStats(match: Match) {
@@ -106,14 +107,74 @@ export function getOpponentFouls(match: Match) {
   return getPlayerStatByType(match, TEAM_OPPONENT_ID, 'foul')
 }
 
+export function getTeamDefensiveRebonds(
+  match: Match,
+  playerIds: Array<string>,
+) {
+  return playerIds.reduce((result, playerId) => {
+    return result + getPlayerStatByType(match, playerId, 'defensive-rebond')
+  }, 0)
+}
+
+export function getTeamOffensiveRebonds(
+  match: Match,
+  playerIds: Array<string>,
+) {
+  return playerIds.reduce((result, playerId) => {
+    return result + getPlayerStatByType(match, playerId, 'offensive-rebond')
+  }, 0)
+}
+
+export function getFullRebondStats(
+  match: Match,
+  playerIds: Array<string>,
+): StatMatchSummaryRebonds {
+  const opponentDefensive = getOpponentDefensiveRebonds(match)
+  const opponentOffensive = getOpponentOffensiveRebonds(match)
+  const opponentTotal = opponentDefensive + opponentOffensive
+
+  const teamOffensive = getTeamOffensiveRebonds(match, playerIds)
+  const teamDefensive = getTeamDefensiveRebonds(match, playerIds)
+  const teamTotal = teamDefensive + teamOffensive
+
+  const teamTotalPercentage =
+    Math.round((teamTotal / (opponentTotal + teamTotal)) * 100) || 0
+  const teamDefensivePercentage =
+    Math.round((teamDefensive / (opponentDefensive + teamDefensive)) * 100) || 0
+  const teamOffensivePercentage =
+    Math.round((teamOffensive / (opponentOffensive + teamOffensive)) * 100) || 0
+
+  return {
+    teamTotal,
+    teamOffensive,
+    teamDefensive,
+    teamTotalPercentage,
+    teamOffensivePercentage,
+    teamDefensivePercentage,
+    opponentTotal,
+    opponentDefensive,
+    opponentOffensive,
+  }
+}
+
 export function getStatSummary(match: Match | null): StatMatchSummary {
   if (!match) {
     return {
       localScore: 0,
       opponentScore: 0,
-      opponentRebonds: 0,
       opponentFouls: 0,
       players: {},
+      rebonds: {
+        teamTotal: 0,
+        teamOffensive: 0,
+        teamDefensive: 0,
+        teamTotalPercentage: 0,
+        teamOffensivePercentage: 0,
+        teamDefensivePercentage: 0,
+        opponentTotal: 0,
+        opponentDefensive: 0,
+        opponentOffensive: 0,
+      },
     }
   }
 
@@ -208,12 +269,13 @@ export function getStatSummary(match: Match | null): StatMatchSummary {
     {} as StatMatchSummaryPlayer,
   )
 
+  const rebonds = getFullRebondStats(match, playerIds)
+
   return {
     localScore: getLocalScore(match, playerIds),
     opponentScore: getOpponentScore(match),
-    opponentRebonds:
-      getOpponentDefensiveRebonds(match) + getOpponentOffensiveRebonds(match),
     opponentFouls: getOpponentFouls(match),
     players,
+    rebonds,
   }
 }
