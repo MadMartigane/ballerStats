@@ -1,6 +1,7 @@
 import { Show } from 'solid-js'
 import { BsScoreCardProps } from './score-card.d'
 import { BsMatchTypeBadge } from '../match-tile'
+import { toDateTime } from '../../libs/utils'
 
 export default function BsScoreCard(props: BsScoreCardProps) {
   return (
@@ -30,6 +31,11 @@ export default function BsScoreCard(props: BsScoreCardProps) {
         <Show when={props.location}>
           <div class="text-center w-full place-self-center">
             <BsMatchTypeBadge type={props.location} size="sm" />
+          </div>
+        </Show>
+        <Show when={props.date}>
+          <div class="text-center w-full place-self-center">
+            {toDateTime(props.date || null)}
           </div>
         </Show>
       </div>
