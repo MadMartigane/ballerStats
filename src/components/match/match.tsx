@@ -1,11 +1,4 @@
-import {
-  Angry,
-  ChevronLeft,
-  Eraser,
-  TriangleAlert,
-  User,
-  Users,
-} from 'lucide-solid'
+import { ChevronLeft, Eraser, TriangleAlert, User, Users } from 'lucide-solid'
 import { For, Show } from 'solid-js'
 import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
@@ -19,8 +12,8 @@ import BsScoreCard from '../score-card'
 import { BsMatchProps } from './match.d'
 import Match from '../../libs/match'
 import { createStore, SetStoreFunction } from 'solid-js/store'
-import { getPlayerScore, getStatSummary } from '../../libs/stats/stats-util'
-import { confirmAction } from '../../libs/utils'
+import { getStatSummary } from '../../libs/stats/stats-util'
+import { confirmAction, goBack } from '../../libs/utils'
 
 function openActionMode(
   playerId: string,
@@ -196,7 +189,7 @@ export default function BsMatch(props: BsMatchProps) {
           <hr />
 
           <button
-            class="btn btn-warning w-full my-2"
+            class="btn btn-warning w-full"
             disabled={disableClearLastAction.get()}
             onClick={() => {
               removeLastAction(match, setStatSummary, disableClearLastAction)
@@ -232,19 +225,19 @@ export default function BsMatch(props: BsMatchProps) {
             )}
           </For>
         </div>
-
-        <hr />
-        {/* CANCEL ACTION */}
-        <button
-          class="btn btn-secondary w-full my-2"
-          onClick={() => {
-            closeActionMode(actionMode)
-          }}
-        >
-          <ChevronLeft />
-          <span>Anuler</span>
-        </button>
       </Show>
+
+      <hr />
+      {/* CANCEL ACTION */}
+      <button
+        class="btn btn-outline w-full"
+        onClick={() => {
+          actionMode.get() ? closeActionMode(actionMode) : goBack()
+        }}
+      >
+        <ChevronLeft />
+        <span>Retour</span>
+      </button>
     </div>
   )
 }
