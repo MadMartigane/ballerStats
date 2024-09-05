@@ -1,4 +1,11 @@
-import { ChevronLeft, Eraser, TriangleAlert, User, Users } from 'lucide-solid'
+import {
+  ChevronLeft,
+  Eraser,
+  Shirt,
+  TriangleAlert,
+  User,
+  Users,
+} from 'lucide-solid'
 import { For, Show } from 'solid-js'
 import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
@@ -14,6 +21,7 @@ import Match from '../../libs/match'
 import { createStore, SetStoreFunction } from 'solid-js/store'
 import { getStatSummary } from '../../libs/stats/stats-util'
 import { confirmAction, goBack } from '../../libs/utils'
+import Player from '../../libs/player'
 
 function openActionMode(
   playerId: string,
@@ -95,16 +103,14 @@ async function removeLastAction(
 }
 
 function renderPlayerButton(
-  playerId: string,
+  player: Player | null,
   match: Match | null,
   actionMode: MadSignal<string | null>,
   statSummary: StatMatchSummary,
 ) {
-  const player = orchestrator.getPlayer(playerId)
-
   if (!player) {
     return (
-      <button class="btn btn-error btn-disabled w-full">{`Joueur ${playerId} non trouvé`}</button>
+      <button class="btn btn-error btn-disabled w-full">{`Joueur non trouvé`}</button>
     )
   }
 
@@ -141,6 +147,25 @@ function renderPlayerButton(
   )
 }
 
+function renderPlayerHeader(playerId: string | null) {
+  const player = orchestrator.getPlayer(playerId)
+
+  return (
+    <div class="w-full my-2 p-3 grid grid-cols-3 gap-3 bg-primary text-primary-content rounded">
+      <div>
+        <Shirt size={28} />
+      </div>
+      <div class="text-center">
+        <div class="text-xl">
+          {player?.nicName ? player.nicName : player?.firstName}
+        </div>
+        <div class="text-sm">Action</div>
+      </div>
+      <div class="text-3xl text-right">{player?.jersayNumber}</div>
+    </div>
+  )
+}
+
 export default function BsMatch(props: BsMatchProps) {
   const matchId = props.id
   const match = orchestrator.getMatch(matchId)
@@ -149,6 +174,7 @@ export default function BsMatch(props: BsMatchProps) {
   const disableClearLastAction = new MadSignal((match?.stats.length || 0) === 0)
 
   const team = orchestrator.getTeam(match?.teamId)
+  const sortedPlayers = orchestrator.getJerseySortedPlayers(team?.playerIds)
 
   return (
     <div class="w-full">
@@ -160,10 +186,10 @@ export default function BsMatch(props: BsMatchProps) {
       </div>
 
       <Show when={!actionMode.get()}>
-        <div class="w-full py-2">
-          <For each={team?.playerIds}>
-            {(playerId: string) =>
-              renderPlayerButton(playerId, match, actionMode, statSummary)
+        <div class="w-full py-3">
+          <For each={sortedPlayers}>
+            {player =>
+              renderPlayerButton(player, match, actionMode, statSummary)
             }
           </For>
 
@@ -201,8 +227,10 @@ export default function BsMatch(props: BsMatchProps) {
           </button>
         </div>
       </Show>
+
       <Show when={actionMode.get()}>
-        <div class="w-full py-2 grid grid-cols-2 gap-2">
+        {renderPlayerHeader(actionMode.get())}
+        <div class="w-full py-2 grid grid-cols-2 gap-3">
           <For each={STATS_MATCH_ACTIONS}>
             {item => (
               <button

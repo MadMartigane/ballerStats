@@ -10,7 +10,6 @@ import {
 } from '../store'
 import Teams from '../teams'
 import Matchs from '../matchs'
-import Team from '../team'
 
 export class Orchestrator {
   #players: Players = new Players()
@@ -216,6 +215,19 @@ export class Orchestrator {
       this.throwTeamsUpdatedEvent()
       return
     }
+  }
+
+  public getJerseySortedPlayers(playerIds?: Array<string>) {
+    if (!playerIds) {
+      return []
+    }
+
+    const players = playerIds.map(playerId => this.getPlayer(playerId))
+
+    return players.sort(
+      (a, b) =>
+        parseInt(a?.jersayNumber || '0') - parseInt(b?.jersayNumber || '0'),
+    )
   }
 }
 
