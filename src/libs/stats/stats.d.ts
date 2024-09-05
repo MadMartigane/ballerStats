@@ -9,6 +9,7 @@ export type StatMatchActionItemName =
   | 'offensive-rebond'
   | 'defensive-rebond'
   | 'assist'
+  | 'foul'
 
 export type StatMatchActionItem = {
   name: StatMatchActionItemName
@@ -19,7 +20,19 @@ export type StatMatchActionItem = {
   label2?: string | JSXElement
 }
 
+export type StatMatchSummaryPlayer = {
+  [playerId: string]: {
+    score: number
+    rebonds: number
+    fouls: number
+    assists: number
+  }
+}
+
 export type StatMatchSummary = {
-  localScore: number,
-  opponentScore: number,
+  localScore: number
+  opponentScore: number
+  opponentRebonds: number
+  opponentFouls: number
+  players: StatMatchSummaryPlayer
 }

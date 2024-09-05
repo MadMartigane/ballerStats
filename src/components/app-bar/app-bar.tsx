@@ -1,11 +1,10 @@
+import { RouteSectionProps, useLocation } from '@solidjs/router'
 import { createEffect, For, Show } from 'solid-js'
 import MadSignal from '../../libs/mad-signal'
 import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
-import { RouteSectionProps, useLocation } from '@solidjs/router'
 
+import { Bell, Menu, UserCog, X } from 'lucide-solid'
 import logoSmallUrl from '/img/logo_small.png'
-import { ArrowLeft, Bell, Menu, UserCog, X } from 'lucide-solid'
-import { goBack } from '../../libs/utils'
 
 const isUserMenuOpen: MadSignal<boolean> = new MadSignal(false)
 const isMainMenuOpen: MadSignal<boolean> = new MadSignal(false)
@@ -54,7 +53,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
 
   return (
     <div class="min-h-full font-rajdhani">
-      <nav class="sticky top-0 z-50 w-full backdrop-blur flex-none transition-colors duration-500 border-b border-slate-50/[0.06] supports-backdrop-blur:bg-slate-200/95 bg-slate-900/75 shadow-lg shadow-neutral">
+      <nav class="sticky top-0 z-50 w-full backdrop-blur flex-none transition-colors duration-500 border-b border-slate-50/[0.06] supports-backdrop-blur:bg-slate-200/95 bg-slate-900/75 shadow shadow-neutral">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="flex h-16 items-center justify-between">
             <div class="flex items-center">

@@ -1,4 +1,10 @@
-import { Hand, IterationCcw, IterationCw, RedoDot } from 'lucide-solid'
+import {
+  ArrowLeftFromLine,
+  Ban,
+  Hand,
+  IterationCcw,
+  RedoDot,
+} from 'lucide-solid'
 import BsIconBasketballGoal from '../../components/icons/basketball-goal'
 import BsIconBasketballMissedGoal from '../../components/icons/basketball-missed-goal'
 import { StatMatchActionItem } from './stats.d'
@@ -54,16 +60,16 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
   },
   {
     name: 'offensive-rebond',
-    label1: <IterationCcw />,
-    label2: 'O-R',
+    label1: 'O-R',
+    label2: <IterationCcw />,
     type: 'success',
     value: 1,
     icon: <Hand />,
   },
   {
     name: 'defensive-rebond',
-    label1: <IterationCw />,
-    label2: 'D-R',
+    label1: 'D-R',
+    label2: <ArrowLeftFromLine />,
     type: 'success',
     value: 1,
     icon: <Hand />,
@@ -74,5 +80,12 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     type: 'success',
     value: 1,
     icon: <RedoDot />,
+  },
+  {
+    name: 'foul',
+    label1: 'Faute !',
+    type: 'error',
+    value: 1,
+    icon: <Ban />,
   },
 ]

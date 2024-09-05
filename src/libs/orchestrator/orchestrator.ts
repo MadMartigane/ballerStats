@@ -142,27 +142,6 @@ export class Orchestrator {
     }
   }
 
-  private cleanTeam(team: Team) {
-    const cleanPlayerIds = team.playerIds.filter(playerId => {
-      return Boolean(this.getPlayer(playerId))
-    })
-
-    console.log('raw ids: ', team.playerIds)
-    console.log(
-      'before: %s, after: %s',
-      team.playerIds.length,
-      cleanPlayerIds.length,
-    )
-    if (team.playerIds.length > cleanPlayerIds.length) {
-      team.update({ playerIds: cleanPlayerIds })
-
-      console.log('clean ids: ', team.playerIds)
-      return true
-    }
-
-    return false
-  }
-
   public get Players() {
     return this.#players
   }
@@ -234,12 +213,9 @@ export class Orchestrator {
     })
 
     if (cleaned) {
-      console.log('Yes, cleaned !!!!!!!')
-      console.log('Teams: ', this.Teams.teams)
       this.throwTeamsUpdatedEvent()
       return
     }
-    console.log('No, not cleaned !!!!!!!')
   }
 }
 

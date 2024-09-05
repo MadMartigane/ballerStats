@@ -48,8 +48,6 @@ export default class Matchs {
       )
     }
 
-    console.log("old match raw data: ", oldMatch.getRawData())
-    console.log("new match raw data: ", newMatch.getRawData())
     oldMatch.setFromRawData(newMatch.getRawData())
     this.throwUpdatedMatchEvent()
   }

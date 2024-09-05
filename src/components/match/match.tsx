@@ -1,4 +1,11 @@
-import { Angry, ChevronLeft, User } from 'lucide-solid'
+import {
+  Angry,
+  ChevronLeft,
+  Eraser,
+  TriangleAlert,
+  User,
+  Users,
+} from 'lucide-solid'
 import { For, Show } from 'solid-js'
 import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
@@ -12,6 +19,8 @@ import BsScoreCard from '../score-card'
 import { BsMatchProps } from './match.d'
 import Match from '../../libs/match'
 import { createStore, SetStoreFunction } from 'solid-js/store'
+import { getPlayerScore, getStatSummary } from '../../libs/stats/stats-util'
+import { confirmAction } from '../../libs/utils'
 
 function openActionMode(
   playerId: string,
@@ -29,6 +38,7 @@ function registerStat(
   item: StatMatchActionItem,
   match: Match | null,
   setStatSummary: SetStoreFunction<StatMatchSummary>,
+  disableClearLastAction: MadSignal<boolean>,
 ) {
   if (!playerId || !match) {
     return
@@ -41,80 +51,99 @@ function registerStat(
     value: item.value,
   })
 
-  console.log('register new stat item: ', item)
-  console.log('register new stat item total: ', match.stats)
-  setStatSummary(buildStatSummary(match))
+  disableClearLastAction.set(match.stats.length === 0)
+  setStatSummary(getStatSummary(match))
   orchestrator.Matchs.updateMatch(match)
 }
 
-function buildStatSummary(match: Match | null) {
+async function removeAction(
+  match: Match | null,
+  id: number,
+  setStatSummary: SetStoreFunction<StatMatchSummary>,
+  disableClearLastAction: MadSignal<boolean>,
+) {
   if (!match) {
-    return {
-      localScore: 0,
-      opponentScore: 0,
-    }
+    return
   }
 
-  const localScore = match.stats.reduce((score, statEntry) => {
-    if (
-      ['2pts', 'free-throw', '3pts'].includes(statEntry.name) &&
-      statEntry.playerId !== TEAM_OPPONENT_ID
-    ) {
-      return score + statEntry.value
-    }
+  const maxId = match.stats.length - 1
 
-    return score
-  }, 0)
-
-  const opponentScore = match.stats.reduce((score, statEntry) => {
-    if (
-      ['2pts', 'free-throw', '3pts'].includes(statEntry.name) &&
-      statEntry.playerId === TEAM_OPPONENT_ID
-    ) {
-      return score + statEntry.value
-    }
-
-    return score
-  }, 0)
-
-  return {
-    localScore,
-    opponentScore,
+  if (id < 0 || id > maxId) {
+    throw new Error(`Unable to remove action id ${id}: nim 0, max: ${maxId}`)
   }
+
+  const confirm = await confirmAction()
+  if (!confirm) {
+    return
+  }
+
+  match.stats.splice(id, 1)
+
+  disableClearLastAction.set(match.stats.length === 0)
+  setStatSummary(getStatSummary(match))
+  orchestrator.Matchs.updateMatch(match)
+}
+
+async function removeLastAction(
+  match: Match | null,
+  setStatSummary: SetStoreFunction<StatMatchSummary>,
+  disableClearLastAction: MadSignal<boolean>,
+) {
+  if (!match) {
+    return
+  }
+
+  return removeAction(
+    match,
+    match.stats.length - 1,
+    setStatSummary,
+    disableClearLastAction,
+  )
 }
 
 function renderPlayerButton(
   playerId: string,
   match: Match | null,
   actionMode: MadSignal<string | null>,
+  statSummary: StatMatchSummary,
 ) {
   const player = orchestrator.getPlayer(playerId)
 
   if (!player) {
     return (
-      <button class="btn btn-neutral basis-2/3">{`Joueur ${playerId} non trouvé`}</button>
+      <button class="btn btn-error btn-disabled w-full">{`Joueur ${playerId} non trouvé`}</button>
     )
   }
 
   if (!match) {
     return (
-      <button class="btn btn-neutral basis-2/3">{`Match non trouvé`}</button>
+      <button class="btn btn-error btn-disabled w-full">{`Match non trouvé`}</button>
     )
   }
 
   return (
-    <div class="w-full flex flex-row my-1">
-      <button
-        class="btn btn-primary basis-2/3"
+    <div class="w-full flex flex-row my-2">
+      <div
+        class="btn btn-primary w-full"
         onClick={() => {
           openActionMode(player.id, actionMode)
         }}
       >
-        <User />
-        <span class="text-2xl">{player.jersayNumber}</span> -{' '}
-        {player.nicName ? player.nicName : player.firstName}
-      </button>
-      <div class="basis-1/3">{playerId}</div>
+        <User size={32} />
+        <span class="text-3xl">{player.jersayNumber}</span>
+        <span class="inline-block w-32">
+          {player.nicName ? player.nicName : player.firstName}
+        </span>
+        <span class="inline-block w-5 text-success text-xl">
+          {statSummary.players[player.id]?.score || 0}
+        </span>
+        <span class="inline-block w-5 text-accent-content text-xl">
+          {statSummary.players[player.id]?.rebonds || 0}
+        </span>
+        <span class="inline-block w-5 text-warning text-xl">
+          {statSummary.players[player.id]?.fouls || 0}
+        </span>
+      </div>
     </div>
   )
 }
@@ -123,15 +152,14 @@ export default function BsMatch(props: BsMatchProps) {
   const matchId = props.id
   const match = orchestrator.getMatch(matchId)
   const actionMode = new MadSignal(null) as MadSignal<string | null>
-  const [statSummary, setStatSummary] = createStore(buildStatSummary(match))
+  const [statSummary, setStatSummary] = createStore(getStatSummary(match))
+  const disableClearLastAction = new MadSignal((match?.stats.length || 0) === 0)
 
   const team = orchestrator.getTeam(match?.teamId)
 
-  console.log('match: ', match)
-
   return (
     <div class="w-full">
-      <div class="w-full border border-neutral rounded bg-accent text-accent-content">
+      <div class="w-full border border-neutral rounded bg-secondary text-secondary-content">
         <BsScoreCard
           localScore={statSummary.localScore}
           visitorScore={statSummary.opponentScore}
@@ -142,7 +170,7 @@ export default function BsMatch(props: BsMatchProps) {
         <div class="w-full py-2">
           <For each={team?.playerIds}>
             {(playerId: string) =>
-              renderPlayerButton(playerId, match, actionMode)
+              renderPlayerButton(playerId, match, actionMode, statSummary)
             }
           </For>
 
@@ -152,8 +180,31 @@ export default function BsMatch(props: BsMatchProps) {
               openActionMode(TEAM_OPPONENT_ID, actionMode)
             }}
           >
-            <Angry />
-            Adversaire
+            <Users size={32} />
+            <span class="inline-block w-44 text-lg">Équipe adverse</span>
+            <span class="inline-block w-5 text-success text-xl">
+              {statSummary.opponentScore || 0}
+            </span>
+            <span class="inline-block w-5 text-accent-content text-xl">
+              {statSummary.opponentRebonds || 0}
+            </span>
+            <span class="inline-block w-5 text-warning text-xl">
+              {statSummary.opponentFouls || 0}
+            </span>
+          </button>
+
+          <hr />
+
+          <button
+            class="btn btn-warning w-full my-2"
+            disabled={disableClearLastAction.get()}
+            onClick={() => {
+              removeLastAction(match, setStatSummary, disableClearLastAction)
+            }}
+          >
+            <Eraser />
+            Effacer la dernière action
+            <TriangleAlert />
           </button>
         </div>
       </Show>
@@ -164,7 +215,13 @@ export default function BsMatch(props: BsMatchProps) {
               <button
                 class={`btn btn-${item.type}`}
                 onClick={() => {
-                  registerStat(actionMode.get(), item, match, setStatSummary)
+                  registerStat(
+                    actionMode.get(),
+                    item,
+                    match,
+                    setStatSummary,
+                    disableClearLastAction,
+                  )
                   closeActionMode(actionMode)
                 }}
               >
@@ -176,6 +233,7 @@ export default function BsMatch(props: BsMatchProps) {
           </For>
         </div>
 
+        <hr />
         {/* CANCEL ACTION */}
         <button
           class="btn btn-secondary w-full my-2"
@@ -187,9 +245,6 @@ export default function BsMatch(props: BsMatchProps) {
           <span>Anuler</span>
         </button>
       </Show>
-      <pre>{JSON.stringify(statSummary, null, 4)}</pre>
-
-      <pre>{JSON.stringify(match, null, 4)}</pre>
     </div>
   )
 }

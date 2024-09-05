@@ -10,7 +10,7 @@ export default function Matchs() {
     <div class="w-full">
       <div class="w-full py-1">
         <button
-          class="btn btn-secondary btn-xs"
+          class="btn btn-outline btn-sm"
           onClick={() => {
             goBack()
           }}
