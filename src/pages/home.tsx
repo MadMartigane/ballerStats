@@ -8,6 +8,8 @@ import BsIconBasketballBallOutline from '../components/icons/basketball-ball-out
 import BsIconBasketballPlayer from '../components/icons/basketball-player'
 import BsIconBasketballPanel from '../components/icons/basketball-panel'
 import BsIconBasketballBasketMove from '../components/icons/basketball-basket-move'
+import { Medal, Trash2 } from 'lucide-solid'
+import orchestrator from '../libs/orchestrator/orchestrator'
 
 const displayDemo = true
 
@@ -39,9 +41,18 @@ export default function Home() {
             <BsIconBasketballBallPlain />
             <BsIconBasketballBallOutline />
             <BsIconBasketballPlayer />
-            <BsIconBasketballPanel size='9xl' variant='primary' />
-            <BsIconBasketballBasketMove size='6xl' variant='accent' />
+            <BsIconBasketballPanel size="9xl" variant="primary" />
+            <BsIconBasketballBasketMove size="6xl" variant="accent" />
+            <Medal size={96} />
           </div>
+          <button
+            class="btn btn-warning btn-lg"
+            onClick={() => {
+              orchestrator.bigClean()
+            }}
+          >
+            <Trash2 /> BIG CLEAN
+          </button>
         </div>
       </Show>
     </div>

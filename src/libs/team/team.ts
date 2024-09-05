@@ -2,6 +2,8 @@ import { getUniqId } from '../utils'
 import { TeamRawData } from './team.d'
 import { clone } from '../utils'
 
+export const TEAM_OPPONENT_ID = 'OPPONENT'
+
 export default class Team {
   #id = getUniqId()
   #playerIds: Array<string> = []

@@ -10,6 +10,7 @@ import {
 } from '../store'
 import Teams from '../teams'
 import Matchs from '../matchs'
+import Team from '../team'
 
 export class Orchestrator {
   #players: Players = new Players()
@@ -141,6 +142,27 @@ export class Orchestrator {
     }
   }
 
+  private cleanTeam(team: Team) {
+    const cleanPlayerIds = team.playerIds.filter(playerId => {
+      return Boolean(this.getPlayer(playerId))
+    })
+
+    console.log('raw ids: ', team.playerIds)
+    console.log(
+      'before: %s, after: %s',
+      team.playerIds.length,
+      cleanPlayerIds.length,
+    )
+    if (team.playerIds.length > cleanPlayerIds.length) {
+      team.update({ playerIds: cleanPlayerIds })
+
+      console.log('clean ids: ', team.playerIds)
+      return true
+    }
+
+    return false
+  }
+
   public get Players() {
     return this.#players
   }
@@ -173,28 +195,51 @@ export class Orchestrator {
     bsEventBus.dispatchEvent('BS::SYNCHRO::FAIL', mute)
   }
 
-  public getPlayer(id: string | null) {
-    if (id === null) {
+  public getPlayer(id?: string | null) {
+    if (!id) {
       return null
     }
 
     return this.#players.players.find(candidate => candidate.id === id) || null
   }
 
-  public getTeam(id: string | null) {
-    if (id === null) {
+  public getTeam(id?: string | null) {
+    if (!id) {
       return null
     }
 
     return this.#teams.teams.find(candidate => candidate.id === id) || null
   }
 
-  public getMatch(id: string | null) {
-    if (id === null) {
+  public getMatch(id?: string | null) {
+    if (!id) {
       return null
     }
 
     return this.#matchs.matchs.find(candidate => candidate.id === id) || null
+  }
+
+  public bigClean() {
+    let cleaned = false
+    this.Teams.teams.forEach(team => {
+      const cleanPlayerIds = team.playerIds.filter(playerId => {
+        return Boolean(this.getPlayer(playerId))
+      })
+
+      if (team.playerIds.length > cleanPlayerIds.length) {
+        team.update({ playerIds: cleanPlayerIds })
+        this.Teams.updateTeam(team)
+        cleaned = true
+      }
+    })
+
+    if (cleaned) {
+      console.log('Yes, cleaned !!!!!!!')
+      console.log('Teams: ', this.Teams.teams)
+      this.throwTeamsUpdatedEvent()
+      return
+    }
+    console.log('No, not cleaned !!!!!!!')
   }
 }
 

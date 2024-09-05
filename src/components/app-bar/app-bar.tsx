@@ -4,7 +4,8 @@ import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
 import { RouteSectionProps, useLocation } from '@solidjs/router'
 
 import logoSmallUrl from '/img/logo_small.png'
-import { Bell, Menu, UserCog, X } from 'lucide-solid'
+import { ArrowLeft, Bell, Menu, UserCog, X } from 'lucide-solid'
+import { goBack } from '../../libs/utils'
 
 const isUserMenuOpen: MadSignal<boolean> = new MadSignal(false)
 const isMainMenuOpen: MadSignal<boolean> = new MadSignal(false)
@@ -23,11 +24,13 @@ function renderMasterTitle(currentPath: string | null) {
   )
 
   if (!menuEntry) {
-    menuEntry = NAVIGATION_MENU_ENTRIES.find(candidate => candidate.path === '/*')
+    menuEntry = NAVIGATION_MENU_ENTRIES.find(
+      candidate => candidate.path === '/*',
+    )
   }
 
   if (!menuEntry) {
-    menuEntry = NAVIGATION_MENU_ENTRIES[NAVIGATION_MENU_ENTRIES.length -1];
+    menuEntry = NAVIGATION_MENU_ENTRIES[NAVIGATION_MENU_ENTRIES.length - 1]
   }
 
   return (
@@ -75,7 +78,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                           class={`flex flex-row items-center gap-2 rounded-md px-3 py-2 text-sm font-medium ${String(currentHash.get()).endsWith(menuEntry.path) ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
                           aria-current="page"
                         >
-                          {menuEntry.icon('text')}
+                          {menuEntry.icon('primary-content')}
                           {menuEntry.label}
                         </a>
                       </Show>
@@ -291,15 +294,8 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
         </Show>
       </nav>
 
-      <header class="bg-neutral text-neutral-content">
-        <div class="mx-auto max-w-7xl px-3 py-2 sm:px-4 lg:px-6">
-          <h1 class="text-lg font-bold">
-            {renderMasterTitle(currentHash.get())}
-          </h1>
-        </div>
-      </header>
       <main>
-        <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
           {props.children}
         </div>
       </main>

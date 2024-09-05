@@ -8,15 +8,17 @@ export default function Matchs() {
 
   return (
     <div class="w-full">
-      <button
-        class='btn btn-secondary'
-        onClick={() => {
-          goBack()
-        }}
-      >
-        <ChevronLeft />
-        Retour
-      </button>
+      <div class="w-full py-1">
+        <button
+          class="btn btn-secondary btn-xs"
+          onClick={() => {
+            goBack()
+          }}
+        >
+          <ChevronLeft />
+          Retour
+        </button>
+      </div>
       <div class="w-full">
         <BsMatch id={params.id} />
       </div>

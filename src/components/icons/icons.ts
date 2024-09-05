@@ -84,7 +84,6 @@ async function bsIconPropsToData(props: BsIconProps): Promise<BsIconData> {
     data.width = SIZE[props.size]
     data.height = SIZE[props.size]
   }
-  console.log('data: ', data)
 
   return data
 }
