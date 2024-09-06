@@ -1,5 +1,7 @@
 import {
+  ChartLine,
   ChevronLeft,
+  ChevronRight,
   Eraser,
   Shirt,
   TriangleAlert,
@@ -20,7 +22,7 @@ import { BsMatchProps } from './match.d'
 import Match from '../../libs/match'
 import { createStore, SetStoreFunction } from 'solid-js/store'
 import { getStatSummary } from '../../libs/stats/stats-util'
-import { confirmAction, goBack } from '../../libs/utils'
+import { confirmAction, goBack, goTo } from '../../libs/utils'
 import Player from '../../libs/player'
 
 function openActionMode(
@@ -134,10 +136,10 @@ function renderPlayerButton(
           {player.nicName ? player.nicName : player.firstName}
         </span>
         <span class="inline-block w-5 text-success text-xl">
-          {statSummary.players[player.id]?.score || 0}
+          {statSummary.players[player.id]?.scores.total || 0}
         </span>
         <span class="inline-block w-5 text-accent-content text-xl">
-          {statSummary.players[player.id]?.rebonds || 0}
+          {statSummary.players[player.id]?.rebonds.total || 0}
         </span>
         <span class="inline-block w-5 text-warning text-xl">
           {statSummary.players[player.id]?.fouls || 0}
@@ -166,12 +168,77 @@ function renderPlayerHeader(playerId: string | null) {
   )
 }
 
+function renderStatGrid(statSummary: StatMatchSummary) {
+  return (
+    <div>
+      <div class="overflow-x-auto">
+        <table class="table table-zebra">
+          <thead>
+            <tr>
+              <th><Shirt /></th>
+              <th>Nom</th>
+              <th>Pts</th>
+              <th>Rbs (O-D)</th>
+              <th>Fautes</th>
+              <th>LF</th>
+              <th>2pts</th>
+              <th>3pts</th>
+            </tr>
+          </thead>
+          <tbody>
+            <For each={Object.keys(statSummary.players)}>
+              {playerId => {
+                const player = orchestrator.getPlayer(playerId)
+
+                return (
+                  <tr>
+                    <th><span class='text-2xl'>{player?.jersayNumber}</span></th>
+                    <td>
+                      {player?.nicName ? player.nicName : player?.firstName}
+                    </td>
+                    <td>
+                      <span class='text-lg'>{`${statSummary.players[playerId].scores.total}`}</span>
+                    </td>
+                    <td>
+                      <span class='text-lg'>{`${statSummary.players[playerId].rebonds.total}`}</span>
+                      <span class=''>{` (${statSummary.players[playerId].rebonds.offensive}-${statSummary.players[playerId].rebonds.defensive})`}</span>
+                    </td>
+                    <td>
+                      <span class='text-lg'>{`${statSummary.players[playerId].fouls}`}</span>
+                    </td>
+                    <td>
+                      <span class='text-lg'>{`${statSummary.players[playerId].scores['free-throw']}`}</span>
+                      {` ${statSummary.players[playerId].ratio['free-throw'].success}/${statSummary.players[playerId].ratio['free-throw'].total}`}
+                      {` (${statSummary.players[playerId].ratio['free-throw'].percentage}%)`}
+                    </td>
+                    <td>
+                      <span class='text-lg'>{`${statSummary.players[playerId].scores['2pts']}`}</span>
+                      {` ${statSummary.players[playerId].ratio['2pts'].success}/${statSummary.players[playerId].ratio['2pts'].total}`}
+                      {` (${statSummary.players[playerId].ratio['2pts'].percentage}%)`}
+                    </td>
+                    <td>
+                      <span class='text-lg'>{`${statSummary.players[playerId].scores['3pts']}`}</span>
+                      {` ${statSummary.players[playerId].ratio['3pts'].success}/${statSummary.players[playerId].ratio['3pts'].total}`}
+                      {` (${statSummary.players[playerId].ratio['3pts'].percentage}%)`}
+                    </td>
+                  </tr>
+                )
+              }}
+            </For>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 export default function BsMatch(props: BsMatchProps) {
   const matchId = props.id
   const match = orchestrator.getMatch(matchId)
   const actionMode = new MadSignal(null) as MadSignal<string | null>
   const [statSummary, setStatSummary] = createStore(getStatSummary(match))
   const disableClearLastAction = new MadSignal((match?.stats.length || 0) === 0)
+  const isStatMode = new MadSignal(false)
 
   const team = orchestrator.getTeam(match?.teamId)
   const sortedPlayers = orchestrator.getJerseySortedPlayers(team?.playerIds)
@@ -185,82 +252,109 @@ export default function BsMatch(props: BsMatchProps) {
         />
       </div>
 
-      <Show when={!actionMode.get()}>
-        <div class="w-full py-3">
-          <For each={sortedPlayers}>
-            {player =>
-              renderPlayerButton(player, match, actionMode, statSummary)
-            }
-          </For>
+      <Show when={!isStatMode.get()}>
+        <Show when={!actionMode.get()}>
+          <div class="w-full py-3">
+            <For each={sortedPlayers}>
+              {player =>
+                renderPlayerButton(player, match, actionMode, statSummary)
+              }
+            </For>
 
-          <button
-            class="btn btn-accent w-full"
-            onClick={() => {
-              openActionMode(TEAM_OPPONENT_ID, actionMode)
-            }}
-          >
-            <Users size={32} />
-            <span class="inline-block w-44 text-lg">Équipe adverse</span>
-            <span class="inline-block w-5 text-success text-xl">
-              {statSummary.opponentScore || 0}
-            </span>
-            <span class="inline-block w-5 text-accent-content text-xl">
-              {statSummary.opponentRebonds || 0}
-            </span>
-            <span class="inline-block w-5 text-warning text-xl">
-              {statSummary.opponentFouls || 0}
-            </span>
-          </button>
+            <button
+              class="btn btn-accent w-full my-4"
+              onClick={() => {
+                openActionMode(TEAM_OPPONENT_ID, actionMode)
+              }}
+            >
+              <Users size={32} />
+              <span class="inline-block w-44 text-lg">Équipe adverse</span>
+              <span class="inline-block w-5 text-success text-xl">
+                {statSummary.opponentScore || 0}
+              </span>
+              <span class="inline-block w-5 text-accent-content text-xl">
+                {statSummary.opponentRebonds || 0}
+              </span>
+              <span class="inline-block w-5 text-warning text-xl">
+                {statSummary.opponentFouls || 0}
+              </span>
+            </button>
 
-          <hr />
+            <button
+              class="btn btn-primary w-full"
+              onClick={() => {
+                isStatMode.set(true)
+              }}
+            >
+              <ChartLine />
+              Tableau des stats
+              <ChevronRight />
+            </button>
 
-          <button
-            class="btn btn-warning w-full"
-            disabled={disableClearLastAction.get()}
-            onClick={() => {
-              removeLastAction(match, setStatSummary, disableClearLastAction)
-            }}
-          >
-            <Eraser />
-            Effacer la dernière action
-            <TriangleAlert />
-          </button>
-        </div>
+            <hr />
+
+            <button
+              class="btn btn-warning w-full"
+              disabled={disableClearLastAction.get()}
+              onClick={() => {
+                removeLastAction(match, setStatSummary, disableClearLastAction)
+              }}
+            >
+              <Eraser />
+              Effacer la dernière action
+              <TriangleAlert />
+            </button>
+          </div>
+        </Show>
+
+        <Show when={actionMode.get()}>
+          {renderPlayerHeader(actionMode.get())}
+          <div class="w-full py-2 grid grid-cols-2 gap-3">
+            <For each={STATS_MATCH_ACTIONS}>
+              {item => (
+                <button
+                  class={`btn btn-${item.type}`}
+                  onClick={() => {
+                    registerStat(
+                      actionMode.get(),
+                      item,
+                      match,
+                      setStatSummary,
+                      disableClearLastAction,
+                    )
+                    closeActionMode(actionMode)
+                  }}
+                >
+                  {item.icon}
+                  <span class="text-2xl">{item.label1}</span>{' '}
+                  <span>{item.label2}</span>
+                </button>
+              )}
+            </For>
+          </div>
+        </Show>
       </Show>
 
-      <Show when={actionMode.get()}>
-        {renderPlayerHeader(actionMode.get())}
-        <div class="w-full py-2 grid grid-cols-2 gap-3">
-          <For each={STATS_MATCH_ACTIONS}>
-            {item => (
-              <button
-                class={`btn btn-${item.type}`}
-                onClick={() => {
-                  registerStat(
-                    actionMode.get(),
-                    item,
-                    match,
-                    setStatSummary,
-                    disableClearLastAction,
-                  )
-                  closeActionMode(actionMode)
-                }}
-              >
-                {item.icon}
-                <span class="text-2xl">{item.label1}</span>{' '}
-                <span>{item.label2}</span>
-              </button>
-            )}
-          </For>
-        </div>
-      </Show>
+      <Show when={isStatMode.get()}>{renderStatGrid(statSummary)}</Show>
 
       <hr />
       {/* CANCEL ACTION */}
       <button
         class="btn btn-outline w-full"
-        onClick={() => {
-          actionMode.get() ? closeActionMode(actionMode) : goBack()
+        onClick={event => {
+          event.stopPropagation()
+
+          if (isStatMode.get()) {
+            isStatMode.set(false)
+            return
+          }
+
+          if (actionMode.get()) {
+            closeActionMode(actionMode)
+            return
+          }
+
+          goTo('matchs')
         }}
       >
         <ChevronLeft />

@@ -22,8 +22,37 @@ export type StatMatchActionItem = {
 
 export type StatMatchSummaryPlayer = {
   [playerId: string]: {
-    score: number
-    rebonds: number
+    scores: {
+      'free-throw': number
+      '2pts': number
+      '3pts': number
+      total: number
+    }
+    rebonds: {
+      defensive: number
+      offensive: number
+      total: number
+    }
+    ratio: {
+      'free-throw': {
+        success: number
+        fail: number
+        total: number
+        percentage: number
+      }
+      '2pts': {
+        success: number
+        fail: number
+        total: number
+        percentage: number
+      }
+      '3pts': {
+        success: number
+        fail: number
+        total: number
+        percentage: number
+      }
+    }
     fouls: number
     assists: number
   }
