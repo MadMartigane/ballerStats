@@ -67,7 +67,7 @@ export async function confirmAction(
   dialogEl.classList.add('modal', 'modal-bottom', 'sm:modal-middle')
 
   const modalBox: HTMLDivElement = document.createElement('div')
-  modalBox.classList.add('modal-box')
+  modalBox.classList.add('modal-box', 'w-full')
   dialogEl.append(modalBox)
 
   //    <h3 class="text-lg font-bold">Hello!</h3>
@@ -78,8 +78,8 @@ export async function confirmAction(
 
   //    <p class="py-4">Press ESC key or click the button below to close</p>
   const questionEl: HTMLParagraphElement = document.createElement('p')
-  questionEl.innerText = `⚠ ${message}`
-  questionEl.classList.add('py-4', 'alert', 'my-4', 'alert-info')
+  questionEl.innerText = message
+  questionEl.classList.add('py-4', 'alert', 'my-4', 'alert-info', 'w-full')
   questionEl.role = 'alert'
   modalBox.append(questionEl)
 
@@ -91,17 +91,17 @@ export async function confirmAction(
   //      <form method="dialog">
   const modalForm: HTMLFormElement = document.createElement('form')
   modalForm.method = 'dialog'
-  modalForm.classList.add('grid', 'grid-flow-col', 'justify-stretch', 'gap-4')
+  modalForm.classList.add('flex', 'flex-row', 'w-full', 'gap-4')
   modalAction.append(modalForm)
 
   const cancelButton: HTMLButtonElement = document.createElement('button')
   const confirmButton: HTMLButtonElement = document.createElement('button')
 
   cancelButton.innerText = cancel
-  cancelButton.classList.add('btn', 'btn-warning', 'btn-block')
+  cancelButton.classList.add('btn', 'btn-warning', 'basis-1/2')
 
   confirmButton.innerText = confirm
-  confirmButton.classList.add('btn', 'btn-success', 'btn-block')
+  confirmButton.classList.add('btn', 'btn-success', 'basis-1/2')
 
   modalForm.append(cancelButton)
   modalForm.append(confirmButton)

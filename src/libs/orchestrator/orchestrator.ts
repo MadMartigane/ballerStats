@@ -173,28 +173,61 @@ export class Orchestrator {
     bsEventBus.dispatchEvent('BS::SYNCHRO::FAIL', mute)
   }
 
-  public getPlayer(id: string | null) {
-    if (id === null) {
+  public getPlayer(id?: string | null) {
+    if (!id) {
       return null
     }
 
     return this.#players.players.find(candidate => candidate.id === id) || null
   }
 
-  public getTeam(id: string | null) {
-    if (id === null) {
+  public getTeam(id?: string | null) {
+    if (!id) {
       return null
     }
 
     return this.#teams.teams.find(candidate => candidate.id === id) || null
   }
 
-  public getMatch(id: string | null) {
-    if (id === null) {
+  public getMatch(id?: string | null) {
+    if (!id) {
       return null
     }
 
     return this.#matchs.matchs.find(candidate => candidate.id === id) || null
+  }
+
+  public bigClean() {
+    let cleaned = false
+    this.Teams.teams.forEach(team => {
+      const cleanPlayerIds = team.playerIds.filter(playerId => {
+        return Boolean(this.getPlayer(playerId))
+      })
+
+      if (team.playerIds.length > cleanPlayerIds.length) {
+        team.update({ playerIds: cleanPlayerIds })
+        this.Teams.updateTeam(team)
+        cleaned = true
+      }
+    })
+
+    if (cleaned) {
+      this.throwTeamsUpdatedEvent()
+      return
+    }
+  }
+
+  public getJerseySortedPlayers(playerIds?: Array<string>) {
+    if (!playerIds) {
+      return []
+    }
+
+    const players = playerIds.map(playerId => this.getPlayer(playerId))
+
+    return players.sort(
+      (a, b) =>
+        parseInt(a?.jersayNumber || '0') - parseInt(b?.jersayNumber || '0'),
+    )
   }
 }
 

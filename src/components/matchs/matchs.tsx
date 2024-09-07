@@ -1,24 +1,16 @@
-import {
-  BrainCircuit,
-  MessageCircleWarning,
-  Save,
-  Users,
-  X,
-} from 'lucide-solid'
+import { MessageCircleWarning, Save, UserPlus, Users, X } from 'lucide-solid'
+import { For, Show } from 'solid-js'
+import { createStore } from 'solid-js/store'
 import bsEventBus from '../../libs/event-bus'
 import MadSignal from '../../libs/mad-signal'
-import orchestrator from '../../libs/orchestrator/orchestrator'
+import type { MatchRawData, MatchType } from '../../libs/match'
 import Match from '../../libs/match'
-import type { MatchType } from '../../libs/match'
-import { For, Show } from 'solid-js'
+import orchestrator from '../../libs/orchestrator/orchestrator'
+import { goTo, scrollBottom, scrollTop } from '../../libs/utils'
 import BsCard from '../card'
 import BsInput from '../input'
-import type { MatchRawData } from '../../libs/match'
 import BsMatch from '../match-tile'
-import { createStore } from 'solid-js/store'
-import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
 import { BsMatchTypeText } from '../match-tile/match-tile'
-import { goTo, scrollBottom, scrollTop } from '../../libs/utils'
 import BsSelect from '../select/select'
 
 let isEditingNewMatch: boolean = false
@@ -27,11 +19,6 @@ const canAddMatch: MadSignal<boolean> = new MadSignal(false)
 const matchLength: MadSignal<number> = new MadSignal(orchestrator.Matchs.length)
 const [matchs, setMatchs] = createStore(orchestrator.Matchs.matchs)
 const [teams, setTeams] = createStore(orchestrator.Teams.teams)
-
-const matchMenuEntry = NAVIGATION_MENU_ENTRIES.find(menuEntry => {
-  return menuEntry.path === '/match/:id'
-})
-const matchIcon = matchMenuEntry ? matchMenuEntry.icon() : <BrainCircuit />
 
 let currentMatch: Match | null = null
 
@@ -128,7 +115,7 @@ function renderAddMatchButton() {
             scrollTop()
           }}
         >
-          {matchIcon}
+          <UserPlus />
           Ajouter un match
         </button>
       </div>
@@ -203,7 +190,7 @@ function renderAddingMatchCard() {
             scrollBottom()
           }}
         >
-          {isEditingNewMatch ? matchIcon : <Save />}
+          {isEditingNewMatch ? <UserPlus /> : <Save />}
           {isEditingNewMatch ? 'Ajouter' : 'Enregistrer'}
         </button>
       </div>

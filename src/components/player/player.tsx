@@ -5,6 +5,7 @@ import Player from '../../libs/player'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import BsTile from '../tile'
 import { confirmAction } from '../../libs/utils'
+import BsIconBasketballPlayer from '../icons/basketball-player'
 
 async function removePlayer(player: Player) {
   const yes = await confirmAction()

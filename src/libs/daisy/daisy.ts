@@ -1,3 +1,5 @@
+import bsEventBus from "../event-bus"
+
 const DS_PREF_THEME_STORAGE_KEY = 'daisy_theme'
 const THEME_ATTRIBUTE = 'data-theme'
 const THEME_HTML_TAG = 'html'
@@ -5,16 +7,15 @@ const THEME_HTML_TAG = 'html'
 export const THEME_AUTO_KEY = 'auto'
 export const THEMES: {[name: string]: string} = {
   light: 'corporate',
-  bslight: 'bsLight',
   dark: 'business',
   aqua: 'aqua',
 }
 
-export function initTheme() {
+export async function initTheme() {
   const html: HTMLHtmlElement | null = document.querySelector(THEME_HTML_TAG)
 
   if (!html) {
-    throw new Error('[daisy::initDarkMode()] unable to find THE html element.')
+    throw new Error('[daisy::initTheme()] unable to find THE html element.')
   }
 
   const isSystemPreferDark = window.matchMedia(
@@ -29,33 +30,29 @@ export function initTheme() {
       html.setAttribute(THEME_ATTRIBUTE, THEMES.light)
     }
 
-    return
+    return Promise.resolve(html)
   }
 
   html.setAttribute(THEME_ATTRIBUTE, storedPreference)
+  return Promise.resolve(html)
 }
 
-export function setTheme(darkMode: string | null) {
-  if (darkMode === null) {
+export async function setTheme(theme: string | null) {
+  if (theme === null) {
     localStorage.setItem(DS_PREF_THEME_STORAGE_KEY, THEME_AUTO_KEY)
   } else {
-    localStorage.setItem(DS_PREF_THEME_STORAGE_KEY, darkMode)
+    localStorage.setItem(DS_PREF_THEME_STORAGE_KEY, theme)
   }
 
-  initTheme()
+  bsEventBus.dispatchEvent('BS::THEME::CHANGE')
+  return initTheme()
 }
 
-export function resetTheme() {
-  setTheme(null)
+export async function resetTheme() {
+  return setTheme(null)
 }
 
-export function getTheme() {
-  initTheme()
-  const storedPreference = localStorage.getItem(DS_PREF_THEME_STORAGE_KEY)
-  if (storedPreference) {
-    return storedPreference
-  }
-
-  const html: HTMLHtmlElement | null = document.querySelector(THEME_HTML_TAG)
+export async function getTheme() {
+  const html = await initTheme()
   return html?.getAttribute(THEME_ATTRIBUTE)
 }

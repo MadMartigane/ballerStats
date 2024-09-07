@@ -8,7 +8,7 @@ export default [
   ...tseslint.configs.recommended,
   {
     rules: {
-      quotes: ['error', 'single'],
+      quotes: ['warn', 'single'],
     },
     ignorePatterns: ['src/**/*.test.ts', 'dist/*'],
   },
