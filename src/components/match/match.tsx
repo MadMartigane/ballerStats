@@ -22,7 +22,7 @@ import { BsMatchProps } from './match.d'
 import Match from '../../libs/match'
 import { createStore, SetStoreFunction } from 'solid-js/store'
 import { getStatSummary } from '../../libs/stats/stats-util'
-import { confirmAction, goBack, goTo } from '../../libs/utils'
+import { confirmAction, goTo } from '../../libs/utils'
 import Player from '../../libs/player'
 
 function openActionMode(
@@ -123,7 +123,7 @@ function renderPlayerButton(
   }
 
   return (
-    <div class="w-full flex flex-row my-2">
+    <div class="w-full flex flex-row my-3 md:my-4">
       <div
         class="btn btn-primary w-full"
         onClick={() => {
@@ -132,7 +132,7 @@ function renderPlayerButton(
       >
         <User size={32} />
         <span class="text-3xl">{player.jersayNumber}</span>
-        <span class="inline-block w-32">
+        <span class="inline-block min-w-40 md:min-w-72 text-3xl">
           {player.nicName ? player.nicName : player.firstName}
         </span>
         <span class="inline-block w-5 text-success text-xl">
@@ -175,7 +175,9 @@ function renderStatGrid(statSummary: StatMatchSummary) {
         <table class="table table-zebra">
           <thead>
             <tr>
-              <th><Shirt /></th>
+              <th>
+                <Shirt />
+              </th>
               <th>Nom</th>
               <th>Pts</th>
               <th>Rbs (O-D)</th>
@@ -192,32 +194,34 @@ function renderStatGrid(statSummary: StatMatchSummary) {
 
                 return (
                   <tr>
-                    <th><span class='text-2xl'>{player?.jersayNumber}</span></th>
+                    <th>
+                      <span class="text-2xl">{player?.jersayNumber}</span>
+                    </th>
                     <td>
                       {player?.nicName ? player.nicName : player?.firstName}
                     </td>
                     <td>
-                      <span class='text-lg'>{`${statSummary.players[playerId].scores.total}`}</span>
+                      <span class="text-lg">{`${statSummary.players[playerId].scores.total}`}</span>
                     </td>
                     <td>
-                      <span class='text-lg'>{`${statSummary.players[playerId].rebonds.total}`}</span>
-                      <span class=''>{` (${statSummary.players[playerId].rebonds.offensive}-${statSummary.players[playerId].rebonds.defensive})`}</span>
+                      <span class="text-lg">{`${statSummary.players[playerId].rebonds.total}`}</span>
+                      <span class="">{` (${statSummary.players[playerId].rebonds.offensive}-${statSummary.players[playerId].rebonds.defensive})`}</span>
                     </td>
                     <td>
-                      <span class='text-lg'>{`${statSummary.players[playerId].fouls}`}</span>
+                      <span class="text-lg">{`${statSummary.players[playerId].fouls}`}</span>
                     </td>
                     <td>
-                      <span class='text-lg'>{`${statSummary.players[playerId].scores['free-throw']}`}</span>
+                      <span class="text-lg">{`${statSummary.players[playerId].scores['free-throw']}`}</span>
                       {` ${statSummary.players[playerId].ratio['free-throw'].success}/${statSummary.players[playerId].ratio['free-throw'].total}`}
                       {` (${statSummary.players[playerId].ratio['free-throw'].percentage}%)`}
                     </td>
                     <td>
-                      <span class='text-lg'>{`${statSummary.players[playerId].scores['2pts']}`}</span>
+                      <span class="text-lg">{`${statSummary.players[playerId].scores['2pts']}`}</span>
                       {` ${statSummary.players[playerId].ratio['2pts'].success}/${statSummary.players[playerId].ratio['2pts'].total}`}
                       {` (${statSummary.players[playerId].ratio['2pts'].percentage}%)`}
                     </td>
                     <td>
-                      <span class='text-lg'>{`${statSummary.players[playerId].scores['3pts']}`}</span>
+                      <span class="text-lg">{`${statSummary.players[playerId].scores['3pts']}`}</span>
                       {` ${statSummary.players[playerId].ratio['3pts'].success}/${statSummary.players[playerId].ratio['3pts'].total}`}
                       {` (${statSummary.players[playerId].ratio['3pts'].percentage}%)`}
                     </td>

@@ -140,44 +140,19 @@ export function getStatSummary(match: Match | null): StatMatchSummary {
               'free-throw',
               'success',
             ),
-            fail: getPlayerNumberByType(
-              match,
-              playerId,
-              'free-throw',
-              'error',
-            ),
+            fail: getPlayerNumberByType(match, playerId, 'free-throw', 'error'),
             total: 0,
             percentage: 0,
           },
           '2pts': {
-            success: getPlayerNumberByType(
-              match,
-              playerId,
-              '2pts',
-              'success',
-            ),
-            fail: getPlayerNumberByType(
-              match,
-              playerId,
-              '2pts',
-              'error',
-            ),
+            success: getPlayerNumberByType(match, playerId, '2pts', 'success'),
+            fail: getPlayerNumberByType(match, playerId, '2pts', 'error'),
             total: 0,
             percentage: 0,
           },
           '3pts': {
-            success: getPlayerNumberByType(
-              match,
-              playerId,
-              '3pts',
-              'success',
-            ),
-            fail: getPlayerNumberByType(
-              match,
-              playerId,
-              '3pts',
-              'error',
-            ),
+            success: getPlayerNumberByType(match, playerId, '3pts', 'success'),
+            fail: getPlayerNumberByType(match, playerId, '3pts', 'error'),
             total: 0,
             percentage: 0,
           },
@@ -200,27 +175,33 @@ export function getStatSummary(match: Match | null): StatMatchSummary {
         result[playerId].ratio['2pts'].success
 
       result[playerId].ratio['2pts'].percentage =
-        (result[playerId].ratio['2pts'].success /
-          result[playerId].ratio['2pts'].total) *
-        100
+        Math.round(
+          (result[playerId].ratio['2pts'].success /
+            result[playerId].ratio['2pts'].total) *
+            100,
+        ) || 0
 
       result[playerId].ratio['3pts'].total =
         result[playerId].ratio['3pts'].fail +
         result[playerId].ratio['3pts'].success
 
       result[playerId].ratio['3pts'].percentage =
-        (result[playerId].ratio['3pts'].success /
-          result[playerId].ratio['3pts'].total) *
-        100
+        Math.round(
+          (result[playerId].ratio['3pts'].success /
+            result[playerId].ratio['3pts'].total) *
+            100,
+        ) || 0
 
       result[playerId].ratio['free-throw'].total =
         result[playerId].ratio['free-throw'].fail +
         result[playerId].ratio['free-throw'].success
 
       result[playerId].ratio['free-throw'].percentage =
-        (result[playerId].ratio['free-throw'].success /
-          result[playerId].ratio['free-throw'].total) *
-        100
+        Math.round(
+          (result[playerId].ratio['free-throw'].success /
+            result[playerId].ratio['free-throw'].total) *
+            100,
+        ) || 0
 
       return result
     },
