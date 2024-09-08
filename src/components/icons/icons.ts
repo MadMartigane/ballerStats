@@ -5,27 +5,29 @@ import bsEventBus from '../../libs/event-bus'
 import { clone } from '../../libs/utils'
 
 const VARIANT: { [key: string]: { [key in DaisyVariant]: string } } = {
+  // TODO: ajust to fantasy
   default: {
     // light
     text: '#171929',
     primary: '#e8e8e8',
-    "primary-content": '#171929',
+    'primary-content': '#edf2f7',
     secondary: '#7a91b1',
     accent: '#66caa0',
     neutral: '#171929',
-    "neutral-content": '#edf2f7',
+    'neutral-content': '#edf2f7',
     success: '#00a96d',
     warning: '#ffbd00',
     error: '#ff5760',
   },
-  business: {
+  // TODO: ajust to dracula
+  dracula: {
     text: '#cccccc',
     primary: '#1b1b1b',
-    "primary-content": '#bdcdd0',
+    'primary-content': '#bdcdd0',
     secondary: '#7b8f99',
     accent: '#e86846',
     neutral: '#22272d',
-    "neutral-content": '#bdcdd0',
+    'neutral-content': '#bdcdd0',
     success: '#6ab086',
     warning: '#daad58',
     error: '#ab3e31',
@@ -33,11 +35,11 @@ const VARIANT: { [key: string]: { [key in DaisyVariant]: string } } = {
   aqua: {
     text: '#d3ddef',
     primary: '#2d5496',
-    "primary-content": '#d3ddef',
+    'primary-content': '#d3ddef',
     secondary: '#956eb2',
     accent: '#e8d48b',
     neutral: '#3b89c3',
-    "neutral-content": '#09080d',
+    'neutral-content': '#09080d',
     success: '#15a34a',
     warning: '#d87605',
     error: '#ff7164',
