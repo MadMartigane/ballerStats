@@ -130,7 +130,7 @@ function renderPlayerButton(
   return (
     <div class="w-full flex flex-row my-3 md:my-4">
       <div
-        class="btn btn-primary w-full"
+        class="btn w-full"
         onClick={() => {
           if (match?.status === 'locked') {
             alert('Match vérouillé !')
@@ -163,7 +163,7 @@ function renderPlayerHeader(playerId: string | null) {
   const player = orchestrator.getPlayer(playerId)
 
   return (
-    <div class="w-full my-2 p-3 grid grid-cols-3 gap-3 bg-primary text-primary-content rounded">
+    <div class="w-full my-2 p-3 grid grid-cols-3 gap-3 bg-neutral text-neutral-content rounded">
       <div>
         <Shirt size={28} />
       </div>

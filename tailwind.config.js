@@ -12,6 +12,6 @@ export default {
   },
   plugins: [require('@tailwindcss/typography'), require('daisyui')],
   daisyui: {
-    themes: ['business', 'aqua', 'corporate'],
+    themes: ['fantasy', 'dracula', 'aqua'],
   },
 }

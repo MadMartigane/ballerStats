@@ -1,13 +1,13 @@
-import bsEventBus from "../event-bus"
+import bsEventBus from '../event-bus'
 
 const DS_PREF_THEME_STORAGE_KEY = 'daisy_theme'
 const THEME_ATTRIBUTE = 'data-theme'
 const THEME_HTML_TAG = 'html'
 
 export const THEME_AUTO_KEY = 'auto'
-export const THEMES: {[name: string]: string} = {
-  light: 'corporate',
-  dark: 'business',
+export const THEMES: { [name: string]: string } = {
+  light: 'fantasy',
+  dark: 'dracula',
   aqua: 'aqua',
 }
 
