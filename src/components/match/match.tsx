@@ -130,7 +130,7 @@ function renderPlayerButton(
   return (
     <div class="w-full flex flex-row my-3 md:my-4">
       <div
-        class="btn btn-primary w-full"
+        class="btn w-full"
         onClick={() => {
           if (match?.status === 'locked') {
             alert('Match vérouillé !')
@@ -163,7 +163,7 @@ function renderPlayerHeader(playerId: string | null) {
   const player = orchestrator.getPlayer(playerId)
 
   return (
-    <div class="w-full my-2 p-3 grid grid-cols-3 gap-3 bg-primary text-primary-content rounded">
+    <div class="w-full my-2 p-3 grid grid-cols-3 gap-3 bg-neutral text-neutral-content rounded">
       <div>
         <Shirt size={28} />
       </div>
@@ -246,29 +246,31 @@ function renderStatGrid(statSummary: StatMatchSummary) {
       <hr />
 
       <h3>Synthèse rebonds</h3>
-      <div class="stats shadow">
-        <div class="stat place-items-center">
-          <div class="stat-title">Total</div>
-          <div
-            class={`stat-value ${statSummary.rebonds.teamTotalPercentage > 49 ? 'text-success' : 'text-warning'}`}
-          >{`${statSummary.rebonds.teamTotalPercentage} %`}</div>
-          <div class="stat-desc">{`Équipe (${statSummary.rebonds.teamTotal}) - Opposent (${statSummary.rebonds.opponentTotal})`}</div>
-        </div>
+      <div class="overflow-x-auto">
+        <div class="stats shadow">
+          <div class="stat place-items-center">
+            <div class="stat-title">Total</div>
+            <div
+              class={`stat-value ${statSummary.rebonds.teamTotalPercentage > 49 ? 'text-success' : 'text-warning'}`}
+            >{`${statSummary.rebonds.teamTotalPercentage} %`}</div>
+            <div class="stat-desc">{`Équipe (${statSummary.rebonds.teamTotal}) - Opposent (${statSummary.rebonds.opponentTotal})`}</div>
+          </div>
 
-        <div class="stat place-items-center">
-          <div class="stat-title">Offensifs</div>
-          <div
-            class={`stat-value ${statSummary.rebonds.teamOffensivePercentage > 49 ? 'text-success' : 'text-warning'}`}
-          >{`${statSummary.rebonds.teamOffensivePercentage} %`}</div>
-          <div class="stat-desc">{`Équipe (${statSummary.rebonds.teamOffensive}) - Opposent (${statSummary.rebonds.opponentOffensive})`}</div>
-        </div>
+          <div class="stat place-items-center">
+            <div class="stat-title">Offensifs</div>
+            <div
+              class={`stat-value ${statSummary.rebonds.teamOffensivePercentage > 49 ? 'text-success' : 'text-warning'}`}
+            >{`${statSummary.rebonds.teamOffensivePercentage} %`}</div>
+            <div class="stat-desc">{`Équipe (${statSummary.rebonds.teamOffensive}) - Opposent (${statSummary.rebonds.opponentOffensive})`}</div>
+          </div>
 
-        <div class="stat place-items-center">
-          <div class="stat-title">Defensifs</div>
-          <div
-            class={`stat-value ${statSummary.rebonds.teamDefensivePercentage > 49 ? 'text-success' : 'text-warning'}`}
-          >{`${statSummary.rebonds.teamDefensivePercentage} %`}</div>
-          <div class="stat-desc">{`Équipe (${statSummary.rebonds.teamDefensive}) - Opposent (${statSummary.rebonds.opponentDefensive})`}</div>
+          <div class="stat place-items-center">
+            <div class="stat-title">Defensifs</div>
+            <div
+              class={`stat-value ${statSummary.rebonds.teamDefensivePercentage > 49 ? 'text-success' : 'text-warning'}`}
+            >{`${statSummary.rebonds.teamDefensivePercentage} %`}</div>
+            <div class="stat-desc">{`Équipe (${statSummary.rebonds.teamDefensive}) - Opposent (${statSummary.rebonds.opponentDefensive})`}</div>
+          </div>
         </div>
       </div>
     </div>

@@ -29,7 +29,7 @@ export default function BsScoreCard(props: BsScoreCardProps) {
         <div class="text-center text-xl w-full place-self-center">VS</div>
         <Show when={props.location}>
           <div class="text-center w-full place-self-center">
-            <BsMatchTypeBadge type={props.location} size='xl' />
+            <BsMatchTypeBadge type={props.location} size="sm" />
           </div>
         </Show>
       </div>

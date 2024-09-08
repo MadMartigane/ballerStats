@@ -28,13 +28,23 @@ export default function Home() {
       </div>
       <Show when={displayDemo}>
         <div class="py-4">
+          <button class="btn">Default</button>
           <button class="btn btn-neutral">Neutral</button>
-          <button class="btn btn-primany">Primary</button>
+          <button class="btn btn-primary">Primary</button>
           <button class="btn btn-secondary">Secondary</button>
           <button class="btn btn-accent">Accent</button>
           <button class="btn btn-success">Success</button>
           <button class="btn btn-warning">Warning</button>
           <button class="btn btn-error">Error</button>
+          <button class="btn btn-outline">Default</button>
+          <button class="btn btn-outline btn-neutral">Neutral</button>
+          <button class="btn btn-outline btn-primary">Primary</button>
+          <button class="btn btn-outline btn-secondary">Secondary</button>
+          <button class="btn btn-outline btn-accent">Accent</button>
+          <button class="btn btn-outline btn-success">Success</button>
+          <button class="btn btn-outline btn-warning">Warning</button>
+          <button class="btn btn-outline btn-error">Error</button>
+
           <div class="flex flex-row gap-4 py-4">
             <BsIconBasketballBall variant="secondary" />
             <BsIconPersonPlay size="4xl" />

@@ -53,7 +53,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
 
   return (
     <div class="min-h-full font-rajdhani">
-      <nav class="sticky top-0 z-50 w-full backdrop-blur flex-none transition-colors duration-500 border-b border-slate-50/[0.06] supports-backdrop-blur:bg-slate-200/95 bg-slate-900/75 shadow shadow-neutral">
+      <nav class="sticky top-0 z-50 w-full flex-none supports-backdrop-blur:bg-neutral bg-neutral/95 shadow shadow-primary/60">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="flex h-16 items-center justify-between">
             <div class="flex items-center">
@@ -74,10 +74,12 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                       <Show when={menuEntry.isMenuEntry}>
                         <a
                           href={menuEntry.path}
-                          class={`flex flex-row items-center gap-2 rounded-md px-3 py-2 text-sm font-medium ${String(currentHash.get()).endsWith(menuEntry.path) ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                          class={`flex flex-row items-center gap-2 rounded-md px-3 py-2 text-sm font-medium ${String(currentHash.get()).endsWith(menuEntry.path) ? 'bg-primary text-primary-content' : 'text-neutral-content hover:bg-primary/60 hover:text-primary-content'}`}
                           aria-current="page"
                         >
-                          {menuEntry.icon('primary-content')}
+                          {menuEntry.icon(
+                            `${String(currentHash.get()).endsWith(menuEntry.path) ? 'primary-content' : 'neutral-content'}`,
+                          )}
                           {menuEntry.label}
                         </a>
                       </Show>
@@ -263,10 +265,12 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                   <Show when={menuEntry.isMenuEntry}>
                     <a
                       href={menuEntry.path}
-                      class={`flex flex-row items-center gap-2 rounded-md px-3 py-2 text-base font-medium ${currentHash.get() === menuEntry.path ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}
+                      class={`flex flex-row items-center gap-2 rounded-md px-3 py-2 text-base font-medium ${String(currentHash.get()).endsWith(menuEntry.path) ? 'bg-primary text-primary-content' : 'text-neutral-content hover:bg-primary/60 hover:text-primary-content'}`}
                       aria-current="page"
                     >
-                      {menuEntry.icon()}
+                      {menuEntry.icon(
+                        `${String(currentHash.get()).endsWith(menuEntry.path) ? 'primary-content' : 'neutral-content'}`,
+                      )}
                       {menuEntry.label}
                     </a>
                   </Show>
@@ -277,13 +281,13 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
               <div class="mt-3 space-y-1 px-2">
                 <a
                   href="/user"
-                  class="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-neutral-content hover:bg-primary/60 hover:text-primary-content"
                 >
                   Mon Profile
                 </a>
                 <a
                   href="/config"
-                  class="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-neutral-content hover:bg-primary/60 hover:text-primary-content"
                 >
                   Configuration
                 </a>
