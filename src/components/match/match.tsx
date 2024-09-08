@@ -96,6 +96,11 @@ async function removeLastAction(
     return
   }
 
+  if (match.status === 'locked') {
+    alert('Match vérouillé !!')
+    return
+  }
+
   return removeAction(
     match,
     match.stats.length - 1,
@@ -127,6 +132,11 @@ function renderPlayerButton(
       <div
         class="btn btn-primary w-full"
         onClick={() => {
+          if (match?.status === 'locked') {
+            alert('Match vérouillé !')
+            return
+          }
+
           openActionMode(player.id, actionMode)
         }}
       >
@@ -232,6 +242,35 @@ function renderStatGrid(statSummary: StatMatchSummary) {
           </tbody>
         </table>
       </div>
+
+      <hr />
+
+      <h3>Synthèse rebonds</h3>
+      <div class="stats shadow">
+        <div class="stat place-items-center">
+          <div class="stat-title">Total</div>
+          <div
+            class={`stat-value ${statSummary.rebonds.teamTotalPercentage > 49 ? 'text-success' : 'text-warning'}`}
+          >{`${statSummary.rebonds.teamTotalPercentage} %`}</div>
+          <div class="stat-desc">{`Équipe (${statSummary.rebonds.teamTotal}) - Opposent (${statSummary.rebonds.opponentTotal})`}</div>
+        </div>
+
+        <div class="stat place-items-center">
+          <div class="stat-title">Offensifs</div>
+          <div
+            class={`stat-value ${statSummary.rebonds.teamOffensivePercentage > 49 ? 'text-success' : 'text-warning'}`}
+          >{`${statSummary.rebonds.teamOffensivePercentage} %`}</div>
+          <div class="stat-desc">{`Équipe (${statSummary.rebonds.teamOffensive}) - Opposent (${statSummary.rebonds.opponentOffensive})`}</div>
+        </div>
+
+        <div class="stat place-items-center">
+          <div class="stat-title">Defensifs</div>
+          <div
+            class={`stat-value ${statSummary.rebonds.teamDefensivePercentage > 49 ? 'text-success' : 'text-warning'}`}
+          >{`${statSummary.rebonds.teamDefensivePercentage} %`}</div>
+          <div class="stat-desc">{`Équipe (${statSummary.rebonds.teamDefensive}) - Opposent (${statSummary.rebonds.opponentDefensive})`}</div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -242,7 +281,7 @@ export default function BsMatch(props: BsMatchProps) {
   const actionMode = new MadSignal(null) as MadSignal<string | null>
   const [statSummary, setStatSummary] = createStore(getStatSummary(match))
   const disableClearLastAction = new MadSignal((match?.stats.length || 0) === 0)
-  const isStatMode = new MadSignal(false)
+  const isStatMode = new MadSignal(match?.status === 'locked')
 
   const team = orchestrator.getTeam(match?.teamId)
   const sortedPlayers = orchestrator.getJerseySortedPlayers(team?.playerIds)
@@ -253,6 +292,9 @@ export default function BsMatch(props: BsMatchProps) {
         <BsScoreCard
           localScore={statSummary.localScore}
           visitorScore={statSummary.opponentScore}
+          location={match?.type}
+          localName={team?.name}
+          visitorName={match?.opponent}
         />
       </div>
 
@@ -268,6 +310,11 @@ export default function BsMatch(props: BsMatchProps) {
             <button
               class="btn btn-accent w-full my-4"
               onClick={() => {
+                if (match?.status === 'locked') {
+                  alert('Match vérouillé !')
+                  return
+                }
+
                 openActionMode(TEAM_OPPONENT_ID, actionMode)
               }}
             >
@@ -277,7 +324,7 @@ export default function BsMatch(props: BsMatchProps) {
                 {statSummary.opponentScore || 0}
               </span>
               <span class="inline-block w-5 text-accent-content text-xl">
-                {statSummary.opponentRebonds || 0}
+                {statSummary.rebonds.opponentTotal || 0}
               </span>
               <span class="inline-block w-5 text-warning text-xl">
                 {statSummary.opponentFouls || 0}
@@ -348,12 +395,12 @@ export default function BsMatch(props: BsMatchProps) {
         onClick={event => {
           event.stopPropagation()
 
-          if (isStatMode.get()) {
+          if (match?.status !== 'locked' && isStatMode.get()) {
             isStatMode.set(false)
             return
           }
 
-          if (actionMode.get()) {
+          if (match?.status !== 'locked' && actionMode.get()) {
             closeActionMode(actionMode)
             return
           }

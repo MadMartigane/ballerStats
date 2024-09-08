@@ -1,3 +1,4 @@
+import { DaisySize } from '../../libs/daisy'
 import Match from '../../libs/match'
 import type { MatchType } from '../../libs/match'
 import { JSX } from 'solid-js'
@@ -8,6 +9,7 @@ export type BsMatchTileProps = {
   onStart?: (match: Match) => void
 } & JSX.HTMLAttributes<HTMLDivElement>
 
-export type BsMatchTypeTextProps = {
-  type: MatchType
+export type BsMatchTypeProps = {
+  type?: MatchType
+  size?: DaisySize
 } & JSX.HTMLAttributes<HTMLSpanElement>

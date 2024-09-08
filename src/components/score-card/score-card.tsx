@@ -1,5 +1,6 @@
 import { Show } from 'solid-js'
 import { BsScoreCardProps } from './score-card.d'
+import { BsMatchTypeBadge } from '../match-tile'
 
 export default function BsScoreCard(props: BsScoreCardProps) {
   return (
@@ -25,7 +26,12 @@ export default function BsScoreCard(props: BsScoreCardProps) {
         </span>
       </div>
       <div class="col-span-1">
-        <span class="text-center text-xl inline-block w-full place-self-center">VS</span>
+        <div class="text-center text-xl w-full place-self-center">VS</div>
+        <Show when={props.location}>
+          <div class="text-center w-full place-self-center">
+            <BsMatchTypeBadge type={props.location} size='xl' />
+          </div>
+        </Show>
       </div>
       <div class="col-span-2">
         <span class="countdown h-6 text-6xl inline-block w-full">
@@ -49,7 +55,9 @@ export default function BsScoreCard(props: BsScoreCardProps) {
       </div>
       <div class="col-span-2">
         <span class="text-xl inline-block w-full">
-          <span class="text-center inline-block w-full">LOCAL</span>
+          <span class="text-center inline-block w-full">
+            {props.localName || 'LOCAL'}
+          </span>
         </span>
       </div>
       <div class="col-span-1">
@@ -57,7 +65,9 @@ export default function BsScoreCard(props: BsScoreCardProps) {
       </div>
       <div class="col-span-2">
         <span class="text-xl inline-block w-full">
-          <span class="text-center inline-block w-full">VISITEUR</span>
+          <span class="text-center inline-block w-full">
+            {props.visitorName || 'VISITEUR'}
+          </span>
         </span>
       </div>
     </div>

@@ -20,6 +20,19 @@
     "prod-only": "npm run prod-clean && npm run prod-push"
   },
   "license": "MIT",
+  "eslintConfig": {
+    "extends": "react-app",
+    "rules": {
+      "quotes": [
+        "warn",
+        "single"
+      ]
+    },
+    "ignorePatterns": [
+      "src/**/*.test.ts",
+      "dist/*"
+    ]
+  },
   "devDependencies": {
     "@fontsource/rajdhani": "^5.0.14",
     "@solidjs/router": "^0.14.3",

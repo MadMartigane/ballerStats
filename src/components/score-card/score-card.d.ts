@@ -1,4 +1,9 @@
+import { MatchType } from "../../libs/match"
+
 export type BsScoreCardProps = {
-  visitorScore: number
   localScore: number
+  visitorScore: number
+  location?: MatchType
+  localName?: string | null
+  visitorName?: string | null
 }

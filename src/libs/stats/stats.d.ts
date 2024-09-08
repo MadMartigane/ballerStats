@@ -58,10 +58,22 @@ export type StatMatchSummaryPlayer = {
   }
 }
 
+export type StatMatchSummaryRebonds = {
+  teamTotal: number
+  teamOffensive: number
+  teamDefensive: number
+  teamTotalPercentage: number
+  teamOffensivePercentage: number
+  teamDefensivePercentage: number
+  opponentTotal: number
+  opponentDefensive: number
+  opponentOffensive: number
+}
+
 export type StatMatchSummary = {
   localScore: number
   opponentScore: number
-  opponentRebonds: number
   opponentFouls: number
   players: StatMatchSummaryPlayer
+  rebonds: StatMatchSummaryRebonds
 }
