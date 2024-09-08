@@ -1,6 +1,6 @@
 import { JSXElement } from 'solid-js'
 
-export type StatMatchActionItemType = 'success' | 'error'
+export type StatMatchActionItemType = 'success' | 'error' | 'secondary'
 
 export type StatMatchActionItemName =
   | '2pts'
@@ -10,6 +10,7 @@ export type StatMatchActionItemName =
   | 'defensive-rebond'
   | 'assist'
   | 'foul'
+  | 'turnover'
 
 export type StatMatchActionItem = {
   name: StatMatchActionItemName
@@ -55,6 +56,7 @@ export type StatMatchSummaryPlayer = {
     }
     fouls: number
     assists: number
+    turnover: number
   }
 }
 
@@ -71,9 +73,11 @@ export type StatMatchSummaryRebonds = {
 }
 
 export type StatMatchSummary = {
-  localScore: number
+  teamScore: number
   opponentScore: number
   opponentFouls: number
   players: StatMatchSummaryPlayer
   rebonds: StatMatchSummaryRebonds
+  teamAssists: number
+  teamTurnover: number
 }
