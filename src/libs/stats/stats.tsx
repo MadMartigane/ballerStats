@@ -1,6 +1,7 @@
 import {
   ArrowLeftFromLine,
   Ban,
+  CircleOff,
   Hand,
   IterationCcw,
   RedoDot,
@@ -67,19 +68,20 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     icon: <Hand />,
   },
   {
+    name: 'turnover',
+    label1: 'TO',
+    label2: 'Balle Perdu',
+    type: 'error',
+    value: 1,
+    icon: <CircleOff />,
+  },
+  {
     name: 'defensive-rebond',
     label1: 'D-R',
     label2: <ArrowLeftFromLine />,
-    type: 'success',
+    type: 'secondary',
     value: 1,
     icon: <Hand />,
-  },
-  {
-    name: 'assist',
-    label1: 'Passe D',
-    type: 'success',
-    value: 1,
-    icon: <RedoDot />,
   },
   {
     name: 'foul',
@@ -87,5 +89,12 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     type: 'error',
     value: 1,
     icon: <Ban />,
+  },
+  {
+    name: 'assist',
+    label1: 'Passe D',
+    type: 'success',
+    value: 1,
+    icon: <RedoDot />,
   },
 ]

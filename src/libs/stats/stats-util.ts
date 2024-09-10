@@ -65,11 +65,27 @@ export function getPlayerFouls(match: Match, playerId: string) {
   return getPlayerStatByType(match, playerId, 'foul')
 }
 
-export function getLocalScore(match: Match, playerIds: Array<string>) {
+export function getPlayerTurnovers(match: Match, playerId: string) {
+  return getPlayerStatByType(match, playerId, 'turnover')
+}
+
+export function getTeamScore(match: Match, playerIds: Array<string>) {
   return playerIds.reduce(
     (score: number, playerId) => score + getPlayerScore(match, playerId),
     0,
   )
+}
+
+export function getTeamAssists(playersStats: StatMatchSummaryPlayer) {
+  return Object.keys(playersStats).reduce((result, playerId) => {
+    return result + playersStats[playerId].assists
+  }, 0)
+}
+
+export function getTeamTurnovers(playersStats: StatMatchSummaryPlayer) {
+  return Object.keys(playersStats).reduce((result, playerId) => {
+    return result + playersStats[playerId].turnover
+  }, 0)
 }
 
 export function getPlayerNumberByType(
@@ -160,10 +176,12 @@ export function getFullRebondStats(
 export function getStatSummary(match: Match | null): StatMatchSummary {
   if (!match) {
     return {
-      localScore: 0,
+      teamScore: 0,
       opponentScore: 0,
       opponentFouls: 0,
       players: {},
+      teamAssists: 0,
+      teamTurnover: 0,
       rebonds: {
         teamTotal: 0,
         teamOffensive: 0,
@@ -220,6 +238,7 @@ export function getStatSummary(match: Match | null): StatMatchSummary {
         },
         assists: getPlayerAssists(match, playerId),
         fouls: getPlayerFouls(match, playerId),
+        turnover: getPlayerTurnovers(match, playerId),
       }
 
       // TODO: TOTAL
@@ -272,10 +291,12 @@ export function getStatSummary(match: Match | null): StatMatchSummary {
   const rebonds = getFullRebondStats(match, playerIds)
 
   return {
-    localScore: getLocalScore(match, playerIds),
+    teamScore: getTeamScore(match, playerIds),
     opponentScore: getOpponentScore(match),
     opponentFouls: getOpponentFouls(match),
     players,
     rebonds,
+    teamAssists: getTeamAssists(players),
+    teamTurnover: getTeamTurnovers(players),
   }
 }

@@ -192,6 +192,12 @@ function renderStatGrid(statSummary: StatMatchSummary) {
               <th>Pts</th>
               <th>Rbs (O-D)</th>
               <th>Fautes</th>
+              <th>
+                <div>TO</div>
+              </th>
+              <th>
+                <div>Ass</div>
+              </th>
               <th>LF</th>
               <th>2pts</th>
               <th>3pts</th>
@@ -219,6 +225,12 @@ function renderStatGrid(statSummary: StatMatchSummary) {
                     </td>
                     <td>
                       <span class="text-lg">{`${statSummary.players[playerId].fouls}`}</span>
+                    </td>
+                    <td>
+                      <span class="text-lg">{`${statSummary.players[playerId].turnover}`}</span>
+                    </td>
+                    <td>
+                      <span class="text-lg">{`${statSummary.players[playerId].assists}`}</span>
                     </td>
                     <td>
                       <span class="text-lg">{`${statSummary.players[playerId].scores['free-throw']}`}</span>
@@ -292,7 +304,7 @@ export default function BsMatch(props: BsMatchProps) {
     <div class="w-full">
       <div class="w-full border border-neutral rounded bg-secondary text-secondary-content">
         <BsScoreCard
-          localScore={statSummary.localScore}
+          localScore={statSummary.teamScore}
           visitorScore={statSummary.opponentScore}
           location={match?.type}
           localName={team?.name}
