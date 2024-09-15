@@ -308,6 +308,7 @@ export default function BsMatch(props: BsMatchProps) {
           visitorScore={statSummary.opponentScore}
           location={match?.type}
           localName={team?.name}
+          date={match?.date || null}
           visitorName={match?.opponent}
         />
       </div>

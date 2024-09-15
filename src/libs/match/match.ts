@@ -16,11 +16,25 @@ export default class Match {
   public teamId: string | null = null
   public stats: Array<MatchStatLogEntry> = []
   public status: MatchStatus = 'unlocked'
+  public date: string | null = null
 
   constructor(data?: MatchRawData) {
     if (data) {
       this.setFromRawData(data)
     }
+  }
+
+  private setFromRawData(data: MatchRawData) {
+    if (data.id) {
+      this.#id = data.id
+    }
+
+    this.opponent = data.opponent || null
+    this.type = data.type || defaultType
+    this.teamId = data.teamId || null
+    this.stats = data.stats || []
+    this.status = data.status || 'unlocked'
+    this.date = data.date || null
   }
 
   public get id() {
@@ -31,18 +45,6 @@ export default class Match {
     return Boolean(this.opponent) && Boolean(this.type) && Boolean(this.teamId)
   }
 
-  public setFromRawData(data: MatchRawData) {
-    if (data.id) {
-      this.#id = data.id
-    }
-
-    this.opponent = data.opponent || null
-    this.type = data.type || defaultType
-    this.teamId = data.teamId || null
-    this.stats = data.stats || []
-    this.status = data.status || 'unlocked'
-  }
-
   public getRawData(): MatchRawData {
     return {
       id: this.#id,
@@ -51,6 +53,7 @@ export default class Match {
       teamId: this.teamId,
       status: this.status,
       stats: clone(this.stats) as Array<MatchStatLogEntry>,
+      date: this.date || null,
     }
   }
 

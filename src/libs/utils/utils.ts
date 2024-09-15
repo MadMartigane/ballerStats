@@ -121,3 +121,12 @@ export async function confirmAction(
 
   return promise
 }
+
+export function toDateTime(dateString: string | null) {
+  if (!dateString) {
+    return ''
+  }
+
+  const date = new Date(dateString)
+  return `${date.toLocaleDateString('fr-FR')} - ${date.toLocaleTimeString('fr-FR').replace(/:\d{2}$/, '')}`
+}

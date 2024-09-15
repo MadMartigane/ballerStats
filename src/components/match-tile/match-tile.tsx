@@ -4,7 +4,7 @@ import type { BsMatchTileProps, BsMatchTypeProps } from './match-tile.d'
 import Match from '../../libs/match'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import BsTile from '../tile'
-import { confirmAction } from '../../libs/utils'
+import { confirmAction, toDateTime } from '../../libs/utils'
 
 async function removeMatch(match: Match) {
   const yes = await confirmAction()
@@ -71,20 +71,23 @@ export default function BsMatchTile(props: BsMatchTileProps) {
         callCallback(match, props?.onStart)
       }}
       status={
-        <div class="float-right">
-          <Show
-            when={match.status === 'locked'}
-            fallback={
-              <div class="badge badge-success p-2 rounded-lg">
-                <LockOpen size={18} />
+        <>
+          <div class="float-left">{toDateTime(match?.date)}</div>
+          <div class="float-right">
+            <Show
+              when={match.status === 'locked'}
+              fallback={
+                <div class="badge badge-success p-2 rounded-lg">
+                  <LockOpen size={18} />
+                </div>
+              }
+            >
+              <div class="badge badge-warning p-2 rounded-lg">
+                <Lock size={18} />
               </div>
-            }
-          >
-            <div class="badge badge-warning p-2 rounded-lg">
-              <Lock size={18} />
-            </div>
-          </Show>
-        </div>
+            </Show>
+          </div>
+        </>
       }
       badge={<BsMatchTypeText type={match.type} />}
       footer={

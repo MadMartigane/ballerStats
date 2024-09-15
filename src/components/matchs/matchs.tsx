@@ -13,24 +13,34 @@ import BsMatch from '../match-tile'
 import { BsMatchTypeText } from '../match-tile/match-tile'
 import BsSelect from '../select/select'
 import BsToggle from '../toggle/toggle'
+import { BsDatePicker } from '../date-picker/date-picker'
 
 let isEditingNewMatch: boolean = false
 const isAddingMatch: MadSignal<boolean> = new MadSignal(false)
 const canAddMatch: MadSignal<boolean> = new MadSignal(false)
 const matchLength: MadSignal<number> = new MadSignal(orchestrator.Matchs.length)
-const [matchs, setMatchs] = createStore(orchestrator.Matchs.matchs)
+const [matchs, setMatchs] = createStore(getSortedMatchs())
 const [teams, setTeams] = createStore(orchestrator.Teams.teams)
 
 let currentMatch: Match | null = null
 
 bsEventBus.addEventListener('BS::MATCHS::CHANGE', () => {
   matchLength.set(orchestrator.Matchs.length)
-  setMatchs(orchestrator.Matchs.matchs)
+  setMatchs(getSortedMatchs())
 })
 
 bsEventBus.addEventListener('BS::TEAMS::CHANGE', () => {
   setTeams(orchestrator.Teams.teams)
 })
+
+function getSortedMatchs() {
+  return orchestrator.Matchs.matchs.sort((a, b) => {
+    const dateA = a.date ? new Date(a.date) : new Date()
+    const dateB = b.date ? new Date(b.date) : new Date()
+
+    return dateA.getTime() - dateB.getTime()
+  })
+}
 
 function setNewMatchData(data: MatchRawData) {
   if (!currentMatch) {
@@ -171,9 +181,18 @@ function renderAddingMatchCard() {
           }}
         />
 
+        <BsDatePicker
+          label="Date du match"
+          withTime={true}
+          value={currentMatch?.date}
+          onChange={(value: string) => {
+            setNewMatchData({ date: value })
+          }}
+        />
+
         <BsToggle
           label="Match ouvert"
-          size='lg'
+          size="lg"
           value={currentMatch?.status === 'unlocked'}
           onChange={checked => {
             onStatusChange(checked)
