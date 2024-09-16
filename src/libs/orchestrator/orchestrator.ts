@@ -10,6 +10,7 @@ import {
 } from '../store'
 import Teams from '../teams'
 import Matchs from '../matchs'
+import { mount, unmount } from '../utils'
 
 export class Orchestrator {
   #players: Players = new Players()
@@ -228,6 +229,29 @@ export class Orchestrator {
       (a, b) =>
         parseInt(a?.jersayNumber || '0') - parseInt(b?.jersayNumber || '0'),
     )
+  }
+
+  public exportDB() {
+    const date = new Date()
+
+    const globalDB = {
+      timestamp: date.getTime(),
+      players: this.Players.players.map(player => player.getRawData()),
+      teams: this.Teams.teams.map(team => team.getRawData()),
+      matchs: this.Matchs.matchs.map(match => match.getRawData()),
+    }
+
+    const jsonDB = JSON.stringify(globalDB)
+    const anchor = document.createElement('a')
+    const fileName = `baller-stats-export-db-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}.json`
+    const blob = new Blob([jsonDB], { type: 'application/json;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    anchor.setAttribute('href', url)
+    anchor.setAttribute('download', fileName)
+    anchor.style.visibility = 'hidden'
+    mount(anchor)
+    anchor.click()
+    unmount(anchor)
   }
 }
 

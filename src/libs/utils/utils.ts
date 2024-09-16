@@ -40,6 +40,14 @@ export function goBack() {
   window.history.back()
 }
 
+export function mount(child: HTMLElement, parent?: HTMLElement) {
+  if (!parent) {
+    parent = document.body
+  }
+
+  parent.appendChild(child)
+}
+
 export function unmount(child: HTMLElement, parent?: HTMLElement) {
   if (!parent) {
     parent = document.body

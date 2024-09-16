@@ -8,10 +8,13 @@ import BsIconBasketballBallOutline from '../components/icons/basketball-ball-out
 import BsIconBasketballPlayer from '../components/icons/basketball-player'
 import BsIconBasketballPanel from '../components/icons/basketball-panel'
 import BsIconBasketballBasketMove from '../components/icons/basketball-basket-move'
-import { Medal, Trash2 } from 'lucide-solid'
+import { Loader, Medal, Share, Trash2 } from 'lucide-solid'
 import orchestrator from '../libs/orchestrator/orchestrator'
+import BsToggle from '../components/toggle'
+import MadSignal from '../libs/mad-signal'
 
-const displayDemo = true
+const displayDemo = new MadSignal(false)
+const bigCleanInProgress = new MadSignal(false)
 
 export default function Home() {
   return (
@@ -26,7 +29,50 @@ export default function Home() {
           <DarkThemeSwitch />
         </div>
       </div>
-      <Show when={displayDemo}>
+
+      <hr />
+
+      <h2>Administration:</h2>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 content-start">
+        <button
+          class="btn btn-accent"
+          disabled={bigCleanInProgress.get()}
+          onClick={() => {
+            bigCleanInProgress.set(true)
+            orchestrator.bigClean()
+            setTimeout(() => {
+              bigCleanInProgress.set(false)
+            }, 400)
+          }}
+        >
+          {bigCleanInProgress.get() ? (
+            <Loader class="animate-spin" />
+          ) : (
+            <Trash2 />
+          )}{' '}
+          BIG CLEAN
+        </button>
+
+        <button
+          class="btn btn-neutral"
+          onClick={() => {
+            orchestrator.exportDB()
+          }}
+        >
+          <Share /> Sauvegarde DB
+        </button>
+
+        <BsToggle
+          label="Afficher la démo"
+          value={displayDemo.get()}
+          onChange={value => {
+            displayDemo.set(value)
+          }}
+        />
+      </div>
+
+      <Show when={displayDemo.get()}>
         <div class="py-4">
           <button class="btn">Default</button>
           <button class="btn btn-neutral">Neutral</button>
@@ -55,14 +101,6 @@ export default function Home() {
             <BsIconBasketballBasketMove size="6xl" variant="accent" />
             <Medal size={96} />
           </div>
-          <button
-            class="btn btn-warning btn-lg"
-            onClick={() => {
-              orchestrator.bigClean()
-            }}
-          >
-            <Trash2 /> BIG CLEAN
-          </button>
         </div>
       </Show>
     </div>
