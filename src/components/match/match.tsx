@@ -130,11 +130,6 @@ function renderPlayerButton(
   const playerStats = statSummary.players.find(
     stat => stat.playerId === player.id,
   )
-  if (!playerStats) {
-    return (
-      <button class="btn btn-error btn-disabled w-full">{`Stats joueur non trouvées`}</button>
-    )
-  }
 
   return (
     <div class="w-full flex flex-row my-3 md:my-4">
@@ -155,13 +150,13 @@ function renderPlayerButton(
           {player.nicName ? player.nicName : player.firstName}
         </span>
         <span class="inline-block w-5 text-success text-xl">
-          {playerStats.scores.total || 0}
+          {playerStats?.scores.total || 0}
         </span>
         <span class="inline-block w-5 text-accent-content text-xl">
-          {playerStats.rebonds.total || 0}
+          {playerStats?.rebonds.total || 0}
         </span>
         <span class="inline-block w-5 text-warning text-xl">
-          {playerStats.fouls || 0}
+          {playerStats?.fouls || 0}
         </span>
       </div>
     </div>
