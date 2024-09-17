@@ -127,6 +127,15 @@ function renderPlayerButton(
     )
   }
 
+  const playerStats = statSummary.players.find(
+    stat => stat.playerId === player.id,
+  )
+  if (!playerStats) {
+    return (
+      <button class="btn btn-error btn-disabled w-full">{`Stats joueur non trouvées`}</button>
+    )
+  }
+
   return (
     <div class="w-full flex flex-row my-3 md:my-4">
       <div
@@ -146,13 +155,13 @@ function renderPlayerButton(
           {player.nicName ? player.nicName : player.firstName}
         </span>
         <span class="inline-block w-5 text-success text-xl">
-          {statSummary.players[player.id]?.scores.total || 0}
+          {playerStats.scores.total || 0}
         </span>
         <span class="inline-block w-5 text-accent-content text-xl">
-          {statSummary.players[player.id]?.rebonds.total || 0}
+          {playerStats.rebonds.total || 0}
         </span>
         <span class="inline-block w-5 text-warning text-xl">
-          {statSummary.players[player.id]?.fouls || 0}
+          {playerStats.fouls || 0}
         </span>
       </div>
     </div>
@@ -174,6 +183,50 @@ function renderPlayerHeader(playerId: string | null) {
         <div class="text-sm">Action</div>
       </div>
       <div class="text-3xl text-right">{player?.jersayNumber}</div>
+    </div>
+  )
+}
+
+function renderTeamTotals(statSummary: StatMatchSummary) {
+  return (
+    <div class="overflow-x-auto">
+      <div class="stats shadow">
+        <div class="stat place-items-center">
+          <div class="stat-title">Score</div>
+          <div
+            class={`stat-value ${statSummary.teamScore > statSummary.opponentScore ? 'text-success' : 'text-warning'}`}
+          >
+            {statSummary.teamScore}
+          </div>
+          <div class="stat-desc">
+            {`Score adverse: ${statSummary.opponentScore}`}
+          </div>
+        </div>
+
+        <div class="stat place-items-center">
+          <div class="stat-title">Fautes</div>
+          <div
+            class={`stat-value ${statSummary.teamFouls < statSummary.opponentFouls ? 'text-success' : 'text-warning'}`}
+          >
+            {statSummary.teamFouls}
+          </div>
+          <div class="stat-desc">
+            {`Fautes adverse: ${statSummary.opponentFouls}`}
+          </div>
+        </div>
+
+        <div class="stat place-items-center">
+          <div class="stat-title">Balles perdus</div>
+          <div class="stat-value text-warning">{statSummary.teamTurnover}</div>
+          <div class="stat-desc">Total balles perdus de l’équipe</div>
+        </div>
+
+        <div class="stat place-items-center">
+          <div class="stat-title">Passe D</div>
+          <div class="stat-value text-success">{statSummary.teamAssists}</div>
+          <div class="stat-desc">Total des passes décisives de l’équipe</div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -204,9 +257,9 @@ function renderStatGrid(statSummary: StatMatchSummary) {
             </tr>
           </thead>
           <tbody>
-            <For each={Object.keys(statSummary.players)}>
-              {playerId => {
-                const player = orchestrator.getPlayer(playerId)
+            <For each={statSummary.players}>
+              {playerStats => {
+                const player = orchestrator.getPlayer(playerStats.playerId)
 
                 return (
                   <tr>
@@ -217,35 +270,35 @@ function renderStatGrid(statSummary: StatMatchSummary) {
                       {player?.nicName ? player.nicName : player?.firstName}
                     </td>
                     <td>
-                      <span class="text-lg">{`${statSummary.players[playerId].scores.total}`}</span>
+                      <span class="text-lg">{`${playerStats.scores.total}`}</span>
                     </td>
                     <td>
-                      <span class="text-lg">{`${statSummary.players[playerId].rebonds.total}`}</span>
-                      <span class="">{` (${statSummary.players[playerId].rebonds.offensive}-${statSummary.players[playerId].rebonds.defensive})`}</span>
+                      <span class="text-lg">{`${playerStats.rebonds.total}`}</span>
+                      <span class="">{` (${playerStats.rebonds.offensive}-${playerStats.rebonds.defensive})`}</span>
                     </td>
                     <td>
-                      <span class="text-lg">{`${statSummary.players[playerId].fouls}`}</span>
+                      <span class="text-lg">{`${playerStats.fouls}`}</span>
                     </td>
                     <td>
-                      <span class="text-lg">{`${statSummary.players[playerId].turnover}`}</span>
+                      <span class="text-lg">{`${playerStats.turnover}`}</span>
                     </td>
                     <td>
-                      <span class="text-lg">{`${statSummary.players[playerId].assists}`}</span>
+                      <span class="text-lg">{`${playerStats.assists}`}</span>
                     </td>
                     <td>
-                      <span class="text-lg">{`${statSummary.players[playerId].scores['free-throw']}`}</span>
-                      {` ${statSummary.players[playerId].ratio['free-throw'].success}/${statSummary.players[playerId].ratio['free-throw'].total}`}
-                      {` (${statSummary.players[playerId].ratio['free-throw'].percentage}%)`}
+                      <span class="text-lg">{`${playerStats.scores['free-throw']}`}</span>
+                      {` ${playerStats.ratio['free-throw'].success}/${playerStats.ratio['free-throw'].total}`}
+                      {` (${playerStats.ratio['free-throw'].percentage}%)`}
                     </td>
                     <td>
-                      <span class="text-lg">{`${statSummary.players[playerId].scores['2pts']}`}</span>
-                      {` ${statSummary.players[playerId].ratio['2pts'].success}/${statSummary.players[playerId].ratio['2pts'].total}`}
-                      {` (${statSummary.players[playerId].ratio['2pts'].percentage}%)`}
+                      <span class="text-lg">{`${playerStats.scores['2pts']}`}</span>
+                      {` ${playerStats.ratio['2pts'].success}/${playerStats.ratio['2pts'].total}`}
+                      {` (${playerStats.ratio['2pts'].percentage}%)`}
                     </td>
                     <td>
-                      <span class="text-lg">{`${statSummary.players[playerId].scores['3pts']}`}</span>
-                      {` ${statSummary.players[playerId].ratio['3pts'].success}/${statSummary.players[playerId].ratio['3pts'].total}`}
-                      {` (${statSummary.players[playerId].ratio['3pts'].percentage}%)`}
+                      <span class="text-lg">{`${playerStats.scores['3pts']}`}</span>
+                      {` ${playerStats.ratio['3pts'].success}/${playerStats.ratio['3pts'].total}`}
+                      {` (${playerStats.ratio['3pts'].percentage}%)`}
                     </td>
                   </tr>
                 )
@@ -254,6 +307,11 @@ function renderStatGrid(statSummary: StatMatchSummary) {
           </tbody>
         </table>
       </div>
+
+      <hr />
+
+      <h3>Totaux de l’équipe:</h3>
+      {renderTeamTotals(statSummary)}
 
       <hr />
 

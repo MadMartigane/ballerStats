@@ -22,42 +22,41 @@ export type StatMatchActionItem = {
 }
 
 export type StatMatchSummaryPlayer = {
-  [playerId: string]: {
-    scores: {
-      'free-throw': number
-      '2pts': number
-      '3pts': number
-      total: number
-    }
-    rebonds: {
-      defensive: number
-      offensive: number
-      total: number
-    }
-    ratio: {
-      'free-throw': {
-        success: number
-        fail: number
-        total: number
-        percentage: number
-      }
-      '2pts': {
-        success: number
-        fail: number
-        total: number
-        percentage: number
-      }
-      '3pts': {
-        success: number
-        fail: number
-        total: number
-        percentage: number
-      }
-    }
-    fouls: number
-    assists: number
-    turnover: number
+  playerId: string
+  scores: {
+    'free-throw': number
+    '2pts': number
+    '3pts': number
+    total: number
   }
+  rebonds: {
+    defensive: number
+    offensive: number
+    total: number
+  }
+  ratio: {
+    'free-throw': {
+      success: number
+      fail: number
+      total: number
+      percentage: number
+    }
+    '2pts': {
+      success: number
+      fail: number
+      total: number
+      percentage: number
+    }
+    '3pts': {
+      success: number
+      fail: number
+      total: number
+      percentage: number
+    }
+  }
+  fouls: number
+  assists: number
+  turnover: number
 }
 
 export type StatMatchSummaryRebonds = {
@@ -76,8 +75,9 @@ export type StatMatchSummary = {
   teamScore: number
   opponentScore: number
   opponentFouls: number
-  players: StatMatchSummaryPlayer
+  players: Array<StatMatchSummaryPlayer>
   rebonds: StatMatchSummaryRebonds
   teamAssists: number
   teamTurnover: number
+  teamFouls: number
 }
