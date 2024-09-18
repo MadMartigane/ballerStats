@@ -117,13 +117,17 @@ function renderPlayerButton(
 ) {
   if (!player) {
     return (
-      <button class="btn btn-error btn-disabled w-full">{`Joueur non trouvé`}</button>
+      <button type="button" class="btn btn-error btn-disabled w-full">
+        Joueur non trouvé
+      </button>
     )
   }
 
   if (!match) {
     return (
-      <button class="btn btn-error btn-disabled w-full">{`Match non trouvé`}</button>
+      <button type="button" class="btn btn-error btn-disabled w-full">
+        Match non trouvé
+      </button>
     )
   }
 
@@ -142,6 +146,16 @@ function renderPlayerButton(
           }
 
           openActionMode(player.id, actionMode)
+        }}
+        onKeyDown={(event: KeyboardEvent) => {
+          if (event.code === 'Enter') {
+            if (match?.status === 'locked') {
+              alert('Match vérouillé !')
+              return
+            }
+
+            openActionMode(player.id, actionMode)
+          }
         }}
       >
         <User size={32} />
@@ -376,6 +390,7 @@ export default function BsMatch(props: BsMatchProps) {
             </For>
 
             <button
+              type="button"
               class="btn btn-accent w-full my-4"
               onClick={() => {
                 if (match?.status === 'locked') {
@@ -384,6 +399,16 @@ export default function BsMatch(props: BsMatchProps) {
                 }
 
                 openActionMode(TEAM_OPPONENT_ID, actionMode)
+              }}
+              onKeyDown={(event: KeyboardEvent) => {
+                if (event.code === 'Enter') {
+                  if (match?.status === 'locked') {
+                    alert('Match vérouillé !')
+                    return
+                  }
+
+                  openActionMode(TEAM_OPPONENT_ID, actionMode)
+                }
               }}
             >
               <Users size={32} />
@@ -400,9 +425,15 @@ export default function BsMatch(props: BsMatchProps) {
             </button>
 
             <button
+              type="button"
               class="btn btn-primary w-full"
               onClick={() => {
                 isStatMode.set(true)
+              }}
+              onKeyDown={(event: KeyboardEvent) => {
+                if (event.code === 'Enter') {
+                  isStatMode.set(true)
+                }
               }}
             >
               <ChartLine />
@@ -413,10 +444,20 @@ export default function BsMatch(props: BsMatchProps) {
             <hr />
 
             <button
+              type="button"
               class="btn btn-warning w-full"
               disabled={disableClearLastAction.get()}
               onClick={() => {
                 removeLastAction(match, setStatSummary, disableClearLastAction)
+              }}
+              onKeyDown={(event: KeyboardEvent) => {
+                if (event.code === 'Enter') {
+                  removeLastAction(
+                    match,
+                    setStatSummary,
+                    disableClearLastAction,
+                  )
+                }
               }}
             >
               <Eraser />
@@ -432,6 +473,7 @@ export default function BsMatch(props: BsMatchProps) {
             <For each={STATS_MATCH_ACTIONS}>
               {item => (
                 <button
+                  type="button"
                   class={`btn btn-${item.type}`}
                   onClick={() => {
                     registerStat(
@@ -459,6 +501,7 @@ export default function BsMatch(props: BsMatchProps) {
       <hr />
       {/* CANCEL ACTION */}
       <button
+        type="button"
         class="btn btn-outline w-full"
         onClick={event => {
           event.stopPropagation()
