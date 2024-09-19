@@ -84,7 +84,7 @@ function onSelectionChange(
   setProps('disable', selectData.length < 2);
 
   if (props.onChange) {
-    if (props.selectedIds && props.selectedIds.length) {
+    if (props.selectedIds?.length) {
       props.onChange(props.selectedIds);
     } else {
       props.onChange([]);

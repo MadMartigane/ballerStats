@@ -104,7 +104,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                     }, 10);
                   }}
                 >
-                  <span class="absolute -top-1.5 text-amber-500"></span>
+                  <span class="absolute -top-1.5 text-amber-500" />
                   <span class="sr-only">Afficher les notifications</span>
                   <Bell />
                 </button>
@@ -141,7 +141,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                         }, 10);
                       }}
                     >
-                      <span class="absolute -inset-1.5"></span>
+                      <span class="absolute -inset-1.5" />
                       <span class="sr-only">Open user menu</span>
                       <UserCog size="24" />
                     </button>
@@ -204,7 +204,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                   }, 10);
                 }}
               >
-                <span class="absolute -top-1.5 text-amber-500"></span>
+                <span class="absolute -top-1.5 text-amber-500" />
                 <span class="sr-only">Afficher les notifications</span>
                 <Bell />
               </button>
@@ -238,7 +238,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                   }, 10)
                 }
               >
-                <span class="absolute -inset-0.5"></span>
+                <span class="absolute -inset-0.5" />
                 <span class="sr-only">
                   Ouverture menu principale, version mobile
                 </span>

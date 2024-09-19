@@ -154,7 +154,7 @@ function renderAddingMatchCard() {
         <BsSelect
           label="Mon Équipe"
           placeholder="Sélectionnez l’équipe"
-          value={currentMatch && currentMatch.teamId}
+          value={currentMatch?.teamId}
           datas={teams.map((team) => ({ value: team.id, label: team.name }))}
           onValueChange={(value: string) => {
             onTeamChange(value);

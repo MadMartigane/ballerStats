@@ -60,9 +60,8 @@ export default function BsTeam(props: BsTeamProps) {
                   <span class="p-1">{`${player.nicName || player.firstName} ${(player.nicName && '') || player.lastName}`}</span>
                 </p>
               );
-            } else {
-              <p class="text-error">{`Joueur id ${id} introuvable`}</p>;
             }
+            <p class="text-error">{`Joueur id ${id} introuvable`}</p>;
           }}
         </For>
       </BsTile>

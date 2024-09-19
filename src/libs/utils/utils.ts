@@ -64,7 +64,7 @@ export async function confirmAction(
   cancel = 'Non',
   confirm = 'Oui',
 ): Promise<boolean> {
-  let resolve: (value: boolean) => void | null;
+  let resolve: (value: boolean) => undefined | null;
   const promise: Promise<boolean> = new Promise((res) => {
     resolve = res;
   });
