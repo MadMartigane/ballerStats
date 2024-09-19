@@ -1,3 +1,3 @@
-import GlobalStats from './global-stats'
+import GlobalStats from './global-stats';
 
-export default GlobalStats
+export default GlobalStats;

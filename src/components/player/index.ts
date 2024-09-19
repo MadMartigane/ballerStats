@@ -1,4 +1,4 @@
-export * from './player.d'
+export * from './player.d';
 
-import BsPlayer from './player'
-export default BsPlayer
+import BsPlayer from './player';
+export default BsPlayer;

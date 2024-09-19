@@ -1,8 +1,11 @@
-import { BsButtonProps } from './button.d'
-import { getPrelineClass, PrelineComponentClasses } from '../../libs/preline'
+import {
+  type PrelineComponentClasses,
+  getPrelineClass,
+} from '../../libs/preline';
+import type { BsButtonProps } from './button.d';
 
-const ANIMATION_TOKEN_CLASS = 'animate-ping'
-const ANIMATION_DURATION = 75
+const ANIMATION_TOKEN_CLASS = 'animate-ping';
+const ANIMATION_DURATION = 75;
 
 const defaultButtonOptions: BsButtonProps = {
   type: 'button',
@@ -12,7 +15,7 @@ const defaultButtonOptions: BsButtonProps = {
   wide: false,
   pills: false,
   disabled: false,
-}
+};
 
 const classes: PrelineComponentClasses = {
   common: 'text-sm font-semibold',
@@ -35,31 +38,29 @@ const classes: PrelineComponentClasses = {
   sm: 'py-1 px-2',
   base: 'py-3 px-4',
   lg: 'p-4 sm:p-5',
-}
-
+};
 
 function throwAnimation(buttonEl?: HTMLButtonElement) {
   if (!buttonEl) {
-    return
+    return;
   }
 
   if (!buttonEl.classList.contains(ANIMATION_TOKEN_CLASS)) {
-    buttonEl.classList.add(ANIMATION_TOKEN_CLASS)
+    buttonEl.classList.add(ANIMATION_TOKEN_CLASS);
   }
 
   setTimeout(() => {
-
     if (buttonEl.classList.contains(ANIMATION_TOKEN_CLASS)) {
-      buttonEl.classList.remove(ANIMATION_TOKEN_CLASS)
+      buttonEl.classList.remove(ANIMATION_TOKEN_CLASS);
     }
-  }, ANIMATION_DURATION)
+  }, ANIMATION_DURATION);
 }
 
 function onClick(data: BsButtonProps, buttonEl?: HTMLButtonElement) {
-  throwAnimation(buttonEl)
+  throwAnimation(buttonEl);
 
   if (data.onClick) {
-    data.onClick()
+    data.onClick();
   }
 }
 
@@ -67,7 +68,7 @@ function adaptor(options: BsButtonProps) {
   const newOptions: BsButtonProps = {
     ...defaultButtonOptions,
     ...options,
-  }
+  };
 
   const prelineClass = getPrelineClass(
     {
@@ -77,24 +78,24 @@ function adaptor(options: BsButtonProps) {
       wide: newOptions.wide,
     },
     classes,
-  )
+  );
 
   newOptions.class = options.class
     ? `${options.class} ${prelineClass}`
-    : prelineClass
+    : prelineClass;
 
-  if(!newOptions.onClick) {
-    newOptions.onClick = function () {
-      return
-    }
+  if (!newOptions.onClick) {
+    newOptions.onClick = () => {
+      return;
+    };
   }
 
-  return newOptions
+  return newOptions;
 }
 
 export default function BsButton(props: BsButtonProps) {
-  const data = adaptor(props)
-  let buttonEl: HTMLButtonElement | undefined = undefined
+  const data = adaptor(props);
+  const buttonEl: HTMLButtonElement | undefined = undefined;
 
   return (
     <button
@@ -110,5 +111,5 @@ export default function BsButton(props: BsButtonProps) {
         {data.slotEnd}
       </span>
     </button>
-  )
+  );
 }

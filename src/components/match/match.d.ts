@@ -1,3 +1,3 @@
 export type BsMatchProps = {
-  id: string
-}
+  id: string;
+};

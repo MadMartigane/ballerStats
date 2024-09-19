@@ -1,20 +1,20 @@
-import { Show } from 'solid-js'
-import DarkThemeSwitch from '../components/dark-theme-switch'
-import GlobalStats from '../components/global-stats'
-import BsIconBasketballBall from '../components/icons/basketball-ball'
-import BsIconPersonPlay from '../components/icons/person-play'
-import BsIconBasketballBallPlain from '../components/icons/basketball-ball-plain'
-import BsIconBasketballBallOutline from '../components/icons/basketball-ball-outline'
-import BsIconBasketballPlayer from '../components/icons/basketball-player'
-import BsIconBasketballPanel from '../components/icons/basketball-panel'
-import BsIconBasketballBasketMove from '../components/icons/basketball-basket-move'
-import { Loader, Medal, Share, Trash2 } from 'lucide-solid'
-import orchestrator from '../libs/orchestrator/orchestrator'
-import BsToggle from '../components/toggle'
-import MadSignal from '../libs/mad-signal'
+import { Loader, Medal, Share, Trash2 } from 'lucide-solid';
+import { Show } from 'solid-js';
+import DarkThemeSwitch from '../components/dark-theme-switch';
+import GlobalStats from '../components/global-stats';
+import BsIconBasketballBall from '../components/icons/basketball-ball';
+import BsIconBasketballBallOutline from '../components/icons/basketball-ball-outline';
+import BsIconBasketballBallPlain from '../components/icons/basketball-ball-plain';
+import BsIconBasketballBasketMove from '../components/icons/basketball-basket-move';
+import BsIconBasketballPanel from '../components/icons/basketball-panel';
+import BsIconBasketballPlayer from '../components/icons/basketball-player';
+import BsIconPersonPlay from '../components/icons/person-play';
+import BsToggle from '../components/toggle';
+import MadSignal from '../libs/mad-signal';
+import orchestrator from '../libs/orchestrator/orchestrator';
 
-const displayDemo = new MadSignal(false)
-const bigCleanInProgress = new MadSignal(false)
+const displayDemo = new MadSignal(false);
+const bigCleanInProgress = new MadSignal(false);
 
 export default function Home() {
   return (
@@ -39,11 +39,11 @@ export default function Home() {
           class="btn btn-accent"
           disabled={bigCleanInProgress.get()}
           onClick={() => {
-            bigCleanInProgress.set(true)
-            orchestrator.bigClean()
+            bigCleanInProgress.set(true);
+            orchestrator.bigClean();
             setTimeout(() => {
-              bigCleanInProgress.set(false)
-            }, 400)
+              bigCleanInProgress.set(false);
+            }, 400);
           }}
         >
           {bigCleanInProgress.get() ? (
@@ -57,7 +57,7 @@ export default function Home() {
         <button
           class="btn btn-neutral"
           onClick={() => {
-            orchestrator.exportDB()
+            orchestrator.exportDB();
           }}
         >
           <Share /> Sauvegarde DB
@@ -66,8 +66,8 @@ export default function Home() {
         <BsToggle
           label="Afficher la démo"
           value={displayDemo.get()}
-          onChange={value => {
-            displayDemo.set(value)
+          onChange={(value) => {
+            displayDemo.set(value);
           }}
         />
       </div>
@@ -104,5 +104,5 @@ export default function Home() {
         </div>
       </Show>
     </div>
-  )
+  );
 }

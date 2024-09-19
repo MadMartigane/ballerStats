@@ -1,27 +1,30 @@
-import { For, mergeProps, Show } from 'solid-js'
-import { createStore, SetStoreFunction, unwrap } from 'solid-js/store'
-import { getShortId } from '../../libs/utils'
-import {
+import { CircleX } from 'lucide-solid';
+import { For, Show, mergeProps } from 'solid-js';
+import { type SetStoreFunction, createStore, unwrap } from 'solid-js/store';
+import { getShortId } from '../../libs/utils';
+import BsSelect from '../select/select';
+import type {
   BsSelectDataSet,
   BsSelectMultipleDataSelect,
   BsSelectMultipleProps,
-} from './select-multiple.d'
-import { CircleX } from 'lucide-solid'
-import BsSelect from '../select/select'
+} from './select-multiple.d';
 
-const defaultPlaceholder = 'Sélection…'
+const defaultPlaceholder = 'Sélection…';
 
 function getAvailableDataSets(
   allDataSets: Array<BsSelectDataSet>,
   alreadySelectedDataSets: Array<string>,
 ) {
-  return allDataSets.reduce((result, currentDataSet) => {
-    if (!alreadySelectedDataSets.includes(currentDataSet.value)) {
-      result.push(currentDataSet)
-    }
+  return allDataSets.reduce(
+    (result, currentDataSet) => {
+      if (!alreadySelectedDataSets.includes(currentDataSet.value)) {
+        result.push(currentDataSet);
+      }
 
-    return result
-  }, [] as Array<BsSelectDataSet>)
+      return result;
+    },
+    [] as Array<BsSelectDataSet>,
+  );
 }
 
 function getSelectDataSetFromAvailableDataSets(
@@ -38,23 +41,23 @@ function getSelectDataSetFromAvailableDataSets(
           badge: <span>Error</span>,
         },
       ]
-    : []
+    : [];
 
-  return [...data, ...availableBsSelectDataSets]
+  return [...data, ...availableBsSelectDataSets];
 }
 
 function getDataFromProps(props: BsSelectMultipleProps) {
   const availableDataSets = getAvailableDataSets(
     props.data || [],
     props.selectedIds || [],
-  )
+  );
 
   const selectData = getSelectDataSetFromAvailableDataSets(
     availableDataSets,
     props.placeholder,
-  )
-  const [dataForSelect, setAvailables] = createStore(selectData)
-  const disable = dataForSelect.length < 2
+  );
+  const [dataForSelect, setAvailables] = createStore(selectData);
+  const disable = dataForSelect.length < 2;
 
   return {
     placeholder: defaultPlaceholder,
@@ -64,7 +67,7 @@ function getDataFromProps(props: BsSelectMultipleProps) {
     disable,
     availables: dataForSelect,
     setAvailables,
-  } as BsSelectMultipleDataSelect
+  } as BsSelectMultipleDataSelect;
 }
 
 function onSelectionChange(
@@ -74,17 +77,17 @@ function onSelectionChange(
   const selectData = getSelectDataSetFromAvailableDataSets(
     getAvailableDataSets(props.data || [], props.selectedIds || []),
     props.placeholder,
-  )
+  );
 
-  props.setAvailables(selectData)
+  props.setAvailables(selectData);
 
-  setProps('disable', selectData.length < 2)
+  setProps('disable', selectData.length < 2);
 
   if (props.onChange) {
     if (props.selectedIds && props.selectedIds.length) {
-      props.onChange(props.selectedIds)
+      props.onChange(props.selectedIds);
     } else {
-      props.onChange([])
+      props.onChange([]);
     }
   }
 }
@@ -94,14 +97,14 @@ function onSelect(
   props: BsSelectMultipleDataSelect,
   setProps: SetStoreFunction<BsSelectMultipleDataSelect>,
 ) {
-  const selectedId = event.currentTarget.value
+  const selectedId = event.currentTarget.value;
 
   if (!props.selectedIds?.includes(selectedId)) {
     // TODO: HERE !!!!
-    setProps('selectedIds', props.selectedIds?.length || 0, selectedId)
+    setProps('selectedIds', props.selectedIds?.length || 0, selectedId);
   }
 
-  onSelectionChange(props, setProps)
+  onSelectionChange(props, setProps);
 }
 
 function unselectDataSet(
@@ -110,16 +113,16 @@ function unselectDataSet(
   dataSet: BsSelectDataSet,
 ) {
   if (!props.selectedIds || !props.selectedIds.includes(dataSet.value)) {
-    return
+    return;
   }
 
   const newSelection = props.selectedIds.filter(
-    currentId => currentId !== dataSet.value,
-  )
+    (currentId) => currentId !== dataSet.value,
+  );
 
-  setProps('selectedIds', newSelection)
+  setProps('selectedIds', newSelection);
 
-  onSelectionChange(props, setProps)
+  onSelectionChange(props, setProps);
 }
 
 function renderBsSelectDataSetBadge(
@@ -134,17 +137,17 @@ function renderBsSelectDataSetBadge(
         class="btn btn-circle btn-xs btn-ghost"
         type="button"
         onClick={() => {
-          unselectDataSet(props, setProps, dataSet)
+          unselectDataSet(props, setProps, dataSet);
         }}
       >
         <CircleX />
       </button>
     </div>
-  )
+  );
 }
 
 export default function BsSelectMultiple(props: BsSelectMultipleProps) {
-  const [selectProps, setSelectProps] = createStore(getDataFromProps(props))
+  const [selectProps, setSelectProps] = createStore(getDataFromProps(props));
 
   return (
     <div class="w-full">
@@ -163,32 +166,32 @@ export default function BsSelectMultiple(props: BsSelectMultipleProps) {
           fallback={'Aucun joueur sélectionné.'}
         >
           <For each={selectProps.selectedIds}>
-            {value => {
+            {(value) => {
               const dataSet = selectProps.data?.find(
-                candidate => candidate.value === value,
-              )
+                (candidate) => candidate.value === value,
+              );
               if (!dataSet) {
-                return
+                return;
               }
 
               return renderBsSelectDataSetBadge(
                 selectProps,
                 setSelectProps,
                 dataSet,
-              )
+              );
             }}
           </For>
         </Show>
       </div>
 
       <BsSelect
-        onChange={event => {
-          onSelect(event, selectProps, setSelectProps)
+        onChange={(event) => {
+          onSelect(event, selectProps, setSelectProps);
         }}
         default=""
         datas={selectProps.availables}
         disabled={selectProps.disable}
       />
     </div>
-  )
+  );
 }

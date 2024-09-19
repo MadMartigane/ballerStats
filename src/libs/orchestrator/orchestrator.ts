@@ -1,101 +1,101 @@
-import Players from '../players'
-import bsEventBus from '../event-bus'
+import bsEventBus from '../event-bus';
+import Matchs from '../matchs';
+import Players from '../players';
 import {
+  getStoredMatchs,
   getStoredPlayers,
   getStoredTeams,
-  getStoredMatchs,
+  storeMatchs,
   storePlayers,
   storeTeams,
-  storeMatchs,
-} from '../store'
-import Teams from '../teams'
-import Matchs from '../matchs'
-import { mount, unmount } from '../utils'
+} from '../store';
+import Teams from '../teams';
+import { mount, unmount } from '../utils';
 
 export class Orchestrator {
-  #players: Players = new Players()
-  #teams = new Teams()
-  #matchs = new Matchs()
-  #lastPlayersRecrod: number | null = null
-  #lastTeamsRecrod: number | null = null
-  #lastMatchsRecrod: number | null = null
+  #players: Players = new Players();
+  #teams = new Teams();
+  #matchs = new Matchs();
+  #lastPlayersRecrod: number | null = null;
+  #lastTeamsRecrod: number | null = null;
+  #lastMatchsRecrod: number | null = null;
 
   constructor() {
-    this.getStoredPlayers()
-    this.getStoredTeams()
-    this.getStoredMatchs()
-    this.installEventHandlers()
+    this.getStoredPlayers();
+    this.getStoredTeams();
+    this.getStoredMatchs();
+    this.installEventHandlers();
   }
 
   private installEventHandlers() {
     bsEventBus.addEventListener('BS::PLAYERS::CHANGE', () => {
-      this.storePlayers()
-    })
+      this.storePlayers();
+    });
 
     bsEventBus.addEventListener('BS::TEAMS::CHANGE', () => {
-      this.storeTeams()
-    })
+      this.storeTeams();
+    });
 
     bsEventBus.addEventListener('BS::MATCHS::CHANGE', () => {
-      this.storeMatchs()
-    })
+      this.storeMatchs();
+    });
   }
   private updateLastPlayersRecrod() {
-    this.#lastPlayersRecrod = Date.now()
+    this.#lastPlayersRecrod = Date.now();
   }
 
   private updateLastTeamsRecrod() {
-    this.#lastTeamsRecrod = Date.now()
+    this.#lastTeamsRecrod = Date.now();
   }
 
   private updateLastMatchsRecrod() {
-    this.#lastMatchsRecrod = Date.now()
+    this.#lastMatchsRecrod = Date.now();
   }
 
   private storePlayers() {
-    this.updateLastPlayersRecrod()
+    this.updateLastPlayersRecrod();
 
     storePlayers(this.#players.getRawData(), this.#lastPlayersRecrod)
       .then(() => {
-        this.throwSynchroSuccessEvent()
+        this.throwSynchroSuccessEvent();
       })
       .catch(() => {
-        this.throwSynchroFailEvent()
-      })
+        this.throwSynchroFailEvent();
+      });
   }
 
   private storeTeams() {
-    this.updateLastTeamsRecrod()
+    this.updateLastTeamsRecrod();
 
     storeTeams(this.#teams.getRawData(), this.#lastTeamsRecrod)
       .then(() => {
-        this.throwSynchroSuccessEvent()
+        this.throwSynchroSuccessEvent();
       })
       .catch(() => {
-        this.throwSynchroFailEvent()
-      })
+        this.throwSynchroFailEvent();
+      });
   }
 
   private storeMatchs() {
-    this.updateLastMatchsRecrod()
+    this.updateLastMatchsRecrod();
 
     storeMatchs(this.#matchs.getRawData(), this.#lastMatchsRecrod)
       .then(() => {
-        this.throwSynchroSuccessEvent()
+        this.throwSynchroSuccessEvent();
       })
       .catch(() => {
-        this.throwSynchroFailEvent()
-      })
+        this.throwSynchroFailEvent();
+      });
   }
 
   private async getStoredPlayers() {
     const stored = await getStoredPlayers().catch(() => {
-      this.throwSynchroFailEvent()
-    })
+      this.throwSynchroFailEvent();
+    });
 
     if (!stored) {
-      this.throwSynchroSuccessEvent()
-      return
+      this.throwSynchroSuccessEvent();
+      return;
     }
 
     // TODO: add lastRecord (timestamp) in the player and compare each records
@@ -103,157 +103,162 @@ export class Orchestrator {
       !this.#lastPlayersRecrod ||
       stored.lastRecord > this.#lastPlayersRecrod
     ) {
-      this.#players = new Players(stored.data)
-      this.throwPlayersUpdatedEvent()
+      this.#players = new Players(stored.data);
+      this.throwPlayersUpdatedEvent();
     }
   }
 
   private async getStoredTeams() {
     const stored = await getStoredTeams().catch(() => {
-      this.throwSynchroFailEvent()
-    })
+      this.throwSynchroFailEvent();
+    });
 
     if (!stored) {
-      this.throwSynchroSuccessEvent()
-      return
+      this.throwSynchroSuccessEvent();
+      return;
     }
 
     // TODO: add lastRecord (timestamp) in the team and compare each records
     if (!this.#lastTeamsRecrod || stored.lastRecord > this.#lastTeamsRecrod) {
-      this.#teams = new Teams(stored.data)
-      this.throwTeamsUpdatedEvent()
+      this.#teams = new Teams(stored.data);
+      this.throwTeamsUpdatedEvent();
     }
   }
 
   private async getStoredMatchs() {
     const stored = await getStoredMatchs().catch(() => {
-      this.throwSynchroFailEvent()
-    })
+      this.throwSynchroFailEvent();
+    });
 
     if (!stored) {
-      this.throwSynchroSuccessEvent()
-      return
+      this.throwSynchroSuccessEvent();
+      return;
     }
 
     // TODO: add lastRecord (timestamp) in the match and compare each records
     if (!this.#lastMatchsRecrod || stored.lastRecord > this.#lastMatchsRecrod) {
-      this.#matchs = new Matchs(stored.data)
-      this.throwTeamsUpdatedEvent()
+      this.#matchs = new Matchs(stored.data);
+      this.throwTeamsUpdatedEvent();
     }
   }
 
   public get Players() {
-    return this.#players
+    return this.#players;
   }
 
   public get Teams() {
-    return this.#teams
+    return this.#teams;
   }
 
   public get Matchs() {
-    return this.#matchs
+    return this.#matchs;
   }
 
-  public throwPlayersUpdatedEvent(mute: boolean = false) {
-    bsEventBus.dispatchEvent('BS::PLAYERS::CHANGE', mute)
+  public throwPlayersUpdatedEvent(mute = false) {
+    bsEventBus.dispatchEvent('BS::PLAYERS::CHANGE', mute);
   }
 
-  public throwTeamsUpdatedEvent(mute: boolean = false) {
-    bsEventBus.dispatchEvent('BS::TEAMS::CHANGE', mute)
+  public throwTeamsUpdatedEvent(mute = false) {
+    bsEventBus.dispatchEvent('BS::TEAMS::CHANGE', mute);
   }
 
-  public throwMatchsUpdatedEvent(mute: boolean = false) {
-    bsEventBus.dispatchEvent('BS::MATCHS::CHANGE', mute)
+  public throwMatchsUpdatedEvent(mute = false) {
+    bsEventBus.dispatchEvent('BS::MATCHS::CHANGE', mute);
   }
 
-  public throwSynchroSuccessEvent(mute: boolean = false) {
-    bsEventBus.dispatchEvent('BS::SYNCHRO::SUCCESS', mute)
+  public throwSynchroSuccessEvent(mute = false) {
+    bsEventBus.dispatchEvent('BS::SYNCHRO::SUCCESS', mute);
   }
 
-  public throwSynchroFailEvent(mute: boolean = false) {
-    bsEventBus.dispatchEvent('BS::SYNCHRO::FAIL', mute)
+  public throwSynchroFailEvent(mute = false) {
+    bsEventBus.dispatchEvent('BS::SYNCHRO::FAIL', mute);
   }
 
   public getPlayer(id?: string | null) {
     if (!id) {
-      return null
+      return null;
     }
 
-    return this.#players.players.find(candidate => candidate.id === id) || null
+    return (
+      this.#players.players.find((candidate) => candidate.id === id) || null
+    );
   }
 
   public getTeam(id?: string | null) {
     if (!id) {
-      return null
+      return null;
     }
 
-    return this.#teams.teams.find(candidate => candidate.id === id) || null
+    return this.#teams.teams.find((candidate) => candidate.id === id) || null;
   }
 
   public getMatch(id?: string | null) {
     if (!id) {
-      return null
+      return null;
     }
 
-    return this.#matchs.matchs.find(candidate => candidate.id === id) || null
+    return this.#matchs.matchs.find((candidate) => candidate.id === id) || null;
   }
 
   public bigClean() {
-    let cleaned = false
-    this.Teams.teams.forEach(team => {
-      const cleanPlayerIds = team.playerIds.filter(playerId => {
-        return Boolean(this.getPlayer(playerId))
-      })
+    let cleaned = false;
+    this.Teams.teams.forEach((team) => {
+      const cleanPlayerIds = team.playerIds.filter((playerId) => {
+        return Boolean(this.getPlayer(playerId));
+      });
 
       if (team.playerIds.length > cleanPlayerIds.length) {
-        team.update({ playerIds: cleanPlayerIds })
-        this.Teams.updateTeam(team)
-        cleaned = true
+        team.update({ playerIds: cleanPlayerIds });
+        this.Teams.updateTeam(team);
+        cleaned = true;
       }
-    })
+    });
 
     if (cleaned) {
-      this.throwTeamsUpdatedEvent()
-      return
+      this.throwTeamsUpdatedEvent();
+      return;
     }
   }
 
   public getJerseySortedPlayers(playerIds?: Array<string>) {
     if (!playerIds) {
-      return []
+      return [];
     }
 
-    const players = playerIds.map(playerId => this.getPlayer(playerId))
+    const players = playerIds.map((playerId) => this.getPlayer(playerId));
 
     return players.sort(
       (a, b) =>
-        parseInt(a?.jersayNumber || '0') - parseInt(b?.jersayNumber || '0'),
-    )
+        Number.parseInt(a?.jersayNumber || '0') -
+        Number.parseInt(b?.jersayNumber || '0'),
+    );
   }
 
   public exportDB() {
-    const date = new Date()
+    const date = new Date();
 
     const globalDB = {
       timestamp: date.getTime(),
-      players: this.Players.players.map(player => player.getRawData()),
-      teams: this.Teams.teams.map(team => team.getRawData()),
-      matchs: this.Matchs.matchs.map(match => match.getRawData()),
-    }
+      players: this.Players.players.map((player) => player.getRawData()),
+      teams: this.Teams.teams.map((team) => team.getRawData()),
+      matchs: this.Matchs.matchs.map((match) => match.getRawData()),
+    };
 
-    const jsonDB = JSON.stringify(globalDB)
-    const anchor = document.createElement('a')
-    const fileName = `baller-stats-export-db-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}.json`
-    const blob = new Blob([jsonDB], { type: 'application/json;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    anchor.setAttribute('href', url)
-    anchor.setAttribute('download', fileName)
-    anchor.style.visibility = 'hidden'
-    mount(anchor)
-    anchor.click()
-    unmount(anchor)
+    const jsonDB = JSON.stringify(globalDB);
+    const anchor = document.createElement('a');
+    const fileName = `baller-stats-export-db-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}.json`;
+    const blob = new Blob([jsonDB], {
+      type: 'application/json;charset=utf-8;',
+    });
+    const url = URL.createObjectURL(blob);
+    anchor.setAttribute('href', url);
+    anchor.setAttribute('download', fileName);
+    anchor.style.visibility = 'hidden';
+    mount(anchor);
+    anchor.click();
+    unmount(anchor);
   }
 }
 
-const orchestrator = new Orchestrator()
-export default orchestrator
+const orchestrator = new Orchestrator();
+export default orchestrator;

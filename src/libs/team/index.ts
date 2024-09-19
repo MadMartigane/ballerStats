@@ -1,4 +1,4 @@
-export * from './team.d'
+export * from './team.d';
 
-import Team from './team'
-export default Team
+import Team from './team';
+export default Team;

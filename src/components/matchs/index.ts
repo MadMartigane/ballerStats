@@ -1,2 +1,2 @@
-import BsMatchs from './matchs'
-export default BsMatchs
+import BsMatchs from './matchs';
+export default BsMatchs;

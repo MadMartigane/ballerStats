@@ -1,7 +1,7 @@
-import { Show } from 'solid-js'
-import { BsScoreCardProps } from './score-card.d'
-import { BsMatchTypeBadge } from '../match-tile'
-import { toDateTime } from '../../libs/utils'
+import { Show } from 'solid-js';
+import { toDateTime } from '../../libs/utils';
+import { BsMatchTypeBadge } from '../match-tile';
+import type { BsScoreCardProps } from './score-card.d';
 
 export default function BsScoreCard(props: BsScoreCardProps) {
   return (
@@ -77,5 +77,5 @@ export default function BsScoreCard(props: BsScoreCardProps) {
         </span>
       </div>
     </div>
-  )
+  );
 }

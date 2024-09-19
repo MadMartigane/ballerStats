@@ -1,20 +1,20 @@
-import { createSignal } from 'solid-js'
+import { createSignal } from 'solid-js';
 
 export default class MadSignal<T> {
-  private signalGet: () => T
-  private signalSet: (value: T) => void
+  private signalGet: () => T;
+  private signalSet: (value: T) => void;
 
   constructor(initialValue: T) {
-    const [get, set] = createSignal(initialValue)
-    this.signalGet = get
-    this.signalSet = set
+    const [get, set] = createSignal(initialValue);
+    this.signalGet = get;
+    this.signalSet = set;
   }
 
   public set(value: T): void {
-    this.signalSet(value)
+    this.signalSet(value);
   }
 
   public get(): T {
-    return this.signalGet()
+    return this.signalGet();
   }
 }

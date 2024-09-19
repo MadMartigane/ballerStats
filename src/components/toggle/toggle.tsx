@@ -1,20 +1,20 @@
-import { BsToggleOnChangeEvent, BsToggleProps } from './toggle.d'
+import type { BsToggleOnChangeEvent, BsToggleProps } from './toggle.d';
 
 function onChange(
   event: BsToggleOnChangeEvent,
   callback?: (value: boolean) => void,
 ) {
   if (!callback) {
-    return
+    return;
   }
 
-  event.stopPropagation()
-  const target = event.target || event.currentTarget || { checked: true }
-  callback(target.checked)
+  event.stopPropagation();
+  const target = event.target || event.currentTarget || { checked: true };
+  callback(target.checked);
 }
 
 export default function BsToggle(props: BsToggleProps) {
-  const size = props.size || 'base'
+  const size = props.size || 'base';
 
   return (
     <div class="form-control w-full">
@@ -25,11 +25,11 @@ export default function BsToggle(props: BsToggleProps) {
           type="checkbox"
           class={`toggle toggle-primary toggle-${size}`}
           checked={props.value}
-          onChange={event => {
-            onChange(event, props.onChange)
+          onChange={(event) => {
+            onChange(event, props.onChange);
           }}
         />
       </label>
     </div>
-  )
+  );
 }

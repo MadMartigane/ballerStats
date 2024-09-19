@@ -1,4 +1,4 @@
-export * from './match-tile'
+export * from './match-tile';
 
-import BsMatchTile from './match-tile'
-export default BsMatchTile
+import BsMatchTile from './match-tile';
+export default BsMatchTile;
