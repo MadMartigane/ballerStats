@@ -1,17 +1,17 @@
 import { Contact, MessageCircleWarning, Save, UserPlus, X } from 'lucide-solid'
+import { For, Show } from 'solid-js'
+import { createStore } from 'solid-js/store'
 import bsEventBus from '../../libs/event-bus'
 import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import Player from '../../libs/player'
-import { For, Show } from 'solid-js'
+import type { PlayerRawData } from '../../libs/player'
+import { scrollBottom, scrollTop } from '../../libs/utils'
 import BsCard from '../card'
 import BsInput from '../input'
-import { PlayerRawData } from '../../libs/player'
 import BsPlayer from '../player'
-import { createStore } from 'solid-js/store'
-import { scrollBottom, scrollTop } from '../../libs/utils'
 
-let isEditingNewPlayer: boolean = false
+let isEditingNewPlayer = false
 const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
 const canAddPlayer: MadSignal<boolean> = new MadSignal(false)
 const playerLength: MadSignal<number> = new MadSignal(
@@ -89,6 +89,7 @@ function renderAddPlayerButton() {
       <hr />
       <div class="p-4">
         <button
+          type="button"
           class="btn btn-primary"
           onClick={() => {
             isEditingNewPlayer = true
@@ -164,6 +165,7 @@ function renderAddingPlayerCard() {
     footer: (
       <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <button
+          type="button"
           class="btn btn-primary btn-wide"
           onClick={() => {
             toggleAddPlayer(false)
@@ -177,6 +179,7 @@ function renderAddingPlayerCard() {
         </button>
 
         <button
+          type="button"
           class="btn btn-primary btn-wide"
           disabled={!canAddPlayer.get()}
           onClick={() => {

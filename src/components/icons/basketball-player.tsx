@@ -1,8 +1,8 @@
-import type { BsIconProps } from './icons.d'
-import { bsIconPropsToDataStore } from './icons'
+import { bsIconPropsToDataStore } from './icons';
+import type { BsIconProps } from './icons.d';
 
 export default function BsIconBasketballPlayer(props: BsIconProps) {
-  const data = bsIconPropsToDataStore(props)
+  const data = bsIconPropsToDataStore(props);
 
   return (
     <svg
@@ -66,5 +66,5 @@ export default function BsIconBasketballPlayer(props: BsIconProps) {
         </g>
       </g>
     </svg>
-  )
+  );
 }

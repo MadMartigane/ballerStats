@@ -1,35 +1,35 @@
-import { RouteSectionProps, useLocation } from '@solidjs/router'
-import { createEffect, For, Show } from 'solid-js'
-import MadSignal from '../../libs/mad-signal'
-import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
+import { type RouteSectionProps, useLocation } from '@solidjs/router';
+import { For, Show, createEffect } from 'solid-js';
+import MadSignal from '../../libs/mad-signal';
+import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu';
 
-import { Bell, Menu, UserCog, X } from 'lucide-solid'
-import logoSmallUrl from '/img/logo_small.png'
+import { Bell, Menu, UserCog, X } from 'lucide-solid';
+import logoSmallUrl from '/img/logo_small.png';
 
-const isUserMenuOpen: MadSignal<boolean> = new MadSignal(false)
-const isMainMenuOpen: MadSignal<boolean> = new MadSignal(false)
-const isNotificationBoxOpen: MadSignal<boolean> = new MadSignal(false)
-const currentHash: MadSignal<string> = new MadSignal('')
-const idInUrlPattern = /\/\d+/
+const isUserMenuOpen: MadSignal<boolean> = new MadSignal(false);
+const isMainMenuOpen: MadSignal<boolean> = new MadSignal(false);
+const isNotificationBoxOpen: MadSignal<boolean> = new MadSignal(false);
+const currentHash: MadSignal<string> = new MadSignal('');
+const idInUrlPattern = /\/\d+/;
 
 function isCurrentPath(candidatPath: string, currentPath: string | null) {
-  const cleanPath = currentPath?.replace(idInUrlPattern, '/:id')
-  return cleanPath === candidatPath
+  const cleanPath = currentPath?.replace(idInUrlPattern, '/:id');
+  return cleanPath === candidatPath;
 }
 
 function renderMasterTitle(currentPath: string | null) {
-  let menuEntry = NAVIGATION_MENU_ENTRIES.find(entryCandidate =>
+  let menuEntry = NAVIGATION_MENU_ENTRIES.find((entryCandidate) =>
     isCurrentPath(entryCandidate.path, currentPath),
-  )
+  );
 
   if (!menuEntry) {
     menuEntry = NAVIGATION_MENU_ENTRIES.find(
-      candidate => candidate.path === '/*',
-    )
+      (candidate) => candidate.path === '/*',
+    );
   }
 
   if (!menuEntry) {
-    menuEntry = NAVIGATION_MENU_ENTRIES[NAVIGATION_MENU_ENTRIES.length - 1]
+    menuEntry = NAVIGATION_MENU_ENTRIES[NAVIGATION_MENU_ENTRIES.length - 1];
   }
 
   return (
@@ -37,19 +37,19 @@ function renderMasterTitle(currentPath: string | null) {
       <span class="inline-flex px-1">{menuEntry.icon()}</span>
       <span class="inline-flex">{menuEntry.label}</span>
     </span>
-  )
+  );
 }
 
 function installEventHandlers() {
-  const location = useLocation()
+  const location = useLocation();
 
   createEffect(() => {
-    currentHash.set(location.pathname)
-  })
+    currentHash.set(location.pathname);
+  });
 }
 
 export default function BsAppBar(props: RouteSectionProps<unknown>) {
-  installEventHandlers()
+  installEventHandlers();
 
   return (
     <div class="min-h-full font-rajdhani">
@@ -70,7 +70,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                 <div class="ml-10 flex items-baseline space-x-4">
                   {/* Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" */}
                   <For each={NAVIGATION_MENU_ENTRIES}>
-                    {menuEntry => (
+                    {(menuEntry) => (
                       <Show when={menuEntry.isMenuEntry}>
                         <a
                           href={menuEntry.path}
@@ -96,31 +96,30 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                   id="notifications-box-button"
                   class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                   onClick={() => {
-                    isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
+                    isNotificationBoxOpen.set(!isNotificationBoxOpen.get());
                   }}
                   onBlur={() => {
                     setTimeout(() => {
-                      isNotificationBoxOpen.set(false)
-                    }, 10)
+                      isNotificationBoxOpen.set(false);
+                    }, 10);
                   }}
                 >
-                  <span class="absolute -top-1.5 text-amber-500"></span>
+                  <span class="absolute -top-1.5 text-amber-500" />
                   <span class="sr-only">Afficher les notifications</span>
                   <Bell />
                 </button>
 
                 {/* Notifications dropdown */}
                 <Show when={isNotificationBoxOpen.get()}>
-                  <div
+                  <menu
                     id="notifications-box"
                     class="absolute right-1 top-16 mt-1 z-10 p-6 w-72 origin-top-right rounded-md bg-gray-800 text-gray-400 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                    role="menu"
                     aria-orientation="vertical"
                     aria-labelledby="notifications-box-button"
                     tabindex="-1"
                   >
                     Aucune notification
-                  </div>
+                  </menu>
                 </Show>
 
                 {/* Profile dropdown */}
@@ -133,15 +132,15 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                       aria-expanded="false"
                       aria-haspopup="true"
                       onClick={() => {
-                        isUserMenuOpen.set(!isUserMenuOpen.get())
+                        isUserMenuOpen.set(!isUserMenuOpen.get());
                       }}
                       onBlur={() => {
                         setTimeout(() => {
-                          isUserMenuOpen.set(false)
-                        }, 10)
+                          isUserMenuOpen.set(false);
+                        }, 10);
                       }}
                     >
-                      <span class="absolute -inset-1.5"></span>
+                      <span class="absolute -inset-1.5" />
                       <span class="sr-only">Open user menu</span>
                       <UserCog size="24" />
                     </button>
@@ -158,9 +157,8 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                         To: "transform opacity-0 scale-95"
                     */}
                   <Show when={isUserMenuOpen.get()}>
-                    <div
+                    <menu
                       class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-slate-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                      role="menu"
                       aria-orientation="vertical"
                       aria-labelledby="user-menu-button"
                       tabindex="-1"
@@ -184,7 +182,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                       >
                         Configuration
                       </a>
-                    </div>
+                    </menu>
                   </Show>
                 </div>
               </div>
@@ -196,31 +194,30 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                 id="notifications-box-button"
                 class="relative rounded-full bg-gray-800 p-2 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                 onClick={() => {
-                  isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
+                  isNotificationBoxOpen.set(!isNotificationBoxOpen.get());
                 }}
                 onBlur={() => {
                   setTimeout(() => {
-                    isNotificationBoxOpen.set(false)
-                  }, 10)
+                    isNotificationBoxOpen.set(false);
+                  }, 10);
                 }}
               >
-                <span class="absolute -top-1.5 text-amber-500"></span>
+                <span class="absolute -top-1.5 text-amber-500" />
                 <span class="sr-only">Afficher les notifications</span>
                 <Bell />
               </button>
 
               {/* Notifications dropdown (mobile) */}
               <Show when={isNotificationBoxOpen.get()}>
-                <div
+                <menu
                   id="notifications-box"
                   class="absolute right-1 top-16 mt-1 z-10 p-6 w-72 origin-top-right rounded-md bg-gray-800 text-gray-400 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                  role="menu"
                   aria-orientation="vertical"
                   aria-labelledby="notifications-box-button"
                   tabindex="-1"
                 >
                   Aucune notification
-                </div>
+                </menu>
               </Show>
 
               {/* Mobile menu button */}
@@ -230,15 +227,15 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                 aria-controls="mobile-menu"
                 aria-expanded="false"
                 onClick={() => {
-                  isMainMenuOpen.set(!isMainMenuOpen.get())
+                  isMainMenuOpen.set(!isMainMenuOpen.get());
                 }}
                 onBlur={() =>
                   setTimeout(() => {
-                    isMainMenuOpen.set(false)
+                    isMainMenuOpen.set(false);
                   }, 10)
                 }
               >
-                <span class="absolute -inset-0.5"></span>
+                <span class="absolute -inset-0.5" />
                 <span class="sr-only">
                   Ouverture menu principale, version mobile
                 </span>
@@ -261,7 +258,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
             <div class="space-y-1 px-2 pb-3 pt-2 sm:px-3">
               {/* Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" */}
               <For each={NAVIGATION_MENU_ENTRIES}>
-                {menuEntry => (
+                {(menuEntry) => (
                   <Show when={menuEntry.isMenuEntry}>
                     <a
                       href={menuEntry.path}
@@ -303,5 +300,5 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
         </div>
       </main>
     </div>
-  )
+  );
 }

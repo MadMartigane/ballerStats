@@ -8,8 +8,9 @@
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
-    "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|tsx|json)\"",
-    "lint": "eslint --color --cache --ignore-path .eslintignore --ext .js,.ts,.tsx",
+    "check": "biome check ./src",
+    "format": "biome check --write ./src",
+    "format-force": "biome check --write --unsafe ./src",
     "pre-prod": "npm run build -- --base=/baller-stats-preprod/ && npm run pre-prod-only",
     "pre-prod-only": "npm run pre-prod-clean && npm run pre-prod-push",
     "pre-prod-clean": "rm -rf /var/www/marius.click/html/baller-stats-preprod/*",
@@ -20,31 +21,16 @@
     "prod-only": "npm run prod-clean && npm run prod-push"
   },
   "license": "MIT",
-  "eslintConfig": {
-    "extends": "react-app",
-    "rules": {
-      "quotes": [
-        "warn",
-        "single"
-      ]
-    },
-    "ignorePatterns": [
-      "src/**/*.test.ts",
-      "dist/*"
-    ]
-  },
   "devDependencies": {
+    "@biomejs/biome": "1.9.1",
     "@fontsource/rajdhani": "^5.0.14",
     "@solidjs/router": "^0.14.3",
     "@tailwindcss/typography": "^0.5.14",
-    "@typescript-eslint/eslint-plugin": "^8.2.0",
-    "@typescript-eslint/parser": "^8.2.0",
     "autoprefixer": "^10.4.20",
     "daisyui": "^4.12.10",
     "globals": "^15.9.0",
     "lucide-solid": "^0.436.0",
     "postcss": "^8.4.41",
-    "prettier": "^3.3.3",
     "solid-js": "^1.8.21",
     "tailwindcss": "^3.4.10",
     "typescript": "^5.5.4",

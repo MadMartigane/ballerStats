@@ -1,6 +1,6 @@
-import { Show } from 'solid-js'
-import type { BsTileProps } from './tile.d'
-import { Info } from 'lucide-solid'
+import { Info } from 'lucide-solid';
+import { Show } from 'solid-js';
+import type { BsTileProps } from './tile.d';
 
 function onClick(
   callback?: (
@@ -8,7 +8,7 @@ function onClick(
   ) => void,
 ) {
   if (callback) {
-    callback()
+    callback();
   }
 }
 
@@ -17,7 +17,12 @@ export default function BsTile(props: BsTileProps) {
     <div
       class={`${props.onClick ? 'cursor-pointer' : ''} card bg-neutral text-neutral-content min-w-80 max-w-80 w-80 shadow-lg shadow-neutral p-2`}
       onClick={() => {
-        onClick(props.onClick)
+        onClick(props.onClick);
+      }}
+      onKeyDown={(event) => {
+        if (event.code === 'enter') {
+          onClick(props.onClick);
+        }
       }}
     >
       <Show when={props.status}>
@@ -54,5 +59,5 @@ export default function BsTile(props: BsTileProps) {
         <div class="card-actions justify-end px-2">{props.footer}</div>
       </Show>
     </div>
-  )
+  );
 }

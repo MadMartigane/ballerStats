@@ -5,10 +5,10 @@ import {
   Hand,
   IterationCcw,
   RedoDot,
-} from 'lucide-solid'
-import BsIconBasketballGoal from '../../components/icons/basketball-goal'
-import BsIconBasketballMissedGoal from '../../components/icons/basketball-missed-goal'
-import { StatMatchActionItem } from './stats.d'
+} from 'lucide-solid';
+import BsIconBasketballGoal from '../../components/icons/basketball-goal';
+import BsIconBasketballMissedGoal from '../../components/icons/basketball-missed-goal';
+import type { StatMatchActionItem } from './stats.d';
 
 export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
   {
@@ -97,4 +97,4 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     value: 1,
     icon: <RedoDot />,
   },
-]
+];

@@ -1,2 +1,2 @@
-import BsTeams from './teams'
-export default BsTeams
+import BsTeams from './teams';
+export default BsTeams;

@@ -1,7 +1,7 @@
-import { Show } from 'solid-js'
-import { BsScoreCardProps } from './score-card.d'
-import { BsMatchTypeBadge } from '../match-tile'
-import { toDateTime } from '../../libs/utils'
+import { Show } from 'solid-js';
+import { toDateTime } from '../../libs/utils';
+import { BsMatchTypeBadge } from '../match-tile';
+import type { BsScoreCardProps } from './score-card.d';
 
 export default function BsScoreCard(props: BsScoreCardProps) {
   return (
@@ -12,17 +12,17 @@ export default function BsScoreCard(props: BsScoreCardProps) {
             <span
               class="text-end inline-block w-1/2"
               style={`--value:${Math.floor(props.localScore / 100)};`}
-            ></span>
+            />
             <span
               class="text-start inline-block w-1/2"
               style={`--value:${props.localScore - 100};`}
-            ></span>
+            />
           </Show>
           <Show when={props.localScore < 100}>
             <span
               class="text-center inline-block w-full"
               style={`--value:${props.localScore};`}
-            ></span>
+            />
           </Show>
         </span>
       </div>
@@ -45,17 +45,17 @@ export default function BsScoreCard(props: BsScoreCardProps) {
             <span
               class="text-end inline-block w-1/2"
               style={`--value:${Math.floor(props.visitorScore / 100)};`}
-            ></span>
+            />
             <span
               class="text-start inline-block w-1/2"
               style={`--value:${props.visitorScore - 100};`}
-            ></span>
+            />
           </Show>
           <Show when={props.visitorScore < 100}>
             <span
               class="text-center inline-block w-full"
               style={`--value:${props.visitorScore};`}
-            ></span>
+            />
           </Show>
         </span>
       </div>
@@ -67,7 +67,7 @@ export default function BsScoreCard(props: BsScoreCardProps) {
         </span>
       </div>
       <div class="col-span-1">
-        <span class="text-base"></span>
+        <span class="text-base" />
       </div>
       <div class="col-span-2">
         <span class="text-xl inline-block w-full">
@@ -77,5 +77,5 @@ export default function BsScoreCard(props: BsScoreCardProps) {
         </span>
       </div>
     </div>
-  )
+  );
 }

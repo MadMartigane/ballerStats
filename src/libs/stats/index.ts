@@ -1,2 +1,2 @@
-export * from './stats.d'
-export * from './stats'
+export * from './stats.d';
+export * from './stats';

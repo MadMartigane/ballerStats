@@ -7,33 +7,33 @@ import {
   TriangleAlert,
   User,
   Users,
-} from 'lucide-solid'
-import { For, Show } from 'solid-js'
-import MadSignal from '../../libs/mad-signal'
-import orchestrator from '../../libs/orchestrator/orchestrator'
+} from 'lucide-solid';
+import { For, Show } from 'solid-js';
+import { type SetStoreFunction, createStore } from 'solid-js/store';
+import MadSignal from '../../libs/mad-signal';
+import type Match from '../../libs/match';
+import orchestrator from '../../libs/orchestrator/orchestrator';
+import type Player from '../../libs/player';
 import {
-  StatMatchActionItem,
-  StatMatchSummary,
   STATS_MATCH_ACTIONS,
-} from '../../libs/stats'
-import { TEAM_OPPONENT_ID } from '../../libs/team/team'
-import BsScoreCard from '../score-card'
-import { BsMatchProps } from './match.d'
-import Match from '../../libs/match'
-import { createStore, SetStoreFunction } from 'solid-js/store'
-import { getStatSummary } from '../../libs/stats/stats-util'
-import { confirmAction, goTo } from '../../libs/utils'
-import Player from '../../libs/player'
+  type StatMatchActionItem,
+  type StatMatchSummary,
+} from '../../libs/stats';
+import { getStatSummary } from '../../libs/stats/stats-util';
+import { TEAM_OPPONENT_ID } from '../../libs/team/team';
+import { confirmAction, goTo } from '../../libs/utils';
+import BsScoreCard from '../score-card';
+import type { BsMatchProps } from './match.d';
 
 function openActionMode(
   playerId: string,
   actionMode: MadSignal<string | null>,
 ) {
-  actionMode.set(playerId)
+  actionMode.set(playerId);
 }
 
 function closeActionMode(actionMode: MadSignal<string | null>) {
-  actionMode.set(null)
+  actionMode.set(null);
 }
 
 function registerStat(
@@ -44,7 +44,7 @@ function registerStat(
   disableClearLastAction: MadSignal<boolean>,
 ) {
   if (!playerId || !match) {
-    return
+    return;
   }
 
   match.stats.push({
@@ -52,11 +52,11 @@ function registerStat(
     name: item.name,
     type: item.type,
     value: item.value,
-  })
+  });
 
-  disableClearLastAction.set(match.stats.length === 0)
-  setStatSummary(getStatSummary(match))
-  orchestrator.Matchs.updateMatch(match)
+  disableClearLastAction.set(match.stats.length === 0);
+  setStatSummary(getStatSummary(match));
+  orchestrator.Matchs.updateMatch(match);
 }
 
 async function removeAction(
@@ -66,25 +66,25 @@ async function removeAction(
   disableClearLastAction: MadSignal<boolean>,
 ) {
   if (!match) {
-    return
+    return;
   }
 
-  const maxId = match.stats.length - 1
+  const maxId = match.stats.length - 1;
 
   if (id < 0 || id > maxId) {
-    throw new Error(`Unable to remove action id ${id}: nim 0, max: ${maxId}`)
+    throw new Error(`Unable to remove action id ${id}: nim 0, max: ${maxId}`);
   }
 
-  const confirm = await confirmAction()
+  const confirm = await confirmAction();
   if (!confirm) {
-    return
+    return;
   }
 
-  match.stats.splice(id, 1)
+  match.stats.splice(id, 1);
 
-  disableClearLastAction.set(match.stats.length === 0)
-  setStatSummary(getStatSummary(match))
-  orchestrator.Matchs.updateMatch(match)
+  disableClearLastAction.set(match.stats.length === 0);
+  setStatSummary(getStatSummary(match));
+  orchestrator.Matchs.updateMatch(match);
 }
 
 async function removeLastAction(
@@ -93,12 +93,12 @@ async function removeLastAction(
   disableClearLastAction: MadSignal<boolean>,
 ) {
   if (!match) {
-    return
+    return;
   }
 
   if (match.status === 'locked') {
-    alert('Match vérouillé !!')
-    return
+    alert('Match vérouillé !!');
+    return;
   }
 
   return removeAction(
@@ -106,7 +106,7 @@ async function removeLastAction(
     match.stats.length - 1,
     setStatSummary,
     disableClearLastAction,
-  )
+  );
 }
 
 function renderPlayerButton(
@@ -117,19 +117,23 @@ function renderPlayerButton(
 ) {
   if (!player) {
     return (
-      <button class="btn btn-error btn-disabled w-full">{`Joueur non trouvé`}</button>
-    )
+      <button type="button" class="btn btn-error btn-disabled w-full">
+        Joueur non trouvé
+      </button>
+    );
   }
 
   if (!match) {
     return (
-      <button class="btn btn-error btn-disabled w-full">{`Match non trouvé`}</button>
-    )
+      <button type="button" class="btn btn-error btn-disabled w-full">
+        Match non trouvé
+      </button>
+    );
   }
 
   const playerStats = statSummary.players.find(
-    stat => stat.playerId === player.id,
-  )
+    (stat) => stat.playerId === player.id,
+  );
 
   return (
     <div class="w-full flex flex-row my-3 md:my-4">
@@ -137,11 +141,21 @@ function renderPlayerButton(
         class="btn w-full"
         onClick={() => {
           if (match?.status === 'locked') {
-            alert('Match vérouillé !')
-            return
+            alert('Match vérouillé !');
+            return;
           }
 
-          openActionMode(player.id, actionMode)
+          openActionMode(player.id, actionMode);
+        }}
+        onKeyDown={(event: KeyboardEvent) => {
+          if (event.code === 'Enter') {
+            if (match?.status === 'locked') {
+              alert('Match vérouillé !');
+              return;
+            }
+
+            openActionMode(player.id, actionMode);
+          }
         }}
       >
         <User size={32} />
@@ -160,11 +174,11 @@ function renderPlayerButton(
         </span>
       </div>
     </div>
-  )
+  );
 }
 
 function renderPlayerHeader(playerId: string | null) {
-  const player = orchestrator.getPlayer(playerId)
+  const player = orchestrator.getPlayer(playerId);
 
   return (
     <div class="w-full my-2 p-3 grid grid-cols-3 gap-3 bg-neutral text-neutral-content rounded">
@@ -179,7 +193,7 @@ function renderPlayerHeader(playerId: string | null) {
       </div>
       <div class="text-3xl text-right">{player?.jersayNumber}</div>
     </div>
-  )
+  );
 }
 
 function renderTeamTotals(statSummary: StatMatchSummary) {
@@ -223,7 +237,7 @@ function renderTeamTotals(statSummary: StatMatchSummary) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function renderStatGrid(statSummary: StatMatchSummary) {
@@ -253,8 +267,8 @@ function renderStatGrid(statSummary: StatMatchSummary) {
           </thead>
           <tbody>
             <For each={statSummary.players}>
-              {playerStats => {
-                const player = orchestrator.getPlayer(playerStats.playerId)
+              {(playerStats) => {
+                const player = orchestrator.getPlayer(playerStats.playerId);
 
                 return (
                   <tr>
@@ -296,7 +310,7 @@ function renderStatGrid(statSummary: StatMatchSummary) {
                       {` (${playerStats.ratio['3pts'].percentage}%)`}
                     </td>
                   </tr>
-                )
+                );
               }}
             </For>
           </tbody>
@@ -339,19 +353,21 @@ function renderStatGrid(statSummary: StatMatchSummary) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function BsMatch(props: BsMatchProps) {
-  const matchId = props.id
-  const match = orchestrator.getMatch(matchId)
-  const actionMode = new MadSignal(null) as MadSignal<string | null>
-  const [statSummary, setStatSummary] = createStore(getStatSummary(match))
-  const disableClearLastAction = new MadSignal((match?.stats.length || 0) === 0)
-  const isStatMode = new MadSignal(match?.status === 'locked')
+  const matchId = props.id;
+  const match = orchestrator.getMatch(matchId);
+  const actionMode = new MadSignal(null) as MadSignal<string | null>;
+  const [statSummary, setStatSummary] = createStore(getStatSummary(match));
+  const disableClearLastAction = new MadSignal(
+    (match?.stats.length || 0) === 0,
+  );
+  const isStatMode = new MadSignal(match?.status === 'locked');
 
-  const team = orchestrator.getTeam(match?.teamId)
-  const sortedPlayers = orchestrator.getJerseySortedPlayers(team?.playerIds)
+  const team = orchestrator.getTeam(match?.teamId);
+  const sortedPlayers = orchestrator.getJerseySortedPlayers(team?.playerIds);
 
   return (
     <div class="w-full">
@@ -370,20 +386,31 @@ export default function BsMatch(props: BsMatchProps) {
         <Show when={!actionMode.get()}>
           <div class="w-full py-3">
             <For each={sortedPlayers}>
-              {player =>
+              {(player) =>
                 renderPlayerButton(player, match, actionMode, statSummary)
               }
             </For>
 
             <button
+              type="button"
               class="btn btn-accent w-full my-4"
               onClick={() => {
                 if (match?.status === 'locked') {
-                  alert('Match vérouillé !')
-                  return
+                  alert('Match vérouillé !');
+                  return;
                 }
 
-                openActionMode(TEAM_OPPONENT_ID, actionMode)
+                openActionMode(TEAM_OPPONENT_ID, actionMode);
+              }}
+              onKeyDown={(event: KeyboardEvent) => {
+                if (event.code === 'Enter') {
+                  if (match?.status === 'locked') {
+                    alert('Match vérouillé !');
+                    return;
+                  }
+
+                  openActionMode(TEAM_OPPONENT_ID, actionMode);
+                }
               }}
             >
               <Users size={32} />
@@ -400,9 +427,15 @@ export default function BsMatch(props: BsMatchProps) {
             </button>
 
             <button
+              type="button"
               class="btn btn-primary w-full"
               onClick={() => {
-                isStatMode.set(true)
+                isStatMode.set(true);
+              }}
+              onKeyDown={(event: KeyboardEvent) => {
+                if (event.code === 'Enter') {
+                  isStatMode.set(true);
+                }
               }}
             >
               <ChartLine />
@@ -413,10 +446,20 @@ export default function BsMatch(props: BsMatchProps) {
             <hr />
 
             <button
+              type="button"
               class="btn btn-warning w-full"
               disabled={disableClearLastAction.get()}
               onClick={() => {
-                removeLastAction(match, setStatSummary, disableClearLastAction)
+                removeLastAction(match, setStatSummary, disableClearLastAction);
+              }}
+              onKeyDown={(event: KeyboardEvent) => {
+                if (event.code === 'Enter') {
+                  removeLastAction(
+                    match,
+                    setStatSummary,
+                    disableClearLastAction,
+                  );
+                }
               }}
             >
               <Eraser />
@@ -430,8 +473,9 @@ export default function BsMatch(props: BsMatchProps) {
           {renderPlayerHeader(actionMode.get())}
           <div class="w-full py-2 grid grid-cols-2 gap-3">
             <For each={STATS_MATCH_ACTIONS}>
-              {item => (
+              {(item) => (
                 <button
+                  type="button"
                   class={`btn btn-${item.type}`}
                   onClick={() => {
                     registerStat(
@@ -440,8 +484,8 @@ export default function BsMatch(props: BsMatchProps) {
                       match,
                       setStatSummary,
                       disableClearLastAction,
-                    )
-                    closeActionMode(actionMode)
+                    );
+                    closeActionMode(actionMode);
                   }}
                 >
                   {item.icon}
@@ -459,26 +503,27 @@ export default function BsMatch(props: BsMatchProps) {
       <hr />
       {/* CANCEL ACTION */}
       <button
+        type="button"
         class="btn btn-outline w-full"
-        onClick={event => {
-          event.stopPropagation()
+        onClick={(event) => {
+          event.stopPropagation();
 
           if (match?.status !== 'locked' && isStatMode.get()) {
-            isStatMode.set(false)
-            return
+            isStatMode.set(false);
+            return;
           }
 
           if (match?.status !== 'locked' && actionMode.get()) {
-            closeActionMode(actionMode)
-            return
+            closeActionMode(actionMode);
+            return;
           }
 
-          goTo('matchs')
+          goTo('matchs');
         }}
       >
         <ChevronLeft />
         <span>Retour</span>
       </button>
     </div>
-  )
+  );
 }

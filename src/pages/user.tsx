@@ -1,4 +1,3 @@
-
 export default function User() {
   return (
     <div>
@@ -6,5 +5,5 @@ export default function User() {
 
       <p class="mt-4">Only one user :)</p>
     </div>
-  )
+  );
 }

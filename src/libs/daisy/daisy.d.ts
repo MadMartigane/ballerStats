@@ -8,6 +8,6 @@ export type DaisyVariant =
   | 'neutral-content'
   | 'success'
   | 'warning'
-  | 'error'
+  | 'error';
 
-export type DaisySize = 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl'
+export type DaisySize = 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl';

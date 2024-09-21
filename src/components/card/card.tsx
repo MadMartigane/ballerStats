@@ -1,6 +1,6 @@
-import { Show } from 'solid-js'
-import { BsCardProps } from './card.d'
-import { Info } from 'lucide-solid'
+import { Info } from 'lucide-solid';
+import { Show } from 'solid-js';
+import type { BsCardProps } from './card.d';
 
 export default function BsCard(options: BsCardProps) {
   return (
@@ -23,11 +23,9 @@ export default function BsCard(options: BsCardProps) {
 
         <Show when={options.footer}>
           <hr />
-          <div class="card-actions justify-center">
-            {options.footer}
-          </div>
+          <div class="card-actions justify-center">{options.footer}</div>
         </Show>
       </div>
     </div>
-  )
+  );
 }

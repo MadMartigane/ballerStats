@@ -1,25 +1,25 @@
-import { Trash, UserPen } from 'lucide-solid'
-import { For, Show } from 'solid-js'
-import { BsTeamProps } from './team.d'
-import Team from '../../libs/team'
-import orchestrator from '../../libs/orchestrator/orchestrator'
-import BsTile from '../tile'
-import { confirmAction, scrollTop } from '../../libs/utils'
+import { Trash, UserPen } from 'lucide-solid';
+import { For, Show } from 'solid-js';
+import orchestrator from '../../libs/orchestrator/orchestrator';
+import type Team from '../../libs/team';
+import { confirmAction, scrollTop } from '../../libs/utils';
+import BsTile from '../tile';
+import type { BsTeamProps } from './team.d';
 
 async function removeTeam(team: Team) {
-  const yes = await confirmAction()
+  const yes = await confirmAction();
 
   if (yes) {
-    orchestrator.Teams.remove(team)
+    orchestrator.Teams.remove(team);
   }
 }
 
 function editTeam(team: Team, callback: (team: Team) => void) {
-  callback(team)
+  callback(team);
 }
 
 export default function BsTeam(props: BsTeamProps) {
-  const team = props.team
+  const team = props.team;
 
   return (
     <>
@@ -31,8 +31,8 @@ export default function BsTeam(props: BsTeamProps) {
               <button
                 class="btn btn-square btn-secondary"
                 onClick={() => {
-                  editTeam(team, props.onEdit)
-                  scrollTop()
+                  editTeam(team, props.onEdit);
+                  scrollTop();
                 }}
               >
                 <UserPen />
@@ -41,7 +41,7 @@ export default function BsTeam(props: BsTeamProps) {
             <button
               class="btn btn-square btn-secondary"
               onClick={() => {
-                removeTeam(team)
+                removeTeam(team);
               }}
             >
               <Trash />
@@ -50,8 +50,8 @@ export default function BsTeam(props: BsTeamProps) {
         }
       >
         <For each={team.playerIds}>
-          {id => {
-            const player = orchestrator.getPlayer(id)
+          {(id) => {
+            const player = orchestrator.getPlayer(id);
 
             if (player) {
               return (
@@ -59,13 +59,12 @@ export default function BsTeam(props: BsTeamProps) {
                   <span class="text-warning">{player.jersayNumber}</span>
                   <span class="p-1">{`${player.nicName || player.firstName} ${(player.nicName && '') || player.lastName}`}</span>
                 </p>
-              )
-            } else {
-              <p class="text-error">{`Joueur id ${id} introuvable`}</p>
+              );
             }
+            <p class="text-error">{`Joueur id ${id} introuvable`}</p>;
           }}
         </For>
       </BsTile>
     </>
-  )
+  );
 }

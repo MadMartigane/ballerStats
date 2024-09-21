@@ -1,33 +1,33 @@
-import { FilePenLine, Lock, LockOpen, Trash } from 'lucide-solid'
-import { Show } from 'solid-js'
-import type { BsMatchTileProps, BsMatchTypeProps } from './match-tile.d'
-import Match from '../../libs/match'
-import orchestrator from '../../libs/orchestrator/orchestrator'
-import BsTile from '../tile'
-import { confirmAction, toDateTime } from '../../libs/utils'
+import { FilePenLine, Lock, LockOpen, Trash } from 'lucide-solid';
+import { Show } from 'solid-js';
+import type Match from '../../libs/match';
+import orchestrator from '../../libs/orchestrator/orchestrator';
+import { confirmAction, toDateTime } from '../../libs/utils';
+import BsTile from '../tile';
+import type { BsMatchTileProps, BsMatchTypeProps } from './match-tile.d';
 
 async function removeMatch(match: Match) {
-  const yes = await confirmAction()
+  const yes = await confirmAction();
 
   if (yes) {
-    orchestrator.Matchs.remove(match)
+    orchestrator.Matchs.remove(match);
   }
 }
 
 function callCallback(match: Match, callback?: (match: Match) => void) {
   if (!callback) {
-    return
+    return;
   }
 
-  callback(match)
+  callback(match);
 }
 
 export function BsMatchTypeText(props: BsMatchTypeProps) {
-  const type = props.type
-  const size = props.size || 'base'
+  const type = props.type;
+  const size = props.size || 'base';
 
   if (!type) {
-    return <></>
+    return <></>;
   }
 
   return (
@@ -40,15 +40,15 @@ export function BsMatchTypeText(props: BsMatchTypeProps) {
       </Show>
       <Show when={!type}>{'Type non renseigné'}</Show>
     </span>
-  )
+  );
 }
 
 export function BsMatchTypeBadge(props: BsMatchTypeProps) {
-  const type = props.type
-  const size = props.size || 'base'
+  const type = props.type;
+  const size = props.size || 'base';
 
   if (!type) {
-    return <></>
+    return <></>;
   }
 
   return (
@@ -57,18 +57,18 @@ export function BsMatchTypeBadge(props: BsMatchTypeProps) {
     >
       {type === 'home' ? '↗ Domicile' : '↖ Extérieur'}
     </div>
-  )
+  );
 }
 
 export default function BsMatchTile(props: BsMatchTileProps) {
-  const match = props.match
-  const team = orchestrator.getTeam(match.teamId)
+  const match = props.match;
+  const team = orchestrator.getTeam(match.teamId);
 
   return (
     <BsTile
       title={match.opponent || ''}
       onClick={() => {
-        callCallback(match, props?.onStart)
+        callCallback(match, props?.onStart);
       }}
       status={
         <>
@@ -95,9 +95,9 @@ export default function BsMatchTile(props: BsMatchTileProps) {
           <Show when={props.onEdit}>
             <button
               class="btn btn-secondary btn-square"
-              onClick={event => {
-                event.stopPropagation()
-                callCallback(match, props?.onEdit)
+              onClick={(event) => {
+                event.stopPropagation();
+                callCallback(match, props?.onEdit);
               }}
             >
               <FilePenLine />
@@ -106,9 +106,9 @@ export default function BsMatchTile(props: BsMatchTileProps) {
 
           <button
             class="btn btn-secondary btn-square"
-            onClick={event => {
-              event.stopPropagation()
-              removeMatch(match)
+            onClick={(event) => {
+              event.stopPropagation();
+              removeMatch(match);
             }}
           >
             <Trash />
@@ -122,5 +122,5 @@ export default function BsMatchTile(props: BsMatchTileProps) {
         </p>
       </Show>
     </BsTile>
-  )
+  );
 }

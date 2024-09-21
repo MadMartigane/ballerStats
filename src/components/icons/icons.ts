@@ -1,8 +1,8 @@
-import type { BsIconData, BsIconProps } from './icons.d'
-import { DaisyVariant, getTheme } from '../../libs/daisy'
-import { createStore } from 'solid-js/store'
-import bsEventBus from '../../libs/event-bus'
-import { clone } from '../../libs/utils'
+import { createStore } from 'solid-js/store';
+import { type DaisyVariant, getTheme } from '../../libs/daisy';
+import bsEventBus from '../../libs/event-bus';
+import { clone } from '../../libs/utils';
+import type { BsIconData, BsIconProps } from './icons.d';
 
 const VARIANT: { [key: string]: { [key in DaisyVariant]: string } } = {
   // TODO: ajust to fantasy
@@ -44,7 +44,7 @@ const VARIANT: { [key: string]: { [key in DaisyVariant]: string } } = {
     warning: '#d87605',
     error: '#ff7164',
   },
-}
+};
 
 const SIZE: { [key: string]: string } = {
   sx: '12px',
@@ -60,48 +60,48 @@ const SIZE: { [key: string]: string } = {
   '7xl': '72px',
   '8xl': '78px',
   '9xl': '84px',
-}
+};
 
 const DEFAULT_ICON_DATA = {
   height: SIZE.base,
   width: SIZE.base,
   fill: VARIANT.default.text,
-}
+};
 
 async function bsIconPropsToData(props: BsIconProps): Promise<BsIconData> {
-  const theme = (await getTheme()) || 'default'
-  const variant = VARIANT[theme] || VARIANT.default
+  const theme = (await getTheme()) || 'default';
+  const variant = VARIANT[theme] || VARIANT.default;
 
   const data = {
     ...DEFAULT_ICON_DATA,
-  }
+  };
 
   if (props.variant) {
-    data.fill = variant[props.variant] || variant.text
+    data.fill = variant[props.variant] || variant.text;
   } else {
-    data.fill = variant.text
+    data.fill = variant.text;
   }
 
   if (props.size) {
-    data.width = SIZE[props.size]
-    data.height = SIZE[props.size]
+    data.width = SIZE[props.size];
+    data.height = SIZE[props.size];
   }
 
-  return data
+  return data;
 }
 
 export function bsIconPropsToDataStore(props: BsIconProps) {
-  const data = clone(DEFAULT_ICON_DATA) as BsIconData
-  const [store, setStore] = createStore(data)
+  const data = clone(DEFAULT_ICON_DATA) as BsIconData;
+  const [store, setStore] = createStore(data);
   bsEventBus.addEventListener('BS::THEME::CHANGE', () => {
-    bsIconPropsToData(props).then(data => {
-      setStore(data)
-    })
-  })
+    bsIconPropsToData(props).then((data) => {
+      setStore(data);
+    });
+  });
 
-  bsIconPropsToData(props).then(data => {
-    setStore(data)
-  })
+  bsIconPropsToData(props).then((data) => {
+    setStore(data);
+  });
 
-  return store
+  return store;
 }
