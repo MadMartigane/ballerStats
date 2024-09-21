@@ -1,75 +1,75 @@
-import { Contact, MessageCircleWarning, Save, UserPlus, X } from 'lucide-solid';
-import { For, Show } from 'solid-js';
-import { createStore } from 'solid-js/store';
-import bsEventBus from '../../libs/event-bus';
-import MadSignal from '../../libs/mad-signal';
-import orchestrator from '../../libs/orchestrator/orchestrator';
-import Player from '../../libs/player';
-import type { PlayerRawData } from '../../libs/player';
-import { scrollBottom, scrollTop } from '../../libs/utils';
-import BsCard from '../card';
-import BsInput from '../input';
-import BsPlayer from '../player';
+import { Contact, MessageCircleWarning, Save, UserPlus, X } from 'lucide-solid'
+import { For, Show } from 'solid-js'
+import { createStore } from 'solid-js/store'
+import bsEventBus from '../../libs/event-bus'
+import MadSignal from '../../libs/mad-signal'
+import orchestrator from '../../libs/orchestrator/orchestrator'
+import Player from '../../libs/player'
+import type { PlayerRawData } from '../../libs/player'
+import { scrollBottom, scrollTop } from '../../libs/utils'
+import BsCard from '../card'
+import BsInput from '../input'
+import BsPlayer from '../player'
 
-let isEditingNewPlayer = false;
-const isAddingPlayer: MadSignal<boolean> = new MadSignal(false);
-const canAddPlayer: MadSignal<boolean> = new MadSignal(false);
+let isEditingNewPlayer = false
+const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
+const canAddPlayer: MadSignal<boolean> = new MadSignal(false)
 const playerLength: MadSignal<number> = new MadSignal(
   orchestrator.Players.length,
-);
-const [players, setPlayers] = createStore(orchestrator.Players.players);
+)
+const [players, setPlayers] = createStore(orchestrator.Players.players)
 
-let currentPlayer: Player | null = null;
+let currentPlayer: Player | null = null
 
 bsEventBus.addEventListener('BS::PLAYERS::CHANGE', () => {
-  playerLength.set(orchestrator.Players.length);
-  setPlayers(orchestrator.Players.players);
-});
+  playerLength.set(orchestrator.Players.length)
+  setPlayers(orchestrator.Players.players)
+})
 
 function setNewPlayerData(data: PlayerRawData) {
   if (!currentPlayer) {
-    currentPlayer = new Player(data);
+    currentPlayer = new Player(data)
   } else {
-    currentPlayer.update(data);
+    currentPlayer.update(data)
   }
 
-  canAddPlayer.set(currentPlayer.isRegisterable);
+  canAddPlayer.set(currentPlayer.isRegisterable)
 }
 
 function toggleAddPlayer(value: boolean) {
-  isAddingPlayer.set(value);
+  isAddingPlayer.set(value)
 }
 
 function registerPlayer() {
   if (!currentPlayer || !currentPlayer.isRegisterable) {
-    return;
+    return
   }
 
   if (isEditingNewPlayer) {
-    orchestrator.Players.add(currentPlayer);
+    orchestrator.Players.add(currentPlayer)
   } else {
-    orchestrator.Players.updatePlayer(currentPlayer);
+    orchestrator.Players.updatePlayer(currentPlayer)
   }
 
-  toggleAddPlayer(false);
-  currentPlayer = null;
-  canAddPlayer.set(false);
+  toggleAddPlayer(false)
+  currentPlayer = null
+  canAddPlayer.set(false)
 }
 
 function editPlayer(player: Player) {
-  isEditingNewPlayer = false;
-  currentPlayer = new Player(player.getRawData());
-  canAddPlayer.set(currentPlayer.isRegisterable);
+  isEditingNewPlayer = false
+  currentPlayer = new Player(player.getRawData())
+  canAddPlayer.set(currentPlayer.isRegisterable)
 
-  toggleAddPlayer(true);
+  toggleAddPlayer(true)
 }
 
 function onSubmit(event: KeyboardEvent) {
   if (event.key !== 'Enter') {
-    return;
+    return
   }
 
-  registerPlayer();
+  registerPlayer()
 }
 
 function renderPlayerFallback() {
@@ -80,7 +80,7 @@ function renderPlayerFallback() {
         <span class="px-2">Aucun joueur enregistré.</span>
       </h4>
     </div>
-  );
+  )
 }
 
 function renderAddPlayerButton() {
@@ -89,11 +89,12 @@ function renderAddPlayerButton() {
       <hr />
       <div class="p-4">
         <button
+          type="button"
           class="btn btn-primary"
           onClick={() => {
-            isEditingNewPlayer = true;
-            toggleAddPlayer(true);
-            scrollTop();
+            isEditingNewPlayer = true
+            toggleAddPlayer(true)
+            scrollTop()
           }}
         >
           <UserPlus />
@@ -101,7 +102,7 @@ function renderAddPlayerButton() {
         </button>
       </div>
     </div>
-  );
+  )
 }
 
 function renderAddingPlayerCard() {
@@ -121,7 +122,7 @@ function renderAddingPlayerCard() {
           value: currentPlayer?.lastName,
           placeholder: 'Dupont',
           onChange: (value: string) => {
-            setNewPlayerData({ lastName: value });
+            setNewPlayerData({ lastName: value })
           },
         })}
         {BsInput({
@@ -130,7 +131,7 @@ function renderAddingPlayerCard() {
           value: currentPlayer?.firstName,
           placeholder: 'Charlie',
           onChange: (value: string) => {
-            setNewPlayerData({ firstName: value });
+            setNewPlayerData({ firstName: value })
           },
         })}
         {BsInput({
@@ -139,7 +140,7 @@ function renderAddingPlayerCard() {
           value: currentPlayer?.jersayNumber,
           placeholder: '01',
           onChange: (value: string) => {
-            setNewPlayerData({ jersayNumber: value });
+            setNewPlayerData({ jersayNumber: value })
           },
         })}
         {BsInput({
@@ -148,7 +149,7 @@ function renderAddingPlayerCard() {
           value: currentPlayer?.nicName,
           placeholder: 'The B',
           onChange: (value: string) => {
-            setNewPlayerData({ nicName: value });
+            setNewPlayerData({ nicName: value })
           },
         })}
         {/* BsInput({
@@ -164,12 +165,13 @@ function renderAddingPlayerCard() {
     footer: (
       <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <button
+          type="button"
           class="btn btn-primary btn-wide"
           onClick={() => {
-            toggleAddPlayer(false);
-            currentPlayer = null;
-            canAddPlayer.set(false);
-            scrollBottom();
+            toggleAddPlayer(false)
+            currentPlayer = null
+            canAddPlayer.set(false)
+            scrollBottom()
           }}
         >
           <X />
@@ -177,11 +179,12 @@ function renderAddingPlayerCard() {
         </button>
 
         <button
+          type="button"
           class="btn btn-primary btn-wide"
           disabled={!canAddPlayer.get()}
           onClick={() => {
-            registerPlayer();
-            scrollBottom();
+            registerPlayer()
+            scrollBottom()
           }}
         >
           {isEditingNewPlayer ? 'Ajouter' : 'Enregistrer'}
@@ -189,7 +192,7 @@ function renderAddingPlayerCard() {
         </button>
       </div>
     ),
-  });
+  })
 }
 
 export default function BsPlayers() {
@@ -202,13 +205,13 @@ export default function BsPlayers() {
         >
           <div class="flex flex-wrap gap-4 justify-stretch">
             <For each={players}>
-              {(player) => (
+              {player => (
                 <div class="mx-auto md:mx-0 w-fit">
                   <BsPlayer
                     player={player}
-                    onEdit={(player) => {
-                      editPlayer(player);
-                      scrollTop();
+                    onEdit={player => {
+                      editPlayer(player)
+                      scrollTop()
                     }}
                   />
                 </div>
@@ -221,5 +224,5 @@ export default function BsPlayers() {
         {renderAddingPlayerCard()}
       </Show>
     </div>
-  );
+  )
 }

@@ -111,16 +111,15 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
 
                 {/* Notifications dropdown */}
                 <Show when={isNotificationBoxOpen.get()}>
-                  <div
+                  <menu
                     id="notifications-box"
                     class="absolute right-1 top-16 mt-1 z-10 p-6 w-72 origin-top-right rounded-md bg-gray-800 text-gray-400 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                    role="menu"
                     aria-orientation="vertical"
                     aria-labelledby="notifications-box-button"
                     tabindex="-1"
                   >
                     Aucune notification
-                  </div>
+                  </menu>
                 </Show>
 
                 {/* Profile dropdown */}
@@ -158,9 +157,8 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                         To: "transform opacity-0 scale-95"
                     */}
                   <Show when={isUserMenuOpen.get()}>
-                    <div
+                    <menu
                       class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-slate-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                      role="menu"
                       aria-orientation="vertical"
                       aria-labelledby="user-menu-button"
                       tabindex="-1"
@@ -184,7 +182,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                       >
                         Configuration
                       </a>
-                    </div>
+                    </menu>
                   </Show>
                 </div>
               </div>
@@ -211,16 +209,15 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
 
               {/* Notifications dropdown (mobile) */}
               <Show when={isNotificationBoxOpen.get()}>
-                <div
+                <menu
                   id="notifications-box"
                   class="absolute right-1 top-16 mt-1 z-10 p-6 w-72 origin-top-right rounded-md bg-gray-800 text-gray-400 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                  role="menu"
                   aria-orientation="vertical"
                   aria-labelledby="notifications-box-button"
                   tabindex="-1"
                 >
                   Aucune notification
-                </div>
+                </menu>
               </Show>
 
               {/* Mobile menu button */}

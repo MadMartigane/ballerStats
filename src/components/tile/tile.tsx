@@ -19,6 +19,11 @@ export default function BsTile(props: BsTileProps) {
       onClick={() => {
         onClick(props.onClick);
       }}
+      onKeyDown={(event) => {
+        if (event.code === 'enter') {
+          onClick(props.onClick);
+        }
+      }}
     >
       <Show when={props.status}>
         <div>{props.status}</div>
