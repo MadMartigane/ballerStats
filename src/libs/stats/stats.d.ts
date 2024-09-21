@@ -16,8 +16,9 @@ export type StatMatchActionItem = {
   name: StatMatchActionItemName
   type: StatMatchActionItemType
   inGameAction: boolean
+  opponentMatter: boolean
   value: number
-  icon: JSXElement
+  icon: () => JSXElement
   label1?: string | JSXElement
   label2?: string | JSXElement
 }

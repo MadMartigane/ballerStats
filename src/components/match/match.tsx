@@ -1,62 +1,69 @@
 import {
+  ArrowDownToLine,
+  ArrowUpToLine,
   ChartLine,
   ChevronLeft,
   ChevronRight,
   Eraser,
+  Meh,
+  MessageSquareWarning,
+  MoveDown,
   Shirt,
   TriangleAlert,
   User,
   Users,
-} from 'lucide-solid';
-import { For, Show } from 'solid-js';
-import { type SetStoreFunction, createStore } from 'solid-js/store';
-import MadSignal from '../../libs/mad-signal';
-import type Match from '../../libs/match';
-import orchestrator from '../../libs/orchestrator/orchestrator';
-import type Player from '../../libs/player';
+} from 'lucide-solid'
+import { For, Show } from 'solid-js'
+import { type SetStoreFunction, createStore } from 'solid-js/store'
+import MadSignal from '../../libs/mad-signal'
+import type Match from '../../libs/match'
+import orchestrator from '../../libs/orchestrator/orchestrator'
+import type Player from '../../libs/player'
 import {
   STATS_MATCH_ACTIONS,
   type StatMatchActionItem,
   type StatMatchSummary,
-} from '../../libs/stats';
-import { getStatSummary } from '../../libs/stats/stats-util';
-import { TEAM_OPPONENT_ID } from '../../libs/team/team';
-import { confirmAction, goTo } from '../../libs/utils';
-import BsScoreCard from '../score-card';
-import type { BsMatchProps } from './match.d';
+} from '../../libs/stats'
+import { getStatSummary } from '../../libs/stats/stats-util'
+import { TEAM_OPPONENT_ID } from '../../libs/team/team'
+import { confirmAction, goTo } from '../../libs/utils'
+import BsScoreCard from '../score-card'
+import type { BsMatchProps } from './match.d'
 
 function openActionMode(
   playerId: string,
   actionMode: MadSignal<string | null>,
 ) {
-  actionMode.set(playerId);
+  actionMode.set(playerId)
 }
 
 function closeActionMode(actionMode: MadSignal<string | null>) {
-  actionMode.set(null);
+  actionMode.set(null)
 }
 
-function registerStat(
-  playerId: string | null,
-  item: StatMatchActionItem,
-  match: Match | null,
-  setStatSummary: SetStoreFunction<StatMatchSummary>,
-  disableClearLastAction: MadSignal<boolean>,
-) {
-  if (!playerId || !match) {
-    return;
+function registerStat(options: {
+  playerId: string | null
+  statAction: StatMatchActionItem
+  match: Match | null
+  statSummary: StatMatchSummary
+  setStatSummary: SetStoreFunction<StatMatchSummary>
+  disableClearLastAction: MadSignal<boolean>
+}) {
+  if (!options || !options.playerId || !options.match) {
+    return
   }
 
-  match.stats.push({
-    playerId,
-    name: item.name,
-    type: item.type,
-    value: item.value,
-  });
+  options.match.stats.push({
+    timestamp: Date.now(),
+    playerId: options.playerId,
+    name: options.statAction.name,
+    type: options.statAction.type,
+    value: options.statAction.value,
+  })
 
-  disableClearLastAction.set(match.stats.length === 0);
-  setStatSummary(getStatSummary(match));
-  orchestrator.Matchs.updateMatch(match);
+  options.disableClearLastAction.set(options.match.stats.length === 0)
+  options.setStatSummary(getStatSummary(options.match))
+  orchestrator.Matchs.updateMatch(options.match)
 }
 
 async function removeAction(
@@ -66,25 +73,25 @@ async function removeAction(
   disableClearLastAction: MadSignal<boolean>,
 ) {
   if (!match) {
-    return;
+    return
   }
 
-  const maxId = match.stats.length - 1;
+  const maxId = match.stats.length - 1
 
   if (id < 0 || id > maxId) {
-    throw new Error(`Unable to remove action id ${id}: nim 0, max: ${maxId}`);
+    throw new Error(`Unable to remove action id ${id}: nim 0, max: ${maxId}`)
   }
 
-  const confirm = await confirmAction();
+  const confirm = await confirmAction()
   if (!confirm) {
-    return;
+    return
   }
 
-  match.stats.splice(id, 1);
+  match.stats.splice(id, 1)
 
-  disableClearLastAction.set(match.stats.length === 0);
-  setStatSummary(getStatSummary(match));
-  orchestrator.Matchs.updateMatch(match);
+  disableClearLastAction.set(match.stats.length === 0)
+  setStatSummary(getStatSummary(match))
+  orchestrator.Matchs.updateMatch(match)
 }
 
 async function removeLastAction(
@@ -93,12 +100,12 @@ async function removeLastAction(
   disableClearLastAction: MadSignal<boolean>,
 ) {
   if (!match) {
-    return;
+    return
   }
 
   if (match.status === 'locked') {
-    alert('Match vérouillé !!');
-    return;
+    alert('Match vérouillé !!')
+    return
   }
 
   return removeAction(
@@ -106,79 +113,221 @@ async function removeLastAction(
     match.stats.length - 1,
     setStatSummary,
     disableClearLastAction,
-  );
+  )
 }
 
-function renderPlayerButton(
-  player: Player | null,
-  match: Match | null,
-  actionMode: MadSignal<string | null>,
-  statSummary: StatMatchSummary,
+function getOutFromPlayground(
+  playerId: string,
+  playersInTheFive: MadSignal<Array<string>>,
 ) {
-  if (!player) {
+  const inTheFive = playersInTheFive.get()
+
+  if (!inTheFive.includes(playerId)) {
+    return
+  }
+
+  playersInTheFive.set(
+    inTheFive.filter(candidateId => candidateId !== playerId),
+  )
+}
+
+function getInFromPlayground(
+  playerId: string,
+  playersInTheFive: MadSignal<Array<string>>,
+) {
+  const inTheFive = playersInTheFive.get()
+
+  if (inTheFive.includes(playerId)) {
+    return
+  }
+
+  /* Do not mutate the current array in order to thow a new render */
+  const newFive = Array(...inTheFive)
+  newFive.push(playerId)
+  playersInTheFive.set(newFive)
+}
+
+function renderPlayerBench(options: {
+  player: Player | null
+  playersInTheFive: MadSignal<Array<string>>
+  statSummary: StatMatchSummary
+}) {
+  if (!options || !options.player) {
     return (
       <button type="button" class="btn btn-error btn-disabled w-full">
         Joueur non trouvé
       </button>
-    );
+    )
   }
 
-  if (!match) {
+  const playerStats = options.statSummary.players.find(
+    stat => stat.playerId === options.player?.id,
+  )
+
+  return (
+    <div class="w-full flex flex-row my-3 md:my-4">
+      <div class="bg-neutral text-neutral-content w-full rounded-lg border border-primary p-1 flex items-center gap-1">
+        <div class="flex-none">
+          <button
+            type="button"
+            class="btn btn-primary"
+            onClick={() => {
+              getInFromPlayground(
+                options.player?.id || '',
+                options.playersInTheFive,
+              )
+            }}
+          >
+            <ArrowUpToLine />
+          </button>
+          <div class="text-xs text-center">Rentrée</div>
+        </div>
+        <div class="inline-block flex-auto">
+          <div class="flex items-center">
+            <User class="inline-block flex-none" size={28} />
+            <div class="inline-block text-3xl flex-auto">
+              {options.player.jersayNumber}
+            </div>
+          </div>
+          <div class="text-center text-xl">
+            {options.player.nicName
+              ? options.player.nicName
+              : options.player.firstName}
+          </div>
+        </div>
+        <div class="inline-block flex-auto">
+          <div>
+            <span class="inline-block w-5 text-success text-xl">
+              {playerStats?.scores.total || 0}
+            </span>
+            <span class="inline-block w-5 text-accent-content text-xl">
+              {playerStats?.rebonds.total || 0}
+            </span>
+            <span class="inline-block w-5 text-warning text-xl">
+              {playerStats?.fouls || 0}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function renderPlayerButton(options: {
+  player: Player | null
+  match: Match | null
+  playerInTheFive: MadSignal<Array<string>>
+  statSummary: StatMatchSummary
+  setStatSummary: SetStoreFunction<StatMatchSummary>
+  disableClearLastAction: MadSignal<boolean>
+}) {
+  if (!options || !options.player) {
+    return (
+      <button type="button" class="btn btn-error btn-disabled w-full">
+        Joueur non trouvé
+      </button>
+    )
+  }
+
+  if (!options.match) {
     return (
       <button type="button" class="btn btn-error btn-disabled w-full">
         Match non trouvé
       </button>
-    );
+    )
   }
 
-  const playerStats = statSummary.players.find(
-    (stat) => stat.playerId === player.id,
-  );
+  const playerStats = options.statSummary.players.find(
+    stat => stat.playerId === options.player?.id,
+  )
 
   return (
     <div class="w-full flex flex-row my-3 md:my-4">
-      <div
-        class="btn w-full"
-        onClick={() => {
-          if (match?.status === 'locked') {
-            alert('Match vérouillé !');
-            return;
-          }
+      <div class="bg-neutral text-neutral-content w-full rounded-lg border border-primary p-1 flex items-center gap-1">
+        <div class="flex-none">
+          <button
+            type="button"
+            class="btn btn-primary"
+            onClick={() => {
+              getOutFromPlayground(
+                options.player?.id || '',
+                options.playerInTheFive,
+              )
+            }}
+          >
+            <ArrowDownToLine />
+          </button>
+          <div class="text-xs text-center">Sortie</div>
+        </div>
+        <div class="inline-block flex-auto">
+          <div class="flex items-center">
+            <User class="inline-block flex-none" size={28} />
+            <div class="inline-block text-3xl flex-auto">
+              {options.player.jersayNumber}
+            </div>
+          </div>
+          <div class="text-center text-xl">
+            {options.player.nicName
+              ? options.player.nicName
+              : options.player.firstName}
+          </div>
+        </div>
+        <For each={STATS_MATCH_ACTIONS}>
+          {statAction => (
+            <Show when={statAction.inGameAction}>
+              <div class="flex-none">
+                <button
+                  type="button"
+                  class={`btn btn-${statAction.type}`}
+                  onClick={() => {
+                    registerStat({
+                      playerId: options.player?.id || null,
+                      statAction,
+                      match: options.match,
+                      statSummary: options.statSummary,
+                      setStatSummary: options.setStatSummary,
+                      disableClearLastAction: options.disableClearLastAction,
+                    })
+                  }}
+                  onKeyDown={() => {
+                    registerStat({
+                      playerId: options.player?.id || null,
+                      statAction,
+                      match: options.match,
+                      statSummary: options.statSummary,
+                      setStatSummary: options.setStatSummary,
+                      disableClearLastAction: options.disableClearLastAction,
+                    })
+                  }}
+                >
+                  {statAction.icon()}
+                </button>
+                <div class="text-xs text-center">{statAction.label1}</div>
+              </div>
+            </Show>
+          )}
+        </For>
 
-          openActionMode(player.id, actionMode);
-        }}
-        onKeyDown={(event: KeyboardEvent) => {
-          if (event.code === 'Enter') {
-            if (match?.status === 'locked') {
-              alert('Match vérouillé !');
-              return;
-            }
-
-            openActionMode(player.id, actionMode);
-          }
-        }}
-      >
-        <User size={32} />
-        <span class="text-3xl">{player.jersayNumber}</span>
-        <span class="inline-block min-w-40 md:min-w-72 text-3xl">
-          {player.nicName ? player.nicName : player.firstName}
-        </span>
-        <span class="inline-block w-5 text-success text-xl">
-          {playerStats?.scores.total || 0}
-        </span>
-        <span class="inline-block w-5 text-accent-content text-xl">
-          {playerStats?.rebonds.total || 0}
-        </span>
-        <span class="inline-block w-5 text-warning text-xl">
-          {playerStats?.fouls || 0}
-        </span>
+        <div class="inline-block">
+          <div>
+            <span class="inline-block w-5 text-success text-xl">
+              {playerStats?.scores.total || 0}
+            </span>
+            <span class="inline-block w-5 text-accent-content text-xl">
+              {playerStats?.rebonds.total || 0}
+            </span>
+            <span class="inline-block w-5 text-warning text-xl">
+              {playerStats?.fouls || 0}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
-  );
+  )
 }
 
 function renderPlayerHeader(playerId: string | null) {
-  const player = orchestrator.getPlayer(playerId);
+  const player = orchestrator.getPlayer(playerId)
 
   return (
     <div class="w-full my-2 p-3 grid grid-cols-3 gap-3 bg-neutral text-neutral-content rounded">
@@ -193,7 +342,7 @@ function renderPlayerHeader(playerId: string | null) {
       </div>
       <div class="text-3xl text-right">{player?.jersayNumber}</div>
     </div>
-  );
+  )
 }
 
 function renderTeamTotals(statSummary: StatMatchSummary) {
@@ -237,7 +386,7 @@ function renderTeamTotals(statSummary: StatMatchSummary) {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 function renderStatGrid(statSummary: StatMatchSummary) {
@@ -267,8 +416,8 @@ function renderStatGrid(statSummary: StatMatchSummary) {
           </thead>
           <tbody>
             <For each={statSummary.players}>
-              {(playerStats) => {
-                const player = orchestrator.getPlayer(playerStats.playerId);
+              {playerStats => {
+                const player = orchestrator.getPlayer(playerStats.playerId)
 
                 return (
                   <tr>
@@ -310,7 +459,7 @@ function renderStatGrid(statSummary: StatMatchSummary) {
                       {` (${playerStats.ratio['3pts'].percentage}%)`}
                     </td>
                   </tr>
-                );
+                )
               }}
             </For>
           </tbody>
@@ -353,21 +502,91 @@ function renderStatGrid(statSummary: StatMatchSummary) {
         </div>
       </div>
     </div>
-  );
+  )
+}
+
+function renderTheTeamBench(options: {
+  sortedPlayers: Array<Player | null>
+  playersInTheFive: MadSignal<Array<string>>
+  match: Match | null
+  statSummary: StatMatchSummary
+  setStatSummary: SetStoreFunction<StatMatchSummary>
+  disableClearLastAction: MadSignal<boolean>
+}) {
+  const inTheFive = options.playersInTheFive.get()
+
+  if (inTheFive.length === options.sortedPlayers.length) {
+    return (
+      <div class="alert alert-info">
+        <Meh size={42} />
+        <span>Le banc est vide !</span>
+      </div>
+    )
+  }
+
+  return (
+    <For each={options.sortedPlayers}>
+      {player => (
+        <Show
+          when={player && !options.playersInTheFive.get().includes(player.id)}
+        >
+          {renderPlayerBench({
+            player,
+            playersInTheFive: options.playersInTheFive,
+            statSummary: options.statSummary,
+          })}
+        </Show>
+      )}
+    </For>
+  )
+}
+function renderTheTeamFive(options: {
+  sortedPlayers: Array<Player | null>
+  playersInTheFive: MadSignal<Array<string>>
+  match: Match | null
+  statSummary: StatMatchSummary
+  setStatSummary: SetStoreFunction<StatMatchSummary>
+  disableClearLastAction: MadSignal<boolean>
+}) {
+  if (options.playersInTheFive.get().length < 1) {
+    return (
+      <div class="alert alert-info">
+        <MessageSquareWarning size={42} />
+        <span>Veuillez sélectionner votre 5 de départ depuis le banc.</span>
+      </div>
+    )
+  }
+  return (
+    <For each={options.sortedPlayers}>
+      {player => (
+        <Show
+          when={player && options.playersInTheFive.get().includes(player.id)}
+        >
+          {renderPlayerButton({
+            player,
+            match: options.match,
+            playerInTheFive: options.playersInTheFive,
+            setStatSummary: options.setStatSummary,
+            disableClearLastAction: options.disableClearLastAction,
+            statSummary: options.statSummary,
+          })}
+        </Show>
+      )}
+    </For>
+  )
 }
 
 export default function BsMatch(props: BsMatchProps) {
-  const matchId = props.id;
-  const match = orchestrator.getMatch(matchId);
-  const actionMode = new MadSignal(null) as MadSignal<string | null>;
-  const [statSummary, setStatSummary] = createStore(getStatSummary(match));
-  const disableClearLastAction = new MadSignal(
-    (match?.stats.length || 0) === 0,
-  );
-  const isStatMode = new MadSignal(match?.status === 'locked');
+  const matchId = props.id
+  const match = orchestrator.getMatch(matchId)
+  const playerOnAction = new MadSignal(null) as MadSignal<string | null>
+  const [statSummary, setStatSummary] = createStore(getStatSummary(match))
+  const disableClearLastAction = new MadSignal((match?.stats.length || 0) === 0)
+  const isStatMode = new MadSignal(match?.status === 'locked')
 
-  const team = orchestrator.getTeam(match?.teamId);
-  const sortedPlayers = orchestrator.getJerseySortedPlayers(team?.playerIds);
+  const team = orchestrator.getTeam(match?.teamId)
+  const sortedPlayers = orchestrator.getJerseySortedPlayers(team?.playerIds)
+  const playersInTheFive = new MadSignal([] as Array<string>)
 
   return (
     <div class="w-full">
@@ -383,65 +602,81 @@ export default function BsMatch(props: BsMatchProps) {
       </div>
 
       <Show when={!isStatMode.get()}>
-        <Show when={!actionMode.get()}>
+        <h3>Le 5</h3>
+        <Show when={!playerOnAction.get()}>
           <div class="w-full py-3">
-            <For each={sortedPlayers}>
-              {(player) =>
-                renderPlayerButton(player, match, actionMode, statSummary)
-              }
-            </For>
+            {renderTheTeamFive({
+              sortedPlayers,
+              playersInTheFive,
+              match,
+              setStatSummary,
+              disableClearLastAction,
+              statSummary,
+            })}
 
-            <button
-              type="button"
-              class="btn btn-accent w-full my-4"
-              onClick={() => {
-                if (match?.status === 'locked') {
-                  alert('Match vérouillé !');
-                  return;
-                }
+            <hr />
 
-                openActionMode(TEAM_OPPONENT_ID, actionMode);
-              }}
-              onKeyDown={(event: KeyboardEvent) => {
-                if (event.code === 'Enter') {
-                  if (match?.status === 'locked') {
-                    alert('Match vérouillé !');
-                    return;
-                  }
+            <div class="w-full flex flex-row my-3 md:my-4">
+              <div class="bg-accent text-accent-content w-full rounded-lg border border-primary p-1 flex items-center gap-1">
+                <div class="flex-none">
+                  <Users size={32} />
+                </div>
+                <div class="inline-block flex-auto">
+                  <div class="text-center text-xl">Équipe adverse</div>
+                </div>
+                <For each={STATS_MATCH_ACTIONS}>
+                  {statAction => (
+                    <Show when={statAction.opponentMatter}>
+                      <div class="flex-none">
+                        <button
+                          type="button"
+                          class={`btn btn-${statAction.type}`}
+                          onClick={() => {
+                            registerStat({
+                              playerId: TEAM_OPPONENT_ID,
+                              statAction,
+                              match,
+                              statSummary,
+                              setStatSummary,
+                              disableClearLastAction,
+                            })
+                          }}
+                          onKeyDown={() => {
+                            registerStat({
+                              playerId: TEAM_OPPONENT_ID,
+                              statAction,
+                              match,
+                              statSummary,
+                              setStatSummary,
+                              disableClearLastAction,
+                            })
+                          }}
+                        >
+                          {statAction.icon()}
+                        </button>
+                        <div class="text-xs text-center">
+                          {statAction.label1}
+                        </div>
+                      </div>
+                    </Show>
+                  )}
+                </For>
 
-                  openActionMode(TEAM_OPPONENT_ID, actionMode);
-                }
-              }}
-            >
-              <Users size={32} />
-              <span class="inline-block w-44 text-lg">Équipe adverse</span>
-              <span class="inline-block w-5 text-success text-xl">
-                {statSummary.opponentScore || 0}
-              </span>
-              <span class="inline-block w-5 text-accent-content text-xl">
-                {statSummary.rebonds.opponentTotal || 0}
-              </span>
-              <span class="inline-block w-5 text-warning text-xl">
-                {statSummary.opponentFouls || 0}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              class="btn btn-primary w-full"
-              onClick={() => {
-                isStatMode.set(true);
-              }}
-              onKeyDown={(event: KeyboardEvent) => {
-                if (event.code === 'Enter') {
-                  isStatMode.set(true);
-                }
-              }}
-            >
-              <ChartLine />
-              Tableau des stats
-              <ChevronRight />
-            </button>
+                <div class="inline-block">
+                  <div>
+                    <span class="inline-block w-5 text-success text-xl">
+                      {statSummary.opponentScore || 0}
+                    </span>
+                    <span class="inline-block w-5 text-accent-content text-xl">
+                      {statSummary.rebonds.opponentTotal || 0}
+                    </span>
+                    <span class="inline-block w-5 text-warning text-xl">
+                      {statSummary.opponentFouls || 0}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <hr />
 
@@ -450,7 +685,7 @@ export default function BsMatch(props: BsMatchProps) {
               class="btn btn-warning w-full"
               disabled={disableClearLastAction.get()}
               onClick={() => {
-                removeLastAction(match, setStatSummary, disableClearLastAction);
+                removeLastAction(match, setStatSummary, disableClearLastAction)
               }}
               onKeyDown={(event: KeyboardEvent) => {
                 if (event.code === 'Enter') {
@@ -458,7 +693,7 @@ export default function BsMatch(props: BsMatchProps) {
                     match,
                     setStatSummary,
                     disableClearLastAction,
-                  );
+                  )
                 }
               }}
             >
@@ -466,29 +701,61 @@ export default function BsMatch(props: BsMatchProps) {
               Effacer la dernière action
               <TriangleAlert />
             </button>
+
+            <hr />
+
+            <h3>Le Banc</h3>
+            {renderTheTeamBench({
+              sortedPlayers,
+              playersInTheFive,
+              match,
+              setStatSummary,
+              statSummary,
+              disableClearLastAction,
+            })}
+
+            <hr />
+
+            <button
+              type="button"
+              class="btn btn-primary w-full"
+              onClick={() => {
+                isStatMode.set(true)
+              }}
+              onKeyDown={(event: KeyboardEvent) => {
+                if (event.code === 'Enter') {
+                  isStatMode.set(true)
+                }
+              }}
+            >
+              <ChartLine />
+              Tableau des stats
+              <ChevronRight />
+            </button>
           </div>
         </Show>
 
-        <Show when={actionMode.get()}>
-          {renderPlayerHeader(actionMode.get())}
+        <Show when={playerOnAction.get()}>
+          {renderPlayerHeader(playerOnAction.get())}
           <div class="w-full py-2 grid grid-cols-2 gap-3">
             <For each={STATS_MATCH_ACTIONS}>
-              {(item) => (
+              {item => (
                 <button
                   type="button"
                   class={`btn btn-${item.type}`}
                   onClick={() => {
-                    registerStat(
-                      actionMode.get(),
-                      item,
+                    registerStat({
+                      playerId: playerOnAction.get(),
+                      statAction: item,
                       match,
+                      statSummary,
                       setStatSummary,
                       disableClearLastAction,
-                    );
-                    closeActionMode(actionMode);
+                    })
+                    closeActionMode(playerOnAction)
                   }}
                 >
-                  {item.icon}
+                  {item.icon()}
                   <span class="text-2xl">{item.label1}</span>{' '}
                   <span>{item.label2}</span>
                 </button>
@@ -501,29 +768,29 @@ export default function BsMatch(props: BsMatchProps) {
       <Show when={isStatMode.get()}>{renderStatGrid(statSummary)}</Show>
 
       <hr />
-      {/* CANCEL ACTION */}
+
       <button
         type="button"
         class="btn btn-outline w-full"
-        onClick={(event) => {
-          event.stopPropagation();
+        onClick={event => {
+          event.stopPropagation()
 
           if (match?.status !== 'locked' && isStatMode.get()) {
-            isStatMode.set(false);
-            return;
+            isStatMode.set(false)
+            return
           }
 
-          if (match?.status !== 'locked' && actionMode.get()) {
-            closeActionMode(actionMode);
-            return;
+          if (match?.status !== 'locked' && playerOnAction.get()) {
+            closeActionMode(playerOnAction)
+            return
           }
 
-          goTo('matchs');
+          goTo('matchs')
         }}
       >
         <ChevronLeft />
         <span>Retour</span>
       </button>
     </div>
-  );
+  )
 }
