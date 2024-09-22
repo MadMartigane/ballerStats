@@ -116,41 +116,88 @@ async function removeLastAction(
   )
 }
 
-function getOutFromPlayground(
-  playerId: string,
-  playersInTheFive: MadSignal<Array<string>>,
-) {
-  const inTheFive = playersInTheFive.get()
+function getOutFromPlayground(options: {
+  playerId: string
+  playersInTheFive: MadSignal<Array<string>>
+  match: Match | null
+  statSummary: StatMatchSummary
+  setStatSummary: SetStoreFunction<StatMatchSummary>
+  disableClearLastAction: MadSignal<boolean>
+}) {
+  const inTheFive = options.playersInTheFive.get()
 
-  if (!inTheFive.includes(playerId)) {
+  if (!options.match || !inTheFive.includes(options.playerId)) {
     return
   }
 
-  playersInTheFive.set(
-    inTheFive.filter(candidateId => candidateId !== playerId),
+  options.playersInTheFive.set(
+    inTheFive.filter(candidateId => candidateId !== options.playerId),
   )
+
+  options.match.update({
+    playersInTheFive: [...options.playersInTheFive.get()],
+  })
+  const statAction = STATS_MATCH_ACTIONS.find(
+    candidate => candidate.name === 'fiveOut',
+  )
+  if (!statAction) {
+    throw new Error('Unable to find stat action item: "fiveOut"')
+  }
+
+  registerStat({
+    playerId: options.playerId,
+    statAction,
+    match: options.match,
+    statSummary: options.statSummary,
+    setStatSummary: options.setStatSummary,
+    disableClearLastAction: options.disableClearLastAction,
+  })
 }
 
-function getInFromPlayground(
-  playerId: string,
-  playersInTheFive: MadSignal<Array<string>>,
-) {
-  const inTheFive = playersInTheFive.get()
+function getInFromPlayground(options: {
+  playerId: string
+  playersInTheFive: MadSignal<Array<string>>
+  match: Match | null
+  statSummary: StatMatchSummary
+  setStatSummary: SetStoreFunction<StatMatchSummary>
+  disableClearLastAction: MadSignal<boolean>
+}) {
+  const inTheFive = options.playersInTheFive.get()
 
-  if (inTheFive.includes(playerId)) {
+  if (!options.match || inTheFive.includes(options.playerId)) {
     return
   }
 
-  /* Do not mutate the current array in order to thow a new render */
+  /* Do not mutate the current array in order to throw a new render */
   const newFive = Array(...inTheFive)
-  newFive.push(playerId)
-  playersInTheFive.set(newFive)
+  newFive.push(options.playerId)
+  options.playersInTheFive.set(newFive)
+  options.match.update({ playersInTheFive: [...newFive] })
+
+  const statAction = STATS_MATCH_ACTIONS.find(
+    candidate => candidate.name === 'fiveIn',
+  )
+  if (!statAction) {
+    throw new Error('Unable to find stat action item: "fiveIn"')
+  }
+
+  registerStat({
+    playerId: options.playerId,
+    statAction,
+    match: options.match,
+    statSummary: options.statSummary,
+    setStatSummary: options.setStatSummary,
+    disableClearLastAction: options.disableClearLastAction,
+  })
 }
 
 function renderPlayerBench(options: {
   player: Player | null
   playersInTheFive: MadSignal<Array<string>>
+  match: Match | null
   statSummary: StatMatchSummary
+  setStatSummary: SetStoreFunction<StatMatchSummary>
+  disableClearLastAction: MadSignal<boolean>
 }) {
   if (!options || !options.player) {
     return (
@@ -172,10 +219,14 @@ function renderPlayerBench(options: {
             type="button"
             class="btn btn-primary"
             onClick={() => {
-              getInFromPlayground(
-                options.player?.id || '',
-                options.playersInTheFive,
-              )
+              getInFromPlayground({
+                playerId: options.player?.id || '',
+                playersInTheFive: options.playersInTheFive,
+                match: options.match,
+                statSummary: options.statSummary,
+                setStatSummary: options.setStatSummary,
+                disableClearLastAction: options.disableClearLastAction,
+              })
             }}
           >
             <ArrowUpToLine />
@@ -249,10 +300,14 @@ function renderPlayerButton(options: {
             type="button"
             class="btn btn-primary"
             onClick={() => {
-              getOutFromPlayground(
-                options.player?.id || '',
-                options.playerInTheFive,
-              )
+              getOutFromPlayground({
+                playerId: options.player?.id || '',
+                playersInTheFive: options.playerInTheFive,
+                match: options.match,
+                statSummary: options.statSummary,
+                setStatSummary: options.setStatSummary,
+                disableClearLastAction: options.disableClearLastAction,
+              })
             }}
           >
             <ArrowDownToLine />
@@ -534,12 +589,16 @@ function renderTheTeamBench(options: {
             player,
             playersInTheFive: options.playersInTheFive,
             statSummary: options.statSummary,
+            match: options.match,
+            setStatSummary: options.setStatSummary,
+            disableClearLastAction: options.disableClearLastAction,
           })}
         </Show>
       )}
     </For>
   )
 }
+
 function renderTheTeamFive(options: {
   sortedPlayers: Array<Player | null>
   playersInTheFive: MadSignal<Array<string>>
@@ -586,7 +645,7 @@ export default function BsMatch(props: BsMatchProps) {
 
   const team = orchestrator.getTeam(match?.teamId)
   const sortedPlayers = orchestrator.getJerseySortedPlayers(team?.playerIds)
-  const playersInTheFive = new MadSignal([] as Array<string>)
+  const playersInTheFive = new MadSignal(match?.playersInTheFive || [])
 
   return (
     <div class="w-full">
@@ -602,9 +661,9 @@ export default function BsMatch(props: BsMatchProps) {
       </div>
 
       <Show when={!isStatMode.get()}>
-        <h3>Le 5</h3>
+        <div class="divider">Le 5</div>
         <Show when={!playerOnAction.get()}>
-          <div class="w-full py-3">
+          <div class="w-full">
             {renderTheTeamFive({
               sortedPlayers,
               playersInTheFive,
@@ -702,9 +761,7 @@ export default function BsMatch(props: BsMatchProps) {
               <TriangleAlert />
             </button>
 
-            <hr />
-
-            <h3>Le Banc</h3>
+            <div class="divider">Le Banc</div>
             {renderTheTeamBench({
               sortedPlayers,
               playersInTheFive,

@@ -11,6 +11,8 @@ export type StatMatchActionItemName =
   | 'assist'
   | 'foul'
   | 'turnover'
+  | 'fiveIn'
+  | 'fiveOut'
 
 export type StatMatchActionItem = {
   name: StatMatchActionItemName

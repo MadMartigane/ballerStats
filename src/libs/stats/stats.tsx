@@ -1,5 +1,8 @@
 import {
   ArrowLeftFromLine,
+  ArrowLeftToLine,
+  ArrowRightFromLine,
+  ArrowRightToLine,
   Ban,
   CircleOff,
   Hand,
@@ -113,5 +116,23 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     type: 'success',
     value: 1,
     icon: () => <RedoDot />,
+  },
+  {
+    name: 'fiveIn',
+    inGameAction: false,
+    opponentMatter: false,
+    label1: 'Entrée sur le terrain',
+    type: 'success',
+    value: 0,
+    icon: () => <ArrowLeftToLine />,
+  },
+  {
+    name: 'fiveOut',
+    inGameAction: false,
+    opponentMatter: false,
+    label1: 'Sortie sur le banc',
+    type: 'secondary',
+    value: 0,
+    icon: () => <ArrowRightFromLine />,
   },
 ]

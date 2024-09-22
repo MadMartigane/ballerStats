@@ -17,6 +17,7 @@ export type MatchRawData = {
   type?: MatchType
   teamId?: string | null
   stats?: Array<MatchStatLogEntry>
+  playersInTheFive?: Array<string>
   status?: MatchStatus
   date?: string | null
 }
