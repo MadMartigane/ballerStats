@@ -3,11 +3,16 @@ export type DaisyVariant =
   | 'primary'
   | 'primary-content'
   | 'secondary'
+  | 'secondary-content'
   | 'accent'
+  | 'accent-content'
   | 'neutral'
   | 'neutral-content'
   | 'success'
+  | 'success-content'
   | 'warning'
-  | 'error';
+  | 'warning-content'
+  | 'error'
+  | 'error-content'
 
-export type DaisySize = 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl';
+export type DaisySize = 'xs' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl'

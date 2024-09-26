@@ -4,6 +4,8 @@ import {
   ChartLine,
   ChevronLeft,
   ChevronRight,
+  CirclePause,
+  CirclePlay,
   Eraser,
   Meh,
   MessageSquareWarning,
@@ -49,7 +51,7 @@ function registerStat(options: {
   setStatSummary: SetStoreFunction<StatMatchSummary>
   disableClearLastAction: MadSignal<boolean>
 }) {
-  if (!options || !options.playerId || !options.match) {
+  if (!options || !options.match) {
     return
   }
 
@@ -191,7 +193,32 @@ function getInFromPlayground(options: {
   })
 }
 
-function renderPlayerBench(options: {
+function stopStartTheGame(opts: {
+  gameIsPlaying: MadSignal<boolean>
+  match: Match | null
+  statSummary: StatMatchSummary
+  setStatSummary: SetStoreFunction<StatMatchSummary>
+  disableClearLastAction: MadSignal<boolean>
+}) {
+  opts.gameIsPlaying.set(!opts.gameIsPlaying.get())
+
+  const statAction = STATS_MATCH_ACTIONS.find(
+    candidate => candidate.name === 'gameStop',
+  )
+  if (!statAction) {
+    throw new Error('Unable to find stat action item: "gameStop"')
+  }
+  registerStat({
+    playerId: null,
+    statAction,
+    match: opts.match,
+    statSummary: opts.statSummary,
+    setStatSummary: opts.setStatSummary,
+    disableClearLastAction: opts.disableClearLastAction,
+  })
+}
+
+function renderPlayerBench(opts: {
   player: Player | null
   playersInTheFive: MadSignal<Array<string>>
   match: Match | null
@@ -199,7 +226,7 @@ function renderPlayerBench(options: {
   setStatSummary: SetStoreFunction<StatMatchSummary>
   disableClearLastAction: MadSignal<boolean>
 }) {
-  if (!options || !options.player) {
+  if (!opts || !opts.player) {
     return (
       <button type="button" class="btn btn-error btn-disabled w-full">
         Joueur non trouvé
@@ -207,8 +234,8 @@ function renderPlayerBench(options: {
     )
   }
 
-  const playerStats = options.statSummary.players.find(
-    stat => stat.playerId === options.player?.id,
+  const playerStats = opts.statSummary.players.find(
+    stat => stat.playerId === opts.player?.id,
   )
 
   return (
@@ -220,12 +247,12 @@ function renderPlayerBench(options: {
             class="btn btn-primary"
             onClick={() => {
               getInFromPlayground({
-                playerId: options.player?.id || '',
-                playersInTheFive: options.playersInTheFive,
-                match: options.match,
-                statSummary: options.statSummary,
-                setStatSummary: options.setStatSummary,
-                disableClearLastAction: options.disableClearLastAction,
+                playerId: opts.player?.id || '',
+                playersInTheFive: opts.playersInTheFive,
+                match: opts.match,
+                statSummary: opts.statSummary,
+                setStatSummary: opts.setStatSummary,
+                disableClearLastAction: opts.disableClearLastAction,
               })
             }}
           >
@@ -237,13 +264,11 @@ function renderPlayerBench(options: {
           <div class="flex items-center">
             <User class="inline-block flex-none" size={28} />
             <div class="inline-block text-3xl flex-auto">
-              {options.player.jersayNumber}
+              {opts.player.jersayNumber}
             </div>
           </div>
           <div class="text-center text-xl">
-            {options.player.nicName
-              ? options.player.nicName
-              : options.player.firstName}
+            {opts.player.nicName ? opts.player.nicName : opts.player.firstName}
           </div>
         </div>
         <div class="inline-block flex-auto">
@@ -264,15 +289,16 @@ function renderPlayerBench(options: {
   )
 }
 
-function renderPlayerButton(options: {
+function renderPlayerButton(opts: {
   player: Player | null
   match: Match | null
   playerInTheFive: MadSignal<Array<string>>
   statSummary: StatMatchSummary
   setStatSummary: SetStoreFunction<StatMatchSummary>
   disableClearLastAction: MadSignal<boolean>
+  matchIsPlaying: MadSignal<boolean>
 }) {
-  if (!options || !options.player) {
+  if (!opts || !opts.player) {
     return (
       <button type="button" class="btn btn-error btn-disabled w-full">
         Joueur non trouvé
@@ -280,7 +306,7 @@ function renderPlayerButton(options: {
     )
   }
 
-  if (!options.match) {
+  if (!opts.match) {
     return (
       <button type="button" class="btn btn-error btn-disabled w-full">
         Match non trouvé
@@ -288,8 +314,8 @@ function renderPlayerButton(options: {
     )
   }
 
-  const playerStats = options.statSummary.players.find(
-    stat => stat.playerId === options.player?.id,
+  const playerStats = opts.statSummary.players.find(
+    stat => stat.playerId === opts.player?.id,
   )
 
   return (
@@ -301,12 +327,12 @@ function renderPlayerButton(options: {
             class="btn btn-primary"
             onClick={() => {
               getOutFromPlayground({
-                playerId: options.player?.id || '',
-                playersInTheFive: options.playerInTheFive,
-                match: options.match,
-                statSummary: options.statSummary,
-                setStatSummary: options.setStatSummary,
-                disableClearLastAction: options.disableClearLastAction,
+                playerId: opts.player?.id || '',
+                playersInTheFive: opts.playerInTheFive,
+                match: opts.match,
+                statSummary: opts.statSummary,
+                setStatSummary: opts.setStatSummary,
+                disableClearLastAction: opts.disableClearLastAction,
               })
             }}
           >
@@ -318,44 +344,49 @@ function renderPlayerButton(options: {
           <div class="flex items-center">
             <User class="inline-block flex-none" size={28} />
             <div class="inline-block text-3xl flex-auto">
-              {options.player.jersayNumber}
+              {opts.player.jersayNumber}
             </div>
           </div>
           <div class="text-center text-xl">
-            {options.player.nicName
-              ? options.player.nicName
-              : options.player.firstName}
+            {opts.player.nicName ? opts.player.nicName : opts.player.firstName}
           </div>
         </div>
         <For each={STATS_MATCH_ACTIONS}>
           {statAction => (
-            <Show when={statAction.inGameAction}>
+            <Show
+              when={
+                !statAction.secondaryAction &&
+                (statAction.everyTimeAction ||
+                  (opts.matchIsPlaying.get() && statAction.inGameAction) ||
+                  (!opts.matchIsPlaying.get() && !statAction.inGameAction))
+              }
+            >
               <div class="flex-none">
                 <button
                   type="button"
                   class={`btn btn-${statAction.type}`}
                   onClick={() => {
                     registerStat({
-                      playerId: options.player?.id || null,
+                      playerId: opts.player?.id || null,
                       statAction,
-                      match: options.match,
-                      statSummary: options.statSummary,
-                      setStatSummary: options.setStatSummary,
-                      disableClearLastAction: options.disableClearLastAction,
+                      match: opts.match,
+                      statSummary: opts.statSummary,
+                      setStatSummary: opts.setStatSummary,
+                      disableClearLastAction: opts.disableClearLastAction,
                     })
                   }}
                   onKeyDown={() => {
                     registerStat({
-                      playerId: options.player?.id || null,
+                      playerId: opts.player?.id || null,
                       statAction,
-                      match: options.match,
-                      statSummary: options.statSummary,
-                      setStatSummary: options.setStatSummary,
-                      disableClearLastAction: options.disableClearLastAction,
+                      match: opts.match,
+                      statSummary: opts.statSummary,
+                      setStatSummary: opts.setStatSummary,
+                      disableClearLastAction: opts.disableClearLastAction,
                     })
                   }}
                 >
-                  {statAction.icon()}
+                  {statAction.icon(`${statAction.type}-content`)}
                 </button>
                 <div class="text-xs text-center">{statAction.label1}</div>
               </div>
@@ -599,15 +630,16 @@ function renderTheTeamBench(options: {
   )
 }
 
-function renderTheTeamFive(options: {
+function renderTheTeamFive(opts: {
   sortedPlayers: Array<Player | null>
   playersInTheFive: MadSignal<Array<string>>
   match: Match | null
   statSummary: StatMatchSummary
   setStatSummary: SetStoreFunction<StatMatchSummary>
   disableClearLastAction: MadSignal<boolean>
+  matchIsPlaying: MadSignal<boolean>
 }) {
-  if (options.playersInTheFive.get().length < 1) {
+  if (opts.playersInTheFive.get().length < 1) {
     return (
       <div class="alert alert-info">
         <MessageSquareWarning size={42} />
@@ -616,18 +648,17 @@ function renderTheTeamFive(options: {
     )
   }
   return (
-    <For each={options.sortedPlayers}>
+    <For each={opts.sortedPlayers}>
       {player => (
-        <Show
-          when={player && options.playersInTheFive.get().includes(player.id)}
-        >
+        <Show when={player && opts.playersInTheFive.get().includes(player.id)}>
           {renderPlayerButton({
             player,
-            match: options.match,
-            playerInTheFive: options.playersInTheFive,
-            setStatSummary: options.setStatSummary,
-            disableClearLastAction: options.disableClearLastAction,
-            statSummary: options.statSummary,
+            match: opts.match,
+            playerInTheFive: opts.playersInTheFive,
+            setStatSummary: opts.setStatSummary,
+            disableClearLastAction: opts.disableClearLastAction,
+            statSummary: opts.statSummary,
+            matchIsPlaying: opts.matchIsPlaying,
           })}
         </Show>
       )}
@@ -646,6 +677,7 @@ export default function BsMatch(props: BsMatchProps) {
   const team = orchestrator.getTeam(match?.teamId)
   const sortedPlayers = orchestrator.getJerseySortedPlayers(team?.playerIds)
   const playersInTheFive = new MadSignal(match?.playersInTheFive || [])
+  const matchIsPlaying = new MadSignal(false)
 
   return (
     <div class="w-full">
@@ -671,6 +703,7 @@ export default function BsMatch(props: BsMatchProps) {
               setStatSummary,
               disableClearLastAction,
               statSummary,
+              matchIsPlaying,
             })}
 
             <hr />
@@ -685,7 +718,14 @@ export default function BsMatch(props: BsMatchProps) {
                 </div>
                 <For each={STATS_MATCH_ACTIONS}>
                   {statAction => (
-                    <Show when={statAction.opponentMatter}>
+                    <Show
+                      when={
+                        !statAction.secondaryAction &&
+                        statAction.opponentMatter &&
+                        ((matchIsPlaying.get() && statAction.inGameAction) ||
+                          (!matchIsPlaying.get() && !statAction.inGameAction))
+                      }
+                    >
                       <div class="flex-none">
                         <button
                           type="button"
@@ -711,7 +751,7 @@ export default function BsMatch(props: BsMatchProps) {
                             })
                           }}
                         >
-                          {statAction.icon()}
+                          {statAction.icon(`${statAction.type}-content`)}
                         </button>
                         <div class="text-xs text-center">
                           {statAction.label1}
@@ -737,6 +777,36 @@ export default function BsMatch(props: BsMatchProps) {
               </div>
             </div>
 
+            <button
+              type="button"
+              class={`btn btn-lg btn-${matchIsPlaying.get() ? 'error' : 'success'} text-xl w-full`}
+              onClick={() =>
+                stopStartTheGame({
+                  gameIsPlaying: matchIsPlaying,
+                  match,
+                  setStatSummary,
+                  statSummary,
+                  disableClearLastAction,
+                })
+              }
+            >
+              <Show when={matchIsPlaying.get()}>
+                {
+                  <>
+                    <CirclePause size={32} />
+                    Arrêt du jeu
+                  </>
+                }
+              </Show>
+              <Show when={!matchIsPlaying.get()}>
+                {
+                  <>
+                    <CirclePlay size={32} />
+                    Reprise du jeu
+                  </>
+                }
+              </Show>
+            </button>
             <hr />
 
             <button
@@ -812,7 +882,7 @@ export default function BsMatch(props: BsMatchProps) {
                     closeActionMode(playerOnAction)
                   }}
                 >
-                  {item.icon()}
+                  {item.icon(`${item.type}-content`)}
                   <span class="text-2xl">{item.label1}</span>{' '}
                   <span>{item.label2}</span>
                 </button>

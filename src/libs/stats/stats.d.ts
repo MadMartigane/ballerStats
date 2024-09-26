@@ -1,4 +1,5 @@
 import type { JSXElement } from 'solid-js'
+import type { DaisySize, DaisyVariant } from '../daisy'
 
 export type StatMatchActionItemType = 'success' | 'error' | 'secondary'
 
@@ -13,6 +14,8 @@ export type StatMatchActionItemName =
   | 'turnover'
   | 'fiveIn'
   | 'fiveOut'
+  | 'gameStop'
+  | 'gameStart'
 
 export type StatMatchActionItem = {
   name: StatMatchActionItemName
@@ -20,9 +23,11 @@ export type StatMatchActionItem = {
   inGameAction: boolean
   opponentMatter: boolean
   value: number
-  icon: () => JSXElement
+  icon: (variant?: DaisyVariant, size?: DaisySize) => JSXElement
   label1?: string | JSXElement
   label2?: string | JSXElement
+  secondaryAction?: boolean
+  everyTimeAction?: boolean
 }
 
 export type StatMatchSummaryPlayer = {

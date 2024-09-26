@@ -7,7 +7,7 @@ export type MatchStatLogEntry = Pick<
   StatMatchActionItem,
   'name' | 'type' | 'value'
 > & {
-  playerId: string
+  playerId: string | null
   timestamp: number
 }
 
