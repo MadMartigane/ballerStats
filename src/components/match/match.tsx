@@ -503,6 +503,11 @@ function renderStatGrid(statSummary: StatMatchSummary) {
           <tbody>
             <For each={statSummary.players}>
               {playerStats => {
+                /* Is a global stat like stop and start game, not a player stat */
+                if (!playerStats.playerId) {
+                  return null
+                }
+
                 const player = orchestrator.getPlayer(playerStats.playerId)
 
                 return (
