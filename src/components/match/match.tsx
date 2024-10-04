@@ -9,7 +9,6 @@ import {
   Eraser,
   Meh,
   MessageSquareWarning,
-  MoveDown,
   Shirt,
   TriangleAlert,
   User,
@@ -33,14 +32,14 @@ import BsScoreCard from '../score-card'
 import type { BsMatchProps } from './match.d'
 
 function openActionMode(
-  playerId: string,
-  actionMode: MadSignal<string | null>,
+  playerId: string | undefined,
+  playerOnAction: MadSignal<string | null>,
 ) {
-  actionMode.set(playerId)
+  playerOnAction.set(playerId || null)
 }
 
-function closeActionMode(actionMode: MadSignal<string | null>) {
-  actionMode.set(null)
+function closeActionMode(playerOnAction: MadSignal<string | null>) {
+  playerOnAction.set(null)
 }
 
 function registerStat(options: {
@@ -260,29 +259,24 @@ function renderPlayerBench(opts: {
           </button>
           <div class="text-xs text-center">Rentrée</div>
         </div>
-        <div class="inline-block flex-auto">
-          <div class="flex items-center">
-            <User class="inline-block flex-none" size={28} />
-            <div class="inline-block text-3xl flex-auto">
-              {opts.player.jersayNumber}
-            </div>
-          </div>
-          <div class="text-center text-xl">
-            {opts.player.nicName ? opts.player.nicName : opts.player.firstName}
+
+        <div class="inline-block flex-none text-center text-3xl">
+          <User class="inline-block flex-none" size={28} />
+          <div class="inline-block text-3xl flex-auto">
+            {opts.player.jersayNumber}
           </div>
         </div>
-        <div class="inline-block flex-auto">
-          <div>
-            <span class="inline-block w-5 text-success text-xl">
-              {playerStats?.scores.total || 0}
-            </span>
-            <span class="inline-block w-5 text-accent-content text-xl">
-              {playerStats?.rebonds.total || 0}
-            </span>
-            <span class="inline-block w-5 text-warning text-xl">
-              {playerStats?.fouls || 0}
-            </span>
+
+        <div class="inline-block flex-auto text-center text-3xl">
+          {opts.player.nicName ? opts.player.nicName : opts.player.firstName}
+        </div>
+
+        <div class="flex flex-col text-center w-8 bg-slate-400/40 rounded">
+          <div class="text-success">{playerStats?.scores.total || 0}</div>
+          <div class="text-accent-content">
+            {playerStats?.rebonds.total || 0}
           </div>
+          <div class="text-error">{playerStats?.fouls || 0}</div>
         </div>
       </div>
     </div>
@@ -297,6 +291,7 @@ function renderPlayerButton(opts: {
   setStatSummary: SetStoreFunction<StatMatchSummary>
   disableClearLastAction: MadSignal<boolean>
   matchIsPlaying: MadSignal<boolean>
+  playerOnAction: MadSignal<string | null>
 }) {
   if (!opts || !opts.player) {
     return (
@@ -361,7 +356,7 @@ function renderPlayerButton(opts: {
                   (!opts.matchIsPlaying.get() && !statAction.inGameAction))
               }
             >
-              <div class="flex-none">
+              <div class="flex-none hidden md:block">
                 <button
                   type="button"
                   class={`btn btn-${statAction.type}`}
@@ -394,18 +389,24 @@ function renderPlayerButton(opts: {
           )}
         </For>
 
-        <div class="inline-block">
-          <div>
-            <span class="inline-block w-5 text-success text-xl">
-              {playerStats?.scores.total || 0}
-            </span>
-            <span class="inline-block w-5 text-accent-content text-xl">
-              {playerStats?.rebonds.total || 0}
-            </span>
-            <span class="inline-block w-5 text-warning text-xl">
-              {playerStats?.fouls || 0}
-            </span>
+        <div class="inline-block md:hidden">
+          <button
+            class="btn w-32"
+            type="button"
+            onClick={() => {
+              openActionMode(opts.player?.id, opts.playerOnAction)
+            }}
+          >
+            Stats !
+          </button>
+        </div>
+
+        <div class="flex flex-col text-center w-8 bg-slate-400/50 rounded">
+          <div class="text-success">{playerStats?.scores.total || 0}</div>
+          <div class="text-accent-content">
+            {playerStats?.rebonds.total || 0}
           </div>
+          <div class="text-error">{playerStats?.fouls || 0}</div>
         </div>
       </div>
     </div>
@@ -413,7 +414,10 @@ function renderPlayerButton(opts: {
 }
 
 function renderPlayerHeader(playerId: string | null) {
-  const player = orchestrator.getPlayer(playerId)
+  const player =
+    playerId === TEAM_OPPONENT_ID
+      ? { nicName: 'Adversaire', firstName: '', jersayNumber: 'XX' }
+      : orchestrator.getPlayer(playerId)
 
   return (
     <div class="w-full my-2 p-3 grid grid-cols-3 gap-3 bg-neutral text-neutral-content rounded">
@@ -643,6 +647,7 @@ function renderTheTeamFive(opts: {
   setStatSummary: SetStoreFunction<StatMatchSummary>
   disableClearLastAction: MadSignal<boolean>
   matchIsPlaying: MadSignal<boolean>
+  playerOnAction: MadSignal<string | null>
 }) {
   if (opts.playersInTheFive.get().length < 1) {
     return (
@@ -664,6 +669,7 @@ function renderTheTeamFive(opts: {
             disableClearLastAction: opts.disableClearLastAction,
             statSummary: opts.statSummary,
             matchIsPlaying: opts.matchIsPlaying,
+            playerOnAction: opts.playerOnAction,
           })}
         </Show>
       )}
@@ -709,6 +715,7 @@ export default function BsMatch(props: BsMatchProps) {
               disableClearLastAction,
               statSummary,
               matchIsPlaying,
+              playerOnAction,
             })}
 
             <hr />
@@ -731,7 +738,7 @@ export default function BsMatch(props: BsMatchProps) {
                           (!matchIsPlaying.get() && !statAction.inGameAction))
                       }
                     >
-                      <div class="flex-none">
+                      <div class="flex-none hidden md:inline-block">
                         <button
                           type="button"
                           class={`btn btn-${statAction.type}`}
@@ -766,18 +773,26 @@ export default function BsMatch(props: BsMatchProps) {
                   )}
                 </For>
 
-                <div class="inline-block">
-                  <div>
-                    <span class="inline-block w-5 text-success text-xl">
-                      {statSummary.opponentScore || 0}
-                    </span>
-                    <span class="inline-block w-5 text-accent-content text-xl">
-                      {statSummary.rebonds.opponentTotal || 0}
-                    </span>
-                    <span class="inline-block w-5 text-warning text-xl">
-                      {statSummary.opponentFouls || 0}
-                    </span>
+                <div class="inline-block md:hidden">
+                  <button
+                    class="btn w-32"
+                    type="button"
+                    onClick={() => {
+                      openActionMode(TEAM_OPPONENT_ID, playerOnAction)
+                    }}
+                  >
+                    Stats !
+                  </button>
+                </div>
+
+                <div class="flex flex-col text-center w-8 bg-slate-400/50 rounded">
+                  <div class="text-success">
+                    {statSummary.opponentScore || 0}
                   </div>
+                  <div class="text-accent-content">
+                    {statSummary.rebonds.opponentTotal || 0}
+                  </div>
+                  <div class="text-error">{statSummary.opponentFouls || 0}</div>
                 </div>
               </div>
             </div>
@@ -872,25 +887,26 @@ export default function BsMatch(props: BsMatchProps) {
           <div class="w-full py-2 grid grid-cols-2 gap-3">
             <For each={STATS_MATCH_ACTIONS}>
               {item => (
-                <button
-                  type="button"
-                  class={`btn btn-${item.type}`}
-                  onClick={() => {
-                    registerStat({
-                      playerId: playerOnAction.get(),
-                      statAction: item,
-                      match,
-                      statSummary,
-                      setStatSummary,
-                      disableClearLastAction,
-                    })
-                    closeActionMode(playerOnAction)
-                  }}
-                >
-                  {item.icon(`${item.type}-content`)}
-                  <span class="text-2xl">{item.label1}</span>{' '}
-                  <span>{item.label2}</span>
-                </button>
+                <Show when={!item.secondaryAction}>
+                  <button
+                    type="button"
+                    class={`btn btn-${item.type}`}
+                    onClick={() => {
+                      registerStat({
+                        playerId: playerOnAction.get(),
+                        statAction: item,
+                        match,
+                        statSummary,
+                        setStatSummary,
+                        disableClearLastAction,
+                      })
+                      closeActionMode(playerOnAction)
+                    }}
+                  >
+                    {item.icon(`${item.type}-content`)}
+                    <span class="text-2xl">{item.label1}</span>{' '}
+                  </button>
+                </Show>
               )}
             </For>
           </div>
