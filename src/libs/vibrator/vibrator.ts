@@ -1,13 +1,11 @@
-/*
-import { ThemeVibration } from './vibrator.d'
+import type { ThemeVibration } from './vibrator.d'
 
-export const themeVibration: { [theme: ThemeVibration]: Array<number> } = {
-  single: [200],
-  double: [200, 100, 200],
+export const themeVibration: { [key in ThemeVibration]: Array<number> } = {
+  single: [100],
+  double: [100, 50, 100],
   long: [400]
 }
-*/
 
-export function vibrate() {
-  navigator.vibrate(200)
+export function vibrate(theme: ThemeVibration = 'single') {
+  navigator.vibrate(themeVibration[theme])
 }
