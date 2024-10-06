@@ -53,16 +53,13 @@ export default class Player {
   }
 
   public get isRegisterable() {
-    const score = Object.keys(scoreFields).reduce(
-      (previousScore: number, field: string) => {
-        if (scoreFields[field].isSet(this)) {
-          return previousScore + scoreFields[field].score
-        }
+    const score = Object.keys(scoreFields).reduce((previousScore: number, field: string) => {
+      if (scoreFields[field].isSet(this)) {
+        return previousScore + scoreFields[field].score
+      }
 
-        return previousScore
-      },
-      0,
-    )
+      return previousScore
+    }, 0)
 
     return score >= minimalSoreToBeRegisterable
   }

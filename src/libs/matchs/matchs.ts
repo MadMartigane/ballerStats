@@ -39,9 +39,7 @@ export default class Matchs {
   }
 
   public updateMatch(newMatch: Match) {
-    const oldMatch = this.#matchs.find(
-      (currentMatch) => currentMatch.id === newMatch.id,
-    )
+    const oldMatch = this.#matchs.find((currentMatch) => currentMatch.id === newMatch.id)
     if (!oldMatch) {
       throw new Error(
         `[BsMatchs.updateMatch()] The match id ${newMatch.id} doesn't exist, Please use .add() method instead.`,
@@ -58,9 +56,7 @@ export default class Matchs {
 
   public add(newMatch: Match) {
     if (!newMatch.isRegisterable) {
-      throw new Error(
-        `[BsMatchs.add()] The match id ${newMatch.id} is not registerable, Please complete the data.`,
-      )
+      throw new Error(`[BsMatchs.add()] The match id ${newMatch.id} is not registerable, Please complete the data.`)
     }
 
     const alreadyRegisteredMatch = this.getMatch(newMatch)
@@ -75,14 +71,10 @@ export default class Matchs {
   }
 
   public remove(match: Match) {
-    const idx = this.#matchs.findIndex(
-      (candidate: Match) => candidate.id === match.id,
-    )
+    const idx = this.#matchs.findIndex((candidate: Match) => candidate.id === match.id)
 
     if (idx === -1) {
-      throw new Error(
-        `[BsMatchs.remove()] The match id ${match.id} not found, Unable to remove it.`,
-      )
+      throw new Error(`[BsMatchs.remove()] The match id ${match.id} not found, Unable to remove it.`)
     }
 
     this.#matchs.splice(idx, 1)

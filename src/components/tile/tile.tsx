@@ -2,11 +2,7 @@ import { Info } from 'lucide-solid'
 import { Show } from 'solid-js'
 import type { BsTileProps } from './tile.d'
 
-function onClick(
-  callback?: (
-    event?: MouseEvent & { currentTarget: HTMLDivElement; target: Element },
-  ) => void,
-) {
+function onClick(callback?: (event?: MouseEvent & { currentTarget: HTMLDivElement; target: Element }) => void) {
   if (callback) {
     callback()
   }

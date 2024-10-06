@@ -1,10 +1,5 @@
 import { clone, getUniqId } from '../utils'
-import type {
-  MatchRawData,
-  MatchStatLogEntry,
-  MatchStatus,
-  MatchType,
-} from './match.d'
+import type { MatchRawData, MatchStatLogEntry, MatchStatus, MatchType } from './match.d'
 
 const defaultType: MatchType = 'home'
 

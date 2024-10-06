@@ -18,9 +18,7 @@ export async function initTheme() {
     throw new Error('[daisy::initTheme()] unable to find THE html element.')
   }
 
-  const isSystemPreferDark = window.matchMedia(
-    '(prefers-color-scheme: dark)',
-  ).matches
+  const isSystemPreferDark = window.matchMedia('(prefers-color-scheme: dark)').matches
   const storedPreference = localStorage.getItem(DS_PREF_THEME_STORAGE_KEY)
 
   if (!storedPreference || storedPreference === THEME_AUTO_KEY) {

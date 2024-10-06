@@ -238,10 +238,7 @@ export default function BsMatchs() {
   return (
     <div>
       <Show when={!isAddingMatch.get()}>
-        <Show
-          when={(matchLength.get() || 0) > 0}
-          fallback={renderMatchFallback()}
-        >
+        <Show when={(matchLength.get() || 0) > 0} fallback={renderMatchFallback()}>
           <div class="flex flex-wrap gap-4 justify-stretch">
             <For each={matchs}>
               {(match) => (

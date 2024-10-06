@@ -8,7 +8,5 @@ export type BsTileProps = {
   info?: JSXElement
   body?: JSXElement | Array<JSXElement>
   footer?: JSXElement | Array<JSXElement>
-  onClick?: (
-    event?: MouseEvent & { currentTarget: HTMLDivElement; target: Element },
-  ) => void
+  onClick?: (event?: MouseEvent & { currentTarget: HTMLDivElement; target: Element }) => void
 }

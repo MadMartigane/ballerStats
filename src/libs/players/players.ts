@@ -15,9 +15,7 @@ export default class Players {
   }
 
   private getPlayer(newPlayer: Player) {
-    return this.#players.find(
-      (currentPlayer) => currentPlayer.id === newPlayer.id,
-    )
+    return this.#players.find((currentPlayer) => currentPlayer.id === newPlayer.id)
   }
 
   public get players(): Array<Player> {
@@ -36,16 +34,12 @@ export default class Players {
       return
     }
 
-    this.#players = data.map(
-      (playerData: PlayerRawData) => new Player(playerData),
-    )
+    this.#players = data.map((playerData: PlayerRawData) => new Player(playerData))
     this.throwUpdatedPlayerEvent()
   }
 
   public updatePlayer(newPlayer: Player) {
-    const oldPlayer = this.#players.find(
-      (currentPlayer) => currentPlayer.id === newPlayer.id,
-    )
+    const oldPlayer = this.#players.find((currentPlayer) => currentPlayer.id === newPlayer.id)
     if (!oldPlayer) {
       throw new Error(
         `[BsPlayers.updatePlayer()] The player id ${newPlayer.id} doesn't exist, Please use .add() method instead.`,
@@ -62,9 +56,7 @@ export default class Players {
 
   public add(newPlayer: Player) {
     if (!newPlayer.isRegisterable) {
-      throw new Error(
-        `[BsPlayers.add()] The player id ${newPlayer.id} is not registerable, Please complete the data.`,
-      )
+      throw new Error(`[BsPlayers.add()] The player id ${newPlayer.id} is not registerable, Please complete the data.`)
     }
 
     const alreadyRegisteredPlayer = this.getPlayer(newPlayer)
@@ -79,14 +71,10 @@ export default class Players {
   }
 
   public remove(player: Player) {
-    const idx = this.#players.findIndex(
-      (candidate: Player) => candidate.id === player.id,
-    )
+    const idx = this.#players.findIndex((candidate: Player) => candidate.id === player.id)
 
     if (idx === -1) {
-      throw new Error(
-        `[BsPlayers.remove()] The player id ${player.id} not found, Unable to remove it.`,
-      )
+      throw new Error(`[BsPlayers.remove()] The player id ${player.id} not found, Unable to remove it.`)
     }
 
     this.#players.splice(idx, 1)

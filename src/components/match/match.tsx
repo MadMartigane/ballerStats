@@ -28,6 +28,7 @@ import {
 import { getStatSummary } from '../../libs/stats/stats-util'
 import { TEAM_OPPONENT_ID } from '../../libs/team/team'
 import { confirmAction, goTo } from '../../libs/utils'
+import { vibrate } from '../../libs/vibrator'
 import BsScoreCard from '../score-card'
 import type { BsMatchProps } from './match.d'
 
@@ -132,14 +133,14 @@ function getOutFromPlayground(options: {
   }
 
   options.playersInTheFive.set(
-    inTheFive.filter((candidateId) => candidateId !== options.playerId),
+    inTheFive.filter(candidateId => candidateId !== options.playerId),
   )
 
   options.match.update({
     playersInTheFive: [...options.playersInTheFive.get()],
   })
   const statAction = STATS_MATCH_ACTIONS.find(
-    (candidate) => candidate.name === 'fiveOut',
+    candidate => candidate.name === 'fiveOut',
   )
   if (!statAction) {
     throw new Error('Unable to find stat action item: "fiveOut"')
@@ -176,7 +177,7 @@ function getInFromPlayground(options: {
   options.match.update({ playersInTheFive: [...newFive] })
 
   const statAction = STATS_MATCH_ACTIONS.find(
-    (candidate) => candidate.name === 'fiveIn',
+    candidate => candidate.name === 'fiveIn',
   )
   if (!statAction) {
     throw new Error('Unable to find stat action item: "fiveIn"')
@@ -202,7 +203,7 @@ function stopStartTheGame(opts: {
   opts.gameIsPlaying.set(!opts.gameIsPlaying.get())
 
   const statAction = STATS_MATCH_ACTIONS.find(
-    (candidate) => candidate.name === 'gameStop',
+    candidate => candidate.name === 'gameStop',
   )
   if (!statAction) {
     throw new Error('Unable to find stat action item: "gameStop"')
@@ -234,7 +235,7 @@ function renderPlayerBench(opts: {
   }
 
   const playerStats = opts.statSummary.players.find(
-    (stat) => stat.playerId === opts.player?.id,
+    stat => stat.playerId === opts.player?.id,
   )
 
   return (
@@ -310,7 +311,7 @@ function renderPlayerButton(opts: {
   }
 
   const playerStats = opts.statSummary.players.find(
-    (stat) => stat.playerId === opts.player?.id,
+    stat => stat.playerId === opts.player?.id,
   )
 
   return (
@@ -347,7 +348,7 @@ function renderPlayerButton(opts: {
           </div>
         </div>
         <For each={STATS_MATCH_ACTIONS}>
-          {(statAction) => (
+          {statAction => (
             <Show
               when={
                 !statAction.secondaryAction &&
@@ -369,6 +370,8 @@ function renderPlayerButton(opts: {
                       setStatSummary: opts.setStatSummary,
                       disableClearLastAction: opts.disableClearLastAction,
                     })
+
+                    vibrate()
                   }}
                   onKeyDown={() => {
                     registerStat({
@@ -379,6 +382,8 @@ function renderPlayerButton(opts: {
                       setStatSummary: opts.setStatSummary,
                       disableClearLastAction: opts.disableClearLastAction,
                     })
+
+                    vibrate()
                   }}
                 >
                   {statAction.icon(`${statAction.type}-content`)}
@@ -446,9 +451,7 @@ function renderTeamTotals(statSummary: StatMatchSummary) {
           >
             {statSummary.teamScore}
           </div>
-          <div class="stat-desc">
-            {`Score adverse: ${statSummary.opponentScore}`}
-          </div>
+          <div class="stat-desc">{`Score adverse: ${statSummary.opponentScore}`}</div>
         </div>
 
         <div class="stat place-items-center">
@@ -458,9 +461,7 @@ function renderTeamTotals(statSummary: StatMatchSummary) {
           >
             {statSummary.teamFouls}
           </div>
-          <div class="stat-desc">
-            {`Fautes adverse: ${statSummary.opponentFouls}`}
-          </div>
+          <div class="stat-desc">{`Fautes adverse: ${statSummary.opponentFouls}`}</div>
         </div>
 
         <div class="stat place-items-center">
@@ -506,7 +507,7 @@ function renderStatGrid(statSummary: StatMatchSummary) {
           </thead>
           <tbody>
             <For each={statSummary.players}>
-              {(playerStats) => {
+              {playerStats => {
                 /* Is a global stat like stop and start game, not a player stat */
                 if (!playerStats.playerId) {
                   return null
@@ -621,7 +622,7 @@ function renderTheTeamBench(options: {
 
   return (
     <For each={options.sortedPlayers}>
-      {(player) => (
+      {player => (
         <Show
           when={player && !options.playersInTheFive.get().includes(player.id)}
         >
@@ -659,7 +660,7 @@ function renderTheTeamFive(opts: {
   }
   return (
     <For each={opts.sortedPlayers}>
-      {(player) => (
+      {player => (
         <Show when={player && opts.playersInTheFive.get().includes(player.id)}>
           {renderPlayerButton({
             player,
@@ -729,7 +730,7 @@ export default function BsMatch(props: BsMatchProps) {
                   <div class="text-center text-xl">Équipe adverse</div>
                 </div>
                 <For each={STATS_MATCH_ACTIONS}>
-                  {(statAction) => (
+                  {statAction => (
                     <Show
                       when={
                         !statAction.secondaryAction &&
@@ -886,7 +887,7 @@ export default function BsMatch(props: BsMatchProps) {
           {renderPlayerHeader(playerOnAction.get())}
           <div class="w-full py-2 grid grid-cols-2 gap-3">
             <For each={STATS_MATCH_ACTIONS}>
-              {(item) => (
+              {item => (
                 <Show when={!item.secondaryAction}>
                   <button
                     type="button"
@@ -920,7 +921,7 @@ export default function BsMatch(props: BsMatchProps) {
       <button
         type="button"
         class="btn btn-outline w-full"
-        onClick={(event) => {
+        onClick={event => {
           event.stopPropagation()
 
           if (match?.status !== 'locked' && isStatMode.get()) {

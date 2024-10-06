@@ -1,14 +1,7 @@
 import bsEventBus from '../event-bus'
 import Matchs from '../matchs'
 import Players from '../players'
-import {
-  getStoredMatchs,
-  getStoredPlayers,
-  getStoredTeams,
-  storeMatchs,
-  storePlayers,
-  storeTeams,
-} from '../store'
+import { getStoredMatchs, getStoredPlayers, getStoredTeams, storeMatchs, storePlayers, storeTeams } from '../store'
 import Teams from '../teams'
 import { mount, unmount } from '../utils'
 
@@ -99,10 +92,7 @@ export class Orchestrator {
     }
 
     // TODO: add lastRecord (timestamp) in the player and compare each records
-    if (
-      !this.#lastPlayersRecrod ||
-      stored.lastRecord > this.#lastPlayersRecrod
-    ) {
+    if (!this.#lastPlayersRecrod || stored.lastRecord > this.#lastPlayersRecrod) {
       this.#players = new Players(stored.data)
       this.throwPlayersUpdatedEvent()
     }
@@ -179,9 +169,7 @@ export class Orchestrator {
       return null
     }
 
-    return (
-      this.#players.players.find((candidate) => candidate.id === id) || null
-    )
+    return this.#players.players.find((candidate) => candidate.id === id) || null
   }
 
   public getTeam(id?: string | null) {
@@ -227,11 +215,7 @@ export class Orchestrator {
 
     const players = playerIds.map((playerId) => this.getPlayer(playerId))
 
-    return players.sort(
-      (a, b) =>
-        Number.parseInt(a?.jersayNumber || '0') -
-        Number.parseInt(b?.jersayNumber || '0'),
-    )
+    return players.sort((a, b) => Number.parseInt(a?.jersayNumber || '0') - Number.parseInt(b?.jersayNumber || '0'))
   }
 
   public exportDB() {

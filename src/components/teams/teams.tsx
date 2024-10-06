@@ -84,9 +84,7 @@ function updateCurrentTeamPlayerIds(playerIds: string[]) {
 function getSelectDataFromPlayer(players: Player[]) {
   return orchestrator.Players.players.map((player) => ({
     value: player.id,
-    label: player.nicName
-      ? player.nicName
-      : `${player.firstName} ${player.lastName}`,
+    label: player.nicName ? player.nicName : `${player.firstName} ${player.lastName}`,
     badge: renderPlayerBadge(player),
   }))
 }
@@ -128,9 +126,7 @@ function renderPlayerBadge(player: Player) {
     <>
       <span class="text-warning">{player.jersayNumber}</span>
       <div class="whitespace-nowrap text-base font-medium m-2">
-        {player.nicName
-          ? player.nicName
-          : `${player.firstName} ${player.lastName}`}
+        {player.nicName ? player.nicName : `${player.firstName} ${player.lastName}`}
       </div>
     </>
   )
@@ -201,10 +197,7 @@ export default function BsTeams() {
   return (
     <div>
       <Show when={!isAddingTeam.get()}>
-        <Show
-          when={(teamLength.get() || 0) > 0}
-          fallback={renderTeamFallback()}
-        >
+        <Show when={(teamLength.get() || 0) > 0} fallback={renderTeamFallback()}>
           <div class="flex flex-wrap gap-4 justify-stretch">
             <For each={teams}>
               {(team) => (

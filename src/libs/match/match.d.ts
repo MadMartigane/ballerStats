@@ -3,10 +3,7 @@ import type { StatMatchActionItem } from '../stats'
 export type MatchType = 'home' | 'outside'
 export type MatchStatus = 'locked' | 'unlocked'
 
-export type MatchStatLogEntry = Pick<
-  StatMatchActionItem,
-  'name' | 'type' | 'value'
-> & {
+export type MatchStatLogEntry = Pick<StatMatchActionItem, 'name' | 'type' | 'value'> & {
   playerId: string | null
   timestamp: number
 }

@@ -24,9 +24,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     label1: '2 pts',
     type: 'success',
     value: 2,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => (
-      <BsIconBasketballGoal variant={variant} size={size} />
-    ),
+    icon: (variant?: DaisyVariant, size?: DaisySize) => <BsIconBasketballGoal variant={variant} size={size} />,
   },
   {
     name: '2pts',
@@ -35,9 +33,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     label1: '2 pts',
     type: 'error',
     value: 0,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => (
-      <BsIconBasketballMissedGoal variant={variant} size={size} />
-    ),
+    icon: (variant?: DaisyVariant, size?: DaisySize) => <BsIconBasketballMissedGoal variant={variant} size={size} />,
   },
   {
     name: '3pts',
@@ -46,9 +42,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     label1: '3 pts',
     type: 'success',
     value: 3,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => (
-      <BsIconBasketballGoal variant={variant} size={size} />
-    ),
+    icon: (variant?: DaisyVariant, size?: DaisySize) => <BsIconBasketballGoal variant={variant} size={size} />,
   },
   {
     name: '3pts',
@@ -57,9 +51,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     label1: '3 pts',
     type: 'error',
     value: 0,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => (
-      <BsIconBasketballMissedGoal variant={variant} size={size} />
-    ),
+    icon: (variant?: DaisyVariant, size?: DaisySize) => <BsIconBasketballMissedGoal variant={variant} size={size} />,
   },
   {
     name: 'free-throw',
@@ -68,9 +60,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     label1: 'LF',
     type: 'success',
     value: 1,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => (
-      <BsIconBasketballGoal variant={variant} size={size} />
-    ),
+    icon: (variant?: DaisyVariant, size?: DaisySize) => <BsIconBasketballGoal variant={variant} size={size} />,
   },
   {
     name: 'free-throw',
@@ -80,9 +70,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     label2: 'Échec',
     type: 'error',
     value: 0,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => (
-      <BsIconBasketballMissedGoal variant={variant} size={size} />
-    ),
+    icon: (variant?: DaisyVariant, size?: DaisySize) => <BsIconBasketballMissedGoal variant={variant} size={size} />,
   },
   {
     name: 'offensive-rebond',
@@ -113,9 +101,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     type: 'error',
     value: 1,
     everyTimeAction: true,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => (
-      <CircleOff size={size} />
-    ),
+    icon: (variant?: DaisyVariant, size?: DaisySize) => <CircleOff size={size} />,
   },
   {
     name: 'foul',
@@ -143,9 +129,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     type: 'success',
     value: 0,
     secondaryAction: true,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => (
-      <ArrowLeftToLine size={size} />
-    ),
+    icon: (variant?: DaisyVariant, size?: DaisySize) => <ArrowLeftToLine size={size} />,
   },
   {
     name: 'fiveOut',
@@ -155,9 +139,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     type: 'secondary',
     value: 0,
     secondaryAction: true,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => (
-      <ArrowRightFromLine size={size} />
-    ),
+    icon: (variant?: DaisyVariant, size?: DaisySize) => <ArrowRightFromLine size={size} />,
   },
   {
     name: 'gameStop',
@@ -167,9 +149,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     type: 'secondary',
     value: 0,
     secondaryAction: true,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => (
-      <CirclePause size={size} />
-    ),
+    icon: (variant?: DaisyVariant, size?: DaisySize) => <CirclePause size={size} />,
   },
   {
     name: 'gameStart',
@@ -179,8 +159,6 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     type: 'secondary',
     value: 0,
     secondaryAction: true,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => (
-      <CirclePlay size={size} />
-    ),
+    icon: (variant?: DaisyVariant, size?: DaisySize) => <CirclePlay size={size} />,
   },
 ]

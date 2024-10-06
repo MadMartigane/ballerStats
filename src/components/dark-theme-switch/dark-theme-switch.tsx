@@ -4,13 +4,10 @@ import MadSignal from '../../libs/mad-signal'
 import { getShortId } from '../../libs/utils'
 
 function onThemeChange(event: Event) {
-  const target: HTMLSelectElement | null = (event.target ||
-    event.currentTarget) as HTMLSelectElement
+  const target: HTMLSelectElement | null = (event.target || event.currentTarget) as HTMLSelectElement
 
   if (!target) {
-    throw new Error(
-      '<DarkThemeSwitch::onThemeChange()> Unable to get the target of "onChage" event.',
-    )
+    throw new Error('<DarkThemeSwitch::onThemeChange()> Unable to get the target of "onChage" event.')
   }
 
   setTheme(target.value)
@@ -34,19 +31,13 @@ export default function BsDarkThemeSwitch() {
             onThemeChange(event)
           }}
         >
-          <option
-            value={THEME_AUTO_KEY}
-            selected={themeValue.get() === THEME_AUTO_KEY}
-          >
+          <option value={THEME_AUTO_KEY} selected={themeValue.get() === THEME_AUTO_KEY}>
             Auto (système)
           </option>
 
           <For each={Object.keys(THEMES)}>
             {(name) => (
-              <option
-                value={THEMES[name]}
-                selected={themeValue.get() === THEMES[name]}
-              >
+              <option value={THEMES[name]} selected={themeValue.get() === THEMES[name]}>
                 {name}
               </option>
             )}

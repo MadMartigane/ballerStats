@@ -52,9 +52,7 @@ export function BsMatchTypeBadge(props: BsMatchTypeProps) {
   }
 
   return (
-    <div
-      class={`badge badge-${type === 'home' ? 'success' : 'warning'} text-${size} py-4 px-2 rounded-md`}
-    >
+    <div class={`badge badge-${type === 'home' ? 'success' : 'warning'} text-${size} py-4 px-2 rounded-md`}>
       {type === 'home' ? '↗ Domicile' : '↖ Extérieur'}
     </div>
   )

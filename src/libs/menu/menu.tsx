@@ -2,14 +2,7 @@ import { lazy } from 'solid-js'
 import Home from '../../pages/home'
 import type { MenuEntry } from './menu.d'
 
-import {
-  BadgeAlert,
-  ChartScatter,
-  FileSliders,
-  MonitorDot,
-  User,
-  Users,
-} from 'lucide-solid'
+import { BadgeAlert, ChartScatter, FileSliders, MonitorDot, User, Users } from 'lucide-solid'
 import BsIconBasketballBall from '../../components/icons/basketball-ball'
 import BsIconBasketballPlayer from '../../components/icons/basketball-player'
 import type { DaisyVariant } from '../daisy'
@@ -42,9 +35,7 @@ export const NAVIGATION_MENU_ENTRIES: Array<MenuEntry> = [
   {
     path: '/players',
     label: 'Joueurs',
-    icon: (variant: DaisyVariant = 'neutral-content') => (
-      <BsIconBasketballPlayer variant={variant} />
-    ),
+    icon: (variant: DaisyVariant = 'neutral-content') => <BsIconBasketballPlayer variant={variant} />,
     component: lazy(() => import('../../pages/players')),
     isMenuEntry: true,
   },
@@ -58,9 +49,7 @@ export const NAVIGATION_MENU_ENTRIES: Array<MenuEntry> = [
   {
     path: '/match/:id',
     label: 'Match',
-    icon: (variant: DaisyVariant = 'neutral-content') => (
-      <BsIconBasketballBall variant={variant} />
-    ),
+    icon: (variant: DaisyVariant = 'neutral-content') => <BsIconBasketballBall variant={variant} />,
     component: lazy(() => import('../../pages/match')),
     isMenuEntry: false,
   },

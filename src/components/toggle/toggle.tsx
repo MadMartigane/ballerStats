@@ -1,9 +1,6 @@
 import type { BsToggleOnChangeEvent, BsToggleProps } from './toggle.d'
 
-function onChange(
-  event: BsToggleOnChangeEvent,
-  callback?: (value: boolean) => void,
-) {
+function onChange(event: BsToggleOnChangeEvent, callback?: (value: boolean) => void) {
   if (!callback) {
     return
   }

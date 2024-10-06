@@ -14,9 +14,7 @@ import BsPlayer from '../player'
 let isEditingNewPlayer = false
 const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
 const canAddPlayer: MadSignal<boolean> = new MadSignal(false)
-const playerLength: MadSignal<number> = new MadSignal(
-  orchestrator.Players.length,
-)
+const playerLength: MadSignal<number> = new MadSignal(orchestrator.Players.length)
 const [players, setPlayers] = createStore(orchestrator.Players.players)
 
 let currentPlayer: Player | null = null
@@ -199,10 +197,7 @@ export default function BsPlayers() {
   return (
     <div>
       <Show when={!isAddingPlayer.get()}>
-        <Show
-          when={(playerLength.get() || 0) > 0}
-          fallback={renderPlayerFallback()}
-        >
+        <Show when={(playerLength.get() || 0) > 0} fallback={renderPlayerFallback()}>
           <div class="flex flex-wrap gap-4 justify-stretch">
             <For each={players}>
               {(player) => (

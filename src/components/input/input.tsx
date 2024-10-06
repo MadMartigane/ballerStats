@@ -14,10 +14,7 @@ const defaultOptions: BsInputProps = {
   },
 }
 
-function onInput(
-  event: BsInputOnChangeEvent,
-  callback?: (value: string) => void,
-) {
+function onInput(event: BsInputOnChangeEvent, callback?: (value: string) => void) {
   if (debounceOnInput) {
     clearTimeout(debounceOnInput)
   }
@@ -28,10 +25,7 @@ function onInput(
   }, 300)
 }
 
-function onChange(
-  event: BsInputOnChangeEvent,
-  callback?: (value: string) => void,
-) {
+function onChange(event: BsInputOnChangeEvent, callback?: (value: string) => void) {
   if (!callback) {
     return
   }

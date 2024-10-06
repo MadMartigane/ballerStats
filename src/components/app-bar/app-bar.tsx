@@ -18,14 +18,10 @@ function isCurrentPath(candidatPath: string, currentPath: string | null) {
 }
 
 function renderMasterTitle(currentPath: string | null) {
-  let menuEntry = NAVIGATION_MENU_ENTRIES.find((entryCandidate) =>
-    isCurrentPath(entryCandidate.path, currentPath),
-  )
+  let menuEntry = NAVIGATION_MENU_ENTRIES.find((entryCandidate) => isCurrentPath(entryCandidate.path, currentPath))
 
   if (!menuEntry) {
-    menuEntry = NAVIGATION_MENU_ENTRIES.find(
-      (candidate) => candidate.path === '/*',
-    )
+    menuEntry = NAVIGATION_MENU_ENTRIES.find((candidate) => candidate.path === '/*')
   }
 
   if (!menuEntry) {
@@ -59,11 +55,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
             <div class="flex items-center">
               <div class="flex-shrink-0">
                 <a href="#/" aria-current="page">
-                  <img
-                    class="h-16 w-16"
-                    src={logoSmallUrl}
-                    alt="Baller stats logo"
-                  />
+                  <img class="h-16 w-16" src={logoSmallUrl} alt="Baller stats logo" />
                 </a>
               </div>
               <div class="hidden md:block">
@@ -236,17 +228,11 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                 }
               >
                 <span class="absolute -inset-0.5" />
-                <span class="sr-only">
-                  Ouverture menu principale, version mobile
-                </span>
+                <span class="sr-only">Ouverture menu principale, version mobile</span>
                 {/* Menu open: "hidden", Menu closed: "block" */}
-                <Menu
-                  class={`${isMainMenuOpen.get() ? 'hidden' : 'block'} h-6 w-6`}
-                />
+                <Menu class={`${isMainMenuOpen.get() ? 'hidden' : 'block'} h-6 w-6`} />
                 {/* Menu open: "block", Menu closed: "hidden" */}
-                <X
-                  class={`${isMainMenuOpen.get() ? 'block' : 'hidden'} h-6 w-6`}
-                />
+                <X class={`${isMainMenuOpen.get() ? 'block' : 'hidden'} h-6 w-6`} />
               </button>
             </div>
           </div>
@@ -295,9 +281,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
       </nav>
 
       <main>
-        <div class="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">
-          {props.children}
-        </div>
+        <div class="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">{props.children}</div>
       </main>
     </div>
   )

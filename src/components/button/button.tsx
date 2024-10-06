@@ -1,7 +1,4 @@
-import {
-  type PrelineComponentClasses,
-  getPrelineClass,
-} from '../../libs/preline'
+import { type PrelineComponentClasses, getPrelineClass } from '../../libs/preline'
 import type { BsButtonProps } from './button.d'
 
 const ANIMATION_TOKEN_CLASS = 'animate-ping'
@@ -80,9 +77,7 @@ function adaptor(options: BsButtonProps) {
     classes,
   )
 
-  newOptions.class = options.class
-    ? `${options.class} ${prelineClass}`
-    : prelineClass
+  newOptions.class = options.class ? `${options.class} ${prelineClass}` : prelineClass
 
   if (!newOptions.onClick) {
     newOptions.onClick = () => {

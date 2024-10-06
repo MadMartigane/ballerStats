@@ -38,9 +38,7 @@ export default class Teams {
   }
 
   public updateTeam(newTeam: Team) {
-    const oldTeam = this.#teams.find(
-      (currentTeam) => currentTeam.id === newTeam.id,
-    )
+    const oldTeam = this.#teams.find((currentTeam) => currentTeam.id === newTeam.id)
     if (!oldTeam) {
       throw new Error(
         `[BsTeams.updateTeam()] The team id ${newTeam.id} doesn't exist, Please use .add() method instead.`,
@@ -57,9 +55,7 @@ export default class Teams {
 
   public add(newTeam: Team) {
     if (!newTeam.isRegisterable) {
-      throw new Error(
-        `[BsTeams.add()] The team id ${newTeam.id} is not registerable, Please complete the data.`,
-      )
+      throw new Error(`[BsTeams.add()] The team id ${newTeam.id} is not registerable, Please complete the data.`)
     }
 
     const alreadyRegisteredTeam = this.getTeam(newTeam)
@@ -74,14 +70,10 @@ export default class Teams {
   }
 
   public remove(team: Team) {
-    const idx = this.#teams.findIndex(
-      (candidate: Team) => candidate.id === team.id,
-    )
+    const idx = this.#teams.findIndex((candidate: Team) => candidate.id === team.id)
 
     if (idx === -1) {
-      throw new Error(
-        `[BsTeams.remove()] The team id ${team.id} not found, Unable to remove it.`,
-      )
+      throw new Error(`[BsTeams.remove()] The team id ${team.id} not found, Unable to remove it.`)
     }
 
     this.#teams.splice(idx, 1)

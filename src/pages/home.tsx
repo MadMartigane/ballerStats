@@ -46,12 +46,7 @@ export default function Home() {
             }, 400)
           }}
         >
-          {bigCleanInProgress.get() ? (
-            <Loader class="animate-spin" />
-          ) : (
-            <Trash2 />
-          )}{' '}
-          BIG CLEAN
+          {bigCleanInProgress.get() ? <Loader class="animate-spin" /> : <Trash2 />} BIG CLEAN
         </button>
 
         <button
