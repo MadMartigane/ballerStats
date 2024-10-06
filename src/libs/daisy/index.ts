@@ -1,2 +1,2 @@
-export * from './daisy.d';
-export * from './daisy';
+export * from './daisy.d'
+export * from './daisy'

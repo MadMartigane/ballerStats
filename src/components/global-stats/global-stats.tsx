@@ -1,27 +1,27 @@
-import { Dot } from 'lucide-solid';
-import bsEventBus from '../../libs/event-bus';
-import MadSignal from '../../libs/mad-signal';
-import orchestrator from '../../libs/orchestrator';
+import { Dot } from 'lucide-solid'
+import bsEventBus from '../../libs/event-bus'
+import MadSignal from '../../libs/mad-signal'
+import orchestrator from '../../libs/orchestrator'
 
 function installEventHandlers(
   nbPlayers: MadSignal<number>,
   nbTeams: MadSignal<number>,
 ) {
   bsEventBus.addEventListener('BS::PLAYERS::CHANGE', () => {
-    nbPlayers.set(orchestrator.Players.length);
-  });
+    nbPlayers.set(orchestrator.Players.length)
+  })
 
   bsEventBus.addEventListener('BS::TEAMS::CHANGE', () => {
-    nbTeams.set(orchestrator.Teams.length);
-  });
+    nbTeams.set(orchestrator.Teams.length)
+  })
 }
 
 export default function GlobalStats() {
-  const nbPlayers = new MadSignal(orchestrator.Players.length);
-  const nbTeams = new MadSignal(orchestrator.Teams.length);
-  const nbMatchs = new MadSignal(orchestrator.Matchs.length);
+  const nbPlayers = new MadSignal(orchestrator.Players.length)
+  const nbTeams = new MadSignal(orchestrator.Teams.length)
+  const nbMatchs = new MadSignal(orchestrator.Matchs.length)
 
-  installEventHandlers(nbPlayers, nbTeams);
+  installEventHandlers(nbPlayers, nbTeams)
 
   return (
     <div>
@@ -56,5 +56,5 @@ export default function GlobalStats() {
         </table>
       </div>
     </div>
-  );
+  )
 }

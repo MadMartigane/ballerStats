@@ -1,4 +1,4 @@
-import BsTile from './tile';
+import BsTile from './tile'
 
-export * from './tile.d';
-export default BsTile;
+export * from './tile.d'
+export default BsTile

@@ -1,3 +1,3 @@
-import { initTheme } from '../libs/daisy';
+import { initTheme } from '../libs/daisy'
 
-initTheme();
+initTheme()

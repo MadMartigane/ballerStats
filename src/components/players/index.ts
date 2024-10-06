@@ -1,2 +1,2 @@
-import BsPalyerEl from './players';
-export default BsPalyerEl;
+import BsPalyerEl from './players'
+export default BsPalyerEl

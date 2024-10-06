@@ -13,8 +13,8 @@ import {
 } from 'lucide-solid'
 import BsIconBasketballGoal from '../../components/icons/basketball-goal'
 import BsIconBasketballMissedGoal from '../../components/icons/basketball-missed-goal'
+import type { DaisySize, DaisyVariant } from '../daisy'
 import type { StatMatchActionItem } from './stats.d'
-import type { DaisyVariant, DaisySize } from '../daisy'
 
 export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
   {

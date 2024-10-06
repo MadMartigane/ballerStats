@@ -18,13 +18,13 @@ function isCurrentPath(candidatPath: string, currentPath: string | null) {
 }
 
 function renderMasterTitle(currentPath: string | null) {
-  let menuEntry = NAVIGATION_MENU_ENTRIES.find(entryCandidate =>
+  let menuEntry = NAVIGATION_MENU_ENTRIES.find((entryCandidate) =>
     isCurrentPath(entryCandidate.path, currentPath),
   )
 
   if (!menuEntry) {
     menuEntry = NAVIGATION_MENU_ENTRIES.find(
-      candidate => candidate.path === '/*',
+      (candidate) => candidate.path === '/*',
     )
   }
 
@@ -70,7 +70,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                 <div class="ml-10 flex items-baseline space-x-4">
                   {/* Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" */}
                   <For each={NAVIGATION_MENU_ENTRIES}>
-                    {menuEntry => (
+                    {(menuEntry) => (
                       <Show when={menuEntry.isMenuEntry}>
                         <a
                           href={menuEntry.path}
@@ -258,7 +258,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
             <div class="space-y-1 px-2 pb-3 pt-2 sm:px-3">
               {/* Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" */}
               <For each={NAVIGATION_MENU_ENTRIES}>
-                {menuEntry => (
+                {(menuEntry) => (
                   <Show when={menuEntry.isMenuEntry}>
                     <a
                       href={menuEntry.path}

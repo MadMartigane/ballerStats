@@ -5,5 +5,5 @@ export default function Stats() {
 
       <p class="mt-4">Get your stats here.</p>
     </div>
-  );
+  )
 }

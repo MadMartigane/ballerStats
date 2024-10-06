@@ -179,7 +179,9 @@ export class Orchestrator {
       return null
     }
 
-    return this.#players.players.find(candidate => candidate.id === id) || null
+    return (
+      this.#players.players.find((candidate) => candidate.id === id) || null
+    )
   }
 
   public getTeam(id?: string | null) {
@@ -187,7 +189,7 @@ export class Orchestrator {
       return null
     }
 
-    return this.#teams.teams.find(candidate => candidate.id === id) || null
+    return this.#teams.teams.find((candidate) => candidate.id === id) || null
   }
 
   public getMatch(id?: string | null) {
@@ -195,13 +197,13 @@ export class Orchestrator {
       return null
     }
 
-    return this.#matchs.matchs.find(candidate => candidate.id === id) || null
+    return this.#matchs.matchs.find((candidate) => candidate.id === id) || null
   }
 
   public bigClean() {
     let cleaned = false
     for (const team of this.Teams.teams) {
-      const cleanPlayerIds = team.playerIds.filter(playerId => {
+      const cleanPlayerIds = team.playerIds.filter((playerId) => {
         return Boolean(this.getPlayer(playerId))
       })
 
@@ -223,7 +225,7 @@ export class Orchestrator {
       return []
     }
 
-    const players = playerIds.map(playerId => this.getPlayer(playerId))
+    const players = playerIds.map((playerId) => this.getPlayer(playerId))
 
     return players.sort(
       (a, b) =>
@@ -237,9 +239,9 @@ export class Orchestrator {
 
     const globalDB = {
       timestamp: date.getTime(),
-      players: this.Players.players.map(player => player.getRawData()),
-      teams: this.Teams.teams.map(team => team.getRawData()),
-      matchs: this.Matchs.matchs.map(match => match.getRawData()),
+      players: this.Players.players.map((player) => player.getRawData()),
+      teams: this.Teams.teams.map((team) => team.getRawData()),
+      matchs: this.Matchs.matchs.map((match) => match.getRawData()),
     }
 
     const jsonDB = JSON.stringify(globalDB)

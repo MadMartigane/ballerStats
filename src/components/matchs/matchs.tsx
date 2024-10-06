@@ -154,7 +154,7 @@ function renderAddingMatchCard() {
           label="Mon Équipe"
           placeholder="Sélectionnez l’équipe"
           value={currentMatch?.teamId}
-          datas={teams.map(team => ({ value: team.id, label: team.name }))}
+          datas={teams.map((team) => ({ value: team.id, label: team.name }))}
           onValueChange={(value: string) => {
             onTeamChange(value)
           }}
@@ -195,7 +195,7 @@ function renderAddingMatchCard() {
           label="Match ouvert"
           size="lg"
           value={currentMatch?.status === 'unlocked'}
-          onChange={checked => {
+          onChange={(checked) => {
             onStatusChange(checked)
           }}
         />
@@ -244,7 +244,7 @@ export default function BsMatchs() {
         >
           <div class="flex flex-wrap gap-4 justify-stretch">
             <For each={matchs}>
-              {match => (
+              {(match) => (
                 <div class="mx-auto md:mx-0 w-fit">
                   <BsMatch
                     match={match}

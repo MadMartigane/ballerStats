@@ -1,5 +1,5 @@
 export type TeamRawData = {
-  id?: string;
-  name?: string | null;
-  playerIds?: string[];
-};
+  id?: string
+  name?: string | null
+  playerIds?: string[]
+}

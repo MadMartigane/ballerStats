@@ -1,4 +1,4 @@
-export * from './toggle';
+export * from './toggle'
 
-import BsToggle from './toggle';
-export default BsToggle;
+import BsToggle from './toggle'
+export default BsToggle

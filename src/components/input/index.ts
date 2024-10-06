@@ -1,4 +1,4 @@
-export * from './input.d';
+export * from './input.d'
 
-import BsInput from './input';
-export default BsInput;
+import BsInput from './input'
+export default BsInput

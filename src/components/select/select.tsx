@@ -1,30 +1,30 @@
-import { For, Show, mergeProps } from 'solid-js';
-import { createStore } from 'solid-js/store';
-import { getShortId } from '../../libs/utils';
-import type { BsSelectOnChangeEvent, BsSelectProps } from './select.d';
+import { For, Show, mergeProps } from 'solid-js'
+import { createStore } from 'solid-js/store'
+import { getShortId } from '../../libs/utils'
+import type { BsSelectOnChangeEvent, BsSelectProps } from './select.d'
 
 const defaultOptions: BsSelectProps = {
   default: null,
   disabled: false,
   datas: [],
-};
+}
 
 function onChange(event: BsSelectOnChangeEvent, options: BsSelectProps) {
-  event.stopPropagation();
+  event.stopPropagation()
 
   if (options.onValueChange) {
-    const target = event.target || event.currentTarget || { value: '' };
-    options.onValueChange(target.value);
+    const target = event.target || event.currentTarget || { value: '' }
+    options.onValueChange(target.value)
   }
 
   if (options.onChange) {
-    options.onChange(event);
+    options.onChange(event)
   }
 }
 
 function adapter(options: BsSelectProps): BsSelectProps {
-  const random = getShortId();
-  const id = `bs-select-${random}`;
+  const random = getShortId()
+  const id = `bs-select-${random}`
 
   return mergeProps(
     {
@@ -32,12 +32,12 @@ function adapter(options: BsSelectProps): BsSelectProps {
       id,
     },
     options,
-  );
+  )
 }
 
 function renderDaisy(props: BsSelectProps) {
-  const options = adapter(props);
-  const [datas] = createStore(props.datas);
+  const options = adapter(props)
+  const [datas] = createStore(props.datas)
 
   return (
     <label class="form-control w-full">
@@ -70,11 +70,11 @@ function renderDaisy(props: BsSelectProps) {
         </select>
       </div>
     </label>
-  );
+  )
 }
 
 export default function BsSelect(options: BsSelectProps) {
-  const newOpions = adapter(options);
+  const newOpions = adapter(options)
 
-  return renderDaisy(newOpions);
+  return renderDaisy(newOpions)
 }

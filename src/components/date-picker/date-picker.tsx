@@ -1,27 +1,27 @@
-import { Show } from 'solid-js';
+import { Show } from 'solid-js'
 import type {
   BsDatePickerOnChangeEvent,
   BsDatePickerProps,
-} from './date-picker.d';
+} from './date-picker.d'
 
-let debounceOnInput: number | null;
+let debounceOnInput: number | null
 
 function onInput(
   event: BsDatePickerOnChangeEvent,
   callback?: (value: string) => void,
 ) {
   if (!callback) {
-    return;
+    return
   }
 
   if (debounceOnInput) {
-    clearTimeout(debounceOnInput);
+    clearTimeout(debounceOnInput)
   }
 
   debounceOnInput = setTimeout(() => {
-    onChange(event, callback);
-    debounceOnInput = null;
-  }, 300);
+    onChange(event, callback)
+    debounceOnInput = null
+  }, 300)
 }
 
 function onChange(
@@ -29,12 +29,12 @@ function onChange(
   callback?: (value: string) => void,
 ) {
   if (!callback) {
-    return;
+    return
   }
 
-  event.stopPropagation();
-  const target = event.target || event.currentTarget || { value: '' };
-  callback(target.value);
+  event.stopPropagation()
+  const target = event.target || event.currentTarget || { value: '' }
+  callback(target.value)
 }
 
 export function BsDatePicker(props: BsDatePickerProps) {
@@ -54,5 +54,5 @@ export function BsDatePicker(props: BsDatePickerProps) {
         />
       </div>
     </label>
-  );
+  )
 }

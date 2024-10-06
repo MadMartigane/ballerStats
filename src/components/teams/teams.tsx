@@ -1,84 +1,84 @@
-import { MessageCircleWarning, Save, Users, X } from 'lucide-solid';
-import { For, Show } from 'solid-js';
-import { createStore } from 'solid-js/store';
-import bsEventBus from '../../libs/event-bus';
-import MadSignal from '../../libs/mad-signal';
-import orchestrator from '../../libs/orchestrator/orchestrator';
-import type Player from '../../libs/player';
-import Team from '../../libs/team';
-import type { TeamRawData } from '../../libs/team';
-import { scrollBottom, scrollTop } from '../../libs/utils';
-import BsCard from '../card';
-import BsInput from '../input';
-import BsSelectMultiple from '../select-multiple/select-multiple';
-import BsTeam from '../team';
+import { MessageCircleWarning, Save, Users, X } from 'lucide-solid'
+import { For, Show } from 'solid-js'
+import { createStore } from 'solid-js/store'
+import bsEventBus from '../../libs/event-bus'
+import MadSignal from '../../libs/mad-signal'
+import orchestrator from '../../libs/orchestrator/orchestrator'
+import type Player from '../../libs/player'
+import Team from '../../libs/team'
+import type { TeamRawData } from '../../libs/team'
+import { scrollBottom, scrollTop } from '../../libs/utils'
+import BsCard from '../card'
+import BsInput from '../input'
+import BsSelectMultiple from '../select-multiple/select-multiple'
+import BsTeam from '../team'
 
-let isEditingNewTeam = false;
-const isAddingTeam: MadSignal<boolean> = new MadSignal(false);
-const canAddTeam: MadSignal<boolean> = new MadSignal(false);
-const teamLength: MadSignal<number> = new MadSignal(orchestrator.Teams.length);
-const [teams, setTeams] = createStore(orchestrator.Teams.teams);
+let isEditingNewTeam = false
+const isAddingTeam: MadSignal<boolean> = new MadSignal(false)
+const canAddTeam: MadSignal<boolean> = new MadSignal(false)
+const teamLength: MadSignal<number> = new MadSignal(orchestrator.Teams.length)
+const [teams, setTeams] = createStore(orchestrator.Teams.teams)
 
-let currentTeam: Team | null = null;
+let currentTeam: Team | null = null
 
 bsEventBus.addEventListener('BS::TEAMS::CHANGE', () => {
-  teamLength.set(orchestrator.Teams.length);
-  setTeams(orchestrator.Teams.teams);
-});
+  teamLength.set(orchestrator.Teams.length)
+  setTeams(orchestrator.Teams.teams)
+})
 
 function setNewTeamData(data: TeamRawData) {
   if (!currentTeam) {
-    currentTeam = new Team(data);
+    currentTeam = new Team(data)
   } else {
-    currentTeam.update(data);
+    currentTeam.update(data)
   }
 
-  canAddTeam.set(currentTeam.isRegisterable);
+  canAddTeam.set(currentTeam.isRegisterable)
 }
 
 function toggleAddTeam(value: boolean) {
-  isAddingTeam.set(value);
+  isAddingTeam.set(value)
 }
 
 function registerTeam() {
   if (!currentTeam || !currentTeam.isRegisterable) {
-    return;
+    return
   }
 
   if (isEditingNewTeam) {
-    orchestrator.Teams.add(currentTeam);
+    orchestrator.Teams.add(currentTeam)
   } else {
-    orchestrator.Teams.updateTeam(currentTeam);
+    orchestrator.Teams.updateTeam(currentTeam)
   }
 
-  toggleAddTeam(false);
-  currentTeam = null;
-  canAddTeam.set(false);
+  toggleAddTeam(false)
+  currentTeam = null
+  canAddTeam.set(false)
 }
 
 function editTeam(team: Team) {
-  isEditingNewTeam = false;
-  currentTeam = new Team(team.getRawData());
-  canAddTeam.set(currentTeam.isRegisterable);
+  isEditingNewTeam = false
+  currentTeam = new Team(team.getRawData())
+  canAddTeam.set(currentTeam.isRegisterable)
 
-  toggleAddTeam(true);
+  toggleAddTeam(true)
 }
 
 function onSubmit(event: KeyboardEvent) {
   if (event.key !== 'Enter') {
-    return;
+    return
   }
 
-  registerTeam();
+  registerTeam()
 }
 
 function updateCurrentTeamPlayerIds(playerIds: string[]) {
   if (playerIds) {
-    currentTeam?.update({ playerIds: playerIds });
-    return;
+    currentTeam?.update({ playerIds: playerIds })
+    return
   }
 
-  currentTeam?.update({ playerIds: [] });
+  currentTeam?.update({ playerIds: [] })
 }
 
 function getSelectDataFromPlayer(players: Player[]) {
@@ -88,7 +88,7 @@ function getSelectDataFromPlayer(players: Player[]) {
       ? player.nicName
       : `${player.firstName} ${player.lastName}`,
     badge: renderPlayerBadge(player),
-  }));
+  }))
 }
 
 function renderTeamFallback() {
@@ -99,7 +99,7 @@ function renderTeamFallback() {
         <span class="px-2">Aucune équipe enregistrée.</span>
       </h4>
     </div>
-  );
+  )
 }
 
 function renderAddTeamButton() {
@@ -110,9 +110,9 @@ function renderAddTeamButton() {
         <button
           class="btn btn-primary"
           onClick={() => {
-            isEditingNewTeam = true;
-            toggleAddTeam(true);
-            scrollTop();
+            isEditingNewTeam = true
+            toggleAddTeam(true)
+            scrollTop()
           }}
         >
           <Users />
@@ -120,7 +120,7 @@ function renderAddTeamButton() {
         </button>
       </div>
     </div>
-  );
+  )
 }
 
 function renderPlayerBadge(player: Player) {
@@ -133,7 +133,7 @@ function renderPlayerBadge(player: Player) {
           : `${player.firstName} ${player.lastName}`}
       </div>
     </>
-  );
+  )
 }
 
 function renderAddingTeamCard() {
@@ -153,7 +153,7 @@ function renderAddingTeamCard() {
           value: currentTeam?.name || '',
           placeholder: 'BCC U09',
           onChange: (value: string) => {
-            setNewTeamData({ name: value });
+            setNewTeamData({ name: value })
           },
         })}
         <BsSelectMultiple
@@ -161,7 +161,7 @@ function renderAddingTeamCard() {
           data={getSelectDataFromPlayer(orchestrator.Players.players)}
           selectedIds={currentTeam?.playerIds}
           onChange={(playerIds: string[]) => {
-            updateCurrentTeamPlayerIds(playerIds);
+            updateCurrentTeamPlayerIds(playerIds)
           }}
         />
       </form>
@@ -171,10 +171,10 @@ function renderAddingTeamCard() {
         <button
           class="btn btn-primary btn-wide"
           onClick={() => {
-            toggleAddTeam(false);
-            currentTeam = null;
-            canAddTeam.set(false);
-            scrollBottom();
+            toggleAddTeam(false)
+            currentTeam = null
+            canAddTeam.set(false)
+            scrollBottom()
           }}
         >
           <X />
@@ -185,8 +185,8 @@ function renderAddingTeamCard() {
           class="btn btn-primary btn-wide"
           disabled={!canAddTeam.get()}
           onClick={() => {
-            registerTeam();
-            scrollBottom();
+            registerTeam()
+            scrollBottom()
           }}
         >
           {isEditingNewTeam ? <Users /> : <Save />}
@@ -194,7 +194,7 @@ function renderAddingTeamCard() {
         </button>
       </div>
     ),
-  });
+  })
 }
 
 export default function BsTeams() {
@@ -212,7 +212,7 @@ export default function BsTeams() {
                   <BsTeam
                     team={team}
                     onEdit={(team) => {
-                      editTeam(team);
+                      editTeam(team)
                     }}
                   />
                 </div>
@@ -225,5 +225,5 @@ export default function BsTeams() {
         {renderAddingTeamCard()}
       </Show>
     </div>
-  );
+  )
 }

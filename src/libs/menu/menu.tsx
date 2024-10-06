@@ -1,6 +1,6 @@
-import { lazy } from 'solid-js';
-import Home from '../../pages/home';
-import type { MenuEntry } from './menu.d';
+import { lazy } from 'solid-js'
+import Home from '../../pages/home'
+import type { MenuEntry } from './menu.d'
 
 import {
   BadgeAlert,
@@ -9,12 +9,12 @@ import {
   MonitorDot,
   User,
   Users,
-} from 'lucide-solid';
-import BsIconBasketballBall from '../../components/icons/basketball-ball';
-import BsIconBasketballPlayer from '../../components/icons/basketball-player';
-import type { DaisyVariant } from '../daisy';
+} from 'lucide-solid'
+import BsIconBasketballBall from '../../components/icons/basketball-ball'
+import BsIconBasketballPlayer from '../../components/icons/basketball-player'
+import type { DaisyVariant } from '../daisy'
 
-export const HASH_REPLACE_PATTERN = /^#\//;
+export const HASH_REPLACE_PATTERN = /^#\//
 
 export const NAVIGATION_MENU_ENTRIES: Array<MenuEntry> = [
   {
@@ -85,4 +85,4 @@ export const NAVIGATION_MENU_ENTRIES: Array<MenuEntry> = [
     component: lazy(() => import('../../pages/404')),
     isMenuEntry: false,
   },
-];
+]

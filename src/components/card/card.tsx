@@ -1,6 +1,6 @@
-import { Info } from 'lucide-solid';
-import { Show } from 'solid-js';
-import type { BsCardProps } from './card.d';
+import { Info } from 'lucide-solid'
+import { Show } from 'solid-js'
+import type { BsCardProps } from './card.d'
 
 export default function BsCard(options: BsCardProps) {
   return (
@@ -27,5 +27,5 @@ export default function BsCard(options: BsCardProps) {
         </Show>
       </div>
     </div>
-  );
+  )
 }

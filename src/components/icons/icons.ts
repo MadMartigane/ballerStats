@@ -108,12 +108,12 @@ export function bsIconPropsToDataStore(props: BsIconProps) {
   const data = clone(DEFAULT_ICON_DATA) as BsIconData
   const [store, setStore] = createStore(data)
   bsEventBus.addEventListener('BS::THEME::CHANGE', () => {
-    bsIconPropsToData(props).then(data => {
+    bsIconPropsToData(props).then((data) => {
       setStore(data)
     })
   })
 
-  bsIconPropsToData(props).then(data => {
+  bsIconPropsToData(props).then((data) => {
     setStore(data)
   })
 

@@ -1,40 +1,40 @@
-import { getUniqId } from '../utils';
-import { clone } from '../utils';
-import type { TeamRawData } from './team.d';
+import { getUniqId } from '../utils'
+import { clone } from '../utils'
+import type { TeamRawData } from './team.d'
 
-export const TEAM_OPPONENT_ID = 'OPPONENT';
+export const TEAM_OPPONENT_ID = 'OPPONENT'
 
 export default class Team {
-  #id = getUniqId();
-  #playerIds: Array<string> = [];
+  #id = getUniqId()
+  #playerIds: Array<string> = []
 
-  public name: string | null = null;
+  public name: string | null = null
 
   constructor(data?: TeamRawData) {
     if (data) {
-      this.setFromRawData(data);
+      this.setFromRawData(data)
     }
   }
 
   public get id() {
-    return this.#id;
+    return this.#id
   }
 
   public get isRegisterable() {
-    return Boolean(this.name);
+    return Boolean(this.name)
   }
 
   public get playerIds() {
-    return clone(this.#playerIds) as string[];
+    return clone(this.#playerIds) as string[]
   }
 
   public setFromRawData(data: TeamRawData) {
     if (data.id) {
-      this.#id = data.id;
+      this.#id = data.id
     }
 
-    this.name = data.name || null;
-    this.#playerIds = data.playerIds || [];
+    this.name = data.name || null
+    this.#playerIds = data.playerIds || []
   }
 
   public getRawData(): TeamRawData {
@@ -42,13 +42,13 @@ export default class Team {
       id: this.#id,
       name: this.name,
       playerIds: <string[]>clone(this.#playerIds),
-    };
+    }
   }
 
   public update(data: TeamRawData) {
     this.setFromRawData({
       ...this.getRawData(),
       ...data,
-    });
+    })
   }
 }

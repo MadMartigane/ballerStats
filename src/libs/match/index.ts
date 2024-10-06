@@ -1,4 +1,4 @@
-export * from './match.d';
+export * from './match.d'
 
-import Match from './match';
-export default Match;
+import Match from './match'
+export default Match

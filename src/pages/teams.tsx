@@ -1,5 +1,5 @@
-import BsTeams from '../components/teams';
+import BsTeams from '../components/teams'
 
 export default function teams() {
-  return <BsTeams />;
+  return <BsTeams />
 }

@@ -1,2 +1,2 @@
-import BsAppBar from './app-bar';
-export default BsAppBar;
+import BsAppBar from './app-bar'
+export default BsAppBar

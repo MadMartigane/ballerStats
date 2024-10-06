@@ -5,5 +5,5 @@ export default function Users() {
 
       <p class="mt-4">All the users here.</p>
     </div>
-  );
+  )
 }

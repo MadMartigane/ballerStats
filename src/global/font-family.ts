@@ -1,1 +1,1 @@
-import '@fontsource/rajdhani/400.css';
+import '@fontsource/rajdhani/400.css'

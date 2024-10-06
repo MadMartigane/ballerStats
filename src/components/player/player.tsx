@@ -1,26 +1,26 @@
-import { Shirt, Trash, UserPen } from 'lucide-solid';
-import { Show } from 'solid-js';
-import orchestrator from '../../libs/orchestrator/orchestrator';
-import type Player from '../../libs/player';
-import { confirmAction } from '../../libs/utils';
-import BsIconBasketballPlayer from '../icons/basketball-player';
-import BsTile from '../tile';
-import type { BsPlayerProps } from './player.d';
+import { Shirt, Trash, UserPen } from 'lucide-solid'
+import { Show } from 'solid-js'
+import orchestrator from '../../libs/orchestrator/orchestrator'
+import type Player from '../../libs/player'
+import { confirmAction } from '../../libs/utils'
+import BsIconBasketballPlayer from '../icons/basketball-player'
+import BsTile from '../tile'
+import type { BsPlayerProps } from './player.d'
 
 async function removePlayer(player: Player) {
-  const yes = await confirmAction();
+  const yes = await confirmAction()
 
   if (yes) {
-    orchestrator.Players.remove(player);
+    orchestrator.Players.remove(player)
   }
 }
 
 function editPlayer(player: Player, callback: (player: Player) => void) {
-  callback(player);
+  callback(player)
 }
 
 export default function BsPlayer(props: BsPlayerProps) {
-  const player = props.player;
+  const player = props.player
 
   return (
     <BsTile
@@ -37,7 +37,7 @@ export default function BsPlayer(props: BsPlayerProps) {
             <button
               class="btn btn-secondary btn-square"
               onClick={() => {
-                editPlayer(player, props.onEdit);
+                editPlayer(player, props.onEdit)
               }}
             >
               <UserPen />
@@ -46,7 +46,7 @@ export default function BsPlayer(props: BsPlayerProps) {
           <button
             class="btn btn-secondary btn-square"
             onClick={() => {
-              removePlayer(player);
+              removePlayer(player)
             }}
           >
             <Trash />
@@ -56,5 +56,5 @@ export default function BsPlayer(props: BsPlayerProps) {
     >
       {`${player.firstName || ''} ${player.lastName || ''}`}
     </BsTile>
-  );
+  )
 }

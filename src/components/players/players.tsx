@@ -205,11 +205,11 @@ export default function BsPlayers() {
         >
           <div class="flex flex-wrap gap-4 justify-stretch">
             <For each={players}>
-              {player => (
+              {(player) => (
                 <div class="mx-auto md:mx-0 w-fit">
                   <BsPlayer
                     player={player}
-                    onEdit={player => {
+                    onEdit={(player) => {
                       editPlayer(player)
                       scrollTop()
                     }}

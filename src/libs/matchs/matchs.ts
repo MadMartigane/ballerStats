@@ -16,7 +16,7 @@ export default class Matchs {
   }
 
   private getMatch(newMatch: Match) {
-    return this.#matchs.find(currentMatch => currentMatch.id === newMatch.id)
+    return this.#matchs.find((currentMatch) => currentMatch.id === newMatch.id)
   }
 
   public get matchs(): Array<Match> {
@@ -40,7 +40,7 @@ export default class Matchs {
 
   public updateMatch(newMatch: Match) {
     const oldMatch = this.#matchs.find(
-      currentMatch => currentMatch.id === newMatch.id,
+      (currentMatch) => currentMatch.id === newMatch.id,
     )
     if (!oldMatch) {
       throw new Error(

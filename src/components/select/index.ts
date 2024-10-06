@@ -1,1 +1,1 @@
-export * from './select.d';
+export * from './select.d'
