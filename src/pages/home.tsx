@@ -1,4 +1,4 @@
-import { Loader, Medal, Share, Trash2, Vibrate } from 'lucide-solid'
+import { BellRing, Loader, Medal, Share, Trash2, Vibrate } from 'lucide-solid'
 import { Show } from 'solid-js'
 import DarkThemeSwitch from '../components/dark-theme-switch'
 import GlobalStats from '../components/global-stats'
@@ -168,6 +168,17 @@ export default function Home() {
               <Vibrate />
               Long
             </button>
+            <button
+              type="button"
+              class="btn btn-outline"
+              onClick={() => {
+                orchestrator.throwUserActionFeedback()
+              }}
+            >
+              <BellRing />
+              Throw user feedback
+            </button>
+
           </div>
         </div>
       </Show>

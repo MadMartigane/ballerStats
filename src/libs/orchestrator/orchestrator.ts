@@ -1,9 +1,18 @@
 import bsEventBus from '../event-bus'
 import Matchs from '../matchs'
 import Players from '../players'
-import { getStoredMatchs, getStoredPlayers, getStoredTeams, storeMatchs, storePlayers, storeTeams } from '../store'
+import {
+  getStoredMatchs,
+  getStoredPlayers,
+  getStoredTeams,
+  storeMatchs,
+  storePlayers,
+  storeTeams,
+} from '../store'
 import Teams from '../teams'
 import { mount, unmount } from '../utils'
+import { vibrate } from '../vibrator'
+import { soundTab } from '../sounds'
 
 export class Orchestrator {
   #players: Players = new Players()
@@ -92,7 +101,10 @@ export class Orchestrator {
     }
 
     // TODO: add lastRecord (timestamp) in the player and compare each records
-    if (!this.#lastPlayersRecrod || stored.lastRecord > this.#lastPlayersRecrod) {
+    if (
+      !this.#lastPlayersRecrod ||
+      stored.lastRecord > this.#lastPlayersRecrod
+    ) {
       this.#players = new Players(stored.data)
       this.throwPlayersUpdatedEvent()
     }
@@ -169,7 +181,7 @@ export class Orchestrator {
       return null
     }
 
-    return this.#players.players.find((candidate) => candidate.id === id) || null
+    return this.#players.players.find(candidate => candidate.id === id) || null
   }
 
   public getTeam(id?: string | null) {
@@ -177,7 +189,7 @@ export class Orchestrator {
       return null
     }
 
-    return this.#teams.teams.find((candidate) => candidate.id === id) || null
+    return this.#teams.teams.find(candidate => candidate.id === id) || null
   }
 
   public getMatch(id?: string | null) {
@@ -185,13 +197,13 @@ export class Orchestrator {
       return null
     }
 
-    return this.#matchs.matchs.find((candidate) => candidate.id === id) || null
+    return this.#matchs.matchs.find(candidate => candidate.id === id) || null
   }
 
   public bigClean() {
     let cleaned = false
     for (const team of this.Teams.teams) {
-      const cleanPlayerIds = team.playerIds.filter((playerId) => {
+      const cleanPlayerIds = team.playerIds.filter(playerId => {
         return Boolean(this.getPlayer(playerId))
       })
 
@@ -213,9 +225,13 @@ export class Orchestrator {
       return []
     }
 
-    const players = playerIds.map((playerId) => this.getPlayer(playerId))
+    const players = playerIds.map(playerId => this.getPlayer(playerId))
 
-    return players.sort((a, b) => Number.parseInt(a?.jersayNumber || '0') - Number.parseInt(b?.jersayNumber || '0'))
+    return players.sort(
+      (a, b) =>
+        Number.parseInt(a?.jersayNumber || '0') -
+        Number.parseInt(b?.jersayNumber || '0'),
+    )
   }
 
   public exportDB() {
@@ -223,9 +239,9 @@ export class Orchestrator {
 
     const globalDB = {
       timestamp: date.getTime(),
-      players: this.Players.players.map((player) => player.getRawData()),
-      teams: this.Teams.teams.map((team) => team.getRawData()),
-      matchs: this.Matchs.matchs.map((match) => match.getRawData()),
+      players: this.Players.players.map(player => player.getRawData()),
+      teams: this.Teams.teams.map(team => team.getRawData()),
+      matchs: this.Matchs.matchs.map(match => match.getRawData()),
     }
 
     const jsonDB = JSON.stringify(globalDB)
@@ -241,6 +257,18 @@ export class Orchestrator {
     mount(anchor)
     anchor.click()
     unmount(anchor)
+  }
+
+  public throwUserActionFeedback() {
+    vibrate()
+
+    const main = document.querySelector('main')
+    main?.classList.toggle('bg-amber-400/10')
+    setTimeout(() => {
+      main?.classList.toggle('bg-amber-400/10')
+    }, 30)
+
+    soundTab.play()
   }
 }
 

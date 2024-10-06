@@ -28,7 +28,6 @@ import {
 import { getStatSummary } from '../../libs/stats/stats-util'
 import { TEAM_OPPONENT_ID } from '../../libs/team/team'
 import { confirmAction, goTo } from '../../libs/utils'
-import { vibrate } from '../../libs/vibrator'
 import BsScoreCard from '../score-card'
 import type { BsMatchProps } from './match.d'
 
@@ -371,7 +370,7 @@ function renderPlayerButton(opts: {
                       disableClearLastAction: opts.disableClearLastAction,
                     })
 
-                    vibrate()
+                    orchestrator.throwUserActionFeedback()
                   }}
                   onKeyDown={() => {
                     registerStat({
@@ -383,7 +382,7 @@ function renderPlayerButton(opts: {
                       disableClearLastAction: opts.disableClearLastAction,
                     })
 
-                    vibrate()
+                    orchestrator.throwUserActionFeedback()
                   }}
                 >
                   {statAction.icon(`${statAction.type}-content`)}
