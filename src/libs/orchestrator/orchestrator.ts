@@ -13,6 +13,10 @@ import Teams from '../teams'
 import { mount, unmount } from '../utils'
 import { vibrate } from '../vibrator'
 import { soundTab } from '../sounds'
+import type { GlobalDB } from './orchestrator.d'
+import Player from '../player'
+import Team from '../team'
+import Match from '../match'
 
 export class Orchestrator {
   #players: Players = new Players()
@@ -144,6 +148,24 @@ export class Orchestrator {
     }
   }
 
+  private removeAllPlayers() {
+    for (const player of this.Players.players) {
+      this.Players.remove(player)
+    }
+  }
+
+  private removeAllTeams() {
+    for (const team of this.Teams.teams) {
+      this.Teams.remove(team)
+    }
+  }
+
+  private removeAllMatchs() {
+    for (const match of this.Matchs.matchs) {
+      this.Matchs.remove(match)
+    }
+  }
+
   public get Players() {
     return this.#players
   }
@@ -237,7 +259,7 @@ export class Orchestrator {
   public exportDB() {
     const date = new Date()
 
-    const globalDB = {
+    const globalDB: GlobalDB = {
       timestamp: date.getTime(),
       players: this.Players.players.map(player => player.getRawData()),
       teams: this.Teams.teams.map(team => team.getRawData()),
@@ -257,6 +279,72 @@ export class Orchestrator {
     mount(anchor)
     anchor.click()
     unmount(anchor)
+  }
+
+  public importDB(
+    event: Event & {
+      currentTarget: HTMLInputElement
+      target: HTMLInputElement
+    },
+  ) {
+
+    const input = event.target || event.currentTarget
+    console.log('input: ', input)
+    const files = input?.files
+    if (!files) {
+      // TODO: throw toast error
+      return
+    }
+
+    const file = files[0]
+
+    if (!file) {
+      // TODO: throw toast error
+      return
+    }
+
+    const reader = new FileReader()
+
+    reader.onload = event => {
+      const target = event.target || event.currentTarget
+      // @ts-ignore
+      const result = target?.result as string
+      if (!result) {
+      // TODO: throw toast error
+        return
+      }
+
+      const json = JSON.parse(result) as GlobalDB
+      if (!json || !json.timestamp) {
+      // TODO: throw toast error
+        return
+      }
+
+      this.removeAllPlayers()
+      for (const playerData of json.players) {
+        const newPlayer = new Player(playerData)
+        this.Players.add(newPlayer)
+      }
+
+      this.removeAllTeams()
+      for (const teamData of json.teams) {
+        const newTeam = new Team(teamData)
+        this.Teams.add(newTeam)
+      }
+
+      this.removeAllMatchs()
+      for (const matchData of json.matchs) {
+        const newMatch = new Match(matchData)
+        this.Matchs.add(newMatch)
+      }
+    }
+
+    reader.onerror = evt => {
+      // TODO: throw toast error
+      console.error('An error ocurred reading the file', evt)
+    }
+
+    reader.readAsText(file, 'UTF-8')
   }
 
   public throwUserActionFeedback() {

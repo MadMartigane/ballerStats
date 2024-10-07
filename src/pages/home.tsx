@@ -35,7 +35,7 @@ export default function Home() {
 
       <h2>Administration:</h2>
 
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 content-start">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 content-start">
         <button
           type="button"
           class="btn btn-accent"
@@ -65,6 +65,24 @@ export default function Home() {
         >
           <Share /> Sauvegarde DB
         </button>
+
+        <label for="input-import-db" class="col-span-2">
+          Restauration DB
+          <input
+            type="file"
+            class="file-input file-input-bordered w-full max-w-xs"
+            id="input-import-db"
+            accept="application/json"
+            onChange={(
+              event: Event & {
+                currentTarget: HTMLInputElement
+                target: HTMLInputElement
+              },
+            ) => {
+              orchestrator.importDB(event)
+            }}
+          />
+        </label>
 
         <BsToggle
           label="Afficher la démo"
@@ -137,7 +155,7 @@ export default function Home() {
             <Medal size={96} />
           </div>
 
-          <div class="flex flex-row gap-4 py-4">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4">
             <button
               type="button"
               class="btn btn-outline"
@@ -170,7 +188,7 @@ export default function Home() {
             </button>
             <button
               type="button"
-              class="btn btn-outline"
+              class="btn btn-outline col-span-2"
               onClick={() => {
                 orchestrator.throwUserActionFeedback()
               }}
@@ -178,7 +196,6 @@ export default function Home() {
               <BellRing />
               Throw user feedback
             </button>
-
           </div>
         </div>
       </Show>
