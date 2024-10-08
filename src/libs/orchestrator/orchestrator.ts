@@ -10,7 +10,7 @@ import {
   storeTeams,
 } from '../store'
 import Teams from '../teams'
-import { mount, unmount } from '../utils'
+import { confirmAction, mount, toast, unmount } from '../utils'
 import { vibrate } from '../vibrator'
 import { soundTab } from '../sounds'
 import type { GlobalDB } from './orchestrator.d'
@@ -166,6 +166,81 @@ export class Orchestrator {
     }
   }
 
+  private doClearDB() {
+    this.removeAllPlayers()
+    this.removeAllTeams()
+    this.removeAllMatchs()
+  }
+
+  private doOverwriteDB(json: GlobalDB) {
+    for (const playerData of json.players) {
+      const newPlayer = new Player(playerData)
+      this.Players.add(newPlayer)
+    }
+
+    for (const teamData of json.teams) {
+      const newTeam = new Team(teamData)
+      this.Teams.add(newTeam)
+    }
+
+    for (const matchData of json.matchs) {
+      const newMatch = new Match(matchData)
+      this.Matchs.add(newMatch)
+    }
+  }
+
+  private async onImportDBLoad(event: ProgressEvent<FileReader>) {
+    const target = event.target || event.currentTarget
+    // @ts-ignore
+    const result = target?.result as string
+    if (!result) {
+      toast('Impossible de lire les données.', 'error')
+      return
+    }
+
+    let rawData: GlobalDB
+    try {
+      rawData = JSON.parse(result) as GlobalDB
+    } catch (e) {
+      toast('Données non valides.', 'error')
+      console.error(e)
+      return
+    }
+
+    if (!rawData || !rawData.timestamp) {
+      toast('Le fichier n’est pas une sauvegarde baller-stats.', 'error')
+      return
+    }
+
+    const proced = await confirmAction(
+      'Import DB',
+      `Vous êtes sur le point d’importer ${rawData?.players.length || 0} joueurs, ${rawData?.teams.length || 0} équipes et ${rawData?.matchs.length || 0} matchs.`,
+    )
+    if (!proced) {
+      return
+    }
+
+    const cleanUpBefore = await confirmAction(
+      'Import DB',
+      'Voulez-vous écraser toutes les données ?'
+    )
+    if (cleanUpBefore) {
+      this.doClearDB()
+    }
+
+    try {
+      this.doOverwriteDB(rawData)
+    } catch (e) {
+      toast('Impossible d’importer les données.', 'error')
+      console.error(e)
+    }
+  }
+
+  private async onImportDBError(event: ProgressEvent<FileReader>) {
+    toast('Impossible d’importer les données.', 'error')
+    console.error('onImportDBError(): ', event)
+  }
+
   public get Players() {
     return this.#players
   }
@@ -281,67 +356,33 @@ export class Orchestrator {
     unmount(anchor)
   }
 
-  public importDB(
+  public async importDB(
     event: Event & {
       currentTarget: HTMLInputElement
       target: HTMLInputElement
     },
   ) {
-
     const input = event.target || event.currentTarget
-    console.log('input: ', input)
     const files = input?.files
     if (!files) {
-      // TODO: throw toast error
+      toast('Impossible de lire les données.', 'error')
       return
     }
 
     const file = files[0]
 
     if (!file) {
-      // TODO: throw toast error
+      toast('Impossible de lire les données.', 'error')
       return
     }
 
     const reader = new FileReader()
 
     reader.onload = event => {
-      const target = event.target || event.currentTarget
-      // @ts-ignore
-      const result = target?.result as string
-      if (!result) {
-      // TODO: throw toast error
-        return
-      }
-
-      const json = JSON.parse(result) as GlobalDB
-      if (!json || !json.timestamp) {
-      // TODO: throw toast error
-        return
-      }
-
-      this.removeAllPlayers()
-      for (const playerData of json.players) {
-        const newPlayer = new Player(playerData)
-        this.Players.add(newPlayer)
-      }
-
-      this.removeAllTeams()
-      for (const teamData of json.teams) {
-        const newTeam = new Team(teamData)
-        this.Teams.add(newTeam)
-      }
-
-      this.removeAllMatchs()
-      for (const matchData of json.matchs) {
-        const newMatch = new Match(matchData)
-        this.Matchs.add(newMatch)
-      }
+      this.onImportDBLoad(event)
     }
-
-    reader.onerror = evt => {
-      // TODO: throw toast error
-      console.error('An error ocurred reading the file', evt)
+    reader.onerror = event => {
+      this.onImportDBError(event)
     }
 
     reader.readAsText(file, 'UTF-8')

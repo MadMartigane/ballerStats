@@ -1,4 +1,7 @@
+import type { DaisyAlert } from '../daisy'
+
 const antropyFator = 3
+const toastContainerId = 'toast-main-container'
 
 export function getUniqId(): string {
   const array = new Uint32Array(antropyFator)
@@ -40,21 +43,17 @@ export function goBack() {
   window.history.back()
 }
 
-export function mount(child: HTMLElement, parent?: HTMLElement) {
-  if (!parent) {
-    parent = document.body
-  }
+export function mount(child: HTMLElement, parent?: HTMLElement | null) {
+  const realParent = parent || document.body
 
-  parent.appendChild(child)
+  realParent.appendChild(child)
 }
 
-export function unmount(child: HTMLElement, parent?: HTMLElement) {
-  if (!parent) {
-    parent = document.body
-  }
+export function unmount(child: HTMLElement, parent?: HTMLElement | null) {
+  const realParent = parent || document.body
 
   return setTimeout(() => {
-    parent?.removeChild(child)
+    realParent.removeChild(child)
   })
 }
 
@@ -65,7 +64,7 @@ export async function confirmAction(
   confirm = 'Oui',
 ): Promise<boolean> {
   let resolve: (value: boolean | PromiseLike<boolean>) => void
-  const promise: Promise<boolean> = new Promise((res) => {
+  const promise: Promise<boolean> = new Promise(res => {
     resolve = res
   })
 
@@ -137,4 +136,41 @@ export function toDateTime(dateString: string | null) {
 
   const date = new Date(dateString)
   return `${date.toLocaleDateString('fr-FR')} - ${date.toLocaleTimeString('fr-FR').replace(/:\d{2}$/, '')}`
+}
+
+export function toast(message: string, variant?: DaisyAlert) {
+  let toastContainer = document.getElementById(
+    toastContainerId,
+  ) as HTMLDivElement
+
+  if (!toastContainer) {
+    toastContainer = document.createElement('div')
+    toastContainer.id = toastContainerId
+    toastContainer.classList.add('toast', 'toast-end')
+    mount(toastContainer)
+  }
+
+  const dialog: HTMLDivElement = document.createElement('div') as HTMLDivElement
+  dialog.classList.add('alert')
+  if (variant) {
+    dialog.classList.add(`alert-${variant}`)
+  }
+  toastContainer.append(dialog)
+  dialog.onclick = () => {
+    unmount(dialog, toastContainer)
+  }
+
+  const span = document.createElement('span')
+  span.classList.add('inline-block', 'min-w-64', 'text-center')
+  span.innerText = message
+  dialog.append(span)
+
+  const timeout = setTimeout(() => {
+    unmount(dialog, toastContainer)
+  }, 6000)
+
+  dialog.onclick = () => {
+    unmount(dialog, toastContainer)
+    clearTimeout(timeout)
+  }
 }

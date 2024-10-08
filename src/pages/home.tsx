@@ -1,4 +1,4 @@
-import { BellRing, Loader, Medal, Share, Trash2, Vibrate } from 'lucide-solid'
+import { BellRing, Loader, Medal, Megaphone, Share, Trash2, Vibrate } from 'lucide-solid'
 import { Show } from 'solid-js'
 import DarkThemeSwitch from '../components/dark-theme-switch'
 import GlobalStats from '../components/global-stats'
@@ -13,6 +13,7 @@ import BsToggle from '../components/toggle'
 import MadSignal from '../libs/mad-signal'
 import orchestrator from '../libs/orchestrator/orchestrator'
 import { vibrate } from '../libs/vibrator'
+import { toast } from '../libs/utils'
 
 const displayDemo = new MadSignal(false)
 const bigCleanInProgress = new MadSignal(false)
@@ -35,7 +36,7 @@ export default function Home() {
 
       <h2>Administration:</h2>
 
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 content-start">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 content-start">
         <button
           type="button"
           class="btn btn-accent"
@@ -155,7 +156,7 @@ export default function Home() {
             <Medal size={96} />
           </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 content-start">
             <button
               type="button"
               class="btn btn-outline"
@@ -196,6 +197,17 @@ export default function Home() {
               <BellRing />
               Throw user feedback
             </button>
+            <button
+              type="button"
+              class="btn btn-outline"
+              onClick={() => {
+                toast('test', 'info')
+              }}
+            >
+              <Megaphone />
+              Toast !
+            </button>
+
           </div>
         </div>
       </Show>
