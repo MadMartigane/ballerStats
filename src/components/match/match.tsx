@@ -30,6 +30,7 @@ import { TEAM_OPPONENT_ID } from '../../libs/team/team'
 import { confirmAction, goTo } from '../../libs/utils'
 import BsScoreCard from '../score-card'
 import type { BsMatchProps } from './match.d'
+import { vibrate } from '../../libs/vibrator'
 
 function openActionMode(
   playerId: string | undefined,
@@ -117,7 +118,7 @@ async function removeLastAction(
   )
 }
 
-function getOutFromPlayground(options: {
+function getOutFromPlayground(opts: {
   playerId: string
   playersInTheFive: MadSignal<Array<string>>
   match: Match | null
@@ -125,18 +126,18 @@ function getOutFromPlayground(options: {
   setStatSummary: SetStoreFunction<StatMatchSummary>
   disableClearLastAction: MadSignal<boolean>
 }) {
-  const inTheFive = options.playersInTheFive.get()
+  const inTheFive = opts.playersInTheFive.get()
 
-  if (!options.match || !inTheFive.includes(options.playerId)) {
+  if (!opts.match || !inTheFive.includes(opts.playerId)) {
     return
   }
 
-  options.playersInTheFive.set(
-    inTheFive.filter(candidateId => candidateId !== options.playerId),
+  opts.playersInTheFive.set(
+    inTheFive.filter(candidateId => candidateId !== opts.playerId),
   )
 
-  options.match.update({
-    playersInTheFive: [...options.playersInTheFive.get()],
+  opts.match.update({
+    playersInTheFive: [...opts.playersInTheFive.get()],
   })
   const statAction = STATS_MATCH_ACTIONS.find(
     candidate => candidate.name === 'fiveOut',
@@ -146,16 +147,22 @@ function getOutFromPlayground(options: {
   }
 
   registerStat({
-    playerId: options.playerId,
+    playerId: opts.playerId,
     statAction,
-    match: options.match,
-    statSummary: options.statSummary,
-    setStatSummary: options.setStatSummary,
-    disableClearLastAction: options.disableClearLastAction,
+    match: opts.match,
+    statSummary: opts.statSummary,
+    setStatSummary: opts.setStatSummary,
+    disableClearLastAction: opts.disableClearLastAction,
   })
+
+  if (opts.playersInTheFive.get().length === 5) {
+    vibrate('long')
+  } else {
+    vibrate()
+  }
 }
 
-function getInFromPlayground(options: {
+function getInFromPlayground(opts: {
   playerId: string
   playersInTheFive: MadSignal<Array<string>>
   match: Match | null
@@ -163,17 +170,17 @@ function getInFromPlayground(options: {
   setStatSummary: SetStoreFunction<StatMatchSummary>
   disableClearLastAction: MadSignal<boolean>
 }) {
-  const inTheFive = options.playersInTheFive.get()
+  const inTheFive = opts.playersInTheFive.get()
 
-  if (!options.match || inTheFive.includes(options.playerId)) {
+  if (!opts.match || inTheFive.includes(opts.playerId)) {
     return
   }
 
   /* Do not mutate the current array in order to throw a new render */
   const newFive = Array(...inTheFive)
-  newFive.push(options.playerId)
-  options.playersInTheFive.set(newFive)
-  options.match.update({ playersInTheFive: [...newFive] })
+  newFive.push(opts.playerId)
+  opts.playersInTheFive.set(newFive)
+  opts.match.update({ playersInTheFive: [...newFive] })
 
   const statAction = STATS_MATCH_ACTIONS.find(
     candidate => candidate.name === 'fiveIn',
@@ -183,13 +190,19 @@ function getInFromPlayground(options: {
   }
 
   registerStat({
-    playerId: options.playerId,
+    playerId: opts.playerId,
     statAction,
-    match: options.match,
-    statSummary: options.statSummary,
-    setStatSummary: options.setStatSummary,
-    disableClearLastAction: options.disableClearLastAction,
+    match: opts.match,
+    statSummary: opts.statSummary,
+    setStatSummary: opts.setStatSummary,
+    disableClearLastAction: opts.disableClearLastAction,
   })
+
+  if (opts.playersInTheFive.get().length === 5) {
+    vibrate('long')
+  } else {
+    vibrate()
+  }
 }
 
 function stopStartTheGame(opts: {
@@ -215,6 +228,8 @@ function stopStartTheGame(opts: {
     setStatSummary: opts.setStatSummary,
     disableClearLastAction: opts.disableClearLastAction,
   })
+
+  orchestrator.throwUserActionFeedback()
 }
 
 function renderPlayerBench(opts: {
@@ -751,6 +766,8 @@ export default function BsMatch(props: BsMatchProps) {
                               setStatSummary,
                               disableClearLastAction,
                             })
+
+                            orchestrator.throwUserActionFeedback()
                           }}
                           onKeyDown={() => {
                             registerStat({
@@ -761,6 +778,8 @@ export default function BsMatch(props: BsMatchProps) {
                               setStatSummary,
                               disableClearLastAction,
                             })
+
+                            orchestrator.throwUserActionFeedback()
                           }}
                         >
                           {statAction.icon(`${statAction.type}-content`)}
