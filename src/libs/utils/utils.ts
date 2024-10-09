@@ -1,7 +1,6 @@
 import type { DaisyAlert } from '../daisy'
 
 const antropyFator = 3
-const toastContainerId = 'toast-main-container'
 
 export function getUniqId(): string {
   const array = new Uint32Array(antropyFator)
@@ -139,37 +138,58 @@ export function toDateTime(dateString: string | null) {
 }
 
 export function toast(message: string, variant?: DaisyAlert) {
-  let toastContainer = document.getElementById(
-    toastContainerId,
+  const toastContainer = document.getElementById(
+    'bs-global-toast',
   ) as HTMLDivElement
 
-  if (!toastContainer) {
-    toastContainer = document.createElement('div')
-    toastContainer.id = toastContainerId
-    toastContainer.classList.add('toast', 'toast-end')
-    mount(toastContainer)
+  let dialogTemplate: HTMLDivElement | null
+  switch (variant) {
+    case 'success':
+      dialogTemplate = document.querySelector(
+        '#bs-template-store > #bs-template-store-alert-success',
+      )
+      break
+    case 'warning':
+      dialogTemplate = document.querySelector(
+        '#bs-template-store > #bs-template-store-alert-warning',
+      )
+      break
+    case 'error':
+      dialogTemplate = document.querySelector(
+        '#bs-template-store > #bs-template-store-alert-error',
+      )
+      break
+    default:
+      dialogTemplate = document.querySelector(
+        '#bs-template-store > #bs-template-store-alert-info',
+      )
+      break
   }
 
-  const dialog: HTMLDivElement = document.createElement('div') as HTMLDivElement
-  dialog.classList.add('alert')
-  if (variant) {
-    dialog.classList.add(`alert-${variant}`)
+  if (!dialogTemplate) {
+    throw new Error('Unable to find the dialog item in the template store.')
   }
-  toastContainer.append(dialog)
+
+  const dialog = dialogTemplate.cloneNode(true) as HTMLDivElement
+  mount(dialog, toastContainer)
+
+  dialog.id = `${dialog.id}-${getShortId()}`
   dialog.onclick = () => {
     unmount(dialog, toastContainer)
   }
 
-  const span = document.createElement('span')
-  span.classList.add('inline-block', 'min-w-64', 'text-center')
+  console.log('dialog: ', dialog)
+  const span = dialog.querySelector('#message') as HTMLDivElement
+  if (!span) {
+    throw new Error('Unable to find the message item in the toast dialog.')
+  }
   span.innerText = message
-  dialog.append(span)
 
   const timeout = setTimeout(() => {
     unmount(dialog, toastContainer)
   }, 6000)
 
-  dialog.onclick = () => {
+  dialogTemplate.onclick = () => {
     unmount(dialog, toastContainer)
     clearTimeout(timeout)
   }

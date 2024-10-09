@@ -201,7 +201,10 @@ export default function Home() {
               type="button"
               class="btn btn-outline"
               onClick={() => {
-                toast('test', 'info')
+                toast('Info test', 'info')
+                toast('Success test', 'success')
+                toast('Warning test', 'warning')
+                toast('Error test', 'error')
               }}
             >
               <Megaphone />

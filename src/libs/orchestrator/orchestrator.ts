@@ -230,6 +230,7 @@ export class Orchestrator {
 
     try {
       this.doOverwriteDB(rawData)
+      toast("Import des nouvelles données réussi !", 'success')
     } catch (e) {
       toast('Impossible d’importer les données.', 'error')
       console.error(e)
