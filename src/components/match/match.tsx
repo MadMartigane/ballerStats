@@ -673,22 +673,28 @@ function renderTheTeamFive(opts: {
     )
   }
   return (
-    <For each={opts.sortedPlayers}>
-      {player => (
-        <Show when={player && opts.playersInTheFive.get().includes(player.id)}>
-          {renderPlayerButton({
-            player,
-            match: opts.match,
-            playerInTheFive: opts.playersInTheFive,
-            setStatSummary: opts.setStatSummary,
-            disableClearLastAction: opts.disableClearLastAction,
-            statSummary: opts.statSummary,
-            matchIsPlaying: opts.matchIsPlaying,
-            playerOnAction: opts.playerOnAction,
-          })}
-        </Show>
-      )}
-    </For>
+    <div
+      class={`${opts.playersInTheFive.get().length === 5 ? '' : 'bg-warning/50'} rounded`}
+    >
+      <For each={opts.sortedPlayers}>
+        {player => (
+          <Show
+            when={player && opts.playersInTheFive.get().includes(player.id)}
+          >
+            {renderPlayerButton({
+              player,
+              match: opts.match,
+              playerInTheFive: opts.playersInTheFive,
+              setStatSummary: opts.setStatSummary,
+              disableClearLastAction: opts.disableClearLastAction,
+              statSummary: opts.statSummary,
+              matchIsPlaying: opts.matchIsPlaying,
+              playerOnAction: opts.playerOnAction,
+            })}
+          </Show>
+        )}
+      </For>
+    </div>
   )
 }
 
@@ -719,7 +725,19 @@ export default function BsMatch(props: BsMatchProps) {
       </div>
 
       <Show when={!isStatMode.get()}>
-        <div class="divider">Le 5</div>
+        <div class="divider">
+          Le 5 (
+          <span
+            class={
+              playersInTheFive.get().length === 5
+                ? 'text-success'
+                : 'text-error'
+            }
+          >
+            {playersInTheFive.get().length}
+          </span>
+          )
+        </div>
         <Show when={!playerOnAction.get()}>
           <div class="w-full">
             {renderTheTeamFive({
