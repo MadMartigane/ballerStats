@@ -1,5 +1,6 @@
 import type Match from '../match'
 import { TEAM_OPPONENT_ID } from '../team/team'
+import { clone } from '../utils'
 import type {
   StatMatchActionItemName,
   StatMatchActionItemType,
@@ -7,6 +8,65 @@ import type {
   StatMatchSummaryPlayer,
   StatMatchSummaryRebonds,
 } from './stats.d'
+
+const RAW_STAT_MATCH_SUMMARY: StatMatchSummary = {
+  teamScore: 0,
+  teamScores: {
+    playTime: 0,
+    playerId: '',
+    scores: {
+      '2pts': 0,
+      '3pts': 0,
+      'free-throw': 0,
+      total: 0,
+    },
+    rebonds: {
+      defensive: 0,
+      offensive: 0,
+      total: 0,
+    },
+    ratio: {
+      'free-throw': {
+        success: 0,
+        fail: 0,
+        total: 0,
+        percentage: 0,
+      },
+      '2pts': {
+        success: 0,
+        fail: 0,
+        total: 0,
+        percentage: 0,
+      },
+      '3pts': {
+        success: 0,
+        fail: 0,
+        total: 0,
+        percentage: 0,
+      },
+    },
+    fouls: 0,
+    turnover: 0,
+    assists: 0,
+  },
+  opponentScore: 0,
+  opponentFouls: 0,
+  players: [],
+  teamAssists: 0,
+  teamTurnover: 0,
+  teamFouls: 0,
+  rebonds: {
+    teamTotal: 0,
+    teamOffensive: 0,
+    teamDefensive: 0,
+    teamTotalPercentage: 0,
+    teamOffensivePercentage: 0,
+    teamDefensivePercentage: 0,
+    opponentTotal: 0,
+    opponentDefensive: 0,
+    opponentOffensive: 0,
+  },
+}
 
 function getPlayerIdsInStats(match: Match) {
   return match.stats
@@ -74,6 +134,60 @@ export function getTeamScore(match: Match, playerIds: Array<string>) {
     (score: number, playerId) => score + getPlayerScore(match, playerId),
     0,
   )
+}
+
+export function getTeamScores(players: Array<StatMatchSummaryPlayer>) {
+  const rawTeamScores = clone(
+    RAW_STAT_MATCH_SUMMARY.teamScores,
+  ) as StatMatchSummaryPlayer
+
+  const teamScores = players.reduce((total, playerStat) => {
+    total.scores.total += playerStat.scores.total
+    total.scores['free-throw'] += playerStat.scores['free-throw']
+    total.scores['2pts'] += playerStat.scores['2pts']
+    total.scores['3pts'] += playerStat.scores['3pts']
+
+    total.playTime = (total.playTime || 0) + (playerStat.playTime || 0)
+
+    total.assists += playerStat.assists
+    total.turnover += playerStat.turnover
+    total.fouls += playerStat.fouls
+
+    total.rebonds.total += playerStat.rebonds.total
+    total.rebonds.offensive += playerStat.rebonds.offensive
+    total.rebonds.defensive += playerStat.rebonds.defensive
+
+    total.ratio['free-throw'].fail += playerStat.ratio['free-throw'].fail
+    total.ratio['free-throw'].success += playerStat.ratio['free-throw'].success
+    total.ratio['free-throw'].total += playerStat.ratio['free-throw'].total
+    total.ratio['2pts'].fail += playerStat.ratio['2pts'].fail
+    total.ratio['2pts'].success += playerStat.ratio['2pts'].success
+    total.ratio['2pts'].total += playerStat.ratio['2pts'].total
+    total.ratio['3pts'].fail += playerStat.ratio['3pts'].fail
+    total.ratio['3pts'].success += playerStat.ratio['3pts'].success
+    total.ratio['3pts'].total += playerStat.ratio['3pts'].total
+
+    return total
+  }, rawTeamScores)
+
+  teamScores.ratio['free-throw'].percentage =
+    Math.round(
+      (teamScores.ratio['free-throw'].success /
+        teamScores.ratio['free-throw'].total) *
+        100,
+    ) || 0
+
+  teamScores.ratio['2pts'].percentage =
+    Math.round(
+      (teamScores.ratio['2pts'].success / teamScores.ratio['2pts'].total) * 100,
+    ) || 0
+
+  teamScores.ratio['3pts'].percentage =
+    Math.round(
+      (teamScores.ratio['3pts'].success / teamScores.ratio['3pts'].total) * 100,
+    ) || 0
+
+  return teamScores
 }
 
 export function getTeamAssists(playersStats: StatMatchSummaryPlayer[]) {
@@ -180,26 +294,7 @@ export function getFullRebondStats(
 
 export function getStatSummary(match: Match | null): StatMatchSummary {
   if (!match) {
-    return {
-      teamScore: 0,
-      opponentScore: 0,
-      opponentFouls: 0,
-      players: [],
-      teamAssists: 0,
-      teamTurnover: 0,
-      teamFouls: 0,
-      rebonds: {
-        teamTotal: 0,
-        teamOffensive: 0,
-        teamDefensive: 0,
-        teamTotalPercentage: 0,
-        teamOffensivePercentage: 0,
-        teamDefensivePercentage: 0,
-        opponentTotal: 0,
-        opponentDefensive: 0,
-        opponentOffensive: 0,
-      },
-    }
+    return clone(RAW_STAT_MATCH_SUMMARY) as StatMatchSummary
   }
 
   const playerIds = getPlayerIdsInStats(match)
@@ -333,6 +428,7 @@ export function getStatSummary(match: Match | null): StatMatchSummary {
 
   return {
     teamScore: getTeamScore(match, playerIds),
+    teamScores: getTeamScores(players),
     opponentScore: getOpponentScore(match),
     opponentFouls: getOpponentFouls(match),
     players,
