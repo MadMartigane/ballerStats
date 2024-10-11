@@ -1,6 +1,9 @@
 import bsEventBus from '../event-bus'
+import Match from '../match'
 import Matchs from '../matchs'
+import Player from '../player'
 import Players from '../players'
+import { soundTab } from '../sounds'
 import {
   getStoredMatchs,
   getStoredPlayers,
@@ -9,14 +12,17 @@ import {
   storePlayers,
   storeTeams,
 } from '../store'
+import Team from '../team'
 import Teams from '../teams'
 import { confirmAction, mount, toast, unmount } from '../utils'
-import { vibrate } from '../vibrator'
-import { soundTab } from '../sounds'
+import { type ThemeVibration, vibrate } from '../vibrator'
 import type { GlobalDB } from './orchestrator.d'
-import Player from '../player'
-import Team from '../team'
-import Match from '../match'
+
+const THEME_VIBRATION_TO_DURATION: { [key in ThemeVibration]: number } = {
+  single: 100,
+  double: 100,
+  long: 200,
+}
 
 export class Orchestrator {
   #players: Players = new Players()
@@ -222,7 +228,7 @@ export class Orchestrator {
 
     const cleanUpBefore = await confirmAction(
       'Import DB',
-      'Voulez-vous écraser toutes les données ?'
+      'Voulez-vous écraser toutes les données ?',
     )
     if (cleanUpBefore) {
       this.doClearDB()
@@ -230,7 +236,7 @@ export class Orchestrator {
 
     try {
       this.doOverwriteDB(rawData)
-      toast("Import des nouvelles données réussi !", 'success')
+      toast('Import des nouvelles données réussi !', 'success')
     } catch (e) {
       toast('Impossible d’importer les données.', 'error')
       console.error(e)
@@ -389,14 +395,38 @@ export class Orchestrator {
     reader.readAsText(file, 'UTF-8')
   }
 
-  public throwUserActionFeedback() {
-    vibrate()
-
+  public blink(duration: number): Promise<void> {
     const main = document.querySelector('main')
-    main?.classList.toggle('bg-amber-400/10')
-    setTimeout(() => {
-      main?.classList.toggle('bg-amber-400/10')
-    }, 30)
+    return new Promise(resolve => {
+      if (!main) {
+        console.warn(
+          '[Orchestrator.blink()] Unable to find the <main /> in the DOM.',
+        )
+        resolve()
+        return
+      }
+
+      main.classList.toggle('bg-amber-400/40')
+      return setTimeout(() => {
+        main.classList.toggle('bg-amber-400/40')
+        resolve()
+      }, duration)
+    })
+  }
+
+  public throwUserActionFeedback(theme: ThemeVibration = 'single') {
+    vibrate(theme)
+
+    const duration =
+      THEME_VIBRATION_TO_DURATION[theme] || THEME_VIBRATION_TO_DURATION.single
+
+    this.blink(duration).then(() => {
+      if (theme === 'double') {
+        setTimeout(() => {
+          this.blink(duration)
+        }, duration / 2)
+      }
+    })
 
     soundTab.play()
   }

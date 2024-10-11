@@ -220,6 +220,7 @@ function stopStartTheGame(opts: {
   if (!statAction) {
     throw new Error('Unable to find stat action item: "gameStop"')
   }
+
   registerStat({
     playerId: null,
     statAction,
@@ -229,7 +230,7 @@ function stopStartTheGame(opts: {
     disableClearLastAction: opts.disableClearLastAction,
   })
 
-  orchestrator.throwUserActionFeedback()
+  orchestrator.throwUserActionFeedback('long')
 }
 
 function renderPlayerBench(opts: {
