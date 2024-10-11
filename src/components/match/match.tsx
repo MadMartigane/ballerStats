@@ -220,6 +220,7 @@ function stopStartTheGame(opts: {
   if (!statAction) {
     throw new Error('Unable to find stat action item: "gameStop"')
   }
+
   registerStat({
     playerId: null,
     statAction,
@@ -229,7 +230,7 @@ function stopStartTheGame(opts: {
     disableClearLastAction: opts.disableClearLastAction,
   })
 
-  orchestrator.throwUserActionFeedback()
+  orchestrator.throwUserActionFeedback('long')
 }
 
 function renderPlayerBench(opts: {
@@ -534,44 +535,88 @@ function renderStatGrid(statSummary: StatMatchSummary) {
                     <th>
                       <span class="text-2xl">{player?.jersayNumber}</span>
                     </th>
-                    <td>
+                    <td class="text-xl">
                       {player?.nicName ? player.nicName : player?.firstName}
                     </td>
                     <td>
                       <span class="text-lg">{`${playerStats.scores.total}`}</span>
                     </td>
-                    <td>
-                      <span class="text-lg">{`${playerStats.rebonds.total}`}</span>
-                      <span class="">{` (${playerStats.rebonds.offensive}-${playerStats.rebonds.defensive})`}</span>
+                    <td class="text-center">
+                      <div class="text-lg">{playerStats.rebonds.total}</div>
+                      <span>{`(${playerStats.rebonds.offensive} - ${playerStats.rebonds.defensive})`}</span>
                     </td>
-                    <td>
-                      <span class="text-lg">{`${playerStats.fouls}`}</span>
+                    <td class="text-center">
+                      <span class="text-lg">{playerStats.fouls}</span>
                     </td>
-                    <td>
-                      <span class="text-lg">{`${playerStats.turnover}`}</span>
+                    <td class="text-center">
+                      <span class="text-lg">{playerStats.turnover}</span>
                     </td>
-                    <td>
-                      <span class="text-lg">{`${playerStats.assists}`}</span>
+                    <td class="text-center">
+                      <span class="text-lg">{playerStats.assists}</span>
                     </td>
                     <td>
                       <span class="text-lg">{`${playerStats.scores['free-throw']}`}</span>
                       {` ${playerStats.ratio['free-throw'].success}/${playerStats.ratio['free-throw'].total}`}
-                      {` (${playerStats.ratio['free-throw'].percentage}%)`}
+                      <div>{`(${playerStats.ratio['free-throw'].percentage}%)`}</div>
                     </td>
                     <td>
                       <span class="text-lg">{`${playerStats.scores['2pts']}`}</span>
                       {` ${playerStats.ratio['2pts'].success}/${playerStats.ratio['2pts'].total}`}
-                      {` (${playerStats.ratio['2pts'].percentage}%)`}
+                      <div>{`(${playerStats.ratio['2pts'].percentage}%)`}</div>
                     </td>
                     <td>
                       <span class="text-lg">{`${playerStats.scores['3pts']}`}</span>
                       {` ${playerStats.ratio['3pts'].success}/${playerStats.ratio['3pts'].total}`}
-                      {` (${playerStats.ratio['3pts'].percentage}%)`}
+                      <div>{`(${playerStats.ratio['3pts'].percentage}%)`}</div>
                     </td>
                   </tr>
                 )
               }}
             </For>
+
+            <tr>
+              <th>
+                <span>
+                  <Users size={32} />
+                </span>
+              </th>
+              <td class="text-2xl">Équipe</td>
+              <td>
+                <span class="text-lg">{`${statSummary.teamScore}`}</span>
+              </td>
+              <td>
+                <div class="text-lg text-center">
+                  {statSummary.teamScores.rebonds.total}
+                </div>
+                <span class="">{`(${statSummary.teamScores.rebonds.offensive} - ${statSummary.teamScores.rebonds.defensive})`}</span>
+              </td>
+              <td class="text-center">
+                <span class="text-lg">{statSummary.teamScores.fouls}</span>
+              </td>
+              <td class="text-center">
+                <span class="text-lg">{statSummary.teamScores.turnover}</span>
+              </td>
+              <td class="text-center">
+                <span class="text-lg">{statSummary.teamScores.assists}</span>
+              </td>
+              <td>
+                <span class="text-lg">
+                  {statSummary.teamScores.scores['free-throw']}
+                </span>
+                {` ${statSummary.teamScores.ratio['free-throw'].success}/${statSummary.teamScores.ratio['free-throw'].total}`}
+                {` (${statSummary.teamScores.ratio['free-throw'].percentage}%)`}
+              </td>
+              <td>
+                <span class="text-lg">{`${statSummary.teamScores.scores['2pts']}`}</span>
+                {` ${statSummary.teamScores.ratio['2pts'].success}/${statSummary.teamScores.ratio['2pts'].total}`}
+                {` (${statSummary.teamScores.ratio['2pts'].percentage}%)`}
+              </td>
+              <td>
+                <span class="text-lg">{`${statSummary.teamScores.scores['3pts']}`}</span>
+                {` ${statSummary.teamScores.ratio['3pts'].success}/${statSummary.teamScores.ratio['3pts'].total}`}
+                {` (${statSummary.teamScores.ratio['3pts'].percentage}%)`}
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>

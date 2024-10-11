@@ -63,6 +63,7 @@ export type StatMatchSummaryPlayer = {
       percentage: number
     }
   }
+  playTime: number | null
   fouls: number
   assists: number
   turnover: number
@@ -82,6 +83,7 @@ export type StatMatchSummaryRebonds = {
 
 export type StatMatchSummary = {
   teamScore: number
+  teamScores: StatMatchSummaryPlayer
   opponentScore: number
   opponentFouls: number
   players: Array<StatMatchSummaryPlayer>
