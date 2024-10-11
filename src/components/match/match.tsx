@@ -574,7 +574,7 @@ function renderStatGrid(statSummary: StatMatchSummary) {
               }}
             </For>
 
-            <tr class="bg-neutral text-neutral-content">
+            <tr>
               <th>
                 <span>
                   <Users size={28} />
