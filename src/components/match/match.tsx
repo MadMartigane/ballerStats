@@ -501,7 +501,7 @@ function renderStatGrid(statSummary: StatMatchSummary) {
       <div class="overflow-x-auto">
         <table class="table table-zebra">
           <thead>
-            <tr>
+            <tr class="bg-neutral text-neutral-content">
               <th>
                 <Shirt />
               </th>
@@ -574,13 +574,13 @@ function renderStatGrid(statSummary: StatMatchSummary) {
               }}
             </For>
 
-            <tr>
+            <tr class="bg-neutral text-neutral-content">
               <th>
                 <span>
-                  <Users size={32} />
+                  <Users size={28} />
                 </span>
               </th>
-              <td class="text-2xl">Équipe</td>
+              <td class="text-xl">Équipe</td>
               <td>
                 <span class="text-lg">{`${statSummary.teamScore}`}</span>
               </td>
