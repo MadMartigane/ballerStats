@@ -31,6 +31,7 @@ import { confirmAction, goTo } from '../../libs/utils'
 import BsScoreCard from '../score-card'
 import type { BsMatchProps } from './match.d'
 import { vibrate } from '../../libs/vibrator'
+import BsFullStatTable from '../stats'
 
 function openActionMode(
   playerId: string | undefined,
@@ -472,9 +473,9 @@ function renderTeamTotals(statSummary: StatMatchSummary) {
         <div class="stat place-items-center">
           <div class="stat-title">Fautes</div>
           <div
-            class={`stat-value ${statSummary.teamFouls < statSummary.opponentFouls ? 'text-success' : 'text-warning'}`}
+            class={`stat-value ${statSummary.teamScores.fouls < statSummary.opponentFouls ? 'text-success' : 'text-warning'}`}
           >
-            {statSummary.teamFouls}
+            {statSummary.teamScores.fouls}
           </div>
           <div class="stat-desc">{`Fautes adverse: ${statSummary.opponentFouls}`}</div>
         </div>
@@ -498,128 +499,7 @@ function renderTeamTotals(statSummary: StatMatchSummary) {
 function renderStatGrid(statSummary: StatMatchSummary) {
   return (
     <div>
-      <div class="overflow-x-auto">
-        <table class="table table-zebra">
-          <thead>
-            <tr class="bg-neutral text-neutral-content">
-              <th>
-                <Shirt />
-              </th>
-              <th>Nom</th>
-              <th>Pts</th>
-              <th>Rbs (O-D)</th>
-              <th>Fautes</th>
-              <th>
-                <div>TO</div>
-              </th>
-              <th>
-                <div>Ass</div>
-              </th>
-              <th>LF</th>
-              <th>2pts</th>
-              <th>3pts</th>
-            </tr>
-          </thead>
-          <tbody>
-            <For each={statSummary.players}>
-              {playerStats => {
-                /* Is a global stat like stop and start game, not a player stat */
-                if (!playerStats.playerId) {
-                  return null
-                }
-
-                const player = orchestrator.getPlayer(playerStats.playerId)
-
-                return (
-                  <tr>
-                    <th>
-                      <span class="text-2xl">{player?.jersayNumber}</span>
-                    </th>
-                    <td class="text-xl">
-                      {player?.nicName ? player.nicName : player?.firstName}
-                    </td>
-                    <td>
-                      <span class="text-lg">{`${playerStats.scores.total}`}</span>
-                    </td>
-                    <td class="text-center">
-                      <div class="text-lg">{playerStats.rebonds.total}</div>
-                      <span>{`(${playerStats.rebonds.offensive} - ${playerStats.rebonds.defensive})`}</span>
-                    </td>
-                    <td class="text-center">
-                      <span class="text-lg">{playerStats.fouls}</span>
-                    </td>
-                    <td class="text-center">
-                      <span class="text-lg">{playerStats.turnover}</span>
-                    </td>
-                    <td class="text-center">
-                      <span class="text-lg">{playerStats.assists}</span>
-                    </td>
-                    <td>
-                      <span class="text-lg">{`${playerStats.scores['free-throw']}`}</span>
-                      {` ${playerStats.ratio['free-throw'].success}/${playerStats.ratio['free-throw'].total}`}
-                      <div>{`(${playerStats.ratio['free-throw'].percentage}%)`}</div>
-                    </td>
-                    <td>
-                      <span class="text-lg">{`${playerStats.scores['2pts']}`}</span>
-                      {` ${playerStats.ratio['2pts'].success}/${playerStats.ratio['2pts'].total}`}
-                      <div>{`(${playerStats.ratio['2pts'].percentage}%)`}</div>
-                    </td>
-                    <td>
-                      <span class="text-lg">{`${playerStats.scores['3pts']}`}</span>
-                      {` ${playerStats.ratio['3pts'].success}/${playerStats.ratio['3pts'].total}`}
-                      <div>{`(${playerStats.ratio['3pts'].percentage}%)`}</div>
-                    </td>
-                  </tr>
-                )
-              }}
-            </For>
-
-            <tr>
-              <th>
-                <span>
-                  <Users size={28} />
-                </span>
-              </th>
-              <td class="text-xl">Équipe</td>
-              <td>
-                <span class="text-lg">{`${statSummary.teamScore}`}</span>
-              </td>
-              <td>
-                <div class="text-lg text-center">
-                  {statSummary.teamScores.rebonds.total}
-                </div>
-                <span class="">{`(${statSummary.teamScores.rebonds.offensive} - ${statSummary.teamScores.rebonds.defensive})`}</span>
-              </td>
-              <td class="text-center">
-                <span class="text-lg">{statSummary.teamScores.fouls}</span>
-              </td>
-              <td class="text-center">
-                <span class="text-lg">{statSummary.teamScores.turnover}</span>
-              </td>
-              <td class="text-center">
-                <span class="text-lg">{statSummary.teamScores.assists}</span>
-              </td>
-              <td>
-                <span class="text-lg">
-                  {statSummary.teamScores.scores['free-throw']}
-                </span>
-                {` ${statSummary.teamScores.ratio['free-throw'].success}/${statSummary.teamScores.ratio['free-throw'].total}`}
-                {` (${statSummary.teamScores.ratio['free-throw'].percentage}%)`}
-              </td>
-              <td>
-                <span class="text-lg">{`${statSummary.teamScores.scores['2pts']}`}</span>
-                {` ${statSummary.teamScores.ratio['2pts'].success}/${statSummary.teamScores.ratio['2pts'].total}`}
-                {` (${statSummary.teamScores.ratio['2pts'].percentage}%)`}
-              </td>
-              <td>
-                <span class="text-lg">{`${statSummary.teamScores.scores['3pts']}`}</span>
-                {` ${statSummary.teamScores.ratio['3pts'].success}/${statSummary.teamScores.ratio['3pts'].total}`}
-                {` (${statSummary.teamScores.ratio['3pts'].percentage}%)`}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <BsFullStatTable stats={statSummary} />
 
       <hr />
 

@@ -1,9 +1,17 @@
+import BsFullStatTable from "../components/stats"
+import { getFullStats } from "../libs/stats/stats-util"
+
 export default function Stats() {
+  const fullStats = getFullStats()
+
+  console.log("fullStats: ", fullStats)
+
   return (
     <div>
-      <h1 class="text-2xl font-bold">Stats !!</h1>
+      <h1 class="text-2xl font-bold">Get your full stats !!</h1>
 
-      <p class="mt-4">Get your stats here.</p>
+      <BsFullStatTable stats={fullStats} />
+      <pre>{JSON.stringify(fullStats, null, 2)}</pre>
     </div>
   )
 }

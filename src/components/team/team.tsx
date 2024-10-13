@@ -29,6 +29,7 @@ export default function BsTeam(props: BsTeamProps) {
           <>
             <Show when={props.onEdit}>
               <button
+                type="button"
                 class="btn btn-square btn-secondary"
                 onClick={() => {
                   editTeam(team, props.onEdit)
@@ -39,6 +40,7 @@ export default function BsTeam(props: BsTeamProps) {
               </button>
             </Show>
             <button
+              type="button"
               class="btn btn-square btn-secondary"
               onClick={() => {
                 removeTeam(team)
@@ -50,7 +52,7 @@ export default function BsTeam(props: BsTeamProps) {
         }
       >
         <For each={team.playerIds}>
-          {(id) => {
+          {id => {
             const player = orchestrator.getPlayer(id)
 
             if (player) {

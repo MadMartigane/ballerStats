@@ -88,7 +88,7 @@ export type StatMatchSummary = {
   opponentFouls: number
   players: Array<StatMatchSummaryPlayer>
   rebonds: StatMatchSummaryRebonds
-  teamAssists: number
-  teamTurnover: number
-  teamFouls: number
+  teamAssists?: number
+  teamTurnover?: number
+  teamFouls?: number
 }
