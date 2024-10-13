@@ -19,17 +19,17 @@ function renderTh(playerStats: StatMatchSummaryPlayer, player?: Player | null) {
       <td>
         <span class="text-lg">{`${playerStats.scores.total}`}</span>
       </td>
-      <td class="text-center">
+      <td>
         <div class="text-lg">{playerStats.rebonds.total}</div>
         <span>{`(${playerStats.rebonds.offensive} - ${playerStats.rebonds.defensive})`}</span>
       </td>
-      <td class="text-center">
+      <td>
         <span class="text-lg">{playerStats.fouls}</span>
       </td>
-      <td class="text-center">
+      <td>
         <span class="text-lg">{playerStats.turnover}</span>
       </td>
-      <td class="text-center">
+      <td>
         <span class="text-lg">{playerStats.assists}</span>
       </td>
       <td>
