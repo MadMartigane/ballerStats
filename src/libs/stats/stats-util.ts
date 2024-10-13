@@ -283,9 +283,9 @@ export function getFullRebondStats(
   const teamTotalPercentage =
     Math.round((teamTotal / (opponentTotal + teamTotal)) * 100) || 0
   const teamDefensivePercentage =
-    Math.round((teamDefensive / (opponentDefensive + teamDefensive)) * 100) || 0
+    Math.round((teamDefensive / (opponentOffensive + teamDefensive)) * 100) || 0
   const teamOffensivePercentage =
-    Math.round((teamOffensive / (opponentOffensive + teamOffensive)) * 100) || 0
+    Math.round((teamOffensive / (opponentDefensive + teamOffensive)) * 100) || 0
 
   return {
     teamTotal,
