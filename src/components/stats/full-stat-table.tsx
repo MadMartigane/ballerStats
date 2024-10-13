@@ -51,7 +51,7 @@ function renderTh(playerStats: StatMatchSummaryPlayer, player?: Player | null) {
   )
 }
 
-export default function BsFullStatTable(props: BsFullStatTableProps) {
+export function BsFullStatTable(props: BsFullStatTableProps) {
   const statSummary = props.stats
 
   return (

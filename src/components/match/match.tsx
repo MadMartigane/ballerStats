@@ -31,7 +31,7 @@ import { confirmAction, goTo } from '../../libs/utils'
 import BsScoreCard from '../score-card'
 import type { BsMatchProps } from './match.d'
 import { vibrate } from '../../libs/vibrator'
-import BsFullStatTable from '../stats'
+import { BsFullStatTable, BsStatSumUpRebonds  } from '../stats'
 
 function openActionMode(
   playerId: string | undefined,
@@ -509,33 +509,7 @@ function renderStatGrid(statSummary: StatMatchSummary) {
       <hr />
 
       <h3>Synthèse rebonds</h3>
-      <div class="overflow-x-auto">
-        <div class="stats shadow">
-          <div class="stat place-items-center">
-            <div class="stat-title">Total</div>
-            <div
-              class={`stat-value ${statSummary.rebonds.teamTotalPercentage > 49 ? 'text-success' : 'text-warning'}`}
-            >{`${statSummary.rebonds.teamTotalPercentage} %`}</div>
-            <div class="stat-desc">{`Équipe (${statSummary.rebonds.teamTotal}) - Opposent (${statSummary.rebonds.opponentTotal})`}</div>
-          </div>
-
-          <div class="stat place-items-center">
-            <div class="stat-title">Offensifs</div>
-            <div
-              class={`stat-value ${statSummary.rebonds.teamOffensivePercentage > 49 ? 'text-success' : 'text-warning'}`}
-            >{`${statSummary.rebonds.teamOffensivePercentage} %`}</div>
-            <div class="stat-desc">{`Équipe (${statSummary.rebonds.teamOffensive}) - Opposent (${statSummary.rebonds.opponentOffensive})`}</div>
-          </div>
-
-          <div class="stat place-items-center">
-            <div class="stat-title">Defensifs</div>
-            <div
-              class={`stat-value ${statSummary.rebonds.teamDefensivePercentage > 49 ? 'text-success' : 'text-warning'}`}
-            >{`${statSummary.rebonds.teamDefensivePercentage} %`}</div>
-            <div class="stat-desc">{`Équipe (${statSummary.rebonds.teamDefensive}) - Opposent (${statSummary.rebonds.opponentDefensive})`}</div>
-          </div>
-        </div>
-      </div>
+      <BsStatSumUpRebonds stats={statSummary} />
     </div>
   )
 }

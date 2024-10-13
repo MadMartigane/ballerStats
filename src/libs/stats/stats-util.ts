@@ -280,12 +280,12 @@ export function getFullRebondStats(
   const teamDefensive = getTeamDefensiveRebonds(match, playerIds)
   const teamTotal = teamDefensive + teamOffensive
 
-  const teamTotalPercentage =
-    Math.round((teamTotal / (opponentTotal + teamTotal)) * 100) || 0
   const teamDefensivePercentage =
     Math.round((teamDefensive / (opponentOffensive + teamDefensive)) * 100) || 0
   const teamOffensivePercentage =
     Math.round((teamOffensive / (opponentDefensive + teamOffensive)) * 100) || 0
+  const teamTotalPercentage =
+    Math.round((teamDefensivePercentage + teamOffensivePercentage) / 2) || 0
 
   return {
     teamTotal,
@@ -629,11 +629,19 @@ export function getFullStats(): StatMatchSummary {
   )
 
   // Fouls, turnover and assists was not registered on the first matchs.
-  const nbMatchFouls = matchs.filter((match) => isMatchHaveStatOfType(match, 'foul')).length
-  const nbMatchTurnover = matchs.filter((match) => isMatchHaveStatOfType(match, 'turnover')).length
-  const nbMatchAssists = matchs.filter((match) => isMatchHaveStatOfType(match, 'assist')).length
+  const nbMatchFouls = matchs.filter(match =>
+    isMatchHaveStatOfType(match, 'foul'),
+  ).length
+  const nbMatchTurnover = matchs.filter(match =>
+    isMatchHaveStatOfType(match, 'turnover'),
+  ).length
+  const nbMatchAssists = matchs.filter(match =>
+    isMatchHaveStatOfType(match, 'assist'),
+  ).length
 
-  fullStats.teamScores.fouls = Math.round(fullStats.teamScores.fouls / nbMatchFouls)
+  fullStats.teamScores.fouls = Math.round(
+    fullStats.teamScores.fouls / nbMatchFouls,
+  )
   fullStats.teamScores.turnover = Math.round(
     fullStats.teamScores.turnover / nbMatchTurnover,
   )

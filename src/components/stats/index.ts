@@ -1,3 +1,6 @@
 export * from './full-stat-table.d'
-import BsFullStatTable from './full-stat-table'
-export default BsFullStatTable
+export * from './full-stat-table'
+
+export * from './sum-up-rebonds.d'
+export * from './sum-up-rebonds'
+
