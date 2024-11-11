@@ -5,18 +5,18 @@ import { getFullStats } from '../libs/stats/stats-util'
 export default function Stats() {
   const fullStats = getFullStats()
 
-  console.log('fullStats: ', fullStats)
-
   return (
     <div>
       <h1 class="text-2xl font-bold">
-        <ChartScatter  class="inline-block"/><span class="inline-block px-2">Statistiques globales sur tous les matchs.</span> 
+        <ChartScatter class="inline-block" />
+        <span class="inline-block px-2">
+          Statistiques globales sur tous les matchs.
+        </span>
       </h1>
 
       <div class="mt-4">
         <BsFullStatTable stats={fullStats} />
       </div>
-      <pre>{JSON.stringify(fullStats, null, 2)}</pre>
     </div>
   )
 }

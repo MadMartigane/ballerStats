@@ -64,6 +64,7 @@ export type StatMatchSummaryPlayer = {
     }
   }
   playTime: number | null
+  nbPlayedMatch: number
   fouls: number
   assists: number
   turnover: number

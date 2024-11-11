@@ -15,6 +15,7 @@ const RAW_STAT_MATCH_SUMMARY: StatMatchSummary = {
   teamScores: {
     playTime: 0,
     playerId: '',
+    nbPlayedMatch: 0,
     scores: {
       '2pts': 0,
       '3pts': 0,
@@ -83,7 +84,7 @@ function getPlayerIdsInStats(match: Match) {
     }, [] as Array<string>)
 }
 
-export function getPlayerScore(match: Match, playerId: string) {
+function getPlayerScore(match: Match, playerId: string) {
   return match.stats.reduce((score, statEntry) => {
     if (
       ['2pts', 'free-throw', '3pts'].includes(statEntry.name) &&
@@ -110,41 +111,41 @@ function getPlayerStatByType(
   }, 0)
 }
 
-export function getPlayerOffensiveRebonds(match: Match, playerId: string) {
+function getPlayerOffensiveRebonds(match: Match, playerId: string) {
   return getPlayerStatByType(match, playerId, 'offensive-rebond')
 }
 
-export function getPlayerDefensiveRebonds(match: Match, playerId: string) {
+function getPlayerDefensiveRebonds(match: Match, playerId: string) {
   return getPlayerStatByType(match, playerId, 'defensive-rebond')
 }
 
-export function getPlayerAssists(match: Match, playerId: string) {
+function getPlayerAssists(match: Match, playerId: string) {
   return getPlayerStatByType(match, playerId, 'assist')
 }
 
-export function getPlayerFouls(match: Match, playerId: string) {
+function getPlayerFouls(match: Match, playerId: string) {
   return getPlayerStatByType(match, playerId, 'foul')
 }
 
-export function getPlayerTurnovers(match: Match, playerId: string) {
+function getPlayerTurnovers(match: Match, playerId: string) {
   return getPlayerStatByType(match, playerId, 'turnover')
 }
 
-export function getTeamScore(match: Match, playerIds: Array<string>) {
+function getTeamScore(match: Match, playerIds: Array<string>) {
   return playerIds.reduce(
     (score: number, playerId) => score + getPlayerScore(match, playerId),
     0,
   )
 }
 
-export function isMatchHaveStatOfType(
+function isMatchHaveStatOfType(
   match: Match,
   statName: StatMatchActionItemName,
 ) {
   return Boolean(match.stats.find(statItem => statItem.name === statName))
 }
 
-export function getTeamScores(players: Array<StatMatchSummaryPlayer>) {
+function getTeamScores(players: Array<StatMatchSummaryPlayer>) {
   const rawTeamScores = clone(
     RAW_STAT_MATCH_SUMMARY.teamScores,
   ) as StatMatchSummaryPlayer
@@ -198,24 +199,25 @@ export function getTeamScores(players: Array<StatMatchSummaryPlayer>) {
   return teamScores
 }
 
-export function getTeamAssists(playersStats: StatMatchSummaryPlayer[]) {
+function getTeamAssists(playersStats: StatMatchSummaryPlayer[]) {
   return playersStats.reduce((result, playerStats) => {
     return result + playerStats.assists
   }, 0)
 }
 
-export function getTeamTurnovers(playersStats: StatMatchSummaryPlayer[]) {
+function getTeamTurnovers(playersStats: StatMatchSummaryPlayer[]) {
   return playersStats.reduce((result, playerStats) => {
     return result + playerStats.turnover
   }, 0)
 }
 
-export function getTeamFouls(playersStats: StatMatchSummaryPlayer[]) {
+function getTeamFouls(playersStats: StatMatchSummaryPlayer[]) {
   return playersStats.reduce((result, playerStats) => {
     return result + playerStats.fouls
   }, 0)
 }
-export function getPlayerNumberByType(
+
+function getPlayerNumberByType(
   match: Match,
   playerId: string,
   name: StatMatchActionItemName,
@@ -234,41 +236,35 @@ export function getPlayerNumberByType(
   }, 0)
 }
 
-export function getOpponentScore(match: Match) {
+function getOpponentScore(match: Match) {
   return getPlayerScore(match, TEAM_OPPONENT_ID)
 }
 
-export function getOpponentOffensiveRebonds(match: Match) {
+function getOpponentOffensiveRebonds(match: Match) {
   return getPlayerStatByType(match, TEAM_OPPONENT_ID, 'offensive-rebond')
 }
 
-export function getOpponentDefensiveRebonds(match: Match) {
+function getOpponentDefensiveRebonds(match: Match) {
   return getPlayerStatByType(match, TEAM_OPPONENT_ID, 'defensive-rebond')
 }
 
-export function getOpponentFouls(match: Match) {
+function getOpponentFouls(match: Match) {
   return getPlayerStatByType(match, TEAM_OPPONENT_ID, 'foul')
 }
 
-export function getTeamDefensiveRebonds(
-  match: Match,
-  playerIds: Array<string>,
-) {
+function getTeamDefensiveRebonds(match: Match, playerIds: Array<string>) {
   return playerIds.reduce((result, playerId) => {
     return result + getPlayerStatByType(match, playerId, 'defensive-rebond')
   }, 0)
 }
 
-export function getTeamOffensiveRebonds(
-  match: Match,
-  playerIds: Array<string>,
-) {
+function getTeamOffensiveRebonds(match: Match, playerIds: Array<string>) {
   return playerIds.reduce((result, playerId) => {
     return result + getPlayerStatByType(match, playerId, 'offensive-rebond')
   }, 0)
 }
 
-export function getFullRebondStats(
+function getFullRebondStats(
   match: Match,
   playerIds: Array<string>,
 ): StatMatchSummaryRebonds {
@@ -300,7 +296,7 @@ export function getFullRebondStats(
   }
 }
 
-export function getPlayersStatsByMatch(match: Match) {
+function getPlayersStatsByMatch(match: Match) {
   const playerIds = getPlayerIdsInStats(match)
   return playerIds
     .map(playerId => {
@@ -429,6 +425,168 @@ export function getPlayersStatsByMatch(match: Match) {
     .sort((playerA, playerB) => playerB.scores.total - playerA.scores.total)
 }
 
+function sumPlayerStats(
+  statResult: StatMatchSummaryPlayer,
+  statCurrentMatch: StatMatchSummaryPlayer,
+): StatMatchSummaryPlayer {
+  statResult.scores['free-throw'] += statCurrentMatch.scores['free-throw']
+  statResult.scores['2pts'] += statCurrentMatch.scores['2pts']
+  statResult.scores['3pts'] += statCurrentMatch.scores['3pts']
+  statResult.scores.total += statCurrentMatch.scores.total
+
+  statResult.rebonds.defensive += statCurrentMatch.rebonds.defensive
+  statResult.rebonds.offensive += statCurrentMatch.rebonds.offensive
+  statResult.rebonds.total += statCurrentMatch.rebonds.total
+
+  statResult.ratio['free-throw'].success +=
+    statCurrentMatch.ratio['free-throw'].success
+  statResult.ratio['free-throw'].fail +=
+    statCurrentMatch.ratio['free-throw'].fail
+  statResult.ratio['free-throw'].total +=
+    statCurrentMatch.ratio['free-throw'].total
+
+  statResult.ratio['2pts'].success += statCurrentMatch.ratio['2pts'].success
+  statResult.ratio['2pts'].fail += statCurrentMatch.ratio['2pts'].fail
+  statResult.ratio['2pts'].total += statCurrentMatch.ratio['2pts'].total
+
+  statResult.ratio['3pts'].success += statCurrentMatch.ratio['3pts'].success
+  statResult.ratio['3pts'].fail += statCurrentMatch.ratio['3pts'].fail
+  statResult.ratio['3pts'].total += statCurrentMatch.ratio['3pts'].total
+
+  statResult.fouls += statCurrentMatch.fouls
+  statResult.turnover += statCurrentMatch.turnover
+  statResult.assists += statCurrentMatch.assists
+
+  return statResult
+}
+
+function dividePlayerStatsByNbMatch(playerSats: StatMatchSummaryPlayer) {
+  if (!playerSats.nbPlayedMatch) {
+    return playerSats
+  }
+
+  playerSats.fouls =
+    (playerSats.fouls &&
+      Math.round(playerSats.fouls / playerSats.nbPlayedMatch)) ||
+    0
+  playerSats.assists =
+    (playerSats.assists &&
+      Math.round(playerSats.assists / playerSats.nbPlayedMatch)) ||
+    0
+
+  playerSats.turnover =
+    (playerSats.turnover &&
+      Math.round(playerSats.turnover / playerSats.nbPlayedMatch)) ||
+    0
+
+  playerSats.scores.total =
+    (playerSats.scores.total &&
+      Math.round(playerSats.scores.total / playerSats.nbPlayedMatch)) ||
+    0
+
+  playerSats.scores['2pts'] =
+    (playerSats.scores['2pts'] &&
+      Math.round(playerSats.scores['2pts'] / playerSats.nbPlayedMatch)) ||
+    0
+
+  playerSats.scores['3pts'] =
+    (playerSats.scores['3pts'] &&
+      Math.round(playerSats.scores['3pts'] / playerSats.nbPlayedMatch)) ||
+    0
+
+  playerSats.scores['free-throw'] =
+    (playerSats.scores['free-throw'] &&
+      Math.round(playerSats.scores['free-throw'] / playerSats.nbPlayedMatch)) ||
+    0
+
+  playerSats.ratio['free-throw'].total =
+    (playerSats.ratio['free-throw'].total &&
+      Math.round(
+        playerSats.ratio['free-throw'].total / playerSats.nbPlayedMatch,
+      )) ||
+    0
+  playerSats.ratio['free-throw'].success =
+    (playerSats.ratio['free-throw'].success &&
+      Math.round(
+        playerSats.ratio['free-throw'].success / playerSats.nbPlayedMatch,
+      )) ||
+    0
+  playerSats.ratio['free-throw'].fail =
+    (playerSats.ratio['free-throw'].fail &&
+      Math.round(
+        playerSats.ratio['free-throw'].fail / playerSats.nbPlayedMatch,
+      )) ||
+    0
+
+  playerSats.ratio['free-throw'].percentage =
+    (playerSats.ratio['free-throw'].total &&
+      Math.round(
+        (playerSats.ratio['free-throw'].success /
+          playerSats.ratio['free-throw'].total) *
+          100,
+      )) ||
+    0
+
+  playerSats.ratio['2pts'].total =
+    (playerSats.ratio['2pts'].total &&
+      Math.round(playerSats.ratio['2pts'].total / playerSats.nbPlayedMatch)) ||
+    0
+  playerSats.ratio['2pts'].success =
+    (playerSats.ratio['2pts'].success &&
+      Math.round(
+        playerSats.ratio['2pts'].success / playerSats.nbPlayedMatch,
+      )) ||
+    0
+  playerSats.ratio['2pts'].fail =
+    (playerSats.ratio['2pts'].fail &&
+      Math.round(playerSats.ratio['2pts'].fail / playerSats.nbPlayedMatch)) ||
+    0
+
+  playerSats.ratio['2pts'].percentage =
+    (playerSats.ratio['2pts'].total &&
+      Math.round(
+        (playerSats.ratio['2pts'].success / playerSats.ratio['2pts'].total) *
+          100,
+      )) ||
+    0
+
+  playerSats.ratio['3pts'].total =
+    (playerSats.ratio['3pts'].total &&
+      Math.round(playerSats.ratio['3pts'].total / playerSats.nbPlayedMatch)) ||
+    0
+  playerSats.ratio['3pts'].success =
+    (playerSats.ratio['3pts'].success &&
+      Math.round(
+        playerSats.ratio['3pts'].success / playerSats.nbPlayedMatch,
+      )) ||
+    0
+  playerSats.ratio['3pts'].fail =
+    (playerSats.ratio['3pts'].fail &&
+      Math.round(playerSats.ratio['3pts'].fail / playerSats.nbPlayedMatch)) ||
+    0
+
+  playerSats.ratio['3pts'].percentage =
+    (playerSats.ratio['3pts'].total &&
+      Math.round(
+        (playerSats.ratio['3pts'].success / playerSats.ratio['3pts'].total) *
+          100,
+      )) ||
+    0
+
+  playerSats.rebonds.defensive =
+    (playerSats.rebonds.defensive &&
+      Math.round(playerSats.rebonds.defensive / playerSats.nbPlayedMatch)) ||
+    0
+  playerSats.rebonds.offensive =
+    (playerSats.rebonds.offensive &&
+      Math.round(playerSats.rebonds.offensive / playerSats.nbPlayedMatch)) ||
+    0
+  playerSats.rebonds.total =
+    playerSats.rebonds.offensive + playerSats.rebonds.defensive
+
+  return playerSats
+}
+
 export function getStatSummary(match: Match | null): StatMatchSummary {
   if (!match) {
     return clone(RAW_STAT_MATCH_SUMMARY) as StatMatchSummary
@@ -455,6 +613,9 @@ export function getFullStats(): StatMatchSummary {
   // TODO:filter by tournament, date, team, etc.
   const matchs = orchestrator.Matchs.matchs
 
+  // TODO: get team by argv
+  const team = orchestrator.Teams.teams[0]
+
   const stats = matchs.map((match: Match) => {
     return getStatSummary(match)
   })
@@ -474,51 +635,38 @@ export function getFullStats(): StatMatchSummary {
       statResult.rebonds.opponentDefensive +=
         statCurrentMatch.rebonds.opponentDefensive
 
-      statResult.teamScores.scores['free-throw'] +=
-        statCurrentMatch.teamScores.scores['free-throw']
-      statResult.teamScores.scores['2pts'] +=
-        statCurrentMatch.teamScores.scores['2pts']
-      statResult.teamScores.scores['3pts'] +=
-        statCurrentMatch.teamScores.scores['3pts']
-      statResult.teamScores.scores.total +=
-        statCurrentMatch.teamScores.scores.total
-
-      statResult.teamScores.rebonds.defensive +=
-        statCurrentMatch.teamScores.rebonds.defensive
-      statResult.teamScores.rebonds.offensive +=
-        statCurrentMatch.teamScores.rebonds.offensive
-      statResult.teamScores.rebonds.total +=
-        statCurrentMatch.teamScores.rebonds.total
-
-      statResult.teamScores.ratio['free-throw'].success +=
-        statCurrentMatch.teamScores.ratio['free-throw'].success
-      statResult.teamScores.ratio['free-throw'].fail +=
-        statCurrentMatch.teamScores.ratio['free-throw'].fail
-      statResult.teamScores.ratio['free-throw'].total +=
-        statCurrentMatch.teamScores.ratio['free-throw'].total
-
-      statResult.teamScores.ratio['2pts'].success +=
-        statCurrentMatch.teamScores.ratio['2pts'].success
-      statResult.teamScores.ratio['2pts'].fail +=
-        statCurrentMatch.teamScores.ratio['2pts'].fail
-      statResult.teamScores.ratio['2pts'].total +=
-        statCurrentMatch.teamScores.ratio['2pts'].total
-
-      statResult.teamScores.ratio['3pts'].success +=
-        statCurrentMatch.teamScores.ratio['3pts'].success
-      statResult.teamScores.ratio['3pts'].fail +=
-        statCurrentMatch.teamScores.ratio['3pts'].fail
-      statResult.teamScores.ratio['3pts'].total +=
-        statCurrentMatch.teamScores.ratio['3pts'].total
-
-      statResult.teamScores.fouls += statCurrentMatch.teamScores.fouls
-      statResult.teamScores.turnover += statCurrentMatch.teamScores.turnover
-      statResult.teamScores.assists += statCurrentMatch.teamScores.assists
+      sumPlayerStats(statResult.teamScores, statCurrentMatch.teamScores)
 
       return statResult
     },
     clone(RAW_STAT_MATCH_SUMMARY) as StatMatchSummary,
   )
+
+  fullStats.players = team.playerIds.map(
+    (playerId: string): StatMatchSummaryPlayer => {
+      const currentPlayerStats = clone(
+        RAW_STAT_MATCH_SUMMARY.teamScores,
+      ) as StatMatchSummaryPlayer
+      currentPlayerStats.playerId = playerId
+
+      for (const stat of stats) {
+        for (const playerStats of stat.players) {
+          if (playerStats.playerId !== playerId) {
+            continue
+          }
+
+          sumPlayerStats(currentPlayerStats, playerStats)
+          currentPlayerStats.nbPlayedMatch++
+        }
+      }
+
+      dividePlayerStatsByNbMatch(currentPlayerStats)
+
+      return currentPlayerStats
+    },
+  )
+
+  fullStats.players.sort((up, down) => down.scores.total - up.scores.total)
 
   const nbMatch = matchs.length
 
