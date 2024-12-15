@@ -350,7 +350,7 @@ export class Orchestrator {
 
     const jsonDB = JSON.stringify(globalDB)
     const anchor = document.createElement('a')
-    const fileName = `baller-stats-export-db-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}.json`
+    const fileName = `baller-stats-export-db-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}.json`
     const blob = new Blob([jsonDB], {
       type: 'application/json;charset=utf-8;',
     })
