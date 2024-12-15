@@ -28,10 +28,10 @@ import {
 import { getStatSummary } from '../../libs/stats/stats-util'
 import { TEAM_OPPONENT_ID } from '../../libs/team/team'
 import { confirmAction, goTo } from '../../libs/utils'
-import BsScoreCard from '../score-card'
-import type { BsMatchProps } from './match.d'
 import { vibrate } from '../../libs/vibrator'
-import { BsFullStatTable, BsStatSumUpRebonds  } from '../stats'
+import BsScoreCard from '../score-card'
+import { BsFullStatTable, BsStatSumUpRebonds } from '../stats'
+import type { BsMatchProps } from './match.d'
 
 function openActionMode(
   playerId: string | undefined,
@@ -500,7 +500,6 @@ function renderStatGrid(statSummary: StatMatchSummary) {
   return (
     <div>
       <BsFullStatTable stats={statSummary} />
-
       <hr />
 
       <h3>Totaux de l’équipe:</h3>
