@@ -49,7 +49,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
 
   return (
     <div class="min-h-full font-rajdhani">
-      <nav class="sticky top-0 z-50 w-full flex-none supports-backdrop-blur:bg-neutral bg-neutral/95 shadow shadow-primary/60">
+      <nav class="sticky top-0 z-50 w-full flex-none supports-backdrop-blur:bg-neutral bg-neutral/95 shadow shadow-primary/60 print:hidden">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="flex h-16 items-center justify-between">
             <div class="flex items-center">
