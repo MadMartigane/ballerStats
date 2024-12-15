@@ -850,11 +850,11 @@ export default function BsMatch(props: BsMatchProps) {
 
       <Show when={isStatMode.get()}>{renderStatGrid(statSummary)}</Show>
 
-      <hr />
+      <hr class="print:hidden"/>
 
       <button
         type="button"
-        class="btn btn-outline w-full"
+        class="btn btn-outline w-full print:hidden"
         onClick={event => {
           event.stopPropagation()
 
