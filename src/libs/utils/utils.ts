@@ -178,7 +178,6 @@ export function toast(message: string, variant?: DaisyAlert) {
     unmount(dialog, toastContainer)
   }
 
-  console.log('dialog: ', dialog)
   const span = dialog.querySelector('#message') as HTMLDivElement
   if (!span) {
     throw new Error('Unable to find the message item in the toast dialog.')
