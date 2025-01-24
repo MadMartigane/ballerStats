@@ -83,9 +83,9 @@ function renderPlayerFallback() {
 
 function renderAddPlayerButton() {
   return (
-    <div>
+    <div class='w-full'>
       <hr />
-      <div class="p-4">
+      <div class="footer-buttons-container">
         <button
           type="button"
           class="btn btn-primary"
@@ -96,7 +96,7 @@ function renderAddPlayerButton() {
           }}
         >
           <UserPlus />
-          Ajouter un jouer
+          Ajouter un joueur
         </button>
       </div>
     </div>
@@ -161,7 +161,7 @@ function renderAddingPlayerCard() {
       </form>
     ),
     footer: (
-      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+      <div class="footer-buttons-container">
         <button
           type="button"
           class="btn btn-primary btn-wide"
@@ -198,7 +198,7 @@ export default function BsPlayers() {
     <div>
       <Show when={!isAddingPlayer.get()}>
         <Show when={(playerLength.get() || 0) > 0} fallback={renderPlayerFallback()}>
-          <div class="flex flex-wrap gap-4 justify-stretch">
+          <div class="flex flex-wrap gap-4 w-full justify-around">
             <For each={players}>
               {(player) => (
                 <div class="mx-auto md:mx-0 w-fit">
