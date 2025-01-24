@@ -161,7 +161,7 @@ function renderAddingPlayerCard() {
       </form>
     ),
     footer: (
-      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+      <div class="flex flex-col sm:flex-row w-full justify-around">
         <button
           type="button"
           class="btn btn-primary btn-wide"
@@ -198,7 +198,7 @@ export default function BsPlayers() {
     <div>
       <Show when={!isAddingPlayer.get()}>
         <Show when={(playerLength.get() || 0) > 0} fallback={renderPlayerFallback()}>
-          <div class="flex flex-wrap gap-4 justify-stretch">
+          <div class="flex flex-wrap gap-4 w-full justify-around">
             <For each={players}>
               {(player) => (
                 <div class="mx-auto md:mx-0 w-fit">

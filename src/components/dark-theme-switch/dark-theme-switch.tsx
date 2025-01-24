@@ -23,7 +23,7 @@ export default function BsDarkThemeSwitch() {
 
   return (
     <div class="relative w-fit mx-0 my-4">
-      <label for={id} class="form-control w-full max-w-xs">
+      <label for={id} class="w-full max-w-xs">
         <select
           id={id}
           class="select select-bordered w-full max-w-xs"

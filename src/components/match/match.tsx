@@ -288,7 +288,7 @@ function renderPlayerBench(opts: {
           {opts.player.nicName ? opts.player.nicName : opts.player.firstName}
         </div>
 
-        <div class="flex flex-col text-center w-8 bg-slate-400/40 rounded">
+        <div class="flex flex-col text-center w-8 bg-slate-400/40 rounded-xs">
           <div class="text-success">{playerStats?.scores.total || 0}</div>
           <div class="text-accent-content">
             {playerStats?.rebonds.total || 0}
@@ -422,7 +422,7 @@ function renderPlayerButton(opts: {
           </button>
         </div>
 
-        <div class="flex flex-col text-center w-8 bg-slate-400/50 rounded">
+        <div class="flex flex-col text-center w-8 bg-slate-400/50 rounded-xs">
           <div class="text-success">{playerStats?.scores.total || 0}</div>
           <div class="text-accent-content">
             {playerStats?.rebonds.total || 0}
@@ -441,7 +441,7 @@ function renderPlayerHeader(playerId: string | null) {
       : orchestrator.getPlayer(playerId)
 
   return (
-    <div class="w-full my-2 p-3 grid grid-cols-3 gap-3 bg-neutral text-neutral-content rounded">
+    <div class="w-full my-2 p-3 grid grid-cols-3 gap-3 bg-neutral text-neutral-content rounded-xs">
       <div>
         <Shirt size={28} />
       </div>
@@ -459,7 +459,7 @@ function renderPlayerHeader(playerId: string | null) {
 function renderTeamTotals(statSummary: StatMatchSummary) {
   return (
     <div class="overflow-x-auto">
-      <div class="stats shadow">
+      <div class="stats shadow-xs">
         <div class="stat place-items-center">
           <div class="stat-title">Score</div>
           <div
@@ -572,7 +572,7 @@ function renderTheTeamFive(opts: {
   }
   return (
     <div
-      class={`${opts.playersInTheFive.get().length === 5 ? '' : 'bg-warning/50'} rounded`}
+      class={`${opts.playersInTheFive.get().length === 5 ? '' : 'bg-warning/50'} rounded-xs`}
     >
       <For each={opts.sortedPlayers}>
         {player => (
@@ -611,7 +611,7 @@ export default function BsMatch(props: BsMatchProps) {
 
   return (
     <div class="w-full">
-      <div class="w-full border border-neutral rounded bg-secondary text-secondary-content">
+      <div class="w-full border border-neutral rounded-xs bg-secondary text-secondary-content">
         <BsScoreCard
           localScore={statSummary.teamScore}
           visitorScore={statSummary.opponentScore}
@@ -720,7 +720,7 @@ export default function BsMatch(props: BsMatchProps) {
                   </button>
                 </div>
 
-                <div class="flex flex-col text-center w-8 bg-slate-400/50 rounded">
+                <div class="flex flex-col text-center w-8 bg-slate-400/50 rounded-xs">
                   <div class="text-success">
                     {statSummary.opponentScore || 0}
                   </div>

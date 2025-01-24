@@ -1,8 +1,36 @@
+@import 'tailwindcss';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@plugin '@tailwindcss/typography';
 
+@plugin "daisyui" {
+  themes: fantasy --default, dracula --prefersdark, aqua;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-rajdhani: Rajdhani, cursive;
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
 
 html {
   @apply h-full;
@@ -16,14 +44,14 @@ hr {
 }
 
 h1 {
-  @apply text-3xl font-extrabold
+  @apply text-3xl font-extrabold;
 }
 h2 {
-  @apply text-2xl font-bold
+  @apply text-2xl font-bold;
 }
 h3 {
-  @apply text-xl font-bold
+  @apply text-xl font-bold;
 }
 h4 {
-  @apply text-lg font-bold
+  @apply text-lg font-bold;
 }

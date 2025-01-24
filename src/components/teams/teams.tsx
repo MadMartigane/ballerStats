@@ -81,7 +81,7 @@ function updateCurrentTeamPlayerIds(playerIds: string[]) {
   currentTeam?.update({ playerIds: [] })
 }
 
-function getSelectDataFromPlayer(players: Player[]) {
+function getSelectDataFromPlayer() {
   return orchestrator.Players.players.map((player) => ({
     value: player.id,
     label: player.nicName ? player.nicName : `${player.firstName} ${player.lastName}`,
@@ -106,6 +106,7 @@ function renderAddTeamButton() {
       <hr />
       <div class="p-4">
         <button
+          type='button'
           class="btn btn-primary"
           onClick={() => {
             isEditingNewTeam = true
@@ -154,7 +155,7 @@ function renderAddingTeamCard() {
         })}
         <BsSelectMultiple
           placeholder="Sélection des joueurs"
-          data={getSelectDataFromPlayer(orchestrator.Players.players)}
+          data={getSelectDataFromPlayer()}
           selectedIds={currentTeam?.playerIds}
           onChange={(playerIds: string[]) => {
             updateCurrentTeamPlayerIds(playerIds)
@@ -163,8 +164,9 @@ function renderAddingTeamCard() {
       </form>
     ),
     footer: (
-      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+      <div class="flex flex-col sm:flex-row w-full justify-around">
         <button
+          type='button'
           class="btn btn-primary btn-wide"
           onClick={() => {
             toggleAddTeam(false)
@@ -178,6 +180,7 @@ function renderAddingTeamCard() {
         </button>
 
         <button
+          type='button'
           class="btn btn-primary btn-wide"
           disabled={!canAddTeam.get()}
           onClick={() => {
@@ -198,7 +201,7 @@ export default function BsTeams() {
     <div>
       <Show when={!isAddingTeam.get()}>
         <Show when={(teamLength.get() || 0) > 0} fallback={renderTeamFallback()}>
-          <div class="flex flex-wrap gap-4 justify-stretch">
+          <div class="flex flex-wrap gap-4 w-full justify-around">
             <For each={teams}>
               {(team) => (
                 <div class="mx-auto md:mx-0 w-fit">

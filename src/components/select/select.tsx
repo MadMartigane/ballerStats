@@ -40,31 +40,38 @@ function renderDaisy(props: BsSelectProps) {
   const [datas] = createStore(props.datas)
 
   return (
-    <label class="form-control w-full">
-      <div class="label">
-        <Show when={options.label}>
-          <span class="w-full max-w-xs">{options.label}</span>
-        </Show>
+    <div class="w-full flex">
+      <Show when={options.label}>
+        <div class="label w-1/3">
+          <span class="w-full">{options.label}</span>
+        </div>
+      </Show>
+      <div class={options.label ? 'w-2/3' : 'w-full'}>
         <select
-          class="select select-bordered w-full select-ghost"
+          class="select select-bordered w-full"
           id={options.id}
           disabled={options.disabled}
-          onChange={(event) => onChange(event, options)}
+          onChange={event => onChange(event, options)}
         >
-          <Show when={!options.value && !options.default && options.placeholder}>
+          <Show
+            when={!options.value && !options.default && options.placeholder}
+          >
             <option selected>{options.placeholder}</option>
           </Show>
 
           <For each={datas}>
-            {(data) => (
-              <option value={data.value} selected={data.value === (options.value || options.default)}>
+            {data => (
+              <option
+                value={data.value}
+                selected={data.value === (options.value || options.default)}
+              >
                 {data.label}
               </option>
             )}
           </For>
         </select>
       </div>
-    </label>
+    </div>
   )
 }
 
