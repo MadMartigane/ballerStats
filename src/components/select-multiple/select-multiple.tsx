@@ -137,7 +137,7 @@ export default function BsSelectMultiple(props: BsSelectMultipleProps) {
         </label>
       </Show>
       <label class="label">Joueur(s) selectionné(s):</label>
-      <div class="bg-base-200 text-base-content border rounded border-base-100 mx-auto w-11/12 py-4">
+      <div class="bg-base-200 text-base-content border rounded-xs border-base-100 mx-auto w-11/12 py-4">
         <Show when={selectProps.selectedIds?.length} fallback={'Aucun joueur sélectionné.'}>
           <For each={selectProps.selectedIds}>
             {(value) => {

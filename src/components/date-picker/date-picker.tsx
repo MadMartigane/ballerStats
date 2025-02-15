@@ -1,9 +1,15 @@
 import { Show } from 'solid-js'
-import type { BsDatePickerOnChangeEvent, BsDatePickerProps } from './date-picker.d'
+import type {
+  BsDatePickerOnChangeEvent,
+  BsDatePickerProps,
+} from './date-picker.d'
 
 let debounceOnInput: number | null
 
-function onInput(event: BsDatePickerOnChangeEvent, callback?: (value: string) => void) {
+function onInput(
+  event: BsDatePickerOnChangeEvent,
+  callback?: (value: string) => void,
+) {
   if (!callback) {
     return
   }
@@ -18,7 +24,10 @@ function onInput(event: BsDatePickerOnChangeEvent, callback?: (value: string) =>
   }, 300)
 }
 
-function onChange(event: BsDatePickerOnChangeEvent, callback?: (value: string) => void) {
+function onChange(
+  event: BsDatePickerOnChangeEvent,
+  callback?: (value: string) => void,
+) {
   if (!callback) {
     return
   }
@@ -30,18 +39,18 @@ function onChange(event: BsDatePickerOnChangeEvent, callback?: (value: string) =
 
 export function BsDatePicker(props: BsDatePickerProps) {
   return (
-    <label class="form-control w-full">
-      <div class="label">
-        <Show when={props.label}>
-          <span class="w-full max-w-xs">{props.label}</span>
-        </Show>
+    <label class="w-full flex">
+      <Show when={props.label}>
+        <span class="label w-1/3">{props.label}</span>
+      </Show>
+      <div class={props.label ? 'w-2/3' : 'w-full'}>
         <input
-          class="input input-bordered w-full input-ghost"
+          class="input w-full"
           type={props.withTime ? 'datetime-local' : 'date'}
           placeholder={props.placeholder || ''}
           value={props.value || ''}
-          onChange={(event) => onChange(event, props.onChange)}
-          onInput={(event) => onInput(event, props.onChange)}
+          onChange={event => onChange(event, props.onChange)}
+          onInput={event => onInput(event, props.onChange)}
         />
       </div>
     </label>

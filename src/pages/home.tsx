@@ -1,4 +1,12 @@
-import { BellRing, Loader, Medal, Megaphone, Share, Trash2, Vibrate } from 'lucide-solid'
+import {
+  BellRing,
+  Loader,
+  Medal,
+  Megaphone,
+  Share,
+  Trash2,
+  Vibrate,
+} from 'lucide-solid'
 import { Show } from 'solid-js'
 import DarkThemeSwitch from '../components/dark-theme-switch'
 import GlobalStats from '../components/global-stats'
@@ -85,13 +93,15 @@ export default function Home() {
           />
         </label>
 
-        <BsToggle
-          label="Afficher la démo"
-          value={displayDemo.get()}
-          onChange={value => {
-            displayDemo.set(value)
-          }}
-        />
+        <div class="col-span-2">
+          <BsToggle
+            label="Afficher la démo"
+            value={displayDemo.get()}
+            onChange={value => {
+              displayDemo.set(value)
+            }}
+          />
+        </div>
       </div>
 
       <Show when={displayDemo.get()}>
@@ -210,7 +220,6 @@ export default function Home() {
               <Megaphone />
               Toast !
             </button>
-
           </div>
         </div>
       </Show>

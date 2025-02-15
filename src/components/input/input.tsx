@@ -14,7 +14,10 @@ const defaultOptions: BsInputProps = {
   },
 }
 
-function onInput(event: BsInputOnChangeEvent, callback?: (value: string) => void) {
+function onInput(
+  event: BsInputOnChangeEvent,
+  callback?: (value: string) => void,
+) {
   if (debounceOnInput) {
     clearTimeout(debounceOnInput)
   }
@@ -25,7 +28,10 @@ function onInput(event: BsInputOnChangeEvent, callback?: (value: string) => void
   }, 300)
 }
 
-function onChange(event: BsInputOnChangeEvent, callback?: (value: string) => void) {
+function onChange(
+  event: BsInputOnChangeEvent,
+  callback?: (value: string) => void,
+) {
   if (!callback) {
     return
   }
@@ -48,18 +54,18 @@ function adapter(options: BsInputProps): BsInputProps {
 
 function renderDaisy(options: BsInputProps) {
   return (
-    <label class="form-control w-full">
-      <div class="label">
-        <Show when={options.label}>
-          <span class="w-full max-w-xs">{options.label}</span>
-        </Show>
+    <label class="w-full flex">
+      <Show when={options.label}>
+        <div class="label w-1/3">{options.label}</div>
+      </Show>
+      <div class={options.label ? 'w-2/3' : 'w-full'}>
         <input
-          class="input input-bordered w-full input-ghost"
+          class="input w-full"
           type={options.type}
           placeholder={options.placeholder}
           value={options.value || ''}
-          onChange={(event) => onChange(event, options.onChange)}
-          onInput={(event) => onInput(event, options.onChange)}
+          onChange={event => onChange(event, options.onChange)}
+          onInput={event => onInput(event, options.onChange)}
         />
       </div>
     </label>

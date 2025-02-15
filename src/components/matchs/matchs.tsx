@@ -202,7 +202,7 @@ function renderAddingMatchCard() {
       </form>
     ),
     footer: (
-      <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+      <div class="flex flex-col sm:flex-row w-full justify-around">
         <button
           type="button"
           class="btn btn-primary btn-wide"
@@ -239,7 +239,7 @@ export default function BsMatchs() {
     <div>
       <Show when={!isAddingMatch.get()}>
         <Show when={(matchLength.get() || 0) > 0} fallback={renderMatchFallback()}>
-          <div class="flex flex-wrap gap-4 justify-stretch">
+          <div class="flex flex-wrap gap-4 w-full justify-around">
             <For each={matchs}>
               {(match) => (
                 <div class="mx-auto md:mx-0 w-fit">

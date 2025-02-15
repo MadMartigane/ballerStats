@@ -3,7 +3,6 @@ import { Show } from 'solid-js'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import type Player from '../../libs/player'
 import { confirmAction } from '../../libs/utils'
-import BsIconBasketballPlayer from '../icons/basketball-player'
 import BsTile from '../tile'
 import type { BsPlayerProps } from './player.d'
 
@@ -27,13 +26,15 @@ export default function BsPlayer(props: BsPlayerProps) {
       title={player.nicName ? player.nicName : player.firstName}
       badge={
         <div class="flex flex-row flex-none mt-2 text-accent">
-          <Shirt class="w-8 h-8" /> <span class="min-w-8">{player.jersayNumber}</span>
+          <Shirt class="w-8 h-8" />{' '}
+          <span class="min-w-8">{player.jersayNumber}</span>
         </div>
       }
       footer={
         <>
           <Show when={props.onEdit}>
             <button
+              type="button"
               class="btn btn-secondary btn-square"
               onClick={() => {
                 editPlayer(player, props.onEdit)
@@ -43,6 +44,7 @@ export default function BsPlayer(props: BsPlayerProps) {
             </button>
           </Show>
           <button
+            type="button"
             class="btn btn-secondary btn-square"
             onClick={() => {
               removePlayer(player)

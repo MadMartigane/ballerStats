@@ -49,11 +49,11 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
 
   return (
     <div class="min-h-full font-rajdhani">
-      <nav class="sticky top-0 z-50 w-full flex-none supports-backdrop-blur:bg-neutral bg-neutral/95 shadow shadow-primary/60 print:hidden">
+      <nav class="sticky top-0 z-50 w-full flex-none supports-backdrop-blur:bg-neutral bg-neutral/95 shadow-xs shadow-primary/60 print:hidden">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="flex h-16 items-center justify-between">
             <div class="flex items-center">
-              <div class="flex-shrink-0">
+              <div class="shrink-0">
                 <a href="#/" aria-current="page">
                   <img class="h-16 w-16" src={logoSmallUrl} alt="Baller stats logo" />
                 </a>
@@ -86,7 +86,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                 <button
                   type="button"
                   id="notifications-box-button"
-                  class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                  class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                   onClick={() => {
                     isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
                   }}
@@ -105,7 +105,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                 <Show when={isNotificationBoxOpen.get()}>
                   <menu
                     id="notifications-box"
-                    class="absolute right-1 top-16 mt-1 z-10 p-6 w-72 origin-top-right rounded-md bg-gray-800 text-gray-400 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    class="absolute right-1 top-16 mt-1 z-10 p-6 w-72 origin-top-right rounded-md bg-gray-800 text-gray-400 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-hidden"
                     aria-orientation="vertical"
                     aria-labelledby="notifications-box-button"
                     tabindex="-1"
@@ -119,7 +119,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                   <div>
                     <button
                       type="button"
-                      class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                      class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                       id="user-menu-button"
                       aria-expanded="false"
                       aria-haspopup="true"
@@ -150,7 +150,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                     */}
                   <Show when={isUserMenuOpen.get()}>
                     <menu
-                      class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-slate-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                      class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-slate-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-hidden"
                       aria-orientation="vertical"
                       aria-labelledby="user-menu-button"
                       tabindex="-1"
@@ -184,7 +184,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
               <button
                 type="button"
                 id="notifications-box-button"
-                class="relative rounded-full bg-gray-800 p-2 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                class="relative rounded-full bg-gray-800 p-2 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                 onClick={() => {
                   isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
                 }}
@@ -203,7 +203,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
               <Show when={isNotificationBoxOpen.get()}>
                 <menu
                   id="notifications-box"
-                  class="absolute right-1 top-16 mt-1 z-10 p-6 w-72 origin-top-right rounded-md bg-gray-800 text-gray-400 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                  class="absolute right-1 top-16 mt-1 z-10 p-6 w-72 origin-top-right rounded-md bg-gray-800 text-gray-400 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-hidden"
                   aria-orientation="vertical"
                   aria-labelledby="notifications-box-button"
                   tabindex="-1"
@@ -215,7 +215,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
               {/* Mobile menu button */}
               <button
                 type="button"
-                class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                 aria-controls="mobile-menu"
                 aria-expanded="false"
                 onClick={() => {
