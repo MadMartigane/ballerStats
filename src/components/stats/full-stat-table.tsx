@@ -1,21 +1,17 @@
+import { Shirt, Users } from 'lucide-solid'
 import { For } from 'solid-js'
 import orchestrator from '../../libs/orchestrator/orchestrator'
-import type { StatMatchSummaryPlayer } from '../../libs/stats'
-import { Shirt, Users } from 'lucide-solid'
 import type Player from '../../libs/player'
+import type { StatMatchSummaryPlayer } from '../../libs/stats'
 import type { BsFullStatTableProps } from './full-stat-table.d'
 
 function renderTh(playerStats: StatMatchSummaryPlayer, player?: Player | null) {
   return (
     <tr>
       <th>
-        <span class="text-2xl">
-          {player?.jersayNumber || <Users size={28} />}
-        </span>
+        <span class="text-2xl">{player?.jersayNumber || <Users size={28} />}</span>
       </th>
-      <td class="text-xl">
-        {player?.nicName ? player.nicName : player?.firstName || 'Équipe'}
-      </td>
+      <td class="text-xl">{player?.nicName ? player.nicName : player?.firstName || 'Équipe'}</td>
       <td>
         <span class="text-lg">{`${playerStats.scores.total}`}</span>
       </td>
@@ -80,7 +76,7 @@ export function BsFullStatTable(props: BsFullStatTableProps) {
           </thead>
           <tbody>
             <For each={statSummary.players}>
-              {playerStats => {
+              {(playerStats) => {
                 /* Is a global stat like stop and start game, not a player stat */
                 if (!playerStats.playerId) {
                   return null

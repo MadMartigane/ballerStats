@@ -63,7 +63,7 @@ export async function confirmAction(
   confirm = 'Oui',
 ): Promise<boolean> {
   let resolve: (value: boolean | PromiseLike<boolean>) => void
-  const promise: Promise<boolean> = new Promise(res => {
+  const promise: Promise<boolean> = new Promise((res) => {
     resolve = res
   })
 
@@ -138,31 +138,21 @@ export function toDateTime(dateString: string | null) {
 }
 
 export function toast(message: string, variant?: DaisyAlert) {
-  const toastContainer = document.getElementById(
-    'bs-global-toast',
-  ) as HTMLDivElement
+  const toastContainer = document.getElementById('bs-global-toast') as HTMLDivElement
 
   let dialogTemplate: HTMLDivElement | null
   switch (variant) {
     case 'success':
-      dialogTemplate = document.querySelector(
-        '#bs-template-store > #bs-template-store-alert-success',
-      )
+      dialogTemplate = document.querySelector('#bs-template-store > #bs-template-store-alert-success')
       break
     case 'warning':
-      dialogTemplate = document.querySelector(
-        '#bs-template-store > #bs-template-store-alert-warning',
-      )
+      dialogTemplate = document.querySelector('#bs-template-store > #bs-template-store-alert-warning')
       break
     case 'error':
-      dialogTemplate = document.querySelector(
-        '#bs-template-store > #bs-template-store-alert-error',
-      )
+      dialogTemplate = document.querySelector('#bs-template-store > #bs-template-store-alert-error')
       break
     default:
-      dialogTemplate = document.querySelector(
-        '#bs-template-store > #bs-template-store-alert-info',
-      )
+      dialogTemplate = document.querySelector('#bs-template-store > #bs-template-store-alert-info')
       break
   }
 

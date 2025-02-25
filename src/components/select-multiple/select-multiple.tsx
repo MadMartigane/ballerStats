@@ -3,25 +3,21 @@ import { For, Show } from 'solid-js'
 import { type SetStoreFunction, createStore } from 'solid-js/store'
 import { getShortId } from '../../libs/utils'
 import BsSelect from '../select/select'
-import type {
-  BsSelectDataSet,
-  BsSelectMultipleDataSelect,
-  BsSelectMultipleProps,
-} from './select-multiple.d'
+import type { BsSelectDataSet, BsSelectMultipleDataSelect, BsSelectMultipleProps } from './select-multiple.d'
 
 const defaultPlaceholder = 'Sélection…'
 
-function getAvailableDataSets(
-  allDataSets: Array<BsSelectDataSet>,
-  alreadySelectedDataSets: Array<string>,
-) {
-  return allDataSets.reduce((result, currentDataSet) => {
-    if (!alreadySelectedDataSets.includes(currentDataSet.value)) {
-      result.push(currentDataSet)
-    }
+function getAvailableDataSets(allDataSets: Array<BsSelectDataSet>, alreadySelectedDataSets: Array<string>) {
+  return allDataSets.reduce(
+    (result, currentDataSet) => {
+      if (!alreadySelectedDataSets.includes(currentDataSet.value)) {
+        result.push(currentDataSet)
+      }
 
-    return result
-  }, [] as Array<BsSelectDataSet>)
+      return result
+    },
+    [] as Array<BsSelectDataSet>,
+  )
 }
 
 function getSelectDataSetFromAvailableDataSets(
@@ -32,9 +28,7 @@ function getSelectDataSetFromAvailableDataSets(
     ? [
         {
           value: '',
-          label: availableBsSelectDataSets.length
-            ? placeholder
-            : 'Aucun joueur disponible.',
+          label: availableBsSelectDataSets.length ? placeholder : 'Aucun joueur disponible.',
           badge: <span>Error</span>,
         },
       ]
@@ -44,15 +38,9 @@ function getSelectDataSetFromAvailableDataSets(
 }
 
 function getDataFromProps(props: BsSelectMultipleProps) {
-  const availableDataSets = getAvailableDataSets(
-    props.data || [],
-    props.selectedIds || [],
-  )
+  const availableDataSets = getAvailableDataSets(props.data || [], props.selectedIds || [])
 
-  const selectData = getSelectDataSetFromAvailableDataSets(
-    availableDataSets,
-    props.placeholder,
-  )
+  const selectData = getSelectDataSetFromAvailableDataSets(availableDataSets, props.placeholder)
   const [dataForSelect, setAvailables] = createStore(selectData)
   const disable = dataForSelect.length < 2
 
@@ -67,10 +55,7 @@ function getDataFromProps(props: BsSelectMultipleProps) {
   } as BsSelectMultipleDataSelect
 }
 
-function onSelectionChange(
-  props: BsSelectMultipleDataSelect,
-  setProps: SetStoreFunction<BsSelectMultipleDataSelect>,
-) {
+function onSelectionChange(props: BsSelectMultipleDataSelect, setProps: SetStoreFunction<BsSelectMultipleDataSelect>) {
   const selectData = getSelectDataSetFromAvailableDataSets(
     getAvailableDataSets(props.data || [], props.selectedIds || []),
     props.placeholder,
@@ -113,9 +98,7 @@ function unselectDataSet(
     return
   }
 
-  const newSelection = props.selectedIds.filter(
-    currentId => currentId !== dataSet.value,
-  )
+  const newSelection = props.selectedIds.filter((currentId) => currentId !== dataSet.value)
 
   setProps('selectedIds', newSelection)
 
@@ -149,10 +132,7 @@ export default function BsSelectMultiple(props: BsSelectMultipleProps) {
   return (
     <div class="w-full">
       <Show when={selectProps.label}>
-        <label
-          class="block text-sm font-medium mb-2"
-          for={selectProps.selectId}
-        >
+        <label class="block text-sm font-medium mb-2" for={selectProps.selectId}>
           {selectProps.label}
         </label>
       </Show>
@@ -160,24 +140,15 @@ export default function BsSelectMultiple(props: BsSelectMultipleProps) {
         Joueur(s) selectionné(s):
       </label>
       <div class="bg-base-200 text-base-content border rounded-xs border-base-100 mx-auto w-11/12 py-4">
-        <Show
-          when={selectProps.selectedIds?.length}
-          fallback={'Aucun joueur sélectionné.'}
-        >
+        <Show when={selectProps.selectedIds?.length} fallback={'Aucun joueur sélectionné.'}>
           <For each={selectProps.selectedIds}>
-            {value => {
-              const dataSet = selectProps.data?.find(
-                candidate => candidate.value === value,
-              )
+            {(value) => {
+              const dataSet = selectProps.data?.find((candidate) => candidate.value === value)
               if (!dataSet) {
                 return
               }
 
-              return renderBsSelectDataSetBadge(
-                selectProps,
-                setSelectProps,
-                dataSet,
-              )
+              return renderBsSelectDataSetBadge(selectProps, setSelectProps, dataSet)
             }}
           </For>
         </Show>
@@ -185,7 +156,7 @@ export default function BsSelectMultiple(props: BsSelectMultipleProps) {
 
       <BsSelect
         id={selectProps.selectId}
-        onChange={event => {
+        onChange={(event) => {
           onSelect(event, selectProps, setSelectProps)
         }}
         default=""

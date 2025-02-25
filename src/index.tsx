@@ -9,18 +9,15 @@ import { render } from 'solid-js/web'
 import BsAppBar from './components/app-bar'
 import { NAVIGATION_MENU_ENTRIES } from './libs/menu'
 
+import { CircleAlert, CircleCheckBig, Skull, TriangleAlert } from 'lucide-solid'
 import relAppleTouchIconUrl from '/img/apple-touch-icon.png'
 import relIconUrl from '/img/favicon.ico'
-import { CircleAlert, CircleCheckBig, Skull, TriangleAlert } from 'lucide-solid'
 
-const relAppleTouchIcon: HTMLLinkElement | null = document.querySelector(
-  'link[rel="apple-touch-icon"]',
-)
+const relAppleTouchIcon: HTMLLinkElement | null = document.querySelector('link[rel="apple-touch-icon"]')
 if (relAppleTouchIcon) {
   relAppleTouchIcon.href = relAppleTouchIconUrl
 }
-const relIcon: HTMLLinkElement | null =
-  document.querySelector('link[rel="icon"]')
+const relIcon: HTMLLinkElement | null = document.querySelector('link[rel="icon"]')
 if (relIcon) {
   relIcon.href = relIconUrl
 }
@@ -61,9 +58,7 @@ render(() => {
     <>
       <HashRouter root={BsAppBar}>
         <For each={NAVIGATION_MENU_ENTRIES}>
-          {menuItem => (
-            <Route path={menuItem.path} component={menuItem.component} />
-          )}
+          {(menuItem) => <Route path={menuItem.path} component={menuItem.component} />}
         </For>
       </HashRouter>
       <div class="toast toast-end toast-bottom" id="bs-global-toast" />

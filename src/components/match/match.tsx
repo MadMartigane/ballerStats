@@ -20,11 +20,7 @@ import MadSignal from '../../libs/mad-signal'
 import type Match from '../../libs/match'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import type Player from '../../libs/player'
-import {
-  STATS_MATCH_ACTIONS,
-  type StatMatchActionItem,
-  type StatMatchSummary,
-} from '../../libs/stats'
+import { STATS_MATCH_ACTIONS, type StatMatchActionItem, type StatMatchSummary } from '../../libs/stats'
 import { getStatSummary } from '../../libs/stats/stats-util'
 import { TEAM_OPPONENT_ID } from '../../libs/team/team'
 import { confirmAction, goTo } from '../../libs/utils'
@@ -33,10 +29,7 @@ import BsScoreCard from '../score-card'
 import { BsFullStatTable, BsStatSumUpRebonds } from '../stats'
 import type { BsMatchProps } from './match.d'
 
-function openActionMode(
-  playerId: string | undefined,
-  playerOnAction: MadSignal<string | null>,
-) {
+function openActionMode(playerId: string | undefined, playerOnAction: MadSignal<string | null>) {
   playerOnAction.set(playerId || null)
 }
 
@@ -111,12 +104,7 @@ async function removeLastAction(
     return
   }
 
-  return removeAction(
-    match,
-    match.stats.length - 1,
-    setStatSummary,
-    disableClearLastAction,
-  )
+  return removeAction(match, match.stats.length - 1, setStatSummary, disableClearLastAction)
 }
 
 function getOutFromPlayground(opts: {
@@ -133,16 +121,12 @@ function getOutFromPlayground(opts: {
     return
   }
 
-  opts.playersInTheFive.set(
-    inTheFive.filter(candidateId => candidateId !== opts.playerId),
-  )
+  opts.playersInTheFive.set(inTheFive.filter((candidateId) => candidateId !== opts.playerId))
 
   opts.match.update({
     playersInTheFive: [...opts.playersInTheFive.get()],
   })
-  const statAction = STATS_MATCH_ACTIONS.find(
-    candidate => candidate.name === 'fiveOut',
-  )
+  const statAction = STATS_MATCH_ACTIONS.find((candidate) => candidate.name === 'fiveOut')
   if (!statAction) {
     throw new Error('Unable to find stat action item: "fiveOut"')
   }
@@ -183,9 +167,7 @@ function getInFromPlayground(opts: {
   opts.playersInTheFive.set(newFive)
   opts.match.update({ playersInTheFive: [...newFive] })
 
-  const statAction = STATS_MATCH_ACTIONS.find(
-    candidate => candidate.name === 'fiveIn',
-  )
+  const statAction = STATS_MATCH_ACTIONS.find((candidate) => candidate.name === 'fiveIn')
   if (!statAction) {
     throw new Error('Unable to find stat action item: "fiveIn"')
   }
@@ -215,9 +197,7 @@ function stopStartTheGame(opts: {
 }) {
   opts.gameIsPlaying.set(!opts.gameIsPlaying.get())
 
-  const statAction = STATS_MATCH_ACTIONS.find(
-    candidate => candidate.name === 'gameStop',
-  )
+  const statAction = STATS_MATCH_ACTIONS.find((candidate) => candidate.name === 'gameStop')
   if (!statAction) {
     throw new Error('Unable to find stat action item: "gameStop"')
   }
@@ -250,9 +230,7 @@ function renderPlayerBench(opts: {
     )
   }
 
-  const playerStats = opts.statSummary.players.find(
-    stat => stat.playerId === opts.player?.id,
-  )
+  const playerStats = opts.statSummary.players.find((stat) => stat.playerId === opts.player?.id)
 
   return (
     <div class="w-full flex flex-row my-3 md:my-4">
@@ -279,9 +257,7 @@ function renderPlayerBench(opts: {
 
         <div class="inline-block flex-none text-center text-3xl">
           <User class="inline-block flex-none" size={28} />
-          <div class="inline-block text-3xl flex-auto">
-            {opts.player.jersayNumber}
-          </div>
+          <div class="inline-block text-3xl flex-auto">{opts.player.jersayNumber}</div>
         </div>
 
         <div class="inline-block flex-auto text-center text-3xl">
@@ -290,9 +266,7 @@ function renderPlayerBench(opts: {
 
         <div class="flex flex-col text-center w-8 bg-slate-400/40 rounded-xs">
           <div class="text-success">{playerStats?.scores.total || 0}</div>
-          <div class="text-accent-content">
-            {playerStats?.rebonds.total || 0}
-          </div>
+          <div class="text-accent-content">{playerStats?.rebonds.total || 0}</div>
           <div class="text-error">{playerStats?.fouls || 0}</div>
         </div>
       </div>
@@ -326,9 +300,7 @@ function renderPlayerButton(opts: {
     )
   }
 
-  const playerStats = opts.statSummary.players.find(
-    stat => stat.playerId === opts.player?.id,
-  )
+  const playerStats = opts.statSummary.players.find((stat) => stat.playerId === opts.player?.id)
 
   return (
     <div class="w-full flex flex-row my-3 md:my-4">
@@ -355,16 +327,12 @@ function renderPlayerButton(opts: {
         <div class="inline-block flex-auto">
           <div class="flex items-center">
             <User class="inline-block flex-none" size={28} />
-            <div class="inline-block text-3xl flex-auto">
-              {opts.player.jersayNumber}
-            </div>
+            <div class="inline-block text-3xl flex-auto">{opts.player.jersayNumber}</div>
           </div>
-          <div class="text-center text-xl">
-            {opts.player.nicName ? opts.player.nicName : opts.player.firstName}
-          </div>
+          <div class="text-center text-xl">{opts.player.nicName ? opts.player.nicName : opts.player.firstName}</div>
         </div>
         <For each={STATS_MATCH_ACTIONS}>
-          {statAction => (
+          {(statAction) => (
             <Show
               when={
                 !statAction.secondaryAction &&
@@ -424,9 +392,7 @@ function renderPlayerButton(opts: {
 
         <div class="flex flex-col text-center w-8 bg-slate-400/50 rounded-xs">
           <div class="text-success">{playerStats?.scores.total || 0}</div>
-          <div class="text-accent-content">
-            {playerStats?.rebonds.total || 0}
-          </div>
+          <div class="text-accent-content">{playerStats?.rebonds.total || 0}</div>
           <div class="text-error">{playerStats?.fouls || 0}</div>
         </div>
       </div>
@@ -446,9 +412,7 @@ function renderPlayerHeader(playerId: string | null) {
         <Shirt size={28} />
       </div>
       <div class="text-center">
-        <div class="text-xl">
-          {player?.nicName ? player.nicName : player?.firstName}
-        </div>
+        <div class="text-xl">{player?.nicName ? player.nicName : player?.firstName}</div>
         <div class="text-sm">Action</div>
       </div>
       <div class="text-3xl text-right">{player?.jersayNumber}</div>
@@ -534,10 +498,8 @@ function renderTheTeamBench(options: {
 
   return (
     <For each={options.sortedPlayers}>
-      {player => (
-        <Show
-          when={player && !options.playersInTheFive.get().includes(player.id)}
-        >
+      {(player) => (
+        <Show when={player && !options.playersInTheFive.get().includes(player.id)}>
           {renderPlayerBench({
             player,
             playersInTheFive: options.playersInTheFive,
@@ -571,14 +533,10 @@ function renderTheTeamFive(opts: {
     )
   }
   return (
-    <div
-      class={`${opts.playersInTheFive.get().length === 5 ? '' : 'bg-warning/50'} rounded-xs`}
-    >
+    <div class={`${opts.playersInTheFive.get().length === 5 ? '' : 'bg-warning/50'} rounded-xs`}>
       <For each={opts.sortedPlayers}>
-        {player => (
-          <Show
-            when={player && opts.playersInTheFive.get().includes(player.id)}
-          >
+        {(player) => (
+          <Show when={player && opts.playersInTheFive.get().includes(player.id)}>
             {renderPlayerButton({
               player,
               match: opts.match,
@@ -625,13 +583,7 @@ export default function BsMatch(props: BsMatchProps) {
       <Show when={!isStatMode.get()}>
         <div class="divider">
           Le 5 (
-          <span
-            class={
-              playersInTheFive.get().length === 5
-                ? 'text-success'
-                : 'text-error'
-            }
-          >
+          <span class={playersInTheFive.get().length === 5 ? 'text-success' : 'text-error'}>
             {playersInTheFive.get().length}
           </span>
           )
@@ -660,7 +612,7 @@ export default function BsMatch(props: BsMatchProps) {
                   <div class="text-center text-xl">Équipe adverse</div>
                 </div>
                 <For each={STATS_MATCH_ACTIONS}>
-                  {statAction => (
+                  {(statAction) => (
                     <Show
                       when={
                         !statAction.secondaryAction &&
@@ -700,9 +652,7 @@ export default function BsMatch(props: BsMatchProps) {
                         >
                           {statAction.icon(`${statAction.type}-content`)}
                         </button>
-                        <div class="text-xs text-center">
-                          {statAction.label1}
-                        </div>
+                        <div class="text-xs text-center">{statAction.label1}</div>
                       </div>
                     </Show>
                   )}
@@ -721,12 +671,8 @@ export default function BsMatch(props: BsMatchProps) {
                 </div>
 
                 <div class="flex flex-col text-center w-8 bg-slate-400/50 rounded-xs">
-                  <div class="text-success">
-                    {statSummary.opponentScore || 0}
-                  </div>
-                  <div class="text-accent-content">
-                    {statSummary.rebonds.opponentTotal || 0}
-                  </div>
+                  <div class="text-success">{statSummary.opponentScore || 0}</div>
+                  <div class="text-accent-content">{statSummary.rebonds.opponentTotal || 0}</div>
                   <div class="text-error">{statSummary.opponentFouls || 0}</div>
                 </div>
               </div>
@@ -773,11 +719,7 @@ export default function BsMatch(props: BsMatchProps) {
               }}
               onKeyDown={(event: KeyboardEvent) => {
                 if (event.code === 'Enter') {
-                  removeLastAction(
-                    match,
-                    setStatSummary,
-                    disableClearLastAction,
-                  )
+                  removeLastAction(match, setStatSummary, disableClearLastAction)
                 }
               }}
             >
@@ -821,7 +763,7 @@ export default function BsMatch(props: BsMatchProps) {
           {renderPlayerHeader(playerOnAction.get())}
           <div class="w-full py-2 grid grid-cols-2 gap-3">
             <For each={STATS_MATCH_ACTIONS}>
-              {item => (
+              {(item) => (
                 <Show when={!item.secondaryAction}>
                   <button
                     type="button"
@@ -850,12 +792,12 @@ export default function BsMatch(props: BsMatchProps) {
 
       <Show when={isStatMode.get()}>{renderStatGrid(statSummary)}</Show>
 
-      <hr class="print:hidden"/>
+      <hr class="print:hidden" />
 
       <button
         type="button"
         class="btn btn-outline w-full print:hidden"
-        onClick={event => {
+        onClick={(event) => {
           event.stopPropagation()
 
           if (match?.status !== 'locked' && isStatMode.get()) {

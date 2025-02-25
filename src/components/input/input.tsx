@@ -14,10 +14,7 @@ const defaultOptions: BsInputProps = {
   },
 }
 
-function onInput(
-  event: BsInputOnChangeEvent,
-  callback?: (value: string) => void,
-) {
+function onInput(event: BsInputOnChangeEvent, callback?: (value: string) => void) {
   if (debounceOnInput) {
     clearTimeout(debounceOnInput)
   }
@@ -28,10 +25,7 @@ function onInput(
   }, 300)
 }
 
-function onChange(
-  event: BsInputOnChangeEvent,
-  callback?: (value: string) => void,
-) {
+function onChange(event: BsInputOnChangeEvent, callback?: (value: string) => void) {
   if (!callback) {
     return
   }
@@ -64,8 +58,8 @@ function renderDaisy(options: BsInputProps) {
           type={options.type}
           placeholder={options.placeholder}
           value={options.value || ''}
-          onChange={event => onChange(event, options.onChange)}
-          onInput={event => onInput(event, options.onChange)}
+          onChange={(event) => onChange(event, options.onChange)}
+          onInput={(event) => onInput(event, options.onChange)}
         />
       </div>
     </label>

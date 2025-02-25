@@ -4,7 +4,6 @@ export class Sound {
 
   constructor(url: string) {
     this.url = url
-
   }
 
   private load() {

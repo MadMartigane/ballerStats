@@ -83,7 +83,7 @@ function renderPlayerFallback() {
 
 function renderAddPlayerButton() {
   return (
-    <div class='w-full'>
+    <div class="w-full">
       <hr />
       <div class="footer-buttons-container">
         <button

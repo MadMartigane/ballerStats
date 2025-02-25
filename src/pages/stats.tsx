@@ -9,9 +9,7 @@ export default function Stats() {
     <div>
       <h1 class="text-2xl font-bold">
         <ChartScatter class="inline-block" />
-        <span class="inline-block px-2">
-          Statistiques globales sur tous les matchs.
-        </span>
+        <span class="inline-block px-2">Statistiques globales sur tous les matchs.</span>
       </h1>
 
       <div class="mt-4">

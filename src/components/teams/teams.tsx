@@ -102,11 +102,11 @@ function renderTeamFallback() {
 
 function renderAddTeamButton() {
   return (
-    <div class='w-full'>
+    <div class="w-full">
       <hr />
       <div class="footer-buttons-container">
         <button
-          type='button'
+          type="button"
           class="btn btn-primary"
           onClick={() => {
             isEditingNewTeam = true
@@ -166,7 +166,7 @@ function renderAddingTeamCard() {
     footer: (
       <div class="footer-buttons-container">
         <button
-          type='button'
+          type="button"
           class="btn btn-primary btn-wide"
           onClick={() => {
             toggleAddTeam(false)
@@ -180,7 +180,7 @@ function renderAddingTeamCard() {
         </button>
 
         <button
-          type='button'
+          type="button"
           class="btn btn-primary btn-wide"
           disabled={!canAddTeam.get()}
           onClick={() => {

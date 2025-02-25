@@ -119,7 +119,7 @@ function renderMatchFallback() {
 
 function renderAddMatchButton() {
   return (
-    <div class='w-full'>
+    <div class="w-full">
       <hr />
       <div class="footer-buttons-container">
         <button
@@ -154,7 +154,7 @@ function renderAddingMatchCard() {
           label="Mon Équipe"
           placeholder="Sélectionnez l’équipe"
           value={currentMatch?.teamId}
-          datas={teams.map(team => ({ value: team.id, label: team.name }))}
+          datas={teams.map((team) => ({ value: team.id, label: team.name }))}
           onValueChange={(value: string) => {
             onTeamChange(value)
           }}
@@ -195,7 +195,7 @@ function renderAddingMatchCard() {
           label="Match ouvert"
           size="lg"
           value={currentMatch?.status === 'unlocked'}
-          onChange={checked => {
+          onChange={(checked) => {
             onStatusChange(checked)
           }}
         />
@@ -238,13 +238,10 @@ export default function BsMatchs() {
   return (
     <div>
       <Show when={!isAddingMatch.get()}>
-        <Show
-          when={(matchLength.get() || 0) > 0}
-          fallback={renderMatchFallback()}
-        >
+        <Show when={(matchLength.get() || 0) > 0} fallback={renderMatchFallback()}>
           <div class="flex flex-wrap gap-4 w-full justify-around">
             <For each={matchs}>
-              {match => (
+              {(match) => (
                 <div class="mx-auto md:mx-0 w-fit">
                   <BsMatch
                     match={match}

@@ -1,15 +1,9 @@
 import { Show } from 'solid-js'
-import type {
-  BsDatePickerOnChangeEvent,
-  BsDatePickerProps,
-} from './date-picker.d'
+import type { BsDatePickerOnChangeEvent, BsDatePickerProps } from './date-picker.d'
 
 let debounceOnInput: number | null
 
-function onInput(
-  event: BsDatePickerOnChangeEvent,
-  callback?: (value: string) => void,
-) {
+function onInput(event: BsDatePickerOnChangeEvent, callback?: (value: string) => void) {
   if (!callback) {
     return
   }
@@ -24,10 +18,7 @@ function onInput(
   }, 300)
 }
 
-function onChange(
-  event: BsDatePickerOnChangeEvent,
-  callback?: (value: string) => void,
-) {
+function onChange(event: BsDatePickerOnChangeEvent, callback?: (value: string) => void) {
   if (!callback) {
     return
   }
@@ -49,8 +40,8 @@ export function BsDatePicker(props: BsDatePickerProps) {
           type={props.withTime ? 'datetime-local' : 'date'}
           placeholder={props.placeholder || ''}
           value={props.value || ''}
-          onChange={event => onChange(event, props.onChange)}
-          onInput={event => onInput(event, props.onChange)}
+          onChange={(event) => onChange(event, props.onChange)}
+          onInput={(event) => onInput(event, props.onChange)}
         />
       </div>
     </label>

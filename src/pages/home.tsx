@@ -1,12 +1,4 @@
-import {
-  BellRing,
-  Loader,
-  Medal,
-  Megaphone,
-  Share,
-  Trash2,
-  Vibrate,
-} from 'lucide-solid'
+import { BellRing, Loader, Medal, Megaphone, Share, Trash2, Vibrate } from 'lucide-solid'
 import { Show } from 'solid-js'
 import DarkThemeSwitch from '../components/dark-theme-switch'
 import GlobalStats from '../components/global-stats'
@@ -20,8 +12,8 @@ import BsIconPersonPlay from '../components/icons/person-play'
 import BsToggle from '../components/toggle'
 import MadSignal from '../libs/mad-signal'
 import orchestrator from '../libs/orchestrator/orchestrator'
-import { vibrate } from '../libs/vibrator'
 import { toast } from '../libs/utils'
+import { vibrate } from '../libs/vibrator'
 
 const displayDemo = new MadSignal(false)
 const bigCleanInProgress = new MadSignal(false)
@@ -57,12 +49,7 @@ export default function Home() {
             }, 400)
           }}
         >
-          {bigCleanInProgress.get() ? (
-            <Loader class="animate-spin" />
-          ) : (
-            <Trash2 />
-          )}{' '}
-          BIG CLEAN
+          {bigCleanInProgress.get() ? <Loader class="animate-spin" /> : <Trash2 />} BIG CLEAN
         </button>
 
         <button
@@ -97,7 +84,7 @@ export default function Home() {
           <BsToggle
             label="Afficher la démo"
             value={displayDemo.get()}
-            onChange={value => {
+            onChange={(value) => {
               displayDemo.set(value)
             }}
           />

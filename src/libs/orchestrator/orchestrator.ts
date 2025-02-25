@@ -4,14 +4,7 @@ import Matchs from '../matchs'
 import Player from '../player'
 import Players from '../players'
 import { soundTab } from '../sounds'
-import {
-  getStoredMatchs,
-  getStoredPlayers,
-  getStoredTeams,
-  storeMatchs,
-  storePlayers,
-  storeTeams,
-} from '../store'
+import { getStoredMatchs, getStoredPlayers, getStoredTeams, storeMatchs, storePlayers, storeTeams } from '../store'
 import Team from '../team'
 import Teams from '../teams'
 import { confirmAction, mount, toast, unmount } from '../utils'
@@ -111,10 +104,7 @@ export class Orchestrator {
     }
 
     // TODO: add lastRecord (timestamp) in the player and compare each records
-    if (
-      !this.#lastPlayersRecrod ||
-      stored.lastRecord > this.#lastPlayersRecrod
-    ) {
+    if (!this.#lastPlayersRecrod || stored.lastRecord > this.#lastPlayersRecrod) {
       this.#players = new Players(stored.data)
       this.throwPlayersUpdatedEvent()
     }
@@ -226,10 +216,7 @@ export class Orchestrator {
       return
     }
 
-    const cleanUpBefore = await confirmAction(
-      'Import DB',
-      'Voulez-vous écraser toutes les données ?',
-    )
+    const cleanUpBefore = await confirmAction('Import DB', 'Voulez-vous écraser toutes les données ?')
     if (cleanUpBefore) {
       this.doClearDB()
     }
@@ -285,7 +272,7 @@ export class Orchestrator {
       return null
     }
 
-    return this.#players.players.find(candidate => candidate.id === id) || null
+    return this.#players.players.find((candidate) => candidate.id === id) || null
   }
 
   public getTeam(id?: string | null) {
@@ -293,7 +280,7 @@ export class Orchestrator {
       return null
     }
 
-    return this.#teams.teams.find(candidate => candidate.id === id) || null
+    return this.#teams.teams.find((candidate) => candidate.id === id) || null
   }
 
   public getMatch(id?: string | null) {
@@ -301,13 +288,13 @@ export class Orchestrator {
       return null
     }
 
-    return this.#matchs.matchs.find(candidate => candidate.id === id) || null
+    return this.#matchs.matchs.find((candidate) => candidate.id === id) || null
   }
 
   public bigClean() {
     let cleaned = false
     for (const team of this.Teams.teams) {
-      const cleanPlayerIds = team.playerIds.filter(playerId => {
+      const cleanPlayerIds = team.playerIds.filter((playerId) => {
         return Boolean(this.getPlayer(playerId))
       })
 
@@ -329,13 +316,9 @@ export class Orchestrator {
       return []
     }
 
-    const players = playerIds.map(playerId => this.getPlayer(playerId))
+    const players = playerIds.map((playerId) => this.getPlayer(playerId))
 
-    return players.sort(
-      (a, b) =>
-        Number.parseInt(a?.jersayNumber || '0') -
-        Number.parseInt(b?.jersayNumber || '0'),
-    )
+    return players.sort((a, b) => Number.parseInt(a?.jersayNumber || '0') - Number.parseInt(b?.jersayNumber || '0'))
   }
 
   public exportDB() {
@@ -343,9 +326,9 @@ export class Orchestrator {
 
     const globalDB: GlobalDB = {
       timestamp: date.getTime(),
-      players: this.Players.players.map(player => player.getRawData()),
-      teams: this.Teams.teams.map(team => team.getRawData()),
-      matchs: this.Matchs.matchs.map(match => match.getRawData()),
+      players: this.Players.players.map((player) => player.getRawData()),
+      teams: this.Teams.teams.map((team) => team.getRawData()),
+      matchs: this.Matchs.matchs.map((match) => match.getRawData()),
     }
 
     const jsonDB = JSON.stringify(globalDB)
@@ -385,10 +368,10 @@ export class Orchestrator {
 
     const reader = new FileReader()
 
-    reader.onload = event => {
+    reader.onload = (event) => {
       this.onImportDBLoad(event)
     }
-    reader.onerror = event => {
+    reader.onerror = (event) => {
       this.onImportDBError(event)
     }
 
@@ -397,11 +380,9 @@ export class Orchestrator {
 
   public blink(duration: number): Promise<void> {
     const main = document.querySelector('main')
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       if (!main) {
-        console.warn(
-          '[Orchestrator.blink()] Unable to find the <main /> in the DOM.',
-        )
+        console.warn('[Orchestrator.blink()] Unable to find the <main /> in the DOM.')
         resolve()
         return
       }
@@ -417,8 +398,7 @@ export class Orchestrator {
   public throwUserActionFeedback(theme: ThemeVibration = 'single') {
     vibrate(theme)
 
-    const duration =
-      THEME_VIBRATION_TO_DURATION[theme] || THEME_VIBRATION_TO_DURATION.single
+    const duration = THEME_VIBRATION_TO_DURATION[theme] || THEME_VIBRATION_TO_DURATION.single
 
     this.blink(duration).then(() => {
       if (theme === 'double') {

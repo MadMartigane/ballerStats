@@ -51,20 +51,15 @@ function renderDaisy(props: BsSelectProps) {
           class="select select-bordered w-full"
           id={options.id}
           disabled={options.disabled}
-          onChange={event => onChange(event, options)}
+          onChange={(event) => onChange(event, options)}
         >
-          <Show
-            when={!options.value && !options.default && options.placeholder}
-          >
+          <Show when={!options.value && !options.default && options.placeholder}>
             <option selected>{options.placeholder}</option>
           </Show>
 
           <For each={datas}>
-            {data => (
-              <option
-                value={data.value}
-                selected={data.value === (options.value || options.default)}
-              >
+            {(data) => (
+              <option value={data.value} selected={data.value === (options.value || options.default)}>
                 {data.label}
               </option>
             )}

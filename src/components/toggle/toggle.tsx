@@ -1,9 +1,6 @@
 import type { BsToggleOnChangeEvent, BsToggleProps } from './toggle.d'
 
-function onChange(
-  event: BsToggleOnChangeEvent,
-  callback?: (value: boolean) => void,
-) {
+function onChange(event: BsToggleOnChangeEvent, callback?: (value: boolean) => void) {
   if (!callback) {
     return
   }
@@ -26,7 +23,7 @@ export default function BsToggle(props: BsToggleProps) {
             type="checkbox"
             class={`toggle toggle-primary toggle-${size}`}
             checked={props.value}
-            onChange={event => {
+            onChange={(event) => {
               onChange(event, props.onChange)
             }}
           />

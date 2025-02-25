@@ -72,24 +72,24 @@ const RAW_STAT_MATCH_SUMMARY: StatMatchSummary = {
 
 function getPlayerIdsInStats(match: Match) {
   return match.stats
-    .filter(stats => stats.playerId !== TEAM_OPPONENT_ID)
-    .map(stats => stats.playerId)
-    .reduce((result, playerId) => {
-      if (!playerId || result.includes(playerId)) {
-        return result
-      }
+    .filter((stats) => stats.playerId !== TEAM_OPPONENT_ID)
+    .map((stats) => stats.playerId)
+    .reduce(
+      (result, playerId) => {
+        if (!playerId || result.includes(playerId)) {
+          return result
+        }
 
-      result.push(playerId)
-      return result
-    }, [] as Array<string>)
+        result.push(playerId)
+        return result
+      },
+      [] as Array<string>,
+    )
 }
 
 function getPlayerScore(match: Match, playerId: string) {
   return match.stats.reduce((score, statEntry) => {
-    if (
-      ['2pts', 'free-throw', '3pts'].includes(statEntry.name) &&
-      statEntry.playerId === playerId
-    ) {
+    if (['2pts', 'free-throw', '3pts'].includes(statEntry.name) && statEntry.playerId === playerId) {
       return score + statEntry.value
     }
 
@@ -97,11 +97,7 @@ function getPlayerScore(match: Match, playerId: string) {
   }, 0)
 }
 
-function getPlayerStatByType(
-  match: Match,
-  playerId: string,
-  type: StatMatchActionItemName,
-) {
+function getPlayerStatByType(match: Match, playerId: string, type: StatMatchActionItemName) {
   return match.stats.reduce((score, statEntry) => {
     if (statEntry.name === type && statEntry.playerId === playerId) {
       return score + statEntry.value
@@ -132,23 +128,15 @@ function getPlayerTurnovers(match: Match, playerId: string) {
 }
 
 function getTeamScore(match: Match, playerIds: Array<string>) {
-  return playerIds.reduce(
-    (score: number, playerId) => score + getPlayerScore(match, playerId),
-    0,
-  )
+  return playerIds.reduce((score: number, playerId) => score + getPlayerScore(match, playerId), 0)
 }
 
-function isMatchHaveStatOfType(
-  match: Match,
-  statName: StatMatchActionItemName,
-) {
-  return Boolean(match.stats.find(statItem => statItem.name === statName))
+function isMatchHaveStatOfType(match: Match, statName: StatMatchActionItemName) {
+  return Boolean(match.stats.find((statItem) => statItem.name === statName))
 }
 
 function getTeamScores(players: Array<StatMatchSummaryPlayer>) {
-  const rawTeamScores = clone(
-    RAW_STAT_MATCH_SUMMARY.teamScores,
-  ) as StatMatchSummaryPlayer
+  const rawTeamScores = clone(RAW_STAT_MATCH_SUMMARY.teamScores) as StatMatchSummaryPlayer
 
   const teamScores = players.reduce((total, playerStat) => {
     total.scores.total += playerStat.scores.total
@@ -180,21 +168,13 @@ function getTeamScores(players: Array<StatMatchSummaryPlayer>) {
   }, rawTeamScores)
 
   teamScores.ratio['free-throw'].percentage =
-    Math.round(
-      (teamScores.ratio['free-throw'].success /
-        teamScores.ratio['free-throw'].total) *
-        100,
-    ) || 0
+    Math.round((teamScores.ratio['free-throw'].success / teamScores.ratio['free-throw'].total) * 100) || 0
 
   teamScores.ratio['2pts'].percentage =
-    Math.round(
-      (teamScores.ratio['2pts'].success / teamScores.ratio['2pts'].total) * 100,
-    ) || 0
+    Math.round((teamScores.ratio['2pts'].success / teamScores.ratio['2pts'].total) * 100) || 0
 
   teamScores.ratio['3pts'].percentage =
-    Math.round(
-      (teamScores.ratio['3pts'].success / teamScores.ratio['3pts'].total) * 100,
-    ) || 0
+    Math.round((teamScores.ratio['3pts'].success / teamScores.ratio['3pts'].total) * 100) || 0
 
   return teamScores
 }
@@ -224,11 +204,7 @@ function getPlayerNumberByType(
   type: StatMatchActionItemType,
 ) {
   return match.stats.reduce((score, statEntry) => {
-    if (
-      statEntry.playerId === playerId &&
-      statEntry.name === name &&
-      statEntry.type === type
-    ) {
+    if (statEntry.playerId === playerId && statEntry.name === name && statEntry.type === type) {
       return score + 1
     }
 
@@ -264,10 +240,7 @@ function getTeamOffensiveRebonds(match: Match, playerIds: Array<string>) {
   }, 0)
 }
 
-function getFullRebondStats(
-  match: Match,
-  playerIds: Array<string>,
-): StatMatchSummaryRebonds {
+function getFullRebondStats(match: Match, playerIds: Array<string>): StatMatchSummaryRebonds {
   const opponentDefensive = getOpponentDefensiveRebonds(match)
   const opponentOffensive = getOpponentOffensiveRebonds(match)
   const opponentTotal = opponentDefensive + opponentOffensive
@@ -276,12 +249,9 @@ function getFullRebondStats(
   const teamDefensive = getTeamDefensiveRebonds(match, playerIds)
   const teamTotal = teamDefensive + teamOffensive
 
-  const teamDefensivePercentage =
-    Math.round((teamDefensive / (opponentOffensive + teamDefensive)) * 100) || 0
-  const teamOffensivePercentage =
-    Math.round((teamOffensive / (opponentDefensive + teamOffensive)) * 100) || 0
-  const teamTotalPercentage =
-    Math.round((teamDefensivePercentage + teamOffensivePercentage) / 2) || 0
+  const teamDefensivePercentage = Math.round((teamDefensive / (opponentOffensive + teamDefensive)) * 100) || 0
+  const teamOffensivePercentage = Math.round((teamOffensive / (opponentDefensive + teamOffensive)) * 100) || 0
+  const teamTotalPercentage = Math.round((teamDefensivePercentage + teamOffensivePercentage) / 2) || 0
 
   return {
     teamTotal,
@@ -299,7 +269,7 @@ function getFullRebondStats(
 function getPlayersStatsByMatch(match: Match) {
   const playerIds = getPlayerIdsInStats(match)
   return playerIds
-    .map(playerId => {
+    .map((playerId) => {
       const playerStats = {
         playerId,
         scores: {
@@ -315,12 +285,7 @@ function getPlayersStatsByMatch(match: Match) {
         },
         ratio: {
           'free-throw': {
-            success: getPlayerNumberByType(
-              match,
-              playerId,
-              'free-throw',
-              'success',
-            ),
+            success: getPlayerNumberByType(match, playerId, 'free-throw', 'success'),
             fail: getPlayerNumberByType(match, playerId, 'free-throw', 'error'),
             total: 0,
             percentage: 0,
@@ -344,80 +309,44 @@ function getPlayersStatsByMatch(match: Match) {
       }
 
       playerStats.scores.total =
-        playerStats.scores['2pts'] +
-        playerStats.scores['3pts'] +
-        playerStats.scores['free-throw']
+        playerStats.scores['2pts'] + playerStats.scores['3pts'] + playerStats.scores['free-throw']
 
-      playerStats.rebonds.total =
-        playerStats.rebonds.offensive + playerStats.rebonds.defensive
+      playerStats.rebonds.total = playerStats.rebonds.offensive + playerStats.rebonds.defensive
 
-      playerStats.ratio['2pts'].total =
-        playerStats.ratio['2pts'].fail + playerStats.ratio['2pts'].success
+      playerStats.ratio['2pts'].total = playerStats.ratio['2pts'].fail + playerStats.ratio['2pts'].success
 
       playerStats.ratio['2pts'].percentage =
-        Math.round(
-          (playerStats.ratio['2pts'].success /
-            playerStats.ratio['2pts'].total) *
-            100,
-        ) || 0
+        Math.round((playerStats.ratio['2pts'].success / playerStats.ratio['2pts'].total) * 100) || 0
 
-      playerStats.ratio['3pts'].total =
-        playerStats.ratio['3pts'].fail + playerStats.ratio['3pts'].success
+      playerStats.ratio['3pts'].total = playerStats.ratio['3pts'].fail + playerStats.ratio['3pts'].success
 
       playerStats.ratio['3pts'].percentage =
-        Math.round(
-          (playerStats.ratio['3pts'].success /
-            playerStats.ratio['3pts'].total) *
-            100,
-        ) || 0
+        Math.round((playerStats.ratio['3pts'].success / playerStats.ratio['3pts'].total) * 100) || 0
 
       playerStats.ratio['free-throw'].total =
-        playerStats.ratio['free-throw'].fail +
-        playerStats.ratio['free-throw'].success
+        playerStats.ratio['free-throw'].fail + playerStats.ratio['free-throw'].success
 
       playerStats.ratio['free-throw'].percentage =
-        Math.round(
-          (playerStats.ratio['free-throw'].success /
-            playerStats.ratio['free-throw'].total) *
-            100,
-        ) || 0
-      playerStats.scores['2pts'] +
-        playerStats.scores['3pts'] +
-        playerStats.scores['free-throw']
+        Math.round((playerStats.ratio['free-throw'].success / playerStats.ratio['free-throw'].total) * 100) || 0
+      playerStats.scores['2pts'] + playerStats.scores['3pts'] + playerStats.scores['free-throw']
 
-      playerStats.rebonds.total =
-        playerStats.rebonds.offensive + playerStats.rebonds.defensive
+      playerStats.rebonds.total = playerStats.rebonds.offensive + playerStats.rebonds.defensive
 
-      playerStats.ratio['2pts'].total =
-        playerStats.ratio['2pts'].fail + playerStats.ratio['2pts'].success
+      playerStats.ratio['2pts'].total = playerStats.ratio['2pts'].fail + playerStats.ratio['2pts'].success
 
       playerStats.ratio['2pts'].percentage =
-        Math.round(
-          (playerStats.ratio['2pts'].success /
-            playerStats.ratio['2pts'].total) *
-            100,
-        ) || 0
+        Math.round((playerStats.ratio['2pts'].success / playerStats.ratio['2pts'].total) * 100) || 0
 
-      playerStats.ratio['3pts'].total =
-        playerStats.ratio['3pts'].fail + playerStats.ratio['3pts'].success
+      playerStats.ratio['3pts'].total = playerStats.ratio['3pts'].fail + playerStats.ratio['3pts'].success
 
       playerStats.ratio['3pts'].percentage =
-        Math.round(
-          (playerStats.ratio['3pts'].success /
-            playerStats.ratio['3pts'].total) *
-            100,
-        ) || 0
+        Math.round((playerStats.ratio['3pts'].success / playerStats.ratio['3pts'].total) * 100) || 0
 
       playerStats.ratio['free-throw'].total =
-        playerStats.ratio['free-throw'].fail +
-        playerStats.ratio['free-throw'].success
+        playerStats.ratio['free-throw'].fail + playerStats.ratio['free-throw'].success
 
       playerStats.ratio['free-throw'].percentage =
-        Math.round(
-          (playerStats.ratio['free-throw'].success /
-            playerStats.ratio['free-throw'].total) *
-            100,
-        ) || 0
+        Math.round((playerStats.ratio['free-throw'].success / playerStats.ratio['free-throw'].total) * 100) || 0
 
       return playerStats as StatMatchSummaryPlayer
     })
@@ -438,12 +367,9 @@ function sumPlayerStats(
   statResult.rebonds.offensive += statCurrentMatch.rebonds.offensive
   statResult.rebonds.total += statCurrentMatch.rebonds.total
 
-  statResult.ratio['free-throw'].success +=
-    statCurrentMatch.ratio['free-throw'].success
-  statResult.ratio['free-throw'].fail +=
-    statCurrentMatch.ratio['free-throw'].fail
-  statResult.ratio['free-throw'].total +=
-    statCurrentMatch.ratio['free-throw'].total
+  statResult.ratio['free-throw'].success += statCurrentMatch.ratio['free-throw'].success
+  statResult.ratio['free-throw'].fail += statCurrentMatch.ratio['free-throw'].fail
+  statResult.ratio['free-throw'].total += statCurrentMatch.ratio['free-throw'].total
 
   statResult.ratio['2pts'].success += statCurrentMatch.ratio['2pts'].success
   statResult.ratio['2pts'].fail += statCurrentMatch.ratio['2pts'].fail
@@ -465,124 +391,70 @@ function dividePlayerStatsByNbMatch(playerSats: StatMatchSummaryPlayer) {
     return playerSats
   }
 
-  playerSats.fouls =
-    (playerSats.fouls &&
-      Math.round(playerSats.fouls / playerSats.nbPlayedMatch)) ||
-    0
-  playerSats.assists =
-    (playerSats.assists &&
-      Math.round(playerSats.assists / playerSats.nbPlayedMatch)) ||
-    0
+  playerSats.fouls = (playerSats.fouls && Math.round(playerSats.fouls / playerSats.nbPlayedMatch)) || 0
+  playerSats.assists = (playerSats.assists && Math.round(playerSats.assists / playerSats.nbPlayedMatch)) || 0
 
-  playerSats.turnover =
-    (playerSats.turnover &&
-      Math.round(playerSats.turnover / playerSats.nbPlayedMatch)) ||
-    0
+  playerSats.turnover = (playerSats.turnover && Math.round(playerSats.turnover / playerSats.nbPlayedMatch)) || 0
 
   playerSats.scores.total =
-    (playerSats.scores.total &&
-      Math.round(playerSats.scores.total / playerSats.nbPlayedMatch)) ||
-    0
+    (playerSats.scores.total && Math.round(playerSats.scores.total / playerSats.nbPlayedMatch)) || 0
 
   playerSats.scores['2pts'] =
-    (playerSats.scores['2pts'] &&
-      Math.round(playerSats.scores['2pts'] / playerSats.nbPlayedMatch)) ||
-    0
+    (playerSats.scores['2pts'] && Math.round(playerSats.scores['2pts'] / playerSats.nbPlayedMatch)) || 0
 
   playerSats.scores['3pts'] =
-    (playerSats.scores['3pts'] &&
-      Math.round(playerSats.scores['3pts'] / playerSats.nbPlayedMatch)) ||
-    0
+    (playerSats.scores['3pts'] && Math.round(playerSats.scores['3pts'] / playerSats.nbPlayedMatch)) || 0
 
   playerSats.scores['free-throw'] =
-    (playerSats.scores['free-throw'] &&
-      Math.round(playerSats.scores['free-throw'] / playerSats.nbPlayedMatch)) ||
-    0
+    (playerSats.scores['free-throw'] && Math.round(playerSats.scores['free-throw'] / playerSats.nbPlayedMatch)) || 0
 
   playerSats.ratio['free-throw'].total =
     (playerSats.ratio['free-throw'].total &&
-      Math.round(
-        playerSats.ratio['free-throw'].total / playerSats.nbPlayedMatch,
-      )) ||
+      Math.round(playerSats.ratio['free-throw'].total / playerSats.nbPlayedMatch)) ||
     0
   playerSats.ratio['free-throw'].success =
     (playerSats.ratio['free-throw'].success &&
-      Math.round(
-        playerSats.ratio['free-throw'].success / playerSats.nbPlayedMatch,
-      )) ||
+      Math.round(playerSats.ratio['free-throw'].success / playerSats.nbPlayedMatch)) ||
     0
   playerSats.ratio['free-throw'].fail =
     (playerSats.ratio['free-throw'].fail &&
-      Math.round(
-        playerSats.ratio['free-throw'].fail / playerSats.nbPlayedMatch,
-      )) ||
+      Math.round(playerSats.ratio['free-throw'].fail / playerSats.nbPlayedMatch)) ||
     0
 
   playerSats.ratio['free-throw'].percentage =
     (playerSats.ratio['free-throw'].total &&
-      Math.round(
-        (playerSats.ratio['free-throw'].success /
-          playerSats.ratio['free-throw'].total) *
-          100,
-      )) ||
+      Math.round((playerSats.ratio['free-throw'].success / playerSats.ratio['free-throw'].total) * 100)) ||
     0
 
   playerSats.ratio['2pts'].total =
-    (playerSats.ratio['2pts'].total &&
-      Math.round(playerSats.ratio['2pts'].total / playerSats.nbPlayedMatch)) ||
-    0
+    (playerSats.ratio['2pts'].total && Math.round(playerSats.ratio['2pts'].total / playerSats.nbPlayedMatch)) || 0
   playerSats.ratio['2pts'].success =
-    (playerSats.ratio['2pts'].success &&
-      Math.round(
-        playerSats.ratio['2pts'].success / playerSats.nbPlayedMatch,
-      )) ||
-    0
+    (playerSats.ratio['2pts'].success && Math.round(playerSats.ratio['2pts'].success / playerSats.nbPlayedMatch)) || 0
   playerSats.ratio['2pts'].fail =
-    (playerSats.ratio['2pts'].fail &&
-      Math.round(playerSats.ratio['2pts'].fail / playerSats.nbPlayedMatch)) ||
-    0
+    (playerSats.ratio['2pts'].fail && Math.round(playerSats.ratio['2pts'].fail / playerSats.nbPlayedMatch)) || 0
 
   playerSats.ratio['2pts'].percentage =
     (playerSats.ratio['2pts'].total &&
-      Math.round(
-        (playerSats.ratio['2pts'].success / playerSats.ratio['2pts'].total) *
-          100,
-      )) ||
+      Math.round((playerSats.ratio['2pts'].success / playerSats.ratio['2pts'].total) * 100)) ||
     0
 
   playerSats.ratio['3pts'].total =
-    (playerSats.ratio['3pts'].total &&
-      Math.round(playerSats.ratio['3pts'].total / playerSats.nbPlayedMatch)) ||
-    0
+    (playerSats.ratio['3pts'].total && Math.round(playerSats.ratio['3pts'].total / playerSats.nbPlayedMatch)) || 0
   playerSats.ratio['3pts'].success =
-    (playerSats.ratio['3pts'].success &&
-      Math.round(
-        playerSats.ratio['3pts'].success / playerSats.nbPlayedMatch,
-      )) ||
-    0
+    (playerSats.ratio['3pts'].success && Math.round(playerSats.ratio['3pts'].success / playerSats.nbPlayedMatch)) || 0
   playerSats.ratio['3pts'].fail =
-    (playerSats.ratio['3pts'].fail &&
-      Math.round(playerSats.ratio['3pts'].fail / playerSats.nbPlayedMatch)) ||
-    0
+    (playerSats.ratio['3pts'].fail && Math.round(playerSats.ratio['3pts'].fail / playerSats.nbPlayedMatch)) || 0
 
   playerSats.ratio['3pts'].percentage =
     (playerSats.ratio['3pts'].total &&
-      Math.round(
-        (playerSats.ratio['3pts'].success / playerSats.ratio['3pts'].total) *
-          100,
-      )) ||
+      Math.round((playerSats.ratio['3pts'].success / playerSats.ratio['3pts'].total) * 100)) ||
     0
 
   playerSats.rebonds.defensive =
-    (playerSats.rebonds.defensive &&
-      Math.round(playerSats.rebonds.defensive / playerSats.nbPlayedMatch)) ||
-    0
+    (playerSats.rebonds.defensive && Math.round(playerSats.rebonds.defensive / playerSats.nbPlayedMatch)) || 0
   playerSats.rebonds.offensive =
-    (playerSats.rebonds.offensive &&
-      Math.round(playerSats.rebonds.offensive / playerSats.nbPlayedMatch)) ||
-    0
-  playerSats.rebonds.total =
-    playerSats.rebonds.offensive + playerSats.rebonds.defensive
+    (playerSats.rebonds.offensive && Math.round(playerSats.rebonds.offensive / playerSats.nbPlayedMatch)) || 0
+  playerSats.rebonds.total = playerSats.rebonds.offensive + playerSats.rebonds.defensive
 
   return playerSats
 }
@@ -620,51 +492,42 @@ export function getFullStats(): StatMatchSummary {
     return getStatSummary(match)
   })
 
-  const fullStats = stats.reduce(
-    (statResult: StatMatchSummary, statCurrentMatch: StatMatchSummary) => {
-      statResult.opponentFouls += statCurrentMatch.opponentFouls
-      statResult.opponentScore += statCurrentMatch.opponentScore
-      statResult.teamScore += statCurrentMatch.teamScore
+  const fullStats = stats.reduce((statResult: StatMatchSummary, statCurrentMatch: StatMatchSummary) => {
+    statResult.opponentFouls += statCurrentMatch.opponentFouls
+    statResult.opponentScore += statCurrentMatch.opponentScore
+    statResult.teamScore += statCurrentMatch.teamScore
 
-      statResult.rebonds.teamTotal += statCurrentMatch.rebonds.teamTotal
-      statResult.rebonds.teamOffensive += statCurrentMatch.rebonds.teamOffensive
-      statResult.rebonds.teamDefensive += statCurrentMatch.rebonds.teamDefensive
-      statResult.rebonds.opponentTotal += statCurrentMatch.rebonds.opponentTotal
-      statResult.rebonds.opponentOffensive +=
-        statCurrentMatch.rebonds.opponentOffensive
-      statResult.rebonds.opponentDefensive +=
-        statCurrentMatch.rebonds.opponentDefensive
+    statResult.rebonds.teamTotal += statCurrentMatch.rebonds.teamTotal
+    statResult.rebonds.teamOffensive += statCurrentMatch.rebonds.teamOffensive
+    statResult.rebonds.teamDefensive += statCurrentMatch.rebonds.teamDefensive
+    statResult.rebonds.opponentTotal += statCurrentMatch.rebonds.opponentTotal
+    statResult.rebonds.opponentOffensive += statCurrentMatch.rebonds.opponentOffensive
+    statResult.rebonds.opponentDefensive += statCurrentMatch.rebonds.opponentDefensive
 
-      sumPlayerStats(statResult.teamScores, statCurrentMatch.teamScores)
+    sumPlayerStats(statResult.teamScores, statCurrentMatch.teamScores)
 
-      return statResult
-    },
-    clone(RAW_STAT_MATCH_SUMMARY) as StatMatchSummary,
-  )
+    return statResult
+  }, clone(RAW_STAT_MATCH_SUMMARY) as StatMatchSummary)
 
-  fullStats.players = team.playerIds.map(
-    (playerId: string): StatMatchSummaryPlayer => {
-      const currentPlayerStats = clone(
-        RAW_STAT_MATCH_SUMMARY.teamScores,
-      ) as StatMatchSummaryPlayer
-      currentPlayerStats.playerId = playerId
+  fullStats.players = team.playerIds.map((playerId: string): StatMatchSummaryPlayer => {
+    const currentPlayerStats = clone(RAW_STAT_MATCH_SUMMARY.teamScores) as StatMatchSummaryPlayer
+    currentPlayerStats.playerId = playerId
 
-      for (const stat of stats) {
-        for (const playerStats of stat.players) {
-          if (playerStats.playerId !== playerId) {
-            continue
-          }
-
-          sumPlayerStats(currentPlayerStats, playerStats)
-          currentPlayerStats.nbPlayedMatch++
+    for (const stat of stats) {
+      for (const playerStats of stat.players) {
+        if (playerStats.playerId !== playerId) {
+          continue
         }
+
+        sumPlayerStats(currentPlayerStats, playerStats)
+        currentPlayerStats.nbPlayedMatch++
       }
+    }
 
-      dividePlayerStatsByNbMatch(currentPlayerStats)
+    dividePlayerStatsByNbMatch(currentPlayerStats)
 
-      return currentPlayerStats
-    },
-  )
+    return currentPlayerStats
+  })
 
   fullStats.players.sort((up, down) => down.scores.total - up.scores.total)
 
@@ -674,128 +537,62 @@ export function getFullStats(): StatMatchSummary {
   fullStats.opponentScore = Math.round(fullStats.opponentScore / nbMatch)
   fullStats.opponentFouls = Math.round(fullStats.opponentFouls / nbMatch)
 
-  fullStats.rebonds.teamTotal = Math.round(
-    fullStats.rebonds.teamTotal / nbMatch,
-  )
-  fullStats.rebonds.teamOffensive = Math.round(
-    fullStats.rebonds.teamOffensive / nbMatch,
-  )
-  fullStats.rebonds.teamDefensive = Math.round(
-    fullStats.rebonds.teamDefensive / nbMatch,
-  )
-  fullStats.rebonds.opponentTotal = Math.round(
-    fullStats.rebonds.opponentTotal / nbMatch,
-  )
-  fullStats.rebonds.opponentOffensive = Math.round(
-    fullStats.rebonds.opponentOffensive / nbMatch,
-  )
-  fullStats.rebonds.opponentDefensive = Math.round(
-    fullStats.rebonds.opponentDefensive / nbMatch,
-  )
+  fullStats.rebonds.teamTotal = Math.round(fullStats.rebonds.teamTotal / nbMatch)
+  fullStats.rebonds.teamOffensive = Math.round(fullStats.rebonds.teamOffensive / nbMatch)
+  fullStats.rebonds.teamDefensive = Math.round(fullStats.rebonds.teamDefensive / nbMatch)
+  fullStats.rebonds.opponentTotal = Math.round(fullStats.rebonds.opponentTotal / nbMatch)
+  fullStats.rebonds.opponentOffensive = Math.round(fullStats.rebonds.opponentOffensive / nbMatch)
+  fullStats.rebonds.opponentDefensive = Math.round(fullStats.rebonds.opponentDefensive / nbMatch)
   fullStats.rebonds.teamTotalPercentage = Math.round(
-    (fullStats.rebonds.teamTotal /
-      (fullStats.rebonds.teamTotal + fullStats.rebonds.opponentTotal)) *
-      100,
+    (fullStats.rebonds.teamTotal / (fullStats.rebonds.teamTotal + fullStats.rebonds.opponentTotal)) * 100,
   )
   fullStats.rebonds.teamDefensivePercentage = Math.round(
-    (fullStats.rebonds.teamDefensive /
-      (fullStats.rebonds.teamDefensive + fullStats.rebonds.opponentDefensive)) *
-      100,
+    (fullStats.rebonds.teamDefensive / (fullStats.rebonds.teamDefensive + fullStats.rebonds.opponentDefensive)) * 100,
   )
   fullStats.rebonds.teamOffensivePercentage = Math.round(
-    (fullStats.rebonds.teamOffensive /
-      (fullStats.rebonds.teamOffensive + fullStats.rebonds.opponentOffensive)) *
-      100,
+    (fullStats.rebonds.teamOffensive / (fullStats.rebonds.teamOffensive + fullStats.rebonds.opponentOffensive)) * 100,
   )
 
-  fullStats.teamScores.scores['free-throw'] = Math.round(
-    fullStats.teamScores.scores['free-throw'] / nbMatch,
-  )
-  fullStats.teamScores.scores['2pts'] = Math.round(
-    fullStats.teamScores.scores['2pts'] / nbMatch,
-  )
-  fullStats.teamScores.scores['3pts'] = Math.round(
-    fullStats.teamScores.scores['3pts'] / nbMatch,
-  )
-  fullStats.teamScores.scores.total = Math.round(
-    fullStats.teamScores.scores.total / nbMatch,
-  )
+  fullStats.teamScores.scores['free-throw'] = Math.round(fullStats.teamScores.scores['free-throw'] / nbMatch)
+  fullStats.teamScores.scores['2pts'] = Math.round(fullStats.teamScores.scores['2pts'] / nbMatch)
+  fullStats.teamScores.scores['3pts'] = Math.round(fullStats.teamScores.scores['3pts'] / nbMatch)
+  fullStats.teamScores.scores.total = Math.round(fullStats.teamScores.scores.total / nbMatch)
 
-  fullStats.teamScores.rebonds.defensive = Math.round(
-    fullStats.teamScores.rebonds.defensive / nbMatch,
-  )
-  fullStats.teamScores.rebonds.offensive = Math.round(
-    fullStats.teamScores.rebonds.offensive / nbMatch,
-  )
-  fullStats.teamScores.rebonds.total = Math.round(
-    fullStats.teamScores.rebonds.total / nbMatch,
-  )
+  fullStats.teamScores.rebonds.defensive = Math.round(fullStats.teamScores.rebonds.defensive / nbMatch)
+  fullStats.teamScores.rebonds.offensive = Math.round(fullStats.teamScores.rebonds.offensive / nbMatch)
+  fullStats.teamScores.rebonds.total = Math.round(fullStats.teamScores.rebonds.total / nbMatch)
 
   fullStats.teamScores.ratio['free-throw'].success = Math.round(
     fullStats.teamScores.ratio['free-throw'].success / nbMatch,
   )
-  fullStats.teamScores.ratio['free-throw'].fail = Math.round(
-    fullStats.teamScores.ratio['free-throw'].fail / nbMatch,
-  )
-  fullStats.teamScores.ratio['free-throw'].total = Math.round(
-    fullStats.teamScores.ratio['free-throw'].total / nbMatch,
-  )
+  fullStats.teamScores.ratio['free-throw'].fail = Math.round(fullStats.teamScores.ratio['free-throw'].fail / nbMatch)
+  fullStats.teamScores.ratio['free-throw'].total = Math.round(fullStats.teamScores.ratio['free-throw'].total / nbMatch)
   fullStats.teamScores.ratio['free-throw'].percentage = Math.round(
-    (fullStats.teamScores.ratio['free-throw'].success /
-      fullStats.teamScores.ratio['free-throw'].total) *
-      100,
+    (fullStats.teamScores.ratio['free-throw'].success / fullStats.teamScores.ratio['free-throw'].total) * 100,
   )
 
-  fullStats.teamScores.ratio['2pts'].success = Math.round(
-    fullStats.teamScores.ratio['2pts'].success / nbMatch,
-  )
-  fullStats.teamScores.ratio['2pts'].fail = Math.round(
-    fullStats.teamScores.ratio['2pts'].fail / nbMatch,
-  )
-  fullStats.teamScores.ratio['2pts'].total = Math.round(
-    fullStats.teamScores.ratio['2pts'].total / nbMatch,
-  )
+  fullStats.teamScores.ratio['2pts'].success = Math.round(fullStats.teamScores.ratio['2pts'].success / nbMatch)
+  fullStats.teamScores.ratio['2pts'].fail = Math.round(fullStats.teamScores.ratio['2pts'].fail / nbMatch)
+  fullStats.teamScores.ratio['2pts'].total = Math.round(fullStats.teamScores.ratio['2pts'].total / nbMatch)
   fullStats.teamScores.ratio['2pts'].percentage = Math.round(
-    (fullStats.teamScores.ratio['2pts'].success /
-      fullStats.teamScores.ratio['2pts'].total) *
-      100,
+    (fullStats.teamScores.ratio['2pts'].success / fullStats.teamScores.ratio['2pts'].total) * 100,
   )
 
-  fullStats.teamScores.ratio['3pts'].success = Math.round(
-    fullStats.teamScores.ratio['3pts'].success / nbMatch,
-  )
-  fullStats.teamScores.ratio['3pts'].fail = Math.round(
-    fullStats.teamScores.ratio['3pts'].fail / nbMatch,
-  )
-  fullStats.teamScores.ratio['3pts'].total = Math.round(
-    fullStats.teamScores.ratio['3pts'].total / nbMatch,
-  )
+  fullStats.teamScores.ratio['3pts'].success = Math.round(fullStats.teamScores.ratio['3pts'].success / nbMatch)
+  fullStats.teamScores.ratio['3pts'].fail = Math.round(fullStats.teamScores.ratio['3pts'].fail / nbMatch)
+  fullStats.teamScores.ratio['3pts'].total = Math.round(fullStats.teamScores.ratio['3pts'].total / nbMatch)
   fullStats.teamScores.ratio['3pts'].percentage = Math.round(
-    (fullStats.teamScores.ratio['3pts'].success /
-      fullStats.teamScores.ratio['3pts'].total) *
-      100,
+    (fullStats.teamScores.ratio['3pts'].success / fullStats.teamScores.ratio['3pts'].total) * 100,
   )
 
   // Fouls, turnover and assists was not registered on the first matchs.
-  const nbMatchFouls = matchs.filter(match =>
-    isMatchHaveStatOfType(match, 'foul'),
-  ).length
-  const nbMatchTurnover = matchs.filter(match =>
-    isMatchHaveStatOfType(match, 'turnover'),
-  ).length
-  const nbMatchAssists = matchs.filter(match =>
-    isMatchHaveStatOfType(match, 'assist'),
-  ).length
+  const nbMatchFouls = matchs.filter((match) => isMatchHaveStatOfType(match, 'foul')).length
+  const nbMatchTurnover = matchs.filter((match) => isMatchHaveStatOfType(match, 'turnover')).length
+  const nbMatchAssists = matchs.filter((match) => isMatchHaveStatOfType(match, 'assist')).length
 
-  fullStats.teamScores.fouls = Math.round(
-    fullStats.teamScores.fouls / nbMatchFouls,
-  )
-  fullStats.teamScores.turnover = Math.round(
-    fullStats.teamScores.turnover / nbMatchTurnover,
-  )
-  fullStats.teamScores.assists = Math.round(
-    fullStats.teamScores.assists / nbMatchAssists,
-  )
+  fullStats.teamScores.fouls = Math.round(fullStats.teamScores.fouls / nbMatchFouls)
+  fullStats.teamScores.turnover = Math.round(fullStats.teamScores.turnover / nbMatchTurnover)
+  fullStats.teamScores.assists = Math.round(fullStats.teamScores.assists / nbMatchAssists)
 
   return fullStats
 }

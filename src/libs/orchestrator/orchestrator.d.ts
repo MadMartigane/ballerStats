@@ -1,6 +1,6 @@
+import type { MatchRawData } from '../match'
 import type { PlayerRawData } from '../player'
 import type { TeamRawData } from '../team'
-import type { MatchRawData } from '../match'
 
 export type GlobalDB = {
   timestamp: number
