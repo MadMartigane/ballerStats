@@ -52,7 +52,7 @@ export default function BsTeam(props: BsTeamProps) {
         }
       >
         <For each={team.playerIds}>
-          {(id) => {
+          {id => {
             const player = orchestrator.getPlayer(id)
 
             if (player) {

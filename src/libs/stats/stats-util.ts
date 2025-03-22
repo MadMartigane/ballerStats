@@ -492,43 +492,6 @@ export function getFullStats(): StatMatchSummary {
     return getStatSummary(match)
   })
 
-  const fullStats = stats.reduce((statResult: StatMatchSummary, statCurrentMatch: StatMatchSummary) => {
-    statResult.opponentFouls += statCurrentMatch.opponentFouls
-    statResult.opponentScore += statCurrentMatch.opponentScore
-    statResult.teamScore += statCurrentMatch.teamScore
-
-    statResult.rebonds.teamTotal += statCurrentMatch.rebonds.teamTotal
-    statResult.rebonds.teamOffensive += statCurrentMatch.rebonds.teamOffensive
-    statResult.rebonds.teamDefensive += statCurrentMatch.rebonds.teamDefensive
-    statResult.rebonds.opponentTotal += statCurrentMatch.rebonds.opponentTotal
-    statResult.rebonds.opponentOffensive += statCurrentMatch.rebonds.opponentOffensive
-    statResult.rebonds.opponentDefensive += statCurrentMatch.rebonds.opponentDefensive
-
-    sumPlayerStats(statResult.teamScores, statCurrentMatch.teamScores)
-
-    return statResult
-  }, clone(RAW_STAT_MATCH_SUMMARY) as StatMatchSummary)
-
-  fullStats.players = team.playerIds.map((playerId: string): StatMatchSummaryPlayer => {
-    const currentPlayerStats = clone(RAW_STAT_MATCH_SUMMARY.teamScores) as StatMatchSummaryPlayer
-    currentPlayerStats.playerId = playerId
-
-    for (const stat of stats) {
-      for (const playerStats of stat.players) {
-        if (playerStats.playerId !== playerId) {
-          continue
-        }
-
-        sumPlayerStats(currentPlayerStats, playerStats)
-        currentPlayerStats.nbPlayedMatch++
-      }
-    }
-
-    dividePlayerStatsByNbMatch(currentPlayerStats)
-
-    return currentPlayerStats
-  })
-
   fullStats.players.sort((up, down) => down.scores.total - up.scores.total)
 
   const nbMatch = matchs.length
@@ -565,6 +528,7 @@ export function getFullStats(): StatMatchSummary {
   fullStats.teamScores.ratio['free-throw'].success = Math.round(
     fullStats.teamScores.ratio['free-throw'].success / nbMatch,
   )
+  
   fullStats.teamScores.ratio['free-throw'].fail = Math.round(fullStats.teamScores.ratio['free-throw'].fail / nbMatch)
   fullStats.teamScores.ratio['free-throw'].total = Math.round(fullStats.teamScores.ratio['free-throw'].total / nbMatch)
   fullStats.teamScores.ratio['free-throw'].percentage = Math.round(
