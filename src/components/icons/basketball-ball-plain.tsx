@@ -6,6 +6,8 @@ export default function BsIconBasketballBallPlain(props: BsIconProps) {
 
   return (
     <svg
+      role="img"
+      aria-label="Basketball ball"
       viewBox="0 0 512 512"
       xmlns="http://www.w3.org/2000/svg"
       width={data.width}

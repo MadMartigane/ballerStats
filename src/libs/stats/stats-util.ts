@@ -545,7 +545,7 @@ export function getFullStats(): StatMatchSummary {
   fullStats.teamScores.ratio['free-throw'].success = Math.round(
     fullStats.teamScores.ratio['free-throw'].success / nbMatch,
   )
-  
+
   fullStats.teamScores.ratio['free-throw'].fail = Math.round(fullStats.teamScores.ratio['free-throw'].fail / nbMatch)
   fullStats.teamScores.ratio['free-throw'].total = Math.round(fullStats.teamScores.ratio['free-throw'].total / nbMatch)
   fullStats.teamScores.ratio['free-throw'].percentage = Math.round(

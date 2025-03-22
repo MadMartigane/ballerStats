@@ -10,6 +10,7 @@ export default function BsIconBasketballMissedGoal(props: BsIconProps) {
       xmlns="http://www.w3.org/2000/svg"
       xmlns:xlink="http://www.w3.org/1999/xlink"
       role="img"
+      aria-label="Missed goal"
       class="iconify iconify--emojione-monotone"
       width={data.width}
       height={data.height}

@@ -92,6 +92,7 @@ export default function BsMatchTile(props: BsMatchTileProps) {
         <>
           <Show when={props.onEdit}>
             <button
+              type="button"
               class="btn btn-secondary btn-square"
               onClick={(event) => {
                 event.stopPropagation()
@@ -103,6 +104,7 @@ export default function BsMatchTile(props: BsMatchTileProps) {
           </Show>
 
           <button
+            type="button"
             class="btn btn-secondary btn-square"
             onClick={(event) => {
               event.stopPropagation()

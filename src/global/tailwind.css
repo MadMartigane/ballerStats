@@ -8,8 +8,6 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@custom-variant dark (&:where(.dark, .dark *));
-
 @theme {
   --font-rajdhani: Rajdhani, cursive;
 }
@@ -23,6 +21,10 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
+  :root {
+    --color-gray-200: #e5e7eb;
+  }
+
   *,
   ::after,
   ::before,

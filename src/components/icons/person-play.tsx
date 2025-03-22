@@ -6,6 +6,8 @@ export default function BsIconPersonPlay(props: BsIconProps) {
 
   return (
     <svg
+      role="img"
+      aria-label="Person play"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 -960 960 960"
       height={data.height}

@@ -6,6 +6,8 @@ export default function BsIconBasketballBasketMove(props: BsIconProps) {
 
   return (
     <svg
+      role="img"
+      aria-label="Basketball basket move"
       viewBox="0 0 256 256"
       data-name="Layer 1"
       id="Layer_1"
