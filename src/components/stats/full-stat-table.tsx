@@ -29,6 +29,9 @@ function renderTh(playerStats: StatMatchSummaryPlayer, player?: Player | null) {
         <span class="text-lg">{playerStats.assists}</span>
       </td>
       <td>
+        <span class="text-lg">{playerStats.steals}</span>
+      </td>
+      <td>
         <span class="text-lg">{`${playerStats.scores['free-throw']}`}</span>
         {` ${playerStats.ratio['free-throw'].success}/${playerStats.ratio['free-throw'].total}`}
         <div>{`(${playerStats.ratio['free-throw'].percentage}%)`}</div>
@@ -69,6 +72,7 @@ export function BsFullStatTable(props: BsFullStatTableProps) {
               <th>
                 <div>Ass</div>
               </th>
+              <th>Steals</th>
               <th>LF</th>
               <th>2pts</th>
               <th>3pts</th>

@@ -12,6 +12,7 @@ export type StatMatchActionItemName =
   | 'assist'
   | 'foul'
   | 'turnover'
+  | 'steals'
   | 'fiveIn'
   | 'fiveOut'
   | 'gameStop'
@@ -67,6 +68,7 @@ export type StatMatchSummaryPlayer = {
   nbPlayedMatch: number
   fouls: number
   assists: number
+  steals: number
   turnover: number
 }
 
@@ -92,4 +94,5 @@ export type StatMatchSummary = {
   teamAssists?: number
   teamTurnover?: number
   teamFouls?: number
+  teamSteals?: number
 }

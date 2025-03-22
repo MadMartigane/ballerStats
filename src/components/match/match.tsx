@@ -455,6 +455,12 @@ function renderTeamTotals(statSummary: StatMatchSummary) {
           <div class="stat-value text-success">{statSummary.teamAssists}</div>
           <div class="stat-desc">Total des passes décisives de l’équipe</div>
         </div>
+
+        <div class="stat place-items-center">
+          <div class="stat-title">Interceptions</div>
+          <div class="stat-value text-warning">{statSummary.teamSteals}</div>
+          <div class="stat-desc">Total balles gagnés/exploit indiv</div>
+        </div>
       </div>
     </div>
   )

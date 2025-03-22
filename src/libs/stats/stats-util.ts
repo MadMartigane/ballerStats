@@ -49,6 +49,7 @@ const RAW_STAT_MATCH_SUMMARY: StatMatchSummary = {
     },
     fouls: 0,
     turnover: 0,
+    steals: 0,
     assists: 0,
   },
   opponentScore: 0,
@@ -56,6 +57,7 @@ const RAW_STAT_MATCH_SUMMARY: StatMatchSummary = {
   players: [],
   teamAssists: 0,
   teamTurnover: 0,
+  teamSteals: 0,
   teamFouls: 0,
   rebonds: {
     teamTotal: 0,
@@ -127,6 +129,10 @@ function getPlayerTurnovers(match: Match, playerId: string) {
   return getPlayerStatByType(match, playerId, 'turnover')
 }
 
+function getPlayerSteals(match: Match, playerId: string) {
+  return getPlayerStatByType(match, playerId, 'steals')
+}
+
 function getTeamScore(match: Match, playerIds: Array<string>) {
   return playerIds.reduce((score: number, playerId) => score + getPlayerScore(match, playerId), 0)
 }
@@ -148,6 +154,7 @@ function getTeamScores(players: Array<StatMatchSummaryPlayer>) {
 
     total.assists += playerStat.assists
     total.turnover += playerStat.turnover
+    total.steals += playerStat.steals
     total.fouls += playerStat.fouls
 
     total.rebonds.total += playerStat.rebonds.total
@@ -188,6 +195,12 @@ function getTeamAssists(playersStats: StatMatchSummaryPlayer[]) {
 function getTeamTurnovers(playersStats: StatMatchSummaryPlayer[]) {
   return playersStats.reduce((result, playerStats) => {
     return result + playerStats.turnover
+  }, 0)
+}
+
+function getTeamSteals(playersStats: StatMatchSummaryPlayer[]) {
+  return playersStats.reduce((result, playerStats) => {
+    return result + playerStats.steals
   }, 0)
 }
 
@@ -306,6 +319,7 @@ function getPlayersStatsByMatch(match: Match) {
         assists: getPlayerAssists(match, playerId),
         fouls: getPlayerFouls(match, playerId),
         turnover: getPlayerTurnovers(match, playerId),
+        steals: getPlayerSteals(match, playerId),
       }
 
       playerStats.scores.total =
@@ -381,6 +395,7 @@ function sumPlayerStats(
 
   statResult.fouls += statCurrentMatch.fouls
   statResult.turnover += statCurrentMatch.turnover
+  statResult.steals += statCurrentMatch.steals
   statResult.assists += statCurrentMatch.assists
 
   return statResult
@@ -395,6 +410,7 @@ function dividePlayerStatsByNbMatch(playerSats: StatMatchSummaryPlayer) {
   playerSats.assists = (playerSats.assists && Math.round(playerSats.assists / playerSats.nbPlayedMatch)) || 0
 
   playerSats.turnover = (playerSats.turnover && Math.round(playerSats.turnover / playerSats.nbPlayedMatch)) || 0
+  playerSats.steals = (playerSats.steals && Math.round(playerSats.steals / playerSats.nbPlayedMatch)) || 0
 
   playerSats.scores.total =
     (playerSats.scores.total && Math.round(playerSats.scores.total / playerSats.nbPlayedMatch)) || 0
@@ -477,6 +493,7 @@ export function getStatSummary(match: Match | null): StatMatchSummary {
     rebonds,
     teamAssists: getTeamAssists(players),
     teamTurnover: getTeamTurnovers(players),
+    teamSteals: getTeamSteals(players),
     teamFouls: getTeamFouls(players),
   }
 }
@@ -549,13 +566,15 @@ export function getFullStats(): StatMatchSummary {
     (fullStats.teamScores.ratio['3pts'].success / fullStats.teamScores.ratio['3pts'].total) * 100,
   )
 
-  // Fouls, turnover and assists was not registered on the first matchs.
+  // Fouls, turnover, steals and assists was not registered on the first matchs.
   const nbMatchFouls = matchs.filter((match) => isMatchHaveStatOfType(match, 'foul')).length
   const nbMatchTurnover = matchs.filter((match) => isMatchHaveStatOfType(match, 'turnover')).length
+  const nbMatchSteals = matchs.filter((match) => isMatchHaveStatOfType(match, 'steals')).length
   const nbMatchAssists = matchs.filter((match) => isMatchHaveStatOfType(match, 'assist')).length
 
   fullStats.teamScores.fouls = Math.round(fullStats.teamScores.fouls / nbMatchFouls)
   fullStats.teamScores.turnover = Math.round(fullStats.teamScores.turnover / nbMatchTurnover)
+  fullStats.teamScores.steals = Math.round(fullStats.teamScores.steals / nbMatchSteals)
   fullStats.teamScores.assists = Math.round(fullStats.teamScores.assists / nbMatchAssists)
 
   return fullStats
