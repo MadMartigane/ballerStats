@@ -52,6 +52,7 @@ export default function BsPlayer(props: BsPlayerProps) {
           </button>
         </>
       }
+      info={player.licenseNumber}
       title={player.nicName ? player.nicName : player.firstName}
     >
       {`${player.firstName || ''} ${player.lastName || ''}`}

@@ -1,6 +1,8 @@
 import { getUniqId } from '../utils'
 import type { PlayerRawData } from './player.d'
 
+export const LICENSE_NUMBER_MAX_LENGTH = 12
+
 const scoreFields: {
   [key: string]: { score: number; isSet: (player: Player) => boolean }
 } = {

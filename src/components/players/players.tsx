@@ -5,7 +5,7 @@ import bsEventBus from '../../libs/event-bus'
 import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import type { PlayerRawData } from '../../libs/player'
-import Player from '../../libs/player'
+import Player, { LICENSE_NUMBER_MAX_LENGTH } from '../../libs/player'
 import { scrollBottom, scrollTop } from '../../libs/utils'
 import BsCard from '../card'
 import BsInput from '../input'
@@ -150,14 +150,16 @@ function renderAddingPlayerCard() {
             setNewPlayerData({ nicName: value })
           },
         })}
-        {/* BsInput({
+        {BsInput({
           type: 'text',
-          label: 'Numéro de license',
-          placeholder: '0123456789-abc',
+          label: 'Numéro de licence',
+          maxLength: LICENSE_NUMBER_MAX_LENGTH,
+          placeholder: 'AB123456789',
+          value: currentPlayer?.licenseNumber,
           onChange: (value: string) => {
             setNewPlayerData({ licenseNumber: value })
           },
-        }) */}
+        })}
       </form>
     ),
     footer: (
