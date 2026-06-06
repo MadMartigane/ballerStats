@@ -1,5 +1,5 @@
 import { For } from 'solid-js'
-import { THEMES, THEME_AUTO_KEY, getTheme, setTheme } from '../../libs/daisy'
+import { getTheme, setTheme, THEME_AUTO_KEY, THEMES } from '../../libs/daisy'
 import MadSignal from '../../libs/mad-signal'
 import { getShortId } from '../../libs/utils'
 
@@ -22,22 +22,22 @@ export default function BsDarkThemeSwitch() {
   })
 
   return (
-    <div class="relative w-fit mx-0 my-4">
-      <label for={id} class="w-full max-w-xs">
+    <div class="relative mx-0 my-4 w-fit">
+      <label class="w-full max-w-xs" for={id}>
         <select
-          id={id}
           class="select select-bordered w-full max-w-xs"
+          id={id}
           onChange={(event) => {
             onThemeChange(event)
           }}
         >
-          <option value={THEME_AUTO_KEY} selected={themeValue.get() === THEME_AUTO_KEY}>
+          <option selected={themeValue.get() === THEME_AUTO_KEY} value={THEME_AUTO_KEY}>
             Auto (système)
           </option>
 
           <For each={Object.keys(THEMES)}>
             {(name) => (
-              <option value={THEMES[name]} selected={themeValue.get() === THEMES[name]}>
+              <option selected={themeValue.get() === THEMES[name]} value={THEMES[name]}>
                 {name}
               </option>
             )}

@@ -1,4 +1,4 @@
-import { For, Show, mergeProps } from 'solid-js'
+import { For, mergeProps, Show } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { getShortId } from '../../libs/utils'
 import type { BsSelectOnChangeEvent, BsSelectProps } from './select.d'
@@ -31,7 +31,7 @@ function adapter(options: BsSelectProps): BsSelectProps {
       ...defaultOptions,
       id,
     },
-    options,
+    options
   )
 }
 
@@ -40,7 +40,7 @@ function renderDaisy(props: BsSelectProps) {
   const [datas] = createStore(props.datas)
 
   return (
-    <div class="w-full flex">
+    <div class="flex w-full">
       <Show when={options.label}>
         <div class="label w-1/3">
           <span class="w-full">{options.label}</span>
@@ -49,8 +49,8 @@ function renderDaisy(props: BsSelectProps) {
       <div class={options.label ? 'w-2/3' : 'w-full'}>
         <select
           class="select select-bordered w-full"
-          id={options.id}
           disabled={options.disabled}
+          id={options.id}
           onChange={(event) => onChange(event, options)}
         >
           <Show when={!options.value && !options.default && options.placeholder}>
@@ -59,7 +59,7 @@ function renderDaisy(props: BsSelectProps) {
 
           <For each={datas}>
             {(data) => (
-              <option value={data.value} selected={data.value === (options.value || options.default)}>
+              <option selected={data.value === (options.value || options.default)} value={data.value}>
                 {data.label}
               </option>
             )}

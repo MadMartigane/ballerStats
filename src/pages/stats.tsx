@@ -7,7 +7,7 @@ export default function Stats() {
 
   return (
     <div>
-      <h1 class="text-2xl font-bold">
+      <h1 class="font-bold text-2xl">
         <ChartScatter class="inline-block" />
         <span class="inline-block px-2">Statistiques globales sur tous les matchs.</span>
       </h1>

@@ -30,18 +30,18 @@ function onChange(event: BsDatePickerOnChangeEvent, callback?: (value: string) =
 
 export function BsDatePicker(props: BsDatePickerProps) {
   return (
-    <label class="w-full flex">
+    <label class="flex w-full">
       <Show when={props.label}>
         <span class="label w-1/3">{props.label}</span>
       </Show>
       <div class={props.label ? 'w-2/3' : 'w-full'}>
         <input
           class="input w-full"
-          type={props.withTime ? 'datetime-local' : 'date'}
-          placeholder={props.placeholder || ''}
-          value={props.value || ''}
           onChange={(event) => onChange(event, props.onChange)}
           onInput={(event) => onInput(event, props.onChange)}
+          placeholder={props.placeholder || ''}
+          type={props.withTime ? 'datetime-local' : 'date'}
+          value={props.value || ''}
         />
       </div>
     </label>

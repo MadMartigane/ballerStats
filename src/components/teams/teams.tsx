@@ -5,8 +5,8 @@ import bsEventBus from '../../libs/event-bus'
 import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import type Player from '../../libs/player'
-import Team from '../../libs/team'
 import type { TeamRawData } from '../../libs/team'
+import Team from '../../libs/team'
 import { scrollBottom, scrollTop } from '../../libs/utils'
 import BsCard from '../card'
 import BsInput from '../input'
@@ -27,10 +27,10 @@ bsEventBus.addEventListener('BS::TEAMS::CHANGE', () => {
 })
 
 function setNewTeamData(data: TeamRawData) {
-  if (!currentTeam) {
-    currentTeam = new Team(data)
-  } else {
+  if (currentTeam) {
     currentTeam.update(data)
+  } else {
+    currentTeam = new Team(data)
   }
 
   canAddTeam.set(currentTeam.isRegisterable)
@@ -74,7 +74,7 @@ function onSubmit(event: KeyboardEvent) {
 
 function updateCurrentTeamPlayerIds(playerIds: string[]) {
   if (playerIds) {
-    currentTeam?.update({ playerIds: playerIds })
+    currentTeam?.update({ playerIds })
     return
   }
 
@@ -92,8 +92,8 @@ function getSelectDataFromPlayer() {
 function renderTeamFallback() {
   return (
     <div>
-      <h4 class="inline-flex items-end my-4">
-        <MessageCircleWarning class="w-14 h-14" />
+      <h4 class="my-4 inline-flex items-end">
+        <MessageCircleWarning class="h-14 w-14" />
         <span class="px-2">Aucune équipe enregistrée.</span>
       </h4>
     </div>
@@ -106,13 +106,13 @@ function renderAddTeamButton() {
       <hr />
       <div class="footer-buttons-container">
         <button
-          type="button"
           class="btn btn-primary"
           onClick={() => {
             isEditingNewTeam = true
             toggleAddTeam(true)
             scrollTop()
           }}
+          type="button"
         >
           <Users />
           Ajouter une équipe
@@ -126,7 +126,7 @@ function renderPlayerBadge(player: Player) {
   return (
     <>
       <span class="text-warning">{player.jersayNumber}</span>
-      <div class="whitespace-nowrap text-base font-medium m-2">
+      <div class="m-2 whitespace-nowrap font-medium text-base">
         {player.nicName ? player.nicName : `${player.firstName} ${player.lastName}`}
       </div>
     </>
@@ -154,19 +154,18 @@ function renderAddingTeamCard() {
           },
         })}
         <BsSelectMultiple
-          placeholder="Sélection des joueurs"
           data={getSelectDataFromPlayer()}
-          selectedIds={currentTeam?.playerIds}
           onChange={(playerIds: string[]) => {
             updateCurrentTeamPlayerIds(playerIds)
           }}
+          placeholder="Sélection des joueurs"
+          selectedIds={currentTeam?.playerIds}
         />
       </form>
     ),
     footer: (
       <div class="footer-buttons-container">
         <button
-          type="button"
           class="btn btn-primary btn-wide"
           onClick={() => {
             toggleAddTeam(false)
@@ -174,19 +173,20 @@ function renderAddingTeamCard() {
             canAddTeam.set(false)
             scrollBottom()
           }}
+          type="button"
         >
           <X />
           Annuler
         </button>
 
         <button
-          type="button"
           class="btn btn-primary btn-wide"
           disabled={!canAddTeam.get()}
           onClick={() => {
             registerTeam()
             scrollBottom()
           }}
+          type="button"
         >
           {isEditingNewTeam ? <Users /> : <Save />}
           {isEditingNewTeam ? 'Ajouter' : 'Enregistrer'}
@@ -200,16 +200,16 @@ export default function BsTeams() {
   return (
     <div>
       <Show when={!isAddingTeam.get()}>
-        <Show when={(teamLength.get() || 0) > 0} fallback={renderTeamFallback()}>
-          <div class="flex flex-wrap gap-4 w-full justify-around">
+        <Show fallback={renderTeamFallback()} when={(teamLength.get() || 0) > 0}>
+          <div class="flex w-full flex-wrap justify-around gap-4">
             <For each={teams}>
               {(team) => (
-                <div class="mx-auto md:mx-0 w-fit">
+                <div class="mx-auto w-fit md:mx-0">
                   <BsTeam
-                    team={team}
                     onEdit={(team) => {
                       editTeam(team)
                     }}
+                    team={team}
                   />
                 </div>
               )}
@@ -217,7 +217,7 @@ export default function BsTeams() {
           </div>
         </Show>
       </Show>
-      <Show when={isAddingTeam.get()} fallback={renderAddTeamButton()}>
+      <Show fallback={renderAddTeamButton()} when={isAddingTeam.get()}>
         {renderAddingTeamCard()}
       </Show>
     </div>

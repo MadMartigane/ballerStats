@@ -1,5 +1,4 @@
-import { getUniqId } from '../utils'
-import { clone } from '../utils'
+import { clone, getUniqId } from '../utils'
 import type { TeamRawData } from './team.d'
 
 export const TEAM_OPPONENT_ID = 'OPPONENT'

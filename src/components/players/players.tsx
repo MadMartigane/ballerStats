@@ -4,8 +4,8 @@ import { createStore } from 'solid-js/store'
 import bsEventBus from '../../libs/event-bus'
 import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
-import Player from '../../libs/player'
 import type { PlayerRawData } from '../../libs/player'
+import Player from '../../libs/player'
 import { scrollBottom, scrollTop } from '../../libs/utils'
 import BsCard from '../card'
 import BsInput from '../input'
@@ -25,10 +25,10 @@ bsEventBus.addEventListener('BS::PLAYERS::CHANGE', () => {
 })
 
 function setNewPlayerData(data: PlayerRawData) {
-  if (!currentPlayer) {
-    currentPlayer = new Player(data)
-  } else {
+  if (currentPlayer) {
     currentPlayer.update(data)
+  } else {
+    currentPlayer = new Player(data)
   }
 
   canAddPlayer.set(currentPlayer.isRegisterable)
@@ -73,8 +73,8 @@ function onSubmit(event: KeyboardEvent) {
 function renderPlayerFallback() {
   return (
     <div>
-      <h4 class="inline-flex items-end my-4">
-        <MessageCircleWarning class="w-14 h-14" />
+      <h4 class="my-4 inline-flex items-end">
+        <MessageCircleWarning class="h-14 w-14" />
         <span class="px-2">Aucun joueur enregistré.</span>
       </h4>
     </div>
@@ -87,13 +87,13 @@ function renderAddPlayerButton() {
       <hr />
       <div class="footer-buttons-container">
         <button
-          type="button"
           class="btn btn-primary"
           onClick={() => {
             isEditingNewPlayer = true
             toggleAddPlayer(true)
             scrollTop()
           }}
+          type="button"
         >
           <UserPlus />
           Ajouter un joueur
@@ -163,7 +163,6 @@ function renderAddingPlayerCard() {
     footer: (
       <div class="footer-buttons-container">
         <button
-          type="button"
           class="btn btn-primary btn-wide"
           onClick={() => {
             toggleAddPlayer(false)
@@ -171,19 +170,20 @@ function renderAddingPlayerCard() {
             canAddPlayer.set(false)
             scrollBottom()
           }}
+          type="button"
         >
           <X />
           Annuler
         </button>
 
         <button
-          type="button"
           class="btn btn-primary btn-wide"
           disabled={!canAddPlayer.get()}
           onClick={() => {
             registerPlayer()
             scrollBottom()
           }}
+          type="button"
         >
           {isEditingNewPlayer ? 'Ajouter' : 'Enregistrer'}
           {isEditingNewPlayer ? <UserPlus /> : <Save />}
@@ -197,17 +197,17 @@ export default function BsPlayers() {
   return (
     <div>
       <Show when={!isAddingPlayer.get()}>
-        <Show when={(playerLength.get() || 0) > 0} fallback={renderPlayerFallback()}>
-          <div class="flex flex-wrap gap-4 w-full justify-around">
+        <Show fallback={renderPlayerFallback()} when={(playerLength.get() || 0) > 0}>
+          <div class="flex w-full flex-wrap justify-around gap-4">
             <For each={players}>
               {(player) => (
-                <div class="mx-auto md:mx-0 w-fit">
+                <div class="mx-auto w-fit md:mx-0">
                   <BsPlayer
-                    player={player}
                     onEdit={(player) => {
                       editPlayer(player)
                       scrollTop()
                     }}
+                    player={player}
                   />
                 </div>
               )}
@@ -215,7 +215,7 @@ export default function BsPlayers() {
           </div>
         </Show>
       </Show>
-      <Show when={isAddingPlayer.get()} fallback={renderAddPlayerButton()}>
+      <Show fallback={renderAddPlayerButton()} when={isAddingPlayer.get()}>
         {renderAddingPlayerCard()}
       </Show>
     </div>

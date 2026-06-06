@@ -56,7 +56,7 @@ export function BsFullStatTable(props: BsFullStatTableProps) {
   return (
     <div>
       <div class="overflow-x-auto">
-        <table class="table table-zebra">
+        <table class="table-zebra table">
           <thead>
             <tr class="bg-neutral text-neutral-content">
               <th>

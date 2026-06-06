@@ -19,9 +19,7 @@ export default class Teams {
   }
 
   public get teams(): Array<Team> {
-    return this.#teams.map((team: Team): Team => {
-      return new Team(team.getRawData())
-    })
+    return this.#teams.map((team: Team): Team => new Team(team.getRawData()))
   }
 
   public get length() {
@@ -41,7 +39,7 @@ export default class Teams {
     const oldTeam = this.#teams.find((currentTeam) => currentTeam.id === newTeam.id)
     if (!oldTeam) {
       throw new Error(
-        `[BsTeams.updateTeam()] The team id ${newTeam.id} doesn't exist, Please use .add() method instead.`,
+        `[BsTeams.updateTeam()] The team id ${newTeam.id} doesn't exist, Please use .add() method instead.`
       )
     }
 
@@ -61,7 +59,7 @@ export default class Teams {
     const alreadyRegisteredTeam = this.getTeam(newTeam)
     if (alreadyRegisteredTeam) {
       throw new Error(
-        `[BsTeams.add()] The team id ${newTeam.id} already exist, Please use .updateTeam() method instead.`,
+        `[BsTeams.add()] The team id ${newTeam.id} already exist, Please use .updateTeam() method instead.`
       )
     }
 

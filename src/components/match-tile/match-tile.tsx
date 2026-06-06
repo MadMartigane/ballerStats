@@ -52,7 +52,7 @@ export function BsMatchTypeBadge(props: BsMatchTypeProps) {
   }
 
   return (
-    <div class={`badge badge-${type === 'home' ? 'success' : 'warning'} text-${size} py-4 px-2 rounded-md`}>
+    <div class={`badge badge-${type === 'home' ? 'success' : 'warning'} text-${size} rounded-md px-2 py-4`}>
       {type === 'home' ? '↗ Domicile' : '↖ Extérieur'}
     </div>
   )
@@ -64,7 +64,34 @@ export default function BsMatchTile(props: BsMatchTileProps) {
 
   return (
     <BsTile
-      title={match.opponent || ''}
+      badge={<BsMatchTypeText type={match.type} />}
+      footer={
+        <>
+          <Show when={props.onEdit}>
+            <button
+              class="btn btn-secondary btn-square"
+              onClick={(event) => {
+                event.stopPropagation()
+                callCallback(match, props?.onEdit)
+              }}
+              type="button"
+            >
+              <FilePenLine />
+            </button>
+          </Show>
+
+          <button
+            class="btn btn-secondary btn-square"
+            onClick={(event) => {
+              event.stopPropagation()
+              removeMatch(match)
+            }}
+            type="button"
+          >
+            <Trash />
+          </button>
+        </>
+      }
       onClick={() => {
         callCallback(match, props?.onStart)
       }}
@@ -73,48 +100,21 @@ export default function BsMatchTile(props: BsMatchTileProps) {
           <div class="float-left">{toDateTime(match?.date)}</div>
           <div class="float-right">
             <Show
-              when={match.status === 'locked'}
               fallback={
-                <div class="badge badge-success p-2 rounded-lg">
+                <div class="badge badge-success rounded-lg p-2">
                   <LockOpen size={18} />
                 </div>
               }
+              when={match.status === 'locked'}
             >
-              <div class="badge badge-warning p-2 rounded-lg">
+              <div class="badge badge-warning rounded-lg p-2">
                 <Lock size={18} />
               </div>
             </Show>
           </div>
         </>
       }
-      badge={<BsMatchTypeText type={match.type} />}
-      footer={
-        <>
-          <Show when={props.onEdit}>
-            <button
-              type="button"
-              class="btn btn-secondary btn-square"
-              onClick={(event) => {
-                event.stopPropagation()
-                callCallback(match, props?.onEdit)
-              }}
-            >
-              <FilePenLine />
-            </button>
-          </Show>
-
-          <button
-            type="button"
-            class="btn btn-secondary btn-square"
-            onClick={(event) => {
-              event.stopPropagation()
-              removeMatch(match)
-            }}
-          >
-            <Trash />
-          </button>
-        </>
-      }
+      title={match.opponent || ''}
     >
       <Show when={team}>
         <p class="px-4 md:px-5">

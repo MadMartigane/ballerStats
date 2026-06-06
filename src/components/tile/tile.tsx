@@ -11,7 +11,7 @@ function onClick(callback?: (event?: MouseEvent & { currentTarget: HTMLDivElemen
 export default function BsTile(props: BsTileProps) {
   return (
     <div
-      class={`${props.onClick ? 'cursor-pointer' : ''} card bg-neutral text-neutral-content min-w-80 max-w-80 w-80 shadow-lg shadow-neutral p-2`}
+      class={`${props.onClick ? 'cursor-pointer' : ''} card w-80 min-w-80 max-w-80 bg-neutral p-2 text-neutral-content shadow-lg shadow-neutral`}
       onClick={() => {
         onClick(props.onClick)
       }}
@@ -38,7 +38,7 @@ export default function BsTile(props: BsTileProps) {
       <Show when={props.info}>
         <p class="my-2 flex flex-row gap-1 italic">
           <Info />
-          <span class="inline-block mx-1">{props.info}</span>
+          <span class="mx-1 inline-block">{props.info}</span>
         </p>
       </Show>
 

@@ -23,36 +23,36 @@ export default function BsPlayer(props: BsPlayerProps) {
 
   return (
     <BsTile
-      title={player.nicName ? player.nicName : player.firstName}
       badge={
-        <div class="flex flex-row flex-none mt-2 text-accent">
-          <Shirt class="w-8 h-8" /> <span class="min-w-8">{player.jersayNumber}</span>
+        <div class="mt-2 flex flex-none flex-row text-accent">
+          <Shirt class="h-8 w-8" /> <span class="min-w-8">{player.jersayNumber}</span>
         </div>
       }
       footer={
         <>
           <Show when={props.onEdit}>
             <button
-              type="button"
               class="btn btn-secondary btn-square"
               onClick={() => {
                 editPlayer(player, props.onEdit)
               }}
+              type="button"
             >
               <UserPen />
             </button>
           </Show>
           <button
-            type="button"
             class="btn btn-secondary btn-square"
             onClick={() => {
               removePlayer(player)
             }}
+            type="button"
           >
             <Trash />
           </button>
         </>
       }
+      title={player.nicName ? player.nicName : player.firstName}
     >
       {`${player.firstName || ''} ${player.lastName || ''}`}
     </BsTile>

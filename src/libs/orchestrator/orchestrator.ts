@@ -187,7 +187,7 @@ export class Orchestrator {
 
   private async onImportDBLoad(event: ProgressEvent<FileReader>) {
     const target = event.target || event.currentTarget
-    // @ts-ignore
+    // @ts-expect-error
     const result = target?.result as string
     if (!result) {
       toast('Impossible de lire les données.', 'error')
@@ -210,7 +210,7 @@ export class Orchestrator {
 
     const proced = await confirmAction(
       'Import DB',
-      `Vous êtes sur le point d’importer ${rawData?.players.length || 0} joueurs, ${rawData?.teams.length || 0} équipes et ${rawData?.matchs.length || 0} matchs.`,
+      `Vous êtes sur le point d’importer ${rawData?.players.length || 0} joueurs, ${rawData?.teams.length || 0} équipes et ${rawData?.matchs.length || 0} matchs.`
     )
     if (!proced) {
       return
@@ -294,9 +294,7 @@ export class Orchestrator {
   public bigClean() {
     let cleaned = false
     for (const team of this.Teams.teams) {
-      const cleanPlayerIds = team.playerIds.filter((playerId) => {
-        return Boolean(this.getPlayer(playerId))
-      })
+      const cleanPlayerIds = team.playerIds.filter((playerId) => Boolean(this.getPlayer(playerId)))
 
       if (team.playerIds.length > cleanPlayerIds.length) {
         team.update({ playerIds: cleanPlayerIds })
@@ -350,7 +348,7 @@ export class Orchestrator {
     event: Event & {
       currentTarget: HTMLInputElement
       target: HTMLInputElement
-    },
+    }
   ) {
     const input = event.target || event.currentTarget
     const files = input?.files

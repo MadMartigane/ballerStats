@@ -6,15 +6,15 @@ export default function BsIconBasketballGoal(props: BsIconProps) {
 
   return (
     <svg
-      role="img"
       aria-label="Basketball goal"
+      fill={data.fill}
+      height={data.height}
+      role="img"
       version="1.1"
-      xmlns="http://www.w3.org/2000/svg"
-      xmlns:xlink="http://www.w3.org/1999/xlink"
       viewBox="0 0 512 512"
       width={data.width}
-      height={data.height}
-      fill={data.fill}
+      xmlns:xlink="http://www.w3.org/1999/xlink"
+      xmlns="http://www.w3.org/2000/svg"
     >
       <g>
         <path

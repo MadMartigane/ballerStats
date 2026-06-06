@@ -14,7 +14,7 @@ export async function storePlayers(players: Array<PlayerRawData>, lastRecord?: n
       JSON.stringify({
         lastRecord: lastRecord || Date.now(),
         data: players,
-      }),
+      })
     )
     resolve()
   })
@@ -29,7 +29,7 @@ export async function storeTeams(teams: Array<TeamRawData>, lastRecord?: number 
       JSON.stringify({
         lastRecord: lastRecord || Date.now(),
         data: teams,
-      }),
+      })
     )
     resolve()
   })
@@ -44,7 +44,7 @@ export async function storeMatchs(matchs: Array<MatchRawData>, lastRecord?: numb
       JSON.stringify({
         lastRecord: lastRecord || Date.now(),
         data: matchs,
-      }),
+      })
     )
     resolve()
   })

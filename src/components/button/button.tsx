@@ -1,4 +1,4 @@
-import { type PrelineComponentClasses, getPrelineClass } from '../../libs/preline'
+import { getPrelineClass, type PrelineComponentClasses } from '../../libs/preline'
 import type { BsButtonProps } from './button.d'
 
 const ANIMATION_TOKEN_CLASS = 'animate-ping'
@@ -74,7 +74,7 @@ function adaptor(options: BsButtonProps) {
       pills: newOptions.pills,
       wide: newOptions.wide,
     },
-    classes,
+    classes
   )
 
   newOptions.class = options.class ? `${options.class} ${prelineClass}` : prelineClass
@@ -94,11 +94,11 @@ export default function BsButton(props: BsButtonProps) {
 
   return (
     <button
-      type={data.type}
       class={data.class}
-      ref={buttonEl}
-      onClick={() => onClick(data, buttonEl)}
       disabled={data.disabled}
+      onClick={() => onClick(data, buttonEl)}
+      ref={buttonEl}
+      type={data.type}
     >
       <span class="inline-flex items-end gap-2">
         {data.slotStart}

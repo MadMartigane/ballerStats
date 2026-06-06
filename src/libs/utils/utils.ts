@@ -9,7 +9,7 @@ export function getUniqId(): string {
 }
 
 export function getShortId(): string {
-  return String(Math.floor(Math.random() * 100000))
+  return String(Math.floor(Math.random() * 100_000))
 }
 
 export function clone(data: unknown): unknown {
@@ -60,7 +60,7 @@ export async function confirmAction(
   title = 'Confirmation',
   message = 'Cette action est définitive, continuer ?',
   cancel = 'Non',
-  confirm = 'Oui',
+  confirm = 'Oui'
 ): Promise<boolean> {
   let resolve: (value: boolean | PromiseLike<boolean>) => void
   const promise: Promise<boolean> = new Promise((res) => {

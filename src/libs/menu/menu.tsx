@@ -1,11 +1,10 @@
-import { lazy } from 'solid-js'
-import Home from '../../pages/home'
-import type { MenuEntry } from './menu.d'
-
 import { BadgeAlert, ChartScatter, FileSliders, MonitorDot, User, Users } from 'lucide-solid'
+import { lazy } from 'solid-js'
 import BsIconBasketballBall from '../../components/icons/basketball-ball'
 import BsIconBasketballPlayer from '../../components/icons/basketball-player'
+import Home from '../../pages/home'
 import type { DaisyVariant } from '../daisy'
+import type { MenuEntry } from './menu.d'
 
 export const HASH_REPLACE_PATTERN = /^#\//
 

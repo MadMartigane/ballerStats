@@ -1,6 +1,6 @@
 import bsEventBus from '../event-bus'
-import Match from '../match'
 import type { MatchRawData } from '../match'
+import Match from '../match'
 
 export default class Matchs {
   #matchs: Array<Match> = []
@@ -20,9 +20,7 @@ export default class Matchs {
   }
 
   public get matchs(): Array<Match> {
-    return this.#matchs.map((match: Match): Match => {
-      return new Match(match.getRawData())
-    })
+    return this.#matchs.map((match: Match): Match => new Match(match.getRawData()))
   }
 
   public get length() {
@@ -42,7 +40,7 @@ export default class Matchs {
     const oldMatch = this.#matchs.find((currentMatch) => currentMatch.id === newMatch.id)
     if (!oldMatch) {
       throw new Error(
-        `[BsMatchs.updateMatch()] The match id ${newMatch.id} doesn't exist, Please use .add() method instead.`,
+        `[BsMatchs.updateMatch()] The match id ${newMatch.id} doesn't exist, Please use .add() method instead.`
       )
     }
 
@@ -62,7 +60,7 @@ export default class Matchs {
     const alreadyRegisteredMatch = this.getMatch(newMatch)
     if (alreadyRegisteredMatch) {
       throw new Error(
-        `[BsMatchs.add()] The match id ${newMatch.id} already exist, Please use .updateMatch() method instead.`,
+        `[BsMatchs.add()] The match id ${newMatch.id} already exist, Please use .updateMatch() method instead.`
       )
     }
 

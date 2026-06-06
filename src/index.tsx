@@ -4,14 +4,13 @@ import './global/daisy'
 import './global/font-family'
 
 import { HashRouter, Route } from '@solidjs/router'
+import { CircleAlert, CircleCheckBig, Skull, TriangleAlert } from 'lucide-solid'
 import { For } from 'solid-js'
 import { render } from 'solid-js/web'
-import BsAppBar from './components/app-bar'
-import { NAVIGATION_MENU_ENTRIES } from './libs/menu'
-
-import { CircleAlert, CircleCheckBig, Skull, TriangleAlert } from 'lucide-solid'
 import relAppleTouchIconUrl from '/img/apple-touch-icon.png'
 import relIconUrl from '/img/favicon.ico'
+import BsAppBar from './components/app-bar'
+import { NAVIGATION_MENU_ENTRIES } from './libs/menu'
 
 const relAppleTouchIcon: HTMLLinkElement | null = document.querySelector('link[rel="apple-touch-icon"]')
 if (relAppleTouchIcon) {
@@ -26,7 +25,7 @@ const root = document.getElementById('app')
 
 if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   throw new Error(
-    'Root element not found. Did you forget to add it to your index.html? Or maybe the id attribute got misspelled?',
+    'Root element not found. Did you forget to add it to your index.html? Or maybe the id attribute got misspelled?'
   )
 }
 
@@ -53,16 +52,17 @@ function renderTemplateStore() {
   )
 }
 
-render(() => {
-  return (
+render(
+  () => (
     <>
       <HashRouter root={BsAppBar}>
         <For each={NAVIGATION_MENU_ENTRIES}>
-          {(menuItem) => <Route path={menuItem.path} component={menuItem.component} />}
+          {(menuItem) => <Route component={menuItem.component} path={menuItem.path} />}
         </For>
       </HashRouter>
       <div class="toast toast-end toast-bottom" id="bs-global-toast" />
       {renderTemplateStore()}
     </>
-  )
-}, root || document.body)
+  ),
+  root || document.body
+)

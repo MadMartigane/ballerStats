@@ -24,7 +24,7 @@ export default function GlobalStats() {
     <div>
       <div class="overflow-x-auto">
         <h2>Enregistrements:</h2>
-        <table class="table table-zebra">
+        <table class="table-zebra table">
           <tbody>
             <tr>
               <td>

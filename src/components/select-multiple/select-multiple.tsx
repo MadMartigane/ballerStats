@@ -1,6 +1,6 @@
 import { CircleX } from 'lucide-solid'
 import { For, Show } from 'solid-js'
-import { type SetStoreFunction, createStore } from 'solid-js/store'
+import { createStore, type SetStoreFunction } from 'solid-js/store'
 import { getShortId } from '../../libs/utils'
 import BsSelect from '../select/select'
 import type { BsSelectDataSet, BsSelectMultipleDataSelect, BsSelectMultipleProps } from './select-multiple.d'
@@ -16,13 +16,13 @@ function getAvailableDataSets(allDataSets: Array<BsSelectDataSet>, alreadySelect
 
       return result
     },
-    [] as Array<BsSelectDataSet>,
+    [] as Array<BsSelectDataSet>
   )
 }
 
 function getSelectDataSetFromAvailableDataSets(
   availableBsSelectDataSets: BsSelectDataSet[],
-  placeholder?: string,
+  placeholder?: string
 ): BsSelectDataSet[] {
   const data = placeholder
     ? [
@@ -58,7 +58,7 @@ function getDataFromProps(props: BsSelectMultipleProps) {
 function onSelectionChange(props: BsSelectMultipleDataSelect, setProps: SetStoreFunction<BsSelectMultipleDataSelect>) {
   const selectData = getSelectDataSetFromAvailableDataSets(
     getAvailableDataSets(props.data || [], props.selectedIds || []),
-    props.placeholder,
+    props.placeholder
   )
 
   props.setAvailables(selectData)
@@ -77,7 +77,7 @@ function onSelectionChange(props: BsSelectMultipleDataSelect, setProps: SetStore
 function onSelect(
   event: Event & { currentTarget: HTMLSelectElement; target: Element },
   props: BsSelectMultipleDataSelect,
-  setProps: SetStoreFunction<BsSelectMultipleDataSelect>,
+  setProps: SetStoreFunction<BsSelectMultipleDataSelect>
 ) {
   const selectedId = event.currentTarget.value
 
@@ -92,7 +92,7 @@ function onSelect(
 function unselectDataSet(
   props: BsSelectMultipleDataSelect,
   setProps: SetStoreFunction<BsSelectMultipleDataSelect>,
-  dataSet: BsSelectDataSet,
+  dataSet: BsSelectDataSet
 ) {
   if (!props.selectedIds || !props.selectedIds.includes(dataSet.value)) {
     return
@@ -108,17 +108,17 @@ function unselectDataSet(
 function renderBsSelectDataSetBadge(
   props: BsSelectMultipleDataSelect,
   setProps: SetStoreFunction<BsSelectMultipleDataSelect>,
-  dataSet: BsSelectDataSet,
+  dataSet: BsSelectDataSet
 ) {
   return (
-    <div class="badge badge-outline p-4 m-1">
+    <div class="badge badge-outline m-1 p-4">
       {dataSet.badge}
       <button
         class="btn btn-circle btn-xs btn-ghost"
-        type="button"
         onClick={() => {
           unselectDataSet(props, setProps, dataSet)
         }}
+        type="button"
       >
         <CircleX />
       </button>
@@ -132,15 +132,15 @@ export default function BsSelectMultiple(props: BsSelectMultipleProps) {
   return (
     <div class="w-full">
       <Show when={selectProps.label}>
-        <label class="block text-sm font-medium mb-2" for={selectProps.selectId}>
+        <label class="mb-2 block font-medium text-sm" for={selectProps.selectId}>
           {selectProps.label}
         </label>
       </Show>
       <label class="label" for={selectProps.selectId}>
         Joueur(s) selectionné(s):
       </label>
-      <div class="bg-base-200 text-base-content border rounded-xs border-base-100 mx-auto w-11/12 py-4">
-        <Show when={selectProps.selectedIds?.length} fallback={'Aucun joueur sélectionné.'}>
+      <div class="mx-auto w-11/12 rounded-xs border border-base-100 bg-base-200 py-4 text-base-content">
+        <Show fallback={'Aucun joueur sélectionné.'} when={selectProps.selectedIds?.length}>
           <For each={selectProps.selectedIds}>
             {(value) => {
               const dataSet = selectProps.data?.find((candidate) => candidate.value === value)
@@ -155,13 +155,13 @@ export default function BsSelectMultiple(props: BsSelectMultipleProps) {
       </div>
 
       <BsSelect
+        datas={selectProps.availables}
+        default=""
+        disabled={selectProps.disable}
         id={selectProps.selectId}
         onChange={(event) => {
           onSelect(event, selectProps, setSelectProps)
         }}
-        default=""
-        datas={selectProps.availables}
-        disabled={selectProps.disable}
       />
     </div>
   )

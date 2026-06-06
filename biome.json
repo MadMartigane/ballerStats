@@ -1,25 +1,24 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.1/schema.json",
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "vcs": {
     "enabled": false,
     "clientKind": "git",
     "useIgnoreFile": false
   },
   "files": {
-    "ignoreUnknown": true,
-    "ignore": ["node_modules", "**/tailwind.css"]
+    "ignoreUnknown": true
   },
   "formatter": {
     "enabled": true,
     "indentStyle": "space"
   },
-  "organizeImports": {
-    "enabled": true
-  },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "complexity": {
+        "useSimplifiedLogicExpression": "off"
+      }
     }
   },
   "javascript": {
@@ -28,5 +27,10 @@
       "semicolons": "asNeeded",
       "quoteStyle": "single"
     }
-  }
+  },
+  "extends": [
+    "ultracite/biome/core",
+    "ultracite/biome/solid",
+    "ultracite/biome/vitest"
+  ]
 }

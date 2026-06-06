@@ -1,10 +1,9 @@
 import { type RouteSectionProps, useLocation } from '@solidjs/router'
-import { For, Show, createEffect } from 'solid-js'
+import { Bell, Menu, UserCog, X } from 'lucide-solid'
+import { createEffect, For, Show } from 'solid-js'
+import logoSmallUrl from '/img/logo_small.png'
 import MadSignal from '../../libs/mad-signal'
 import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
-
-import { Bell, Menu, UserCog, X } from 'lucide-solid'
-import logoSmallUrl from '/img/logo_small.png'
 
 const isUserMenuOpen: MadSignal<boolean> = new MadSignal(false)
 const isMainMenuOpen: MadSignal<boolean> = new MadSignal(false)
@@ -49,13 +48,13 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
 
   return (
     <div class="min-h-full font-rajdhani">
-      <nav class="sticky top-0 z-50 w-full flex-none supports-backdrop-blur:bg-neutral bg-neutral/95 shadow-xs shadow-primary/60 print:hidden">
+      <nav class="sticky top-0 z-50 w-full flex-none bg-neutral/95 shadow-primary/60 shadow-xs supports-backdrop-blur:bg-neutral print:hidden">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div class="flex h-16 items-center justify-between">
             <div class="flex items-center">
               <div class="shrink-0">
-                <a href="#/" aria-current="page">
-                  <img class="h-16 w-16" src={logoSmallUrl} alt="Baller stats logo" />
+                <a aria-current="page" href="#/">
+                  <img alt="Baller stats logo" class="h-16 w-16" src={logoSmallUrl} />
                 </a>
               </div>
               <div class="hidden md:block">
@@ -65,12 +64,12 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                     {(menuEntry) => (
                       <Show when={menuEntry.isMenuEntry}>
                         <a
-                          href={menuEntry.path}
-                          class={`flex flex-row items-center gap-2 rounded-md px-3 py-2 text-sm font-medium ${String(currentHash.get()).endsWith(menuEntry.path) ? 'bg-primary text-primary-content' : 'text-neutral-content hover:bg-primary/60 hover:text-primary-content'}`}
                           aria-current="page"
+                          class={`flex flex-row items-center gap-2 rounded-md px-3 py-2 font-medium text-sm ${String(currentHash.get()).endsWith(menuEntry.path) ? 'bg-primary text-primary-content' : 'text-neutral-content hover:bg-primary/60 hover:text-primary-content'}`}
+                          href={menuEntry.path}
                         >
                           {menuEntry.icon(
-                            `${String(currentHash.get()).endsWith(menuEntry.path) ? 'primary-content' : 'neutral-content'}`,
+                            `${String(currentHash.get()).endsWith(menuEntry.path) ? 'primary-content' : 'neutral-content'}`
                           )}
                           {menuEntry.label}
                         </a>
@@ -84,17 +83,17 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
               <div class="ml-4 flex items-center md:ml-6">
                 {/* Notifications button */}
                 <button
-                  type="button"
-                  id="notifications-box-button"
                   class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                  onClick={() => {
-                    isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
-                  }}
+                  id="notifications-box-button"
                   onBlur={() => {
                     setTimeout(() => {
                       isNotificationBoxOpen.set(false)
                     }, 10)
                   }}
+                  onClick={() => {
+                    isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
+                  }}
+                  type="button"
                 >
                   <span class="absolute -top-1.5 text-amber-500" />
                   <span class="sr-only">Afficher les notifications</span>
@@ -104,10 +103,10 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                 {/* Notifications dropdown */}
                 <Show when={isNotificationBoxOpen.get()}>
                   <menu
-                    id="notifications-box"
-                    class="absolute right-1 top-16 mt-1 z-10 p-6 w-72 origin-top-right rounded-md bg-gray-800 text-gray-400 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-hidden"
-                    aria-orientation="vertical"
                     aria-labelledby="notifications-box-button"
+                    aria-orientation="vertical"
+                    class="absolute top-16 right-1 z-10 mt-1 w-72 origin-top-right rounded-md bg-gray-800 p-6 py-1 text-gray-400 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-hidden"
+                    id="notifications-box"
                     tabindex="-1"
                   >
                     Aucune notification
@@ -118,19 +117,19 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                 <div class="relative ml-3">
                   <div>
                     <button
-                      type="button"
-                      class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                      id="user-menu-button"
                       aria-expanded="false"
                       aria-haspopup="true"
-                      onClick={() => {
-                        isUserMenuOpen.set(!isUserMenuOpen.get())
-                      }}
+                      class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                      id="user-menu-button"
                       onBlur={() => {
                         setTimeout(() => {
                           isUserMenuOpen.set(false)
                         }, 10)
                       }}
+                      onClick={() => {
+                        isUserMenuOpen.set(!isUserMenuOpen.get())
+                      }}
+                      type="button"
                     >
                       <span class="absolute -inset-1.5" />
                       <span class="sr-only">Open user menu</span>
@@ -150,27 +149,27 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                     */}
                   <Show when={isUserMenuOpen.get()}>
                     <menu
-                      class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-slate-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-hidden"
-                      aria-orientation="vertical"
                       aria-labelledby="user-menu-button"
+                      aria-orientation="vertical"
+                      class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-slate-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-hidden"
                       tabindex="-1"
                     >
                       {/* Active: "bg-gray-100", Not Active: "" */}
                       <a
+                        class="block rounded-md px-3 py-2 font-medium text-base text-slate-100 hover:bg-slate-700 hover:text-white"
                         href="/user"
-                        class="block rounded-md px-3 py-2 text-base font-medium text-slate-100 hover:bg-slate-700 hover:text-white"
+                        id="user-menu-item-0"
                         role="menuitem"
                         tabindex="-1"
-                        id="user-menu-item-0"
                       >
                         Mon Profile
                       </a>
                       <a
+                        class="block rounded-md px-3 py-2 font-medium text-base text-slate-100 hover:bg-slate-700 hover:text-white"
                         href="/config"
-                        class="block rounded-md px-3 py-2 text-base font-medium text-slate-100 hover:bg-slate-700 hover:text-white"
+                        id="user-menu-item-1"
                         role="menuitem"
                         tabindex="-1"
-                        id="user-menu-item-1"
                       >
                         Configuration
                       </a>
@@ -182,17 +181,17 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
             <div class="-mr-2 flex gap-2 md:hidden">
               {/* Notifications button (mobile) */}
               <button
-                type="button"
-                id="notifications-box-button"
                 class="relative rounded-full bg-gray-800 p-2 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                onClick={() => {
-                  isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
-                }}
+                id="notifications-box-button"
                 onBlur={() => {
                   setTimeout(() => {
                     isNotificationBoxOpen.set(false)
                   }, 10)
                 }}
+                onClick={() => {
+                  isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
+                }}
+                type="button"
               >
                 <span class="absolute -top-1.5 text-amber-500" />
                 <span class="sr-only">Afficher les notifications</span>
@@ -202,10 +201,10 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
               {/* Notifications dropdown (mobile) */}
               <Show when={isNotificationBoxOpen.get()}>
                 <menu
-                  id="notifications-box"
-                  class="absolute right-1 top-16 mt-1 z-10 p-6 w-72 origin-top-right rounded-md bg-gray-800 text-gray-400 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-hidden"
-                  aria-orientation="vertical"
                   aria-labelledby="notifications-box-button"
+                  aria-orientation="vertical"
+                  class="absolute top-16 right-1 z-10 mt-1 w-72 origin-top-right rounded-md bg-gray-800 p-6 py-1 text-gray-400 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-hidden"
+                  id="notifications-box"
                   tabindex="-1"
                 >
                   Aucune notification
@@ -214,18 +213,18 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
 
               {/* Mobile menu button */}
               <button
-                type="button"
-                class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                 aria-controls="mobile-menu"
                 aria-expanded="false"
-                onClick={() => {
-                  isMainMenuOpen.set(!isMainMenuOpen.get())
-                }}
+                class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                 onBlur={() =>
                   setTimeout(() => {
                     isMainMenuOpen.set(false)
                   }, 10)
                 }
+                onClick={() => {
+                  isMainMenuOpen.set(!isMainMenuOpen.get())
+                }}
+                type="button"
               >
                 <span class="absolute -inset-0.5" />
                 <span class="sr-only">Ouverture menu principale, version mobile</span>
@@ -241,18 +240,18 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
         {/* Mobile menu, show/hide based on menu state. */}
         <Show when={isMainMenuOpen.get()}>
           <div class="md:hidden" id="mobile-menu">
-            <div class="space-y-1 px-2 pb-3 pt-2 sm:px-3">
+            <div class="space-y-1 px-2 pt-2 pb-3 sm:px-3">
               {/* Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" */}
               <For each={NAVIGATION_MENU_ENTRIES}>
                 {(menuEntry) => (
                   <Show when={menuEntry.isMenuEntry}>
                     <a
-                      href={menuEntry.path}
-                      class={`flex flex-row items-center gap-2 rounded-md px-3 py-2 text-base font-medium ${String(currentHash.get()).endsWith(menuEntry.path) ? 'bg-primary text-primary-content' : 'text-neutral-content hover:bg-primary/60 hover:text-primary-content'}`}
                       aria-current="page"
+                      class={`flex flex-row items-center gap-2 rounded-md px-3 py-2 font-medium text-base ${String(currentHash.get()).endsWith(menuEntry.path) ? 'bg-primary text-primary-content' : 'text-neutral-content hover:bg-primary/60 hover:text-primary-content'}`}
+                      href={menuEntry.path}
                     >
                       {menuEntry.icon(
-                        `${String(currentHash.get()).endsWith(menuEntry.path) ? 'primary-content' : 'neutral-content'}`,
+                        `${String(currentHash.get()).endsWith(menuEntry.path) ? 'primary-content' : 'neutral-content'}`
                       )}
                       {menuEntry.label}
                     </a>
@@ -260,17 +259,17 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                 )}
               </For>
             </div>
-            <div class="border-t border-gray-700 pb-3 pt-4">
+            <div class="border-gray-700 border-t pt-4 pb-3">
               <div class="mt-3 space-y-1 px-2">
                 <a
+                  class="block rounded-md px-3 py-2 font-medium text-base text-neutral-content hover:bg-primary/60 hover:text-primary-content"
                   href="/user"
-                  class="block rounded-md px-3 py-2 text-base font-medium text-neutral-content hover:bg-primary/60 hover:text-primary-content"
                 >
                   Mon Profile
                 </a>
                 <a
+                  class="block rounded-md px-3 py-2 font-medium text-base text-neutral-content hover:bg-primary/60 hover:text-primary-content"
                   href="/config"
-                  class="block rounded-md px-3 py-2 text-base font-medium text-neutral-content hover:bg-primary/60 hover:text-primary-content"
                 >
                   Configuration
                 </a>

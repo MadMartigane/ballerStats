@@ -21,7 +21,7 @@ const bigCleanInProgress = new MadSignal(false)
 export default function Home() {
   return (
     <div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 content-start">
+      <div class="grid grid-cols-1 content-start gap-4 sm:grid-cols-2">
         <div class="border border-box border-primary p-1">
           <GlobalStats />
         </div>
@@ -36,9 +36,8 @@ export default function Home() {
 
       <h2>Administration:</h2>
 
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 content-start">
+      <div class="grid grid-cols-2 content-start gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         <button
-          type="button"
           class="btn btn-accent"
           disabled={bigCleanInProgress.get()}
           onClick={() => {
@@ -48,97 +47,98 @@ export default function Home() {
               bigCleanInProgress.set(false)
             }, 400)
           }}
+          type="button"
         >
           {bigCleanInProgress.get() ? <Loader class="animate-spin" /> : <Trash2 />} BIG CLEAN
         </button>
 
         <button
-          type="button"
           class="btn btn-neutral"
           onClick={() => {
             orchestrator.exportDB()
           }}
+          type="button"
         >
           <Share /> Sauvegarde DB
         </button>
 
-        <label for="input-import-db" class="col-span-2">
+        <label class="col-span-2" for="input-import-db">
           Restauration DB
           <input
-            type="file"
+            accept="application/json"
             class="file-input file-input-bordered w-full max-w-xs"
             id="input-import-db"
-            accept="application/json"
             onChange={(
               event: Event & {
                 currentTarget: HTMLInputElement
                 target: HTMLInputElement
-              },
+              }
             ) => {
               orchestrator.importDB(event)
             }}
+            type="file"
           />
         </label>
 
         <div class="col-span-2">
           <BsToggle
             label="Afficher la démo"
-            value={displayDemo.get()}
             onChange={(value) => {
               displayDemo.set(value)
             }}
+            value={displayDemo.get()}
           />
         </div>
       </div>
 
       <Show when={displayDemo.get()}>
         <div class="py-4">
-          <button type="button" class="btn">
+          <button class="btn" type="button">
             Default
           </button>
-          <button type="button" class="btn btn-neutral">
+          <button class="btn btn-neutral" type="button">
             Neutral
           </button>
-          <button type="button" class="btn btn-primary">
+          <button class="btn btn-primary" type="button">
             Primary
           </button>
-          <button type="button" class="btn btn-secondary">
+          <button class="btn btn-secondary" type="button">
             Secondary
           </button>
-          <button type="button" class="btn btn-accent">
+          <button class="btn btn-accent" type="button">
             Accent
           </button>
-          <button type="button" class="btn btn-success">
+          <button class="btn btn-success" type="button">
             Success
           </button>
-          <button type="button" class="btn btn-warning">
+          <button class="btn btn-warning" type="button">
             Warning
           </button>
-          <button type="button" class="btn btn-error">
+          <button class="btn btn-error" type="button">
             Error
           </button>
-          <button type="button" class="btn btn-outline">
+          <button class="btn btn-outline" type="button">
             Default
           </button>
-          <button type="button" class="btn btn-outline btn-neutral">
+          <button class="btn btn-outline btn-neutral" type="button">
             Neutral
           </button>
-          <button type="button" class="btn btn-outline btn-primary">
+          <button class="btn btn-outline btn-primary" type="button">
             Primary
           </button>
-          <button type="button" class="btn btn-outline btn-secondary">
+          <button class="btn btn-outline btn-secondary" type="button">
             Secondary
           </button>
-          <button type="button" class="btn btn-outline btn-accent">
+          <button class="btn btn-outline btn-accent" type="button">
             Accent
           </button>
-          <button type="button" class="btn btn-outline btn-success">
+          <button class="btn btn-outline btn-success" type="button">
             Success
           </button>
-          <button type="button" class="btn btn-outline btn-warning">
+          <button class="btn btn-outline btn-warning" type="button">
             Warning
           </button>
-          <button type="button" class="btn btn-outline btn-error">
+          <button class="btn btn-outline btn-error" type="button">
             Error
           </button>
 
@@ -153,49 +153,48 @@ export default function Home() {
             <Medal size={96} />
           </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 content-start">
+          <div class="grid grid-cols-2 content-start gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             <button
-              type="button"
               class="btn btn-outline"
               onClick={() => {
                 vibrate()
               }}
+              type="button"
             >
               <Vibrate />
               Simple
             </button>
             <button
-              type="button"
               class="btn btn-outline"
               onClick={() => {
                 vibrate('double')
               }}
+              type="button"
             >
               <Vibrate />
               Double
             </button>
             <button
-              type="button"
               class="btn btn-outline"
               onClick={() => {
                 vibrate('long')
               }}
+              type="button"
             >
               <Vibrate />
               Long
             </button>
             <button
-              type="button"
               class="btn btn-outline col-span-2"
               onClick={() => {
                 orchestrator.throwUserActionFeedback()
               }}
+              type="button"
             >
               <BellRing />
               Throw user feedback
             </button>
             <button
-              type="button"
               class="btn btn-outline"
               onClick={() => {
                 toast('Info test', 'info')
@@ -203,6 +202,7 @@ export default function Home() {
                 toast('Warning test', 'warning')
                 toast('Error test', 'error')
               }}
+              type="button"
             >
               <Megaphone />
               Toast !

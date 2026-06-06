@@ -24,32 +24,32 @@ export default function BsTeam(props: BsTeamProps) {
   return (
     <>
       <BsTile
-        title={team.name || ''}
         footer={
           <>
             <Show when={props.onEdit}>
               <button
-                type="button"
                 class="btn btn-square btn-secondary"
                 onClick={() => {
                   editTeam(team, props.onEdit)
                   scrollTop()
                 }}
+                type="button"
               >
                 <UserPen />
               </button>
             </Show>
             <button
-              type="button"
               class="btn btn-square btn-secondary"
               onClick={() => {
                 removeTeam(team)
               }}
+              type="button"
             >
               <Trash />
             </button>
           </>
         }
+        title={team.name || ''}
       >
         <For each={team.playerIds}>
           {(id) => {

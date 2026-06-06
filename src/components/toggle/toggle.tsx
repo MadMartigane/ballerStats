@@ -15,17 +15,17 @@ export default function BsToggle(props: BsToggleProps) {
 
   return (
     <div class="w-full">
-      <label class="w-full flex cursor-pointer">
+      <label class="flex w-full cursor-pointer">
         <div class="label w-1/3">{props.label}</div>
 
         <div class="w-2/3">
           <input
-            type="checkbox"
-            class={`toggle toggle-primary toggle-${size}`}
             checked={props.value}
+            class={`toggle toggle-primary toggle-${size}`}
             onChange={(event) => {
               onChange(event, props.onChange)
             }}
+            type="checkbox"
           />
         </div>
       </label>

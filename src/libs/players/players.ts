@@ -19,9 +19,7 @@ export default class Players {
   }
 
   public get players(): Array<Player> {
-    return this.#players.map((player: Player): Player => {
-      return new Player(player.getRawData())
-    })
+    return this.#players.map((player: Player): Player => new Player(player.getRawData()))
   }
 
   public get length() {
@@ -42,7 +40,7 @@ export default class Players {
     const oldPlayer = this.#players.find((currentPlayer) => currentPlayer.id === newPlayer.id)
     if (!oldPlayer) {
       throw new Error(
-        `[BsPlayers.updatePlayer()] The player id ${newPlayer.id} doesn't exist, Please use .add() method instead.`,
+        `[BsPlayers.updatePlayer()] The player id ${newPlayer.id} doesn't exist, Please use .add() method instead.`
       )
     }
 
@@ -62,7 +60,7 @@ export default class Players {
     const alreadyRegisteredPlayer = this.getPlayer(newPlayer)
     if (alreadyRegisteredPlayer) {
       throw new Error(
-        `[BsPlayers.add()] The player id ${newPlayer.id} already exist, Please use .updatePlayer() method instead.`,
+        `[BsPlayers.add()] The player id ${newPlayer.id} already exist, Please use .updatePlayer() method instead.`
       )
     }
 

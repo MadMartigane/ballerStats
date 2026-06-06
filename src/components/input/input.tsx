@@ -48,18 +48,18 @@ function adapter(options: BsInputProps): BsInputProps {
 
 function renderDaisy(options: BsInputProps) {
   return (
-    <label class="w-full flex">
+    <label class="flex w-full">
       <Show when={options.label}>
         <div class="label w-1/3">{options.label}</div>
       </Show>
       <div class={options.label ? 'w-2/3' : 'w-full'}>
         <input
           class="input w-full"
-          type={options.type}
-          placeholder={options.placeholder}
-          value={options.value || ''}
           onChange={(event) => onChange(event, options.onChange)}
           onInput={(event) => onInput(event, options.onChange)}
+          placeholder={options.placeholder}
+          type={options.type}
+          value={options.value || ''}
         />
       </div>
     </label>

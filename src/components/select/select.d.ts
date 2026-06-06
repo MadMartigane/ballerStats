@@ -19,6 +19,6 @@ export type BsSelectProps = {
     event: Event & {
       currentTarget: HTMLSelectElement
       target: HTMLSelectElement
-    },
+    }
   ) => void
 } & JSX.HTMLAttributes<HTMLSelectElement>

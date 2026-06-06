@@ -6,15 +6,15 @@ export default function BsIconBasketballBasketMove(props: BsIconProps) {
 
   return (
     <svg
-      role="img"
       aria-label="Basketball basket move"
-      viewBox="0 0 256 256"
       data-name="Layer 1"
-      id="Layer_1"
-      xmlns="http://www.w3.org/2000/svg"
-      width={data.width}
-      height={data.height}
       fill={data.fill}
+      height={data.height}
+      id="Layer_1"
+      role="img"
+      viewBox="0 0 256 256"
+      width={data.width}
+      xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
         <style>{`.cls-1{fill:none;stroke:${data.fill};stroke-miterlimit:10;stroke-width:8px;}`}</style>

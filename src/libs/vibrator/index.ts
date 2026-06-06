@@ -1,2 +1,2 @@
-export * from './vibrator.d'
 export * from './vibrator'
+export * from './vibrator.d'

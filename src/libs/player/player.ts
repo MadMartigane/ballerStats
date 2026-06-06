@@ -6,27 +6,19 @@ const scoreFields: {
 } = {
   firstName: {
     score: 10,
-    isSet: (player: Player) => {
-      return Boolean(player.firstName)
-    },
+    isSet: (player: Player) => Boolean(player.firstName),
   },
   lastName: {
     score: 10,
-    isSet: (player: Player) => {
-      return Boolean(player.lastName)
-    },
+    isSet: (player: Player) => Boolean(player.lastName),
   },
   nicName: {
     score: 20,
-    isSet: (player: Player) => {
-      return Boolean(player.nicName)
-    },
+    isSet: (player: Player) => Boolean(player.nicName),
   },
   jersayNumber: {
     score: 10,
-    isSet: (player: Player) => {
-      return Boolean(player.jersayNumber)
-    },
+    isSet: (player: Player) => Boolean(player.jersayNumber),
   },
 }
 const minimalSoreToBeRegisterable = 30

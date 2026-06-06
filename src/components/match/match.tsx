@@ -15,7 +15,7 @@ import {
   Users,
 } from 'lucide-solid'
 import { For, Show } from 'solid-js'
-import { type SetStoreFunction, createStore } from 'solid-js/store'
+import { createStore, type SetStoreFunction } from 'solid-js/store'
 import MadSignal from '../../libs/mad-signal'
 import type Match from '../../libs/match'
 import orchestrator from '../../libs/orchestrator/orchestrator'
@@ -66,7 +66,7 @@ async function removeAction(
   match: Match | null,
   id: number,
   setStatSummary: SetStoreFunction<StatMatchSummary>,
-  disableClearLastAction: MadSignal<boolean>,
+  disableClearLastAction: MadSignal<boolean>
 ) {
   if (!match) {
     return
@@ -93,7 +93,7 @@ async function removeAction(
 async function removeLastAction(
   match: Match | null,
   setStatSummary: SetStoreFunction<StatMatchSummary>,
-  disableClearLastAction: MadSignal<boolean>,
+  disableClearLastAction: MadSignal<boolean>
 ) {
   if (!match) {
     return
@@ -162,7 +162,7 @@ function getInFromPlayground(opts: {
   }
 
   /* Do not mutate the current array in order to throw a new render */
-  const newFive = Array(...inTheFive)
+  const newFive = [...inTheFive]
   newFive.push(opts.playerId)
   opts.playersInTheFive.set(newFive)
   opts.match.update({ playersInTheFive: [...newFive] })
@@ -224,7 +224,7 @@ function renderPlayerBench(opts: {
 }) {
   if (!opts || !opts.player) {
     return (
-      <button type="button" class="btn btn-error btn-disabled w-full">
+      <button class="btn btn-error btn-disabled w-full" type="button">
         Joueur non trouvé
       </button>
     )
@@ -233,11 +233,10 @@ function renderPlayerBench(opts: {
   const playerStats = opts.statSummary.players.find((stat) => stat.playerId === opts.player?.id)
 
   return (
-    <div class="w-full flex flex-row my-3 md:my-4">
-      <div class="bg-neutral text-neutral-content w-full rounded-lg border border-primary p-1 flex items-center gap-1">
+    <div class="my-3 flex w-full flex-row md:my-4">
+      <div class="flex w-full items-center gap-1 rounded-lg border border-primary bg-neutral p-1 text-neutral-content">
         <div class="flex-none">
           <button
-            type="button"
             class="btn btn-primary"
             onClick={() => {
               getInFromPlayground({
@@ -249,22 +248,23 @@ function renderPlayerBench(opts: {
                 disableClearLastAction: opts.disableClearLastAction,
               })
             }}
+            type="button"
           >
             <ArrowUpToLine />
           </button>
-          <div class="text-xs text-center">Rentrée</div>
+          <div class="text-center text-xs">Rentrée</div>
         </div>
 
         <div class="inline-block flex-none text-center text-3xl">
           <User class="inline-block flex-none" size={28} />
-          <div class="inline-block text-3xl flex-auto">{opts.player.jersayNumber}</div>
+          <div class="inline-block flex-auto text-3xl">{opts.player.jersayNumber}</div>
         </div>
 
         <div class="inline-block flex-auto text-center text-3xl">
           {opts.player.nicName ? opts.player.nicName : opts.player.firstName}
         </div>
 
-        <div class="flex flex-col text-center w-8 bg-slate-400/40 rounded-xs">
+        <div class="flex w-8 flex-col rounded-xs bg-slate-400/40 text-center">
           <div class="text-success">{playerStats?.scores.total || 0}</div>
           <div class="text-accent-content">{playerStats?.rebonds.total || 0}</div>
           <div class="text-error">{playerStats?.fouls || 0}</div>
@@ -286,7 +286,7 @@ function renderPlayerButton(opts: {
 }) {
   if (!opts || !opts.player) {
     return (
-      <button type="button" class="btn btn-error btn-disabled w-full">
+      <button class="btn btn-error btn-disabled w-full" type="button">
         Joueur non trouvé
       </button>
     )
@@ -294,7 +294,7 @@ function renderPlayerButton(opts: {
 
   if (!opts.match) {
     return (
-      <button type="button" class="btn btn-error btn-disabled w-full">
+      <button class="btn btn-error btn-disabled w-full" type="button">
         Match non trouvé
       </button>
     )
@@ -303,11 +303,10 @@ function renderPlayerButton(opts: {
   const playerStats = opts.statSummary.players.find((stat) => stat.playerId === opts.player?.id)
 
   return (
-    <div class="w-full flex flex-row my-3 md:my-4">
-      <div class="bg-neutral text-neutral-content w-full rounded-lg border border-primary p-1 flex items-center gap-1">
+    <div class="my-3 flex w-full flex-row md:my-4">
+      <div class="flex w-full items-center gap-1 rounded-lg border border-primary bg-neutral p-1 text-neutral-content">
         <div class="flex-none">
           <button
-            type="button"
             class="btn btn-primary"
             onClick={() => {
               getOutFromPlayground({
@@ -319,15 +318,16 @@ function renderPlayerButton(opts: {
                 disableClearLastAction: opts.disableClearLastAction,
               })
             }}
+            type="button"
           >
             <ArrowDownToLine />
           </button>
-          <div class="text-xs text-center">Sortie</div>
+          <div class="text-center text-xs">Sortie</div>
         </div>
         <div class="inline-block flex-auto">
           <div class="flex items-center">
             <User class="inline-block flex-none" size={28} />
-            <div class="inline-block text-3xl flex-auto">{opts.player.jersayNumber}</div>
+            <div class="inline-block flex-auto text-3xl">{opts.player.jersayNumber}</div>
           </div>
           <div class="text-center text-xl">{opts.player.nicName ? opts.player.nicName : opts.player.firstName}</div>
         </div>
@@ -341,9 +341,8 @@ function renderPlayerButton(opts: {
                   (!opts.matchIsPlaying.get() && !statAction.inGameAction))
               }
             >
-              <div class="flex-none hidden md:block">
+              <div class="hidden flex-none md:block">
                 <button
-                  type="button"
                   class={`btn btn-${statAction.type}`}
                   onClick={() => {
                     registerStat({
@@ -369,10 +368,11 @@ function renderPlayerButton(opts: {
 
                     orchestrator.throwUserActionFeedback()
                   }}
+                  type="button"
                 >
                   {statAction.icon(`${statAction.type}-content`)}
                 </button>
-                <div class="text-xs text-center">{statAction.label1}</div>
+                <div class="text-center text-xs">{statAction.label1}</div>
               </div>
             </Show>
           )}
@@ -381,16 +381,16 @@ function renderPlayerButton(opts: {
         <div class="inline-block md:hidden">
           <button
             class="btn w-32"
-            type="button"
             onClick={() => {
               openActionMode(opts.player?.id, opts.playerOnAction)
             }}
+            type="button"
           >
             Stats !
           </button>
         </div>
 
-        <div class="flex flex-col text-center w-8 bg-slate-400/50 rounded-xs">
+        <div class="flex w-8 flex-col rounded-xs bg-slate-400/50 text-center">
           <div class="text-success">{playerStats?.scores.total || 0}</div>
           <div class="text-accent-content">{playerStats?.rebonds.total || 0}</div>
           <div class="text-error">{playerStats?.fouls || 0}</div>
@@ -407,7 +407,7 @@ function renderPlayerHeader(playerId: string | null) {
       : orchestrator.getPlayer(playerId)
 
   return (
-    <div class="w-full my-2 p-3 grid grid-cols-3 gap-3 bg-neutral text-neutral-content rounded-xs">
+    <div class="my-2 grid w-full grid-cols-3 gap-3 rounded-xs bg-neutral p-3 text-neutral-content">
       <div>
         <Shirt size={28} />
       </div>
@@ -415,7 +415,7 @@ function renderPlayerHeader(playerId: string | null) {
         <div class="text-xl">{player?.nicName ? player.nicName : player?.firstName}</div>
         <div class="text-sm">Action</div>
       </div>
-      <div class="text-3xl text-right">{player?.jersayNumber}</div>
+      <div class="text-right text-3xl">{player?.jersayNumber}</div>
     </div>
   )
 }
@@ -575,14 +575,14 @@ export default function BsMatch(props: BsMatchProps) {
 
   return (
     <div class="w-full">
-      <div class="w-full border border-neutral rounded-xs bg-secondary text-secondary-content">
+      <div class="w-full rounded-xs border border-neutral bg-secondary text-secondary-content">
         <BsScoreCard
-          localScore={statSummary.teamScore}
-          visitorScore={statSummary.opponentScore}
-          location={match?.type}
-          localName={team?.name}
           date={match?.date || null}
+          localName={team?.name}
+          localScore={statSummary.teamScore}
+          location={match?.type}
           visitorName={match?.opponent}
+          visitorScore={statSummary.opponentScore}
         />
       </div>
 
@@ -609,8 +609,8 @@ export default function BsMatch(props: BsMatchProps) {
 
             <hr />
 
-            <div class="w-full flex flex-row my-3 md:my-4">
-              <div class="bg-accent text-accent-content w-full rounded-lg border border-primary p-1 flex items-center gap-1">
+            <div class="my-3 flex w-full flex-row md:my-4">
+              <div class="flex w-full items-center gap-1 rounded-lg border border-primary bg-accent p-1 text-accent-content">
                 <div class="flex-none">
                   <Users size={32} />
                 </div>
@@ -627,9 +627,8 @@ export default function BsMatch(props: BsMatchProps) {
                           (!matchIsPlaying.get() && !statAction.inGameAction))
                       }
                     >
-                      <div class="flex-none hidden md:inline-block">
+                      <div class="hidden flex-none md:inline-block">
                         <button
-                          type="button"
                           class={`btn btn-${statAction.type}`}
                           onClick={() => {
                             registerStat({
@@ -655,10 +654,11 @@ export default function BsMatch(props: BsMatchProps) {
 
                             orchestrator.throwUserActionFeedback()
                           }}
+                          type="button"
                         >
                           {statAction.icon(`${statAction.type}-content`)}
                         </button>
-                        <div class="text-xs text-center">{statAction.label1}</div>
+                        <div class="text-center text-xs">{statAction.label1}</div>
                       </div>
                     </Show>
                   )}
@@ -667,16 +667,16 @@ export default function BsMatch(props: BsMatchProps) {
                 <div class="inline-block md:hidden">
                   <button
                     class="btn w-32"
-                    type="button"
                     onClick={() => {
                       openActionMode(TEAM_OPPONENT_ID, playerOnAction)
                     }}
+                    type="button"
                   >
                     Stats !
                   </button>
                 </div>
 
-                <div class="flex flex-col text-center w-8 bg-slate-400/50 rounded-xs">
+                <div class="flex w-8 flex-col rounded-xs bg-slate-400/50 text-center">
                   <div class="text-success">{statSummary.opponentScore || 0}</div>
                   <div class="text-accent-content">{statSummary.rebonds.opponentTotal || 0}</div>
                   <div class="text-error">{statSummary.opponentFouls || 0}</div>
@@ -685,8 +685,7 @@ export default function BsMatch(props: BsMatchProps) {
             </div>
 
             <button
-              type="button"
-              class={`btn btn-lg btn-${matchIsPlaying.get() ? 'error' : 'success'} text-xl w-full`}
+              class={`btn btn-lg btn-${matchIsPlaying.get() ? 'error' : 'success'} w-full text-xl`}
               onClick={() =>
                 stopStartTheGame({
                   gameIsPlaying: matchIsPlaying,
@@ -696,6 +695,7 @@ export default function BsMatch(props: BsMatchProps) {
                   disableClearLastAction,
                 })
               }
+              type="button"
             >
               <Show when={matchIsPlaying.get()}>
                 {
@@ -717,7 +717,6 @@ export default function BsMatch(props: BsMatchProps) {
             <hr />
 
             <button
-              type="button"
               class="btn btn-warning w-full"
               disabled={disableClearLastAction.get()}
               onClick={() => {
@@ -728,6 +727,7 @@ export default function BsMatch(props: BsMatchProps) {
                   removeLastAction(match, setStatSummary, disableClearLastAction)
                 }
               }}
+              type="button"
             >
               <Eraser />
               Effacer la dernière action
@@ -747,7 +747,6 @@ export default function BsMatch(props: BsMatchProps) {
             <hr />
 
             <button
-              type="button"
               class="btn btn-primary w-full"
               onClick={() => {
                 isStatMode.set(true)
@@ -757,6 +756,7 @@ export default function BsMatch(props: BsMatchProps) {
                   isStatMode.set(true)
                 }
               }}
+              type="button"
             >
               <ChartLine />
               Tableau des stats
@@ -767,12 +767,11 @@ export default function BsMatch(props: BsMatchProps) {
 
         <Show when={playerOnAction.get()}>
           {renderPlayerHeader(playerOnAction.get())}
-          <div class="w-full py-2 grid grid-cols-2 gap-3">
+          <div class="grid w-full grid-cols-2 gap-3 py-2">
             <For each={STATS_MATCH_ACTIONS}>
               {(item) => (
                 <Show when={!item.secondaryAction}>
                   <button
-                    type="button"
                     class={`btn btn-${item.type}`}
                     onClick={() => {
                       registerStat({
@@ -785,6 +784,7 @@ export default function BsMatch(props: BsMatchProps) {
                       })
                       closeActionMode(playerOnAction)
                     }}
+                    type="button"
                   >
                     {item.icon(`${item.type}-content`)}
                     <span class="text-2xl">{item.label1}</span>{' '}
@@ -801,7 +801,6 @@ export default function BsMatch(props: BsMatchProps) {
       <hr class="print:hidden" />
 
       <button
-        type="button"
         class="btn btn-outline w-full print:hidden"
         onClick={(event) => {
           event.stopPropagation()
@@ -818,6 +817,7 @@ export default function BsMatch(props: BsMatchProps) {
 
           goTo('matchs')
         }}
+        type="button"
       >
         <ChevronLeft />
         <span>Retour</span>

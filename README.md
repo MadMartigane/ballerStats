@@ -1,15 +1,17 @@
-# ballerStats
+# BallerStats
 
 [![Formatted with Biome](https://img.shields.io/badge/Formatted_with-Biome-60a5fa?style=flat&logo=biome)](https://biomejs.dev/)
+[![Linted with Ultracite](https://img.shields.io/badge/Linted_with-Ultracite-8b5cf6?style=flat)](https://github.com/nicolo-ribaudo/ultracite)
+[![Tested with Vitest](https://img.shields.io/badge/Tested_with-Vitest-6da13f?style=flat&logo=vitest)](https://vitest.dev/)
 
-Web app to collect and visualize your player statistics
+Web app to collect and visualize your basketball player statistics.
 
 ## Getting Started
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (v16 or newer recommended)
-- npm (comes with Node.js)
+- [Node.js](https://nodejs.org/) (v20 or newer)
+- [pnpm](https://pnpm.io/) (v9 or newer)
 
 ### Installation
 
@@ -21,23 +23,29 @@ Web app to collect and visualize your player statistics
 
 2. Install dependencies
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. Start the development server
    ```bash
-   npm run dev
+   pnpm run dev
    ```
-   This will start the development server at http://localhost:5173 (or another port if 5173 is in use)
+   The dev server starts at http://localhost:3000
 
 ### Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run serve` - Preview production build
-- `npm run check` - Run Biome to check code
-- `npm run format` - Format code with Biome
-- `npm run format-force` - Format code with Biome (unsafe mode)
+| Command | Description |
+|---|---|
+| `pnpm run dev` | Start development server |
+| `pnpm run build` | Build for production |
+| `pnpm run serve` | Preview production build |
+| `pnpm run check` | Run Biome lint + format check |
+| `pnpm run fix` | Auto-fix lint and format issues |
+| `pnpm run format` | Format code with Biome (safe) |
+| `pnpm run format-force` | Format code with Biome (unsafe) |
+| `pnpm run test` | Run tests |
+| `pnpm run test:watch` | Run tests in watch mode |
+| `pnpm run test:coverage` | Run tests with coverage |
 
 ### Project Structure
 
@@ -45,48 +53,40 @@ Web app to collect and visualize your player statistics
 ballerStats/
 ├── public/            # Static assets
 ├── src/
-│   ├── components/    # Reusable UI components
+│   ├── components/    # Reusable UI components (Bs* prefix)
 │   ├── global/        # Global state and configurations
-│   ├── libs/          # Utility functions and helpers
-│   ├── pages/         # Page components
+│   ├── libs/          # Business logic and utilities
+│   ├── pages/         # Page components (routes)
 │   ├── index.css      # Global CSS
 │   └── index.tsx      # Application entry point
-├── index.html         # HTML template
-├── package.json       # Dependencies and scripts
+├── biome.json         # Biome + Ultracite config (generated)
+├── vitest.config.ts   # Vitest configuration
 ├── tsconfig.json      # TypeScript configuration
-└── vite.config.ts     # Vite configuration
+├── vite.config.ts     # Vite configuration
+└── package.json       # Dependencies and scripts
 ```
 
-### Development Workflow
+### Code Style
 
-1. Make changes to the codebase
-2. Format your code using `npm run format`
-3. Check for linting issues with `npm run check`
-4. Start the development server with `npm run dev` to preview changes
-5. Build for production with `npm run build` when ready to deploy
+- SolidJS functional components with TypeScript
+- `Bs` prefix for component names (e.g., `BsButton`)
+- Separate `.d.ts` files for component props
+- Line width: 120 characters, 2-space indent, single quotes, semicolons as needed
+- Linted and formatted by Biome via Ultracite
 
-### Code Style Guidelines
+## Tech Stack
 
-- Use SolidJS functional components with TypeScript
-- Follow the naming convention: `Bs` prefix for component names (e.g., `BsButton`)
-- Create separate `.d.ts` files for component props
-- Line width: 120 characters, indentation: 2 spaces
-- Use single quotes for strings
-- Separate presentational logic from business logic
+| Library | Purpose | Docs |
+|---|---|---|
+| SolidJS | UI framework | <https://docs.solidjs.com/> |
+| TypeScript 6 | Type system | <https://www.typescriptlang.org/> |
+| Vite 8 | Build tool | <https://vite.dev/> |
+| Tailwind CSS 4 | Utility CSS | <https://tailwindcss.com/> |
+| DaisyUI 5 | Component library | <https://daisyui.com/> |
+| Lucide | Icons | <https://lucide.dev/> |
+| Biome + Ultracite | Linting & formatting | <https://biomejs.dev/> |
+| Vitest | Testing | <https://vitest.dev/> |
 
-## Third-Party Libraries
+## License
 
-- SolidJS
-  <https://docs.solidjs.com/>
-
-- Tailwindcss
-  <https://tailwindcss.com/>
-
-- Lucide (icons)
-  <https://lucide.dev/>
-
-- DaisyUI
-  <https://daisyui.com/>
-
-- SVGrepo
-  <https://www.svgrepo.com/>
+MIT

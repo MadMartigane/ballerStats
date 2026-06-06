@@ -43,10 +43,10 @@ function getSortedMatchs() {
 }
 
 function setNewMatchData(data: MatchRawData) {
-  if (!currentMatch) {
-    currentMatch = new Match(data)
-  } else {
+  if (currentMatch) {
     currentMatch.update(data)
+  } else {
+    currentMatch = new Match(data)
   }
 
   canAddMatch.set(currentMatch.isRegisterable)
@@ -109,8 +109,8 @@ function onSubmit(event: KeyboardEvent) {
 function renderMatchFallback() {
   return (
     <div>
-      <h4 class="inline-flex items-end my-4">
-        <MessageCircleWarning class="w-14 h-14" />
+      <h4 class="my-4 inline-flex items-end">
+        <MessageCircleWarning class="h-14 w-14" />
         <span class="px-2">Aucun match enregistrée.</span>
       </h4>
     </div>
@@ -123,13 +123,13 @@ function renderAddMatchButton() {
       <hr />
       <div class="footer-buttons-container">
         <button
-          type="button"
           class="btn btn-primary btn-wide"
           onClick={() => {
             isEditingNewMatch = true
             toggleAddMatch(true)
             scrollTop()
           }}
+          type="button"
         >
           <UserPlus />
           Ajouter un match
@@ -151,32 +151,32 @@ function renderAddingMatchCard() {
     body: (
       <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
         <BsSelect
-          label="Mon Équipe"
-          placeholder="Sélectionnez l’équipe"
-          value={currentMatch?.teamId}
           datas={teams.map((team) => ({ value: team.id, label: team.name }))}
+          label="Mon Équipe"
           onValueChange={(value: string) => {
             onTeamChange(value)
           }}
+          placeholder="Sélectionnez l’équipe"
+          value={currentMatch?.teamId}
         />
 
         <BsInput
-          type="text"
           label="Nom de l’adversaire"
-          value={currentMatch?.opponent || ''}
-          placeholder="…"
           onChange={(value: string) => {
             setNewMatchData({ opponent: value })
           }}
+          placeholder="…"
+          type="text"
+          value={currentMatch?.opponent || ''}
         />
 
         <BsSelect
-          label="Localité"
-          default={currentMatch && (currentMatch.type as string)}
           datas={[
             { value: 'home', label: <BsMatchTypeText type="home" /> },
             { value: 'outside', label: <BsMatchTypeText type="outside" /> },
           ]}
+          default={currentMatch && (currentMatch.type as string)}
+          label="Localité"
           onValueChange={(value: string) => {
             onTypeChange(value as MatchType)
           }}
@@ -184,27 +184,26 @@ function renderAddingMatchCard() {
 
         <BsDatePicker
           label="Date du match"
-          withTime={true}
-          value={currentMatch?.date}
           onChange={(value: string) => {
             setNewMatchData({ date: value })
           }}
+          value={currentMatch?.date}
+          withTime={true}
         />
 
         <BsToggle
           label="Match ouvert"
-          size="lg"
-          value={currentMatch?.status === 'unlocked'}
           onChange={(checked) => {
             onStatusChange(checked)
           }}
+          size="lg"
+          value={currentMatch?.status === 'unlocked'}
         />
       </form>
     ),
     footer: (
       <div class="footer-buttons-container">
         <button
-          type="button"
           class="btn btn-primary btn-wide"
           onClick={() => {
             toggleAddMatch(false)
@@ -212,19 +211,20 @@ function renderAddingMatchCard() {
             canAddMatch.set(false)
             scrollBottom()
           }}
+          type="button"
         >
           <X />
           Annuler
         </button>
 
         <button
-          type="button"
           class="btn btn-primary btn-wide"
           disabled={!canAddMatch.get()}
           onClick={() => {
             registerMatch()
             scrollBottom()
           }}
+          type="button"
         >
           {isEditingNewMatch ? <UserPlus /> : <Save />}
           {isEditingNewMatch ? 'Ajouter' : 'Enregistrer'}
@@ -238,11 +238,11 @@ export default function BsMatchs() {
   return (
     <div>
       <Show when={!isAddingMatch.get()}>
-        <Show when={(matchLength.get() || 0) > 0} fallback={renderMatchFallback()}>
-          <div class="flex flex-wrap gap-4 w-full justify-around">
+        <Show fallback={renderMatchFallback()} when={(matchLength.get() || 0) > 0}>
+          <div class="flex w-full flex-wrap justify-around gap-4">
             <For each={matchs}>
               {(match) => (
-                <div class="mx-auto md:mx-0 w-fit">
+                <div class="mx-auto w-fit md:mx-0">
                   <BsMatch
                     match={match}
                     onEdit={(match: Match) => {
@@ -258,7 +258,7 @@ export default function BsMatchs() {
           </div>
         </Show>
       </Show>
-      <Show when={isAddingMatch.get()} fallback={renderAddMatchButton()}>
+      <Show fallback={renderAddMatchButton()} when={isAddingMatch.get()}>
         {renderAddingMatchCard()}
       </Show>
     </div>
