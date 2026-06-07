@@ -55,6 +55,7 @@ function renderDaisy(options: BsInputProps) {
       <div class={options.label ? 'w-2/3' : 'w-full'}>
         <input
           class="input w-full"
+          maxLength={options.maxLength}
           onChange={(event) => onChange(event, options.onChange)}
           onInput={(event) => onInput(event, options.onChange)}
           placeholder={options.placeholder}

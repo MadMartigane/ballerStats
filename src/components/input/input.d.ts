@@ -11,6 +11,7 @@ export type BsInputProps = {
   value?: string
   label?: string
   placeholder?: string
+  maxLength?: number
   onChange?: (value: string) => void
   onBlur?: () => void
   onFocus?: () => void
