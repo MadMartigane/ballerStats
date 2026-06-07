@@ -1,10 +1,11 @@
-import { BadgeAlert, ChartScatter, FileSliders, MonitorDot, User, Users } from 'lucide-solid'
+import { BadgeAlert, ChartScatter, FileSliders, LayoutGrid, MonitorDot, User, Users } from 'lucide-solid'
 import { lazy } from 'solid-js'
 import BsIconBasketballBall from '../../components/icons/basketball-ball'
 import BsIconBasketballPlayer from '../../components/icons/basketball-player'
 import Home from '../../pages/home'
 import type { DaisyVariant } from '../daisy'
 import type { MenuEntry } from './menu.d'
+import { ROUTE_PLAYERS, ROUTE_TROMBI } from './routes'
 
 export const HASH_REPLACE_PATTERN = /^#\//
 
@@ -32,11 +33,18 @@ export const NAVIGATION_MENU_ENTRIES: Array<MenuEntry> = [
     isMenuEntry: false,
   },
   {
-    path: '/players',
+    path: ROUTE_PLAYERS,
     label: 'Joueurs',
     icon: (variant: DaisyVariant = 'neutral-content') => <BsIconBasketballPlayer variant={variant} />,
     component: lazy(() => import('../../pages/players')),
     isMenuEntry: true,
+  },
+  {
+    path: ROUTE_TROMBI,
+    label: 'Trombinoscope',
+    icon: () => <LayoutGrid />,
+    component: lazy(() => import('../../pages/trombi')),
+    isMenuEntry: false,
   },
   {
     path: '/teams',
