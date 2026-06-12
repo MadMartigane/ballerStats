@@ -9,7 +9,7 @@ function renderTh(playerStats: StatMatchSummaryPlayer, player?: Player | null) {
   return (
     <tr>
       <th>
-        <span class="text-2xl">{player?.jersayNumber || <Users size={28} />}</span>
+        <span class="text-2xl">{player?.jerseyNumber || <Users size={28} />}</span>
       </th>
       <td class="text-xl">{player?.nicName ? player.nicName : player?.firstName || 'Équipe'}</td>
       <td>

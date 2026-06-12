@@ -42,7 +42,7 @@ describe('photo flow integration', () => {
   })
 
   it('stores photo and updates player hasPhoto flag', async () => {
-    const player = new Player({ firstName: 'Alice', lastName: 'Dupont', jersayNumber: '10' })
+    const player = new Player({ firstName: 'Alice', lastName: 'Dupont', jerseyNumber: '10' })
     expect(player.hasPhoto).toBe(false)
 
     await storePhoto(player.id, MOCK_COMPRESSED_BLOB)
@@ -54,7 +54,7 @@ describe('photo flow integration', () => {
   })
 
   it('getRawData includes hasPhoto as false', () => {
-    const player = new Player({ firstName: 'Bob', lastName: 'Martin', jersayNumber: '23' })
+    const player = new Player({ firstName: 'Bob', lastName: 'Martin', jerseyNumber: '23' })
     expect(player.hasPhoto).toBe(false)
 
     const rawData = player.getRawData()
@@ -62,9 +62,9 @@ describe('photo flow integration', () => {
   })
 
   it('setFromRawData handles legacy data without hasPhoto', () => {
-    const player = new Player({ firstName: 'Charlie', lastName: 'Durand', jersayNumber: '5' })
+    const player = new Player({ firstName: 'Charlie', lastName: 'Durand', jerseyNumber: '5' })
 
-    player.setFromRawData({ id: player.id, firstName: 'Charlie', lastName: 'Durand', jersayNumber: '5' })
+    player.setFromRawData({ id: player.id, firstName: 'Charlie', lastName: 'Durand', jerseyNumber: '5' })
     expect(player.hasPhoto).toBe(false)
   })
 
@@ -73,5 +73,11 @@ describe('photo flow integration', () => {
 
     player.setFromRawData({ id: player.id, firstName: 'Dave', hasPhoto: true })
     expect(player.hasPhoto).toBe(true)
+  })
+
+  it('should migrate legacy jersayNumber field to jerseyNumber', () => {
+    const player = new Player()
+    player.setFromRawData({ jersayNumber: '10' })
+    expect(player.jerseyNumber).toBe('10')
   })
 })

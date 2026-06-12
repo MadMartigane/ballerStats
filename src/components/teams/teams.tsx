@@ -125,7 +125,7 @@ function renderAddTeamButton() {
 function renderPlayerBadge(player: Player) {
   return (
     <>
-      <span class="text-warning">{player.jersayNumber}</span>
+      <span class="text-warning">{player.jerseyNumber}</span>
       <div class="m-2 whitespace-nowrap font-medium text-base">
         {player.nicName ? player.nicName : `${player.firstName} ${player.lastName}`}
       </div>

@@ -1,2 +1,2 @@
 PROJECT_NAME: ballerStats
-CURRENT_RFC: RFC_player-profile-photos.md
+CURRENT_RFC: RFC_trombi-jersey-number-large-text.md

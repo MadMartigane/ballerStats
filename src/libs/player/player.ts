@@ -18,9 +18,9 @@ const scoreFields: {
     score: 20,
     isSet: (player: Player) => Boolean(player.nicName),
   },
-  jersayNumber: {
+  jerseyNumber: {
     score: 10,
-    isSet: (player: Player) => Boolean(player.jersayNumber),
+    isSet: (player: Player) => Boolean(player.jerseyNumber),
   },
 }
 const minimalSoreToBeRegisterable = 30
@@ -29,7 +29,7 @@ export default class Player {
   #id: string
   public firstName?: string
   public lastName?: string
-  public jersayNumber?: string
+  public jerseyNumber?: string
   public licenseNumber?: string
   public birthDay?: Date
   public nicName?: string
@@ -63,7 +63,7 @@ export default class Player {
     this.#id = data.id || this.#id
     this.firstName = data.firstName
     this.lastName = data.lastName
-    this.jersayNumber = data.jersayNumber
+    this.jerseyNumber = data.jerseyNumber || (data as { jersayNumber?: string }).jersayNumber
     this.licenseNumber = data.licenseNumber
     this.nicName = data.nicName
 
@@ -87,8 +87,8 @@ export default class Player {
       data.lastName = this.lastName
     }
 
-    if (this.jersayNumber) {
-      data.jersayNumber = this.jersayNumber
+    if (this.jerseyNumber) {
+      data.jerseyNumber = this.jerseyNumber
     }
 
     if (this.licenseNumber) {
@@ -114,4 +114,8 @@ export default class Player {
       ...data,
     })
   }
+}
+
+export function hasJerseyNumber(player: Player): boolean {
+  return player.jerseyNumber !== undefined && player.jerseyNumber !== ''
 }

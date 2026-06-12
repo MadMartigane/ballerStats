@@ -284,7 +284,7 @@ export class Orchestrator {
 
     const players = playerIds.map((playerId) => this.getPlayer(playerId))
 
-    return players.sort((a, b) => Number.parseInt(a?.jersayNumber || '0') - Number.parseInt(b?.jersayNumber || '0'))
+    return players.sort((a, b) => Number.parseInt(a?.jerseyNumber || '0') - Number.parseInt(b?.jerseyNumber || '0'))
   }
 
   public async exportDB() {

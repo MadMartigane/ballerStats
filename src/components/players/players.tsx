@@ -170,10 +170,10 @@ function renderAddingPlayerCard() {
         {BsInput({
           type: 'text',
           label: 'Numéro de maillot',
-          value: currentPlayer?.jersayNumber,
+          value: currentPlayer?.jerseyNumber,
           placeholder: '01',
           onChange: (value: string) => {
-            setNewPlayerData({ jersayNumber: value })
+            setNewPlayerData({ jerseyNumber: value })
           },
         })}
         {BsInput({

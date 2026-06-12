@@ -257,7 +257,7 @@ function renderPlayerBench(opts: {
 
         <div class="inline-block flex-none text-center text-3xl">
           <User class="inline-block flex-none" size={28} />
-          <div class="inline-block flex-auto text-3xl">{opts.player.jersayNumber}</div>
+          <div class="inline-block flex-auto text-3xl">{opts.player.jerseyNumber}</div>
         </div>
 
         <div class="inline-block flex-auto text-center text-3xl">
@@ -327,7 +327,7 @@ function renderPlayerButton(opts: {
         <div class="inline-block flex-auto">
           <div class="flex items-center">
             <User class="inline-block flex-none" size={28} />
-            <div class="inline-block flex-auto text-3xl">{opts.player.jersayNumber}</div>
+            <div class="inline-block flex-auto text-3xl">{opts.player.jerseyNumber}</div>
           </div>
           <div class="text-center text-xl">{opts.player.nicName ? opts.player.nicName : opts.player.firstName}</div>
         </div>
@@ -403,7 +403,7 @@ function renderPlayerButton(opts: {
 function renderPlayerHeader(playerId: string | null) {
   const player =
     playerId === TEAM_OPPONENT_ID
-      ? { nicName: 'Adversaire', firstName: '', jersayNumber: 'XX' }
+      ? { nicName: 'Adversaire', firstName: '', jerseyNumber: 'XX' }
       : orchestrator.getPlayer(playerId)
 
   return (
@@ -415,7 +415,7 @@ function renderPlayerHeader(playerId: string | null) {
         <div class="text-xl">{player?.nicName ? player.nicName : player?.firstName}</div>
         <div class="text-sm">Action</div>
       </div>
-      <div class="text-right text-3xl">{player?.jersayNumber}</div>
+      <div class="text-right text-3xl">{player?.jerseyNumber}</div>
     </div>
   )
 }

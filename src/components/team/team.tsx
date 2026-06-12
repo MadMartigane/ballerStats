@@ -58,7 +58,7 @@ export default function BsTeam(props: BsTeamProps) {
             if (player) {
               return (
                 <p class="">
-                  <span class="text-warning">{player.jersayNumber}</span>
+                  <span class="text-warning">{player.jerseyNumber}</span>
                   <span class="p-1">{`${player.nicName || player.firstName} ${(player.nicName && '') || player.lastName}`}</span>
                 </p>
               )

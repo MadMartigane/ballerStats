@@ -26,7 +26,7 @@ export default function BsPlayer(props: BsPlayerProps) {
     <BsTile
       badge={
         <div class="mt-2 flex flex-none flex-row text-accent">
-          <Shirt class="h-8 w-8" /> <span class="min-w-8">{player.jersayNumber}</span>
+          <Shirt class="h-8 w-8" /> <span class="min-w-8">{player.jerseyNumber}</span>
         </div>
       }
       footer={
