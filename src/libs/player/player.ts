@@ -116,6 +116,6 @@ export default class Player {
   }
 }
 
-export function hasJerseyNumber(player: Player): boolean {
+export function hasJerseyNumber(player: Player): player is Player & { jerseyNumber: string } {
   return player.jerseyNumber !== undefined && player.jerseyNumber !== ''
 }

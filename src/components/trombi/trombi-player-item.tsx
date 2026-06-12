@@ -5,7 +5,7 @@ import type { BsTrombiPlayerItemProps } from './trombi-player-item.d'
 
 export default function BsTrombiPlayerItem(props: BsTrombiPlayerItemProps) {
   return (
-    <div class="flex flex-row items-center gap-4 rounded-lg bg-base-300 p-3">
+    <div class="flex flex-row items-center gap-4 rounded-lg bg-base-300 p-3 break-inside-avoid">
       <BsAvatar
         displayName={props.player.nicName || props.player.firstName || '?'}
         hasPhoto={props.player.hasPhoto}
