@@ -1,13 +1,7 @@
+import { strToU8, unzip, zip } from 'fflate'
 import bsEventBus from '../event-bus'
 import Match from '../match'
 import Matchs from '../matchs'
-import Player from '../player'
-import Players from '../players'
-import { soundTab } from '../sounds'
-import { getStoredMatchs, getStoredPlayers, getStoredTeams, storeMatchs, storePlayers, storeTeams } from '../store'
-import Team from '../team'
-import Teams from '../teams'
-import { confirmAction, mount, toast, unmount } from '../utils'
 import {
   clearAllPhotos,
   deletePhoto,
@@ -17,8 +11,14 @@ import {
   PHOTO_MIME_TYPE,
   storePhoto,
 } from '../photo-store/photo-store'
+import Player from '../player'
+import Players from '../players'
+import { soundTab } from '../sounds'
+import { getStoredMatchs, getStoredPlayers, getStoredTeams, storeMatchs, storePlayers, storeTeams } from '../store'
+import Team from '../team'
+import Teams from '../teams'
+import { confirmAction, mount, toast, unmount } from '../utils'
 import { type ThemeVibration, vibrate } from '../vibrator'
-import { strToU8, unzip, zip } from 'fflate'
 import type { GlobalDB } from './orchestrator.d'
 
 const THEME_VIBRATION_TO_DURATION: { [key in ThemeVibration]: number } = {

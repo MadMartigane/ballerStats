@@ -33,7 +33,7 @@ export default class Player {
   public licenseNumber?: string
   public birthDay?: Date
   public nicName?: string
-  public hasPhoto: boolean = false
+  public hasPhoto = false
 
   constructor(data?: PlayerRawData) {
     this.#id = data?.id || getUniqId()

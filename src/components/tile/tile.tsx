@@ -21,6 +21,9 @@ export default function BsTile(props: BsTileProps) {
         }
       }}
     >
+      <Show when={props.header}>
+        <div class="flex justify-center py-2">{props.header}</div>
+      </Show>
       <Show when={props.status}>
         <div>{props.status}</div>
       </Show>

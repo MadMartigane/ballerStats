@@ -23,46 +23,40 @@ function editPlayer(player: Player, callback: (player: Player) => void) {
 export default function BsPlayer(props: BsPlayerProps) {
   const player = props.player
   return (
-    <div class="flex flex-col items-center gap-2">
-      <BsAvatar
-        hasPhoto={player.hasPhoto}
-        displayName={player.nicName || player.firstName || '?'}
-        playerId={player.id}
-        size={64}
-      />
-      <BsTile
-        badge={
-          <div class="mt-2 flex flex-none flex-row text-accent">
-            <Shirt class="h-8 w-8" /> <span class="min-w-8">{player.jersayNumber}</span>
-          </div>
-        }
-        footer={
-          <>
-            <Show when={props.onEdit}>
-              <button
-                class="btn btn-secondary btn-square"
-                onClick={() => editPlayer(player, props.onEdit)}
-                type="button"
-              >
-                <UserPen />
-              </button>
-            </Show>
-            <button
-              class="btn btn-secondary btn-square"
-              onClick={() =>
-                removePlayer(player).catch(() => toast('Erreur lors de la suppression du joueur.', 'error'))
-              }
-              type="button"
-            >
-              <Trash />
+    <BsTile
+      badge={
+        <div class="mt-2 flex flex-none flex-row text-accent">
+          <Shirt class="h-8 w-8" /> <span class="min-w-8">{player.jersayNumber}</span>
+        </div>
+      }
+      footer={
+        <>
+          <Show when={props.onEdit}>
+            <button class="btn btn-secondary btn-square" onClick={() => editPlayer(player, props.onEdit)} type="button">
+              <UserPen />
             </button>
-          </>
-        }
-        info={player.licenseNumber}
-        title={player.nicName ? player.nicName : player.firstName}
-      >
-        {`${player.firstName || ''} ${player.lastName || ''}`}
-      </BsTile>
-    </div>
+          </Show>
+          <button
+            class="btn btn-secondary btn-square"
+            onClick={() => removePlayer(player).catch(() => toast('Erreur lors de la suppression du joueur.', 'error'))}
+            type="button"
+          >
+            <Trash />
+          </button>
+        </>
+      }
+      header={
+        <BsAvatar
+          displayName={player.nicName || player.firstName || '?'}
+          hasPhoto={player.hasPhoto}
+          playerId={player.id}
+          size={64}
+        />
+      }
+      info={player.licenseNumber}
+      title={player.nicName ? player.nicName : player.firstName}
+    >
+      {`${player.firstName || ''} ${player.lastName || ''}`}
+    </BsTile>
   )
 }

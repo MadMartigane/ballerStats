@@ -1,4 +1,4 @@
-import { Show, createResource } from 'solid-js'
+import { createResource, Show } from 'solid-js'
 import { getPhoto } from '../../libs/photo-store/photo-store'
 import { useBlobUrl } from '../../libs/photo-store/use-blob-url'
 import type { BsAvatarProps } from './avatar.d'
@@ -41,13 +41,7 @@ export default function BsAvatar(props: BsAvatarProps) {
       when={url()}
     >
       {(blobUrl) => (
-        <img
-          alt={props.displayName}
-          class="rounded-full object-cover"
-          height={size()}
-          src={blobUrl()}
-          width={size()}
-        />
+        <img alt={props.displayName} class="rounded-full object-cover" height={size()} src={blobUrl()} width={size()} />
       )}
     </Show>
   )

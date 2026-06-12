@@ -1,5 +1,5 @@
-import imageCompression from 'browser-image-compression'
 import type { Options } from 'browser-image-compression'
+import imageCompression from 'browser-image-compression'
 import { PHOTO_MIME_TYPE } from '../photo-store/photo-store'
 
 const COMPRESSION_OPTIONS: Options = {

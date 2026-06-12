@@ -1,8 +1,8 @@
 import { Camera, Trash2, User } from 'lucide-solid'
-import { Show, createMemo, createResource, createSignal } from 'solid-js'
+import { createMemo, createResource, createSignal, Show } from 'solid-js'
+import { compressPhoto } from '../../libs/photo-compressor/photo-compressor'
 import { getPhoto } from '../../libs/photo-store/photo-store'
 import { useBlobUrl } from '../../libs/photo-store/use-blob-url'
-import { compressPhoto } from '../../libs/photo-compressor/photo-compressor'
 import { toast } from '../../libs/utils'
 import type { BsPhotoUploadProps } from './photo-upload.d'
 

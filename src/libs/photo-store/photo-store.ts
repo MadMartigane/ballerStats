@@ -1,4 +1,4 @@
-import { clear, del, entries, get, set, createStore } from 'idb-keyval'
+import { clear, createStore, del, entries, get, set } from 'idb-keyval'
 import type Player from '../player/player'
 import type { PhotoEntry } from './photo-store.d'
 

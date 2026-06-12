@@ -1,7 +1,6 @@
-import type { JSX } from 'solid-js'
 import type Player from '../../libs/player'
 
-export type BsPlayerProps = {
-  player: Player
+export interface BsPlayerProps {
   onEdit: (player: Player) => void
-} & JSX.HTMLAttributes<HTMLDivElement>
+  player: Player
+}

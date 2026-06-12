@@ -1,6 +1,6 @@
-import { ArrowLeft, LayoutGrid } from 'lucide-solid'
 import { useNavigate } from '@solidjs/router'
-import { For, Show, createMemo } from 'solid-js'
+import { ArrowLeft, LayoutGrid } from 'lucide-solid'
+import { createMemo, For, Show } from 'solid-js'
 import { ROUTE_PLAYERS } from '../../libs/menu/routes'
 import type Player from '../../libs/player'
 import { players } from '../../libs/players-store'
@@ -32,8 +32,8 @@ export default function BsTrombi() {
             {(player) => (
               <div class="flex flex-row items-center gap-4 rounded-lg bg-base-300 p-3">
                 <BsAvatar
-                  hasPhoto={player.hasPhoto}
                   displayName={player.nicName || player.firstName || '?'}
+                  hasPhoto={player.hasPhoto}
                   playerId={player.id}
                   size={80}
                 />
@@ -41,9 +41,7 @@ export default function BsTrombi() {
                   <p class="font-bold">
                     {player.lastName} {player.firstName}
                   </p>
-                  <p class="text-sm text-base-content/70">
-                    Licence : {player.licenseNumber || '—'}
-                  </p>
+                  <p class="text-base-content/70 text-sm">Licence : {player.licenseNumber || '—'}</p>
                 </div>
               </div>
             )}

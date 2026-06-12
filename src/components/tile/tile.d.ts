@@ -2,6 +2,7 @@ import type { JSXElement } from 'solid-js'
 
 export type BsTileProps = {
   children?: JSXElement | Array<JSXElement>
+  header?: JSXElement
   title?: JSXElement
   badge?: JSXElement
   status?: JSXElement

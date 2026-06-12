@@ -8,9 +8,9 @@ vi.mock('browser-image-compression', () => ({
   default: mockImageCompression,
 }))
 
-import { clearAllPhotos, deletePhoto, getPhoto, hasPhoto, storePhoto } from './photo-store/photo-store'
-import Player from './player/player'
 import { compressPhoto } from './photo-compressor/photo-compressor'
+import { clearAllPhotos, deletePhoto, hasPhoto, storePhoto } from './photo-store/photo-store'
+import Player from './player/player'
 
 const MOCK_COMPRESSED_BLOB = new Blob(['compressed-webp-data'], { type: 'image/webp' })
 
