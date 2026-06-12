@@ -8,13 +8,30 @@ import { getStoredMatchs, getStoredPlayers, getStoredTeams, storeMatchs, storePl
 import Team from '../team'
 import Teams from '../teams'
 import { confirmAction, mount, toast, unmount } from '../utils'
+import {
+  clearAllPhotos,
+  deletePhoto,
+  getAllPhotoEntries,
+  hasPhoto,
+  PHOTO_FILE_EXTENSION,
+  PHOTO_MIME_TYPE,
+  storePhoto,
+} from '../photo-store/photo-store'
 import { type ThemeVibration, vibrate } from '../vibrator'
+import { strToU8, unzip, zip } from 'fflate'
 import type { GlobalDB } from './orchestrator.d'
 
 const THEME_VIBRATION_TO_DURATION: { [key in ThemeVibration]: number } = {
   single: 100,
   double: 100,
   long: 200,
+}
+
+export class ParseError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'ParseError'
+  }
 }
 
 export class Orchestrator {
@@ -162,10 +179,11 @@ export class Orchestrator {
     }
   }
 
-  private doClearDB() {
+  private async doClearDB() {
     this.removeAllPlayers()
     this.removeAllTeams()
     this.removeAllMatchs()
+    await clearAllPhotos()
   }
 
   private doOverwriteDB(json: GlobalDB) {
@@ -183,56 +201,6 @@ export class Orchestrator {
       const newMatch = new Match(matchData)
       this.Matchs.add(newMatch)
     }
-  }
-
-  private async onImportDBLoad(event: ProgressEvent<FileReader>) {
-    const target = event.target || event.currentTarget
-    // @ts-expect-error
-    const result = target?.result as string
-    if (!result) {
-      toast('Impossible de lire les données.', 'error')
-      return
-    }
-
-    let rawData: GlobalDB
-    try {
-      rawData = JSON.parse(result) as GlobalDB
-    } catch (e) {
-      toast('Données non valides.', 'error')
-      console.error(e)
-      return
-    }
-
-    if (!rawData || !rawData.timestamp) {
-      toast('Le fichier n’est pas une sauvegarde baller-stats.', 'error')
-      return
-    }
-
-    const proced = await confirmAction(
-      'Import DB',
-      `Vous êtes sur le point d’importer ${rawData?.players.length || 0} joueurs, ${rawData?.teams.length || 0} équipes et ${rawData?.matchs.length || 0} matchs.`
-    )
-    if (!proced) {
-      return
-    }
-
-    const cleanUpBefore = await confirmAction('Import DB', 'Voulez-vous écraser toutes les données ?')
-    if (cleanUpBefore) {
-      this.doClearDB()
-    }
-
-    try {
-      this.doOverwriteDB(rawData)
-      toast('Import des nouvelles données réussi !', 'success')
-    } catch (e) {
-      toast('Impossible d’importer les données.', 'error')
-      console.error(e)
-    }
-  }
-
-  private async onImportDBError(event: ProgressEvent<FileReader>) {
-    toast('Impossible d’importer les données.', 'error')
-    console.error('onImportDBError(): ', event)
   }
 
   public get Players() {
@@ -319,7 +287,7 @@ export class Orchestrator {
     return players.sort((a, b) => Number.parseInt(a?.jersayNumber || '0') - Number.parseInt(b?.jersayNumber || '0'))
   }
 
-  public exportDB() {
+  public async exportDB() {
     const date = new Date()
 
     const globalDB: GlobalDB = {
@@ -329,19 +297,138 @@ export class Orchestrator {
       matchs: this.Matchs.matchs.map((match) => match.getRawData()),
     }
 
-    const jsonDB = JSON.stringify(globalDB)
-    const anchor = document.createElement('a')
-    const fileName = `baller-stats-export-db-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}.json`
-    const blob = new Blob([jsonDB], {
-      type: 'application/json;charset=utf-8;',
+    const files: Record<string, Uint8Array> = {
+      'data.json': strToU8(JSON.stringify(globalDB)),
+    }
+
+    const photoEntries = await getAllPhotoEntries()
+    for (const entry of photoEntries) {
+      const buffer = await entry.blob.arrayBuffer()
+      files[`photos/${entry.playerId}${PHOTO_FILE_EXTENSION}`] = new Uint8Array(buffer)
+    }
+
+    const zipped = await new Promise<Uint8Array>((resolve, reject) => {
+      zip(files, (err, data) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(data)
+        }
+      })
     })
+
+    const blob = new Blob([zipped], { type: 'application/octet-stream' })
     const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    const fileName = `baller-stats-export-db-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}.bstat`
     anchor.setAttribute('href', url)
     anchor.setAttribute('download', fileName)
     anchor.style.visibility = 'hidden'
     mount(anchor)
     anchor.click()
     unmount(anchor)
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+
+  private async tryParseZip(uint8: Uint8Array): Promise<{ rawData: GlobalDB; photos: Map<string, Blob> } | null> {
+    let unzipped: Record<string, Uint8Array>
+    try {
+      unzipped = await new Promise<Record<string, Uint8Array>>((resolve, reject) => {
+        unzip(uint8, (err, data) => {
+          if (err) {
+            reject(err)
+          } else {
+            resolve(data)
+          }
+        })
+      })
+    } catch {
+      // Not a valid zip — signal that caller should try legacy JSON fallback
+      return null
+    }
+
+    const dataJson = unzipped['data.json']
+    if (!dataJson) {
+      throw new ParseError('Missing data.json in archive')
+    }
+
+    const decoder = new TextDecoder()
+    const rawData = JSON.parse(decoder.decode(dataJson)) as GlobalDB
+
+    if (!rawData || !rawData.timestamp) {
+      throw new ParseError('Invalid archive data')
+    }
+
+    const photos = new Map<string, Blob>()
+    const correctedPlayers = rawData.players.map((playerData) => {
+      if (!playerData.id || !playerData.hasPhoto) {
+        return playerData
+      }
+      const photoPath = `photos/${playerData.id}${PHOTO_FILE_EXTENSION}`
+      const photoData = unzipped[photoPath]
+      if (photoData) {
+        photos.set(playerData.id, new Blob([photoData], { type: PHOTO_MIME_TYPE }))
+        return playerData
+      }
+      // Photo referenced in metadata but missing from archive — correct the flag
+      return { ...playerData, hasPhoto: false }
+    })
+
+    return { rawData: { ...rawData, players: correctedPlayers }, photos }
+  }
+
+  private async parseImportData(uint8: Uint8Array): Promise<{ rawData: GlobalDB; photos?: Map<string, Blob> }> {
+    // Try ZIP format first
+    const zipResult = await this.tryParseZip(uint8)
+    if (zipResult) {
+      return zipResult
+    }
+
+    // Legacy JSON fallback
+    const text = new TextDecoder().decode(uint8)
+    const rawData = JSON.parse(text) as GlobalDB
+
+    if (!rawData || !rawData.timestamp) {
+      throw new ParseError('Invalid archive data')
+    }
+
+    return { rawData }
+  }
+
+  private async readImportFile(
+    event: Event & {
+      currentTarget: HTMLInputElement
+      target: HTMLInputElement
+    }
+  ): Promise<Uint8Array> {
+    const input = event.target || event.currentTarget
+    const files = input?.files
+    if (!files || !files[0]) {
+      throw new Error('No file selected')
+    }
+    const buffer = await files[0].arrayBuffer()
+    return new Uint8Array(buffer)
+  }
+
+  private async executeImport(rawData: GlobalDB, photos?: Map<string, Blob>): Promise<void> {
+    this.doOverwriteDB(rawData)
+
+    if (!photos || photos.size === 0) {
+      return
+    }
+
+    let photosError: Error | undefined
+    try {
+      const photoPromises = [...photos].map(([playerId, blob]) => this.Photos.store(playerId, blob))
+      await Promise.all(photoPromises)
+    } catch (err) {
+      photosError = err instanceof Error ? err : new Error(String(err))
+      console.error('executeImport: photos storage failed:', photosError)
+    }
+
+    if (photosError) {
+      toast("Données importées mais certaines photos n'ont pas pu être restaurées.", 'error')
+    }
   }
 
   public async importDB(
@@ -350,30 +437,67 @@ export class Orchestrator {
       target: HTMLInputElement
     }
   ) {
-    const input = event.target || event.currentTarget
-    const files = input?.files
-    if (!files) {
+    let uint8: Uint8Array
+    try {
+      uint8 = await this.readImportFile(event)
+    } catch (error) {
+      console.error('importDB: file read failed:', error)
       toast('Impossible de lire les données.', 'error')
       return
     }
 
-    const file = files[0]
-
-    if (!file) {
-      toast('Impossible de lire les données.', 'error')
+    let parseResult: { rawData: GlobalDB; photos?: Map<string, Blob> }
+    try {
+      parseResult = await this.parseImportData(uint8)
+    } catch (error) {
+      console.error('importDB: parse failed:', error)
+      toast('Données non valides.', 'error')
       return
     }
 
-    const reader = new FileReader()
+    const { rawData, photos } = parseResult
 
-    reader.onload = (event) => {
-      this.onImportDBLoad(event)
-    }
-    reader.onerror = (event) => {
-      this.onImportDBError(event)
+    const proced = await confirmAction(
+      'Import DB',
+      `Vous êtes sur le point d\u2019importer ${rawData?.players.length || 0} joueurs, ${rawData?.teams.length || 0} équipes et ${rawData?.matchs.length || 0} matchs.`
+    )
+    if (!proced) {
+      return
     }
 
-    reader.readAsText(file, 'UTF-8')
+    const cleanUpBefore = await confirmAction('Import DB', 'Voulez-vous écraser toutes les données ?')
+    if (cleanUpBefore) {
+      await this.doClearDB()
+    }
+
+    try {
+      await this.executeImport(rawData, photos)
+      toast('Import des nouvelles données réussi !', 'success')
+    } catch (error) {
+      console.error('importDB: executeImport failed:', error)
+      toast("Impossible d'importer les données.", 'error')
+    }
+  }
+
+  public get Photos() {
+    return {
+      store: async (playerId: string, blob: Blob) => {
+        await storePhoto(playerId, blob)
+        const player = this.getPlayer(playerId)
+        if (player) {
+          player.hasPhoto = true
+        }
+      },
+      delete: async (playerId: string) => {
+        await deletePhoto(playerId)
+        const player = this.getPlayer(playerId)
+        if (player) {
+          player.hasPhoto = false
+        }
+      },
+      hasPhoto,
+      getAll: getAllPhotoEntries,
+    }
   }
 
   public blink(duration: number): Promise<void> {

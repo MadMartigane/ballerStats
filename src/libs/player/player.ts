@@ -33,6 +33,7 @@ export default class Player {
   public licenseNumber?: string
   public birthDay?: Date
   public nicName?: string
+  public hasPhoto: boolean = false
 
   constructor(data?: PlayerRawData) {
     this.#id = data?.id || getUniqId()
@@ -69,6 +70,8 @@ export default class Player {
     if (data.birthDay) {
       this.birthDay = new Date(data.birthDay)
     }
+
+    this.hasPhoto = data.hasPhoto ?? false
   }
 
   public getRawData(): PlayerRawData {
@@ -99,6 +102,8 @@ export default class Player {
     if (this.birthDay) {
       data.birthDay = this.birthDay.getTime()
     }
+
+    data.hasPhoto = this.hasPhoto
 
     return data
   }

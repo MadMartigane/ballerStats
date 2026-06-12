@@ -4,6 +4,7 @@ import { For, Show, createMemo } from 'solid-js'
 import { ROUTE_PLAYERS } from '../../libs/menu/routes'
 import type Player from '../../libs/player'
 import { players } from '../../libs/players-store'
+import BsAvatar from '../avatar/avatar'
 import BsEmptyPlayerFallback from '../empty-player-fallback'
 
 function sortPlayersByJersey(playersList: Array<Player>): Array<Player> {
@@ -30,7 +31,12 @@ export default function BsTrombi() {
           <For each={sortedPlayers()}>
             {(player) => (
               <div class="flex flex-row items-center gap-4 rounded-lg bg-base-300 p-3">
-                <div class="h-20 w-20 shrink-0 border border-base-300 bg-base-200" />
+                <BsAvatar
+                  hasPhoto={player.hasPhoto}
+                  displayName={player.nicName || player.firstName || '?'}
+                  playerId={player.id}
+                  size={80}
+                />
                 <div>
                   <p class="font-bold">
                     {player.lastName} {player.firstName}

@@ -8,7 +8,9 @@ import orchestrator from '../../libs/orchestrator/orchestrator'
 import type { PlayerRawData } from '../../libs/player'
 import Player, { LICENSE_NUMBER_MAX_LENGTH } from '../../libs/player'
 import { players } from '../../libs/players-store'
-import { scrollBottom, scrollTop } from '../../libs/utils'
+import { scrollBottom, scrollTop, toast } from '../../libs/utils'
+import BsPhotoUpload from '../photo-upload/photo-upload'
+import { deletePhotoAndFlag, setPhotoAndFlag } from '../../libs/photo-store/photo-store'
 import BsCard from '../card'
 import BsEmptyPlayerFallback from '../empty-player-fallback'
 import BsInput from '../input'
@@ -20,6 +22,8 @@ const canAddPlayer: MadSignal<boolean> = new MadSignal(false)
 const playerLength: MadSignal<number> = new MadSignal(orchestrator.Players.length)
 
 let currentPlayer: Player | null = null
+const pendingPhotoBlob: MadSignal<Blob | undefined> = new MadSignal(undefined)
+const pendingPhotoDelete: MadSignal<boolean> = new MadSignal(false)
 
 bsEventBus.addEventListener('BS::PLAYERS::CHANGE', () => {
   playerLength.set(orchestrator.Players.length)
@@ -39,9 +43,28 @@ function toggleAddPlayer(value: boolean) {
   isAddingPlayer.set(value)
 }
 
-function registerPlayer() {
+function resetPhotoState() {
+  pendingPhotoBlob.set(undefined)
+  pendingPhotoDelete.set(false)
+}
+
+function resetCurrentPlayer() {
+  currentPlayer = null
+  canAddPlayer.set(false)
+}
+
+async function registerPlayer() {
   if (!currentPlayer || !currentPlayer.isRegisterable) {
     return
+  }
+
+  const blob = pendingPhotoBlob.get()
+  const isDelete = pendingPhotoDelete.get()
+
+  if (blob) {
+    await setPhotoAndFlag(currentPlayer, blob)
+  } else if (isDelete && currentPlayer.hasPhoto) {
+    await deletePhotoAndFlag(currentPlayer)
   }
 
   if (isEditingNewPlayer) {
@@ -51,15 +74,15 @@ function registerPlayer() {
   }
 
   toggleAddPlayer(false)
-  currentPlayer = null
-  canAddPlayer.set(false)
+  resetCurrentPlayer()
+  resetPhotoState()
 }
 
 function editPlayer(player: Player) {
   isEditingNewPlayer = false
   currentPlayer = new Player(player.getRawData())
   canAddPlayer.set(currentPlayer.isRegisterable)
-
+  resetPhotoState()
   toggleAddPlayer(true)
 }
 
@@ -80,6 +103,9 @@ function renderAddPlayerButton(onTrombiClick: () => void) {
           class="btn btn-primary"
           onClick={() => {
             isEditingNewPlayer = true
+            currentPlayer = new Player()
+            canAddPlayer.set(false)
+            resetPhotoState()
             toggleAddPlayer(true)
             scrollTop()
           }}
@@ -88,11 +114,7 @@ function renderAddPlayerButton(onTrombiClick: () => void) {
           <UserPlus />
           Ajouter un joueur
         </button>
-        <button
-          class="btn btn-secondary"
-          onClick={onTrombiClick}
-          type="button"
-        >
+        <button class="btn btn-secondary" onClick={onTrombiClick} type="button">
           <LayoutGrid />
           Trombinoscope
         </button>
@@ -112,6 +134,21 @@ function renderAddingPlayerCard() {
     info: 'Les nom, prénom et numéro de maillot sont obligatoires',
     body: (
       <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
+        <Show when={currentPlayer?.id}>
+          <BsPhotoUpload
+            hasPhoto={currentPlayer?.hasPhoto ?? false}
+            onChange={(_hasPhoto: boolean, blob?: Blob) => {
+              if (blob) {
+                pendingPhotoBlob.set(blob)
+                pendingPhotoDelete.set(false)
+              } else {
+                pendingPhotoBlob.set(undefined)
+                pendingPhotoDelete.set(true)
+              }
+            }}
+            playerId={currentPlayer?.id}
+          />
+        </Show>
         {BsInput({
           type: 'text',
           label: 'Nom',
@@ -166,8 +203,8 @@ function renderAddingPlayerCard() {
           class="btn btn-primary btn-wide"
           onClick={() => {
             toggleAddPlayer(false)
-            currentPlayer = null
-            canAddPlayer.set(false)
+            resetCurrentPlayer()
+            resetPhotoState()
             scrollBottom()
           }}
           type="button"
@@ -181,7 +218,8 @@ function renderAddingPlayerCard() {
           disabled={!canAddPlayer.get()}
           onClick={() => {
             registerPlayer()
-            scrollBottom()
+              .then(() => scrollBottom())
+              .catch(() => toast("Erreur lors de l'enregistrement du joueur.", 'error'))
           }}
           type="button"
         >

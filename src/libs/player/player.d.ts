@@ -6,5 +6,5 @@ export type PlayerRawData = {
   licenseNumber?: string
   nicName?: string
   birthDay?: number // timestamp
-  // TODO: id photo
+  hasPhoto?: boolean
 }
