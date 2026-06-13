@@ -1,4 +1,4 @@
-import { createSignal, mergeProps, Show } from 'solid-js'
+import { createEffect, createSignal, mergeProps, Show } from 'solid-js'
 import type { BsInlineEditableTitleProps } from './inline-editable-title.d'
 
 const DEFAULT_MAX_LENGTH = 50
@@ -19,6 +19,15 @@ export default function BsInlineEditableTitle(props: BsInlineEditableTitleProps)
 
   const headingClass = HEADING_CLASSES[data.headingLevel]
   const editAriaLabel = `Modifier : ${data.ariaLabel}`
+
+  let inputRef!: HTMLInputElement
+
+  createEffect(() => {
+    if (isEditing() && inputRef) {
+      inputRef.focus()
+      inputRef.select()
+    }
+  })
 
   function startEditing() {
     setDraft(data.value)
@@ -76,14 +85,11 @@ export default function BsInlineEditableTitle(props: BsInlineEditableTitleProps)
           class="input input-sm w-full"
           maxlength={data.maxLength}
           onBlur={save}
-          onFocus={(event) => {
-            event.currentTarget.select()
-          }}
           onInput={(event) => {
             setDraft(event.currentTarget.value)
           }}
           onKeyDown={onKeyDown}
-          ref={(el) => el.focus()}
+          ref={inputRef}
           type="text"
           value={draft()}
         />
