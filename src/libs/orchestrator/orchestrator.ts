@@ -14,9 +14,17 @@ import {
 import Player from '../player'
 import Players from '../players'
 import { soundTab } from '../sounds'
-import { getStoredMatchs, getStoredPlayers, getStoredTeams, storeMatchs, storePlayers, storeTeams } from '../store'
+import {
+  getStoredMatchs,
+  getStoredPlayers,
+  getStoredTeams,
+  storeMatchs,
+  storePlayers,
+  storeTeams,
+} from '../store'
 import Team from '../team'
 import Teams from '../teams'
+import { persistTitles, titles, DEFAULT_TITLES } from '../trombi-titles-store'
 import { confirmAction, mount, toast, unmount } from '../utils'
 import { type ThemeVibration, vibrate } from '../vibrator'
 import type { GlobalDB } from './orchestrator.d'
@@ -183,10 +191,11 @@ export class Orchestrator {
     this.removeAllPlayers()
     this.removeAllTeams()
     this.removeAllMatchs()
+    await persistTitles({ ...DEFAULT_TITLES })
     await clearAllPhotos()
   }
 
-  private doOverwriteDB(json: GlobalDB) {
+  private async doOverwriteDB(json: GlobalDB) {
     for (const playerData of json.players) {
       const newPlayer = new Player(playerData)
       this.Players.add(newPlayer)
@@ -201,6 +210,8 @@ export class Orchestrator {
       const newMatch = new Match(matchData)
       this.Matchs.add(newMatch)
     }
+
+    await persistTitles(json.trombiTitles || { ...DEFAULT_TITLES })
   }
 
   public get Players() {
@@ -295,6 +306,7 @@ export class Orchestrator {
       players: this.Players.players.map((player) => player.getRawData()),
       teams: this.Teams.teams.map((team) => team.getRawData()),
       matchs: this.Matchs.matchs.map((match) => match.getRawData()),
+      trombiTitles: titles,
     }
 
     const files: Record<string, Uint8Array> = {
@@ -411,7 +423,7 @@ export class Orchestrator {
   }
 
   private async executeImport(rawData: GlobalDB, photos?: Map<string, Blob>): Promise<void> {
-    this.doOverwriteDB(rawData)
+    await this.doOverwriteDB(rawData)
 
     if (!photos || photos.size === 0) {
       return

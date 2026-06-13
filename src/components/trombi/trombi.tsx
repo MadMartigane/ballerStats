@@ -1,14 +1,16 @@
 import { useNavigate } from '@solidjs/router'
-import { ArrowLeft, LayoutGrid } from 'lucide-solid'
+import { ArrowLeft } from 'lucide-solid'
 import { createMemo, For, Show } from 'solid-js'
 import { ROUTE_PLAYERS } from '../../libs/menu/routes'
 import type Player from '../../libs/player'
 import { hasJerseyNumber } from '../../libs/player/player'
 import { players } from '../../libs/players-store'
+import { updateTitle, titles } from '../../libs/trombi-titles-store'
 import BsEmptyPlayerFallback from '../empty-player-fallback'
+import BsInlineEditableTitle from '../inline-editable-title/inline-editable-title'
 import BsTrombiPlayerItem from './trombi-player-item'
 
-function sortPlayersByJersey(playersList: Array<Player>): Array<Player> {
+function sortPlayersByJersey(playersList: Player[]): Player[] {
   const withJersey = playersList
     .filter((p) => hasJerseyNumber(p))
     .sort((a, b) => Number.parseInt(a.jerseyNumber, 10) - Number.parseInt(b.jerseyNumber, 10))
@@ -22,10 +24,22 @@ export default function BsTrombi() {
 
   return (
     <div>
-      <h2 class="my-4 flex flex-row items-center gap-2 print:hidden">
-        <LayoutGrid class="h-8 w-8" />
-        Trombinoscope
-      </h2>
+      <div class="my-4 flex flex-col items-center gap-1">
+        <BsInlineEditableTitle
+          ariaLabel="Nom du club"
+          headingLevel="h1"
+          onSave={(value) => updateTitle('clubName', value)}
+          placeholder="Nom du club"
+          value={titles.clubName}
+        />
+        <BsInlineEditableTitle
+          ariaLabel="Nom de l'équipe"
+          headingLevel="h2"
+          onSave={(value) => updateTitle('teamName', value)}
+          placeholder="Nom de l'équipe"
+          value={titles.teamName}
+        />
+      </div>
 
       <Show fallback={<BsEmptyPlayerFallback />} when={sortedPlayers().length > 0}>
         <div class="flex flex-col gap-3">

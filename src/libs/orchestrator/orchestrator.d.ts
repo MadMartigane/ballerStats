@@ -1,10 +1,12 @@
 import type { MatchRawData } from '../match'
 import type { PlayerRawData } from '../player'
 import type { TeamRawData } from '../team'
+import type { TrombiTitles } from '../trombi-titles'
 
-export type GlobalDB = {
+export interface GlobalDB {
   timestamp: number
-  players: Array<PlayerRawData>
-  teams: Array<TeamRawData>
-  matchs: Array<MatchRawData>
+  players: PlayerRawData[]
+  teams: TeamRawData[]
+  matchs: MatchRawData[]
+  trombiTitles?: TrombiTitles
 }

@@ -1,4 +1,4 @@
-export type StoredData<T> = {
+export interface StoredItemData<T> {
+  data: T
   lastRecord: number
-  data: Array<T>
 }

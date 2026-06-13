@@ -1,98 +1,61 @@
 import type { MatchRawData } from '../match'
 import type { PlayerRawData } from '../player'
 import type { TeamRawData } from '../team'
-import type { StoredData } from './store.d'
+import type { StoredItemData } from './store.d'
 
-const STORAGE_PLAYERS_KEY = 'BS_PLAYERS'
-const STORAGE_TEAMS_KEY = 'BS_TEAMS'
-const STORAGE_MATCHS_KEY = 'BS_MATCHS'
+export const STORAGE_PLAYERS_KEY = 'BS_PLAYERS'
+export const STORAGE_TEAMS_KEY = 'BS_TEAMS'
+export const STORAGE_MATCHS_KEY = 'BS_MATCHS'
+export const STORAGE_TROMBI_TITLES_KEY = 'BS_TROMBI_TITLES'
 
-export async function storePlayers(players: Array<PlayerRawData>, lastRecord?: number | null) {
-  const promise: Promise<void> = new Promise((resolve) => {
-    localStorage.setItem(
-      STORAGE_PLAYERS_KEY,
-      JSON.stringify({
-        lastRecord: lastRecord || Date.now(),
-        data: players,
-      })
-    )
+export function storeData<T>(key: string, data: T, lastRecord?: number | null): Promise<void> {
+  return new Promise((resolve) => {
+    localStorage.setItem(key, JSON.stringify({ lastRecord: lastRecord || Date.now(), data }))
     resolve()
   })
-
-  return promise
 }
 
-export async function storeTeams(teams: Array<TeamRawData>, lastRecord?: number | null) {
-  const promise: Promise<void> = new Promise((resolve) => {
-    localStorage.setItem(
-      STORAGE_TEAMS_KEY,
-      JSON.stringify({
-        lastRecord: lastRecord || Date.now(),
-        data: teams,
-      })
-    )
-    resolve()
-  })
-
-  return promise
-}
-
-export async function storeMatchs(matchs: Array<MatchRawData>, lastRecord?: number | null) {
-  const promise: Promise<void> = new Promise((resolve) => {
-    localStorage.setItem(
-      STORAGE_MATCHS_KEY,
-      JSON.stringify({
-        lastRecord: lastRecord || Date.now(),
-        data: matchs,
-      })
-    )
-    resolve()
-  })
-
-  return promise
-}
-
-export async function getStoredPlayers(): Promise<StoredData<PlayerRawData> | null> {
-  const promise: Promise<StoredData<PlayerRawData> | null> = new Promise((resolve) => {
-    const stringPlayers = localStorage.getItem(STORAGE_PLAYERS_KEY)
-    if (!stringPlayers) {
+export function getStoredData<T>(key: string): Promise<StoredItemData<T> | null> {
+  return new Promise((resolve) => {
+    const raw = localStorage.getItem(key)
+    if (!raw) {
       resolve(null)
       return
     }
-
-    const storedPlayers: StoredData<PlayerRawData> = JSON.parse(stringPlayers)
-    resolve(storedPlayers)
+    resolve(JSON.parse(raw) as StoredItemData<T>)
   })
-
-  return promise
 }
 
-export async function getStoredTeams(): Promise<StoredData<TeamRawData> | null> {
-  const promise: Promise<StoredData<TeamRawData> | null> = new Promise((resolve) => {
-    const stringTeams = localStorage.getItem(STORAGE_TEAMS_KEY)
-    if (!stringTeams) {
-      resolve(null)
-      return
-    }
-
-    const storedTeams: StoredData<TeamRawData> = JSON.parse(stringTeams)
-    resolve(storedTeams)
-  })
-
-  return promise
+export function getStoredDataSync<T>(key: string): StoredItemData<T> | null {
+  const raw = localStorage.getItem(key)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as StoredItemData<T>
+  } catch {
+    return null
+  }
 }
 
-export async function getStoredMatchs(): Promise<StoredData<MatchRawData> | null> {
-  const promise: Promise<StoredData<MatchRawData> | null> = new Promise((resolve) => {
-    const stringMatchs = localStorage.getItem(STORAGE_MATCHS_KEY)
-    if (!stringMatchs) {
-      resolve(null)
-      return
-    }
+export function storePlayers(players: PlayerRawData[], lastRecord?: number | null): Promise<void> {
+  return storeData(STORAGE_PLAYERS_KEY, players, lastRecord)
+}
 
-    const storedMatchs: StoredData<MatchRawData> = JSON.parse(stringMatchs)
-    resolve(storedMatchs)
-  })
+export function storeTeams(teams: TeamRawData[], lastRecord?: number | null): Promise<void> {
+  return storeData(STORAGE_TEAMS_KEY, teams, lastRecord)
+}
 
-  return promise
+export function storeMatchs(matchs: MatchRawData[], lastRecord?: number | null): Promise<void> {
+  return storeData(STORAGE_MATCHS_KEY, matchs, lastRecord)
+}
+
+export function getStoredPlayers(): Promise<StoredItemData<PlayerRawData[]> | null> {
+  return getStoredData<PlayerRawData[]>(STORAGE_PLAYERS_KEY)
+}
+
+export function getStoredTeams(): Promise<StoredItemData<TeamRawData[]> | null> {
+  return getStoredData<TeamRawData[]>(STORAGE_TEAMS_KEY)
+}
+
+export function getStoredMatchs(): Promise<StoredItemData<MatchRawData[]> | null> {
+  return getStoredData<MatchRawData[]>(STORAGE_MATCHS_KEY)
 }

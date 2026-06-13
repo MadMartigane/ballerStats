@@ -5,7 +5,7 @@ import type { BsTrombiPlayerItemProps } from './trombi-player-item.d'
 
 export default function BsTrombiPlayerItem(props: BsTrombiPlayerItemProps) {
   return (
-    <div class="flex flex-row items-center gap-4 rounded-lg bg-base-300 p-3 break-inside-avoid">
+    <div class="flex break-inside-avoid flex-row items-center gap-4 rounded-lg bg-base-300 p-3">
       <BsAvatar
         displayName={props.player.nicName || props.player.firstName || '?'}
         hasPhoto={props.player.hasPhoto}
@@ -13,12 +13,12 @@ export default function BsTrombiPlayerItem(props: BsTrombiPlayerItemProps) {
         size={96}
       />
       <Show when={hasJerseyNumber(props.player)}>
-        <div class="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-primary text-2xl font-bold text-primary-content">
+        <div class="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-primary font-bold text-2xl text-primary-content">
           {props.player.jerseyNumber}
         </div>
       </Show>
       <div class="min-w-0">
-        <p class="text-2xl font-bold">
+        <p class="font-bold text-2xl">
           {props.player.lastName} {props.player.firstName}
         </p>
         <p class="text-base-content/70 text-xl">Licence : {props.player.licenseNumber || '—'}</p>
