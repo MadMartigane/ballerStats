@@ -1,4 +1,4 @@
-import { createSignal, Show } from 'solid-js'
+import { createSignal, mergeProps, Show } from 'solid-js'
 import type { BsInlineEditableTitleProps } from './inline-editable-title.d'
 
 const DEFAULT_MAX_LENGTH = 50
@@ -9,10 +9,7 @@ const HEADING_CLASSES = {
 } as const
 
 function adaptor(options: BsInlineEditableTitleProps): BsInlineEditableTitleProps {
-  return {
-    ...options,
-    maxLength: options.maxLength ?? DEFAULT_MAX_LENGTH,
-  }
+  return mergeProps({ maxLength: DEFAULT_MAX_LENGTH }, options)
 }
 
 export default function BsInlineEditableTitle(props: BsInlineEditableTitleProps) {
@@ -29,9 +26,13 @@ export default function BsInlineEditableTitle(props: BsInlineEditableTitleProps)
   }
 
   function save() {
+    // Guard: onBlur re-fires when the input is unmounted after Enter saves
+    if (!isEditing()) {
+      return
+    }
     const trimmed = draft().trim()
-    setIsEditing(false)
     data.onSave(trimmed)
+    setIsEditing(false)
   }
 
   function cancel() {
@@ -72,17 +73,17 @@ export default function BsInlineEditableTitle(props: BsInlineEditableTitleProps)
       >
         <input
           aria-label={data.ariaLabel}
-          autofocus
           class="input input-sm w-full"
           maxlength={data.maxLength}
           onBlur={save}
           onFocus={(event) => {
-            event.target.select()
+            event.currentTarget.select()
           }}
           onInput={(event) => {
             setDraft(event.currentTarget.value)
           }}
           onKeyDown={onKeyDown}
+          ref={(el) => el.focus()}
           type="text"
           value={draft()}
         />
