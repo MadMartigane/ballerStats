@@ -1,5 +1,5 @@
 import { A } from '@solidjs/router'
-import { Camera, Trash, UserPen } from 'lucide-solid'
+import { LayoutGrid, Trash, UserPen } from 'lucide-solid'
 import { For, Show } from 'solid-js'
 import { buildTeamTrombiPath } from '../../libs/menu/routes'
 import orchestrator from '../../libs/orchestrator/orchestrator'
@@ -33,7 +33,7 @@ export default function BsTeam(props: BsTeamProps) {
               class="btn btn-square btn-secondary"
               href={buildTeamTrombiPath(team.id)}
             >
-              <Camera />
+              <LayoutGrid />
             </A>
             <Show when={props.onEdit}>
               <button
