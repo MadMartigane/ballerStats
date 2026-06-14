@@ -13,7 +13,7 @@ export default function BsTrombiPlayerItem(props: BsTrombiPlayerItemProps) {
         size={96}
       />
       <Show when={hasJerseyNumber(props.player)}>
-        <div class="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-primary font-bold text-2xl text-primary-content">
+        <div class="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-primary font-bold text-2xl text-primary-content print:h-24 print:w-24 print:text-5xl">
           {props.player.jerseyNumber}
         </div>
       </Show>
@@ -21,7 +21,9 @@ export default function BsTrombiPlayerItem(props: BsTrombiPlayerItemProps) {
         <p class="font-bold text-2xl">
           {props.player.lastName} {props.player.firstName}
         </p>
-        <p class="text-base-content/70 text-xl">Licence : {props.player.licenseNumber || '—'}</p>
+        <p class="text-base-content/70 text-xl">
+          Licence : <span class="print:font-bold">{props.player.licenseNumber || '—'}</span>
+        </p>
       </div>
     </div>
   )
