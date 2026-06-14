@@ -119,3 +119,11 @@ export default class Player {
 export function hasJerseyNumber(player: Player): player is Player & { jerseyNumber: string } {
   return player.jerseyNumber !== undefined && player.jerseyNumber !== ''
 }
+
+export function sortPlayersByJersey(playersList: Player[]): Player[] {
+  const withJersey = playersList
+    .filter((p) => hasJerseyNumber(p))
+    .sort((a, b) => Number.parseInt(a.jerseyNumber, 10) - Number.parseInt(b.jerseyNumber, 10))
+  const withoutJersey = playersList.filter((p) => !hasJerseyNumber(p))
+  return [...withJersey, ...withoutJersey]
+}

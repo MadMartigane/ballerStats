@@ -1,5 +1,7 @@
-import { Trash, UserPen } from 'lucide-solid'
+import { A } from '@solidjs/router'
+import { Camera, Trash, UserPen } from 'lucide-solid'
 import { For, Show } from 'solid-js'
+import { buildTeamTrombiPath } from '../../libs/menu/routes'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import type Team from '../../libs/team'
 import { confirmAction, scrollTop } from '../../libs/utils'
@@ -26,6 +28,13 @@ export default function BsTeam(props: BsTeamProps) {
       <BsTile
         footer={
           <>
+            <A
+              aria-label={`Trombinoscope de l'équipe ${team.name || '(sans nom)'}`}
+              class="btn btn-square btn-secondary"
+              href={buildTeamTrombiPath(team.id)}
+            >
+              <Camera />
+            </A>
             <Show when={props.onEdit}>
               <button
                 class="btn btn-square btn-secondary"

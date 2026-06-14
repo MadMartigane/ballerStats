@@ -28,7 +28,9 @@ export function getStoredData<T>(key: string): Promise<StoredItemData<T> | null>
 
 export function getStoredDataSync<T>(key: string): StoredItemData<T> | null {
   const raw = localStorage.getItem(key)
-  if (!raw) return null
+  if (!raw) {
+    return null
+  }
   try {
     return JSON.parse(raw) as StoredItemData<T>
   } catch {

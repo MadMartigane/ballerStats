@@ -5,7 +5,7 @@ import BsIconBasketballPlayer from '../../components/icons/basketball-player'
 import Home from '../../pages/home'
 import type { DaisyVariant } from '../daisy'
 import type { MenuEntry } from './menu.d'
-import { ROUTE_PLAYERS, ROUTE_TROMBI } from './routes'
+import { ROUTE_PLAYERS, ROUTE_TEAMS, ROUTE_TROMBI, ROUTE_TROMBI_TEAM } from './routes'
 
 export const HASH_REPLACE_PATTERN = /^#\//
 
@@ -47,7 +47,14 @@ export const NAVIGATION_MENU_ENTRIES: Array<MenuEntry> = [
     isMenuEntry: false,
   },
   {
-    path: '/teams',
+    path: ROUTE_TROMBI_TEAM,
+    label: 'Trombinoscope équipe',
+    icon: () => <LayoutGrid />,
+    component: lazy(() => import('../../pages/trombi-team')),
+    isMenuEntry: false,
+  },
+  {
+    path: ROUTE_TEAMS,
     label: 'Équipes',
     icon: () => <Users />,
     component: lazy(() => import('../../pages/teams')),

@@ -11,20 +11,13 @@ import {
   PHOTO_MIME_TYPE,
   storePhoto,
 } from '../photo-store/photo-store'
-import Player from '../player'
+import Player, { sortPlayersByJersey } from '../player'
 import Players from '../players'
 import { soundTab } from '../sounds'
-import {
-  getStoredMatchs,
-  getStoredPlayers,
-  getStoredTeams,
-  storeMatchs,
-  storePlayers,
-  storeTeams,
-} from '../store'
+import { getStoredMatchs, getStoredPlayers, getStoredTeams, storeMatchs, storePlayers, storeTeams } from '../store'
 import Team from '../team'
 import Teams from '../teams'
-import { persistTitles, titles, DEFAULT_TITLES } from '../trombi-titles-store'
+import { DEFAULT_TITLES, persistTitles, titles } from '../trombi-titles-store'
 import { confirmAction, mount, toast, unmount } from '../utils'
 import { type ThemeVibration, vibrate } from '../vibrator'
 import type { GlobalDB } from './orchestrator.d'
@@ -288,14 +281,14 @@ export class Orchestrator {
     }
   }
 
-  public getJerseySortedPlayers(playerIds?: Array<string>) {
+  public getJerseySortedPlayers(playerIds?: Array<string>): Player[] {
     if (!playerIds) {
       return []
     }
 
-    const players = playerIds.map((playerId) => this.getPlayer(playerId))
+    const players = playerIds.map((playerId) => this.getPlayer(playerId)).filter((p): p is Player => p !== null)
 
-    return players.sort((a, b) => Number.parseInt(a?.jerseyNumber || '0') - Number.parseInt(b?.jerseyNumber || '0'))
+    return sortPlayersByJersey(players)
   }
 
   public async exportDB() {

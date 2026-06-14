@@ -4,9 +4,9 @@ import type { TeamRawData } from '../team'
 import type { TrombiTitles } from '../trombi-titles'
 
 export interface GlobalDB {
-  timestamp: number
+  matchs: MatchRawData[]
   players: PlayerRawData[]
   teams: TeamRawData[]
-  matchs: MatchRawData[]
+  timestamp: number
   trombiTitles?: TrombiTitles
 }
