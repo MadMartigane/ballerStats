@@ -22,6 +22,8 @@ import { confirmAction, mount, toast, unmount } from '../utils'
 import { type ThemeVibration, vibrate } from '../vibrator'
 import type { GlobalDB } from './orchestrator.d'
 
+export const DB_FILE_EXTENSION = '.bstat' as const
+
 const THEME_VIBRATION_TO_DURATION: { [key in ThemeVibration]: number } = {
   single: 100,
   double: 100,
@@ -325,7 +327,7 @@ export class Orchestrator {
     const blob = new Blob([zipped], { type: 'application/octet-stream' })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
-    const fileName = `baller-stats-export-db-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}.bstat`
+    const fileName = `baller-stats-export-db-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}${DB_FILE_EXTENSION}`
     anchor.setAttribute('href', url)
     anchor.setAttribute('download', fileName)
     anchor.style.visibility = 'hidden'

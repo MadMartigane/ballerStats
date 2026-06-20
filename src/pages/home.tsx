@@ -11,7 +11,7 @@ import BsIconBasketballPlayer from '../components/icons/basketball-player'
 import BsIconPersonPlay from '../components/icons/person-play'
 import BsToggle from '../components/toggle'
 import MadSignal from '../libs/mad-signal'
-import orchestrator from '../libs/orchestrator/orchestrator'
+import orchestrator, { DB_FILE_EXTENSION } from '../libs/orchestrator/orchestrator'
 import { toast } from '../libs/utils'
 import { vibrate } from '../libs/vibrator'
 
@@ -65,7 +65,7 @@ export default function Home() {
         <label class="col-span-2" for="input-import-db">
           Restauration DB
           <input
-            accept="application/json"
+            accept={DB_FILE_EXTENSION}
             class="file-input file-input-bordered w-full max-w-xs"
             id="input-import-db"
             onChange={(
