@@ -55,6 +55,49 @@ src/
 - **Icons**: All imported from `lucide-solid` — check lucide.dev for available icons
 - **Deployment**: `pre-prod` and `prod` scripts copy to `/var/www/` paths — Linux-only
 
+## Design System
+
+### Boutons
+
+L'application utilise des éléments `<button>` natifs avec les classes DaisyUI (`btn`, `btn-primary`, `btn-square`, `btn-wide`, etc.). Aucune abstraction de composant n'est utilisée — ne pas recréer de composant `BsButton` au-dessus de `<button>`.
+
+#### Conventions d'icônes
+
+Les icônes proviennent de `lucide-solid`. Trois patrons sont autorisés :
+
+| # | Patron                | Règle                                                                            |
+|---|-----------------------|----------------------------------------------------------------------------------|
+| 1 | Icône + texte         | L'icône précède le texte (icône à GAUCHE).                                       |
+| 2 | Icône seule           | Bouton carré avec la classe `btn-square`, aucun texte.                           |
+| 3 | 2 icônes + texte      | Les deux icônes encadrent le texte (une à gauche, une à droite).                 |
+
+#### Exemples
+
+```tsx
+// Patron 1 : Icône + texte (icône à GAUCHE)
+<button class="btn btn-primary" type="button">
+  <Save />
+  Enregistrer
+</button>
+
+// Patron 2 : Icône seule (btn-square)
+<button class="btn btn-square" type="button">
+  <Trash />
+</button>
+
+// Patron 3 : 2 icônes encadrent le texte
+<button class="btn btn-primary" type="button">
+  <ChartLine />
+  Tableau des stats
+  <ChevronRight />
+</button>
+```
+
+#### Anti-patterns
+
+- ❌ Texte suivi de l'icône (icône à droite) pour un bouton à icône unique — sauf justification sémantique explicite (ex. action « suivant » avec flèche).
+- ❌ Icône seule sans la classe `btn-square`.
+- ❌ Recréer une abstraction `BsButton` (composant supprimé — cf. historique Git).
 
 # Ultracite Code Standards
 

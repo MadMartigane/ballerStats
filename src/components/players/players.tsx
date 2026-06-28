@@ -223,8 +223,8 @@ function renderAddingPlayerCard() {
           }}
           type="button"
         >
-          {isEditingNewPlayer ? 'Ajouter' : 'Enregistrer'}
           {isEditingNewPlayer ? <UserPlus /> : <Save />}
+          {isEditingNewPlayer ? 'Ajouter' : 'Enregistrer'}
         </button>
       </div>
     ),
