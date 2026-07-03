@@ -7,4 +7,6 @@ export type PlayerRawData = {
   nicName?: string
   birthDay?: number // timestamp
   hasPhoto?: boolean
+  phone?: string // player's direct phone number (optional — parents are primary contacts)
+  email?: string // player's direct email address (optional)
 }

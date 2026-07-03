@@ -1,5 +1,5 @@
 import { useNavigate } from '@solidjs/router'
-import { Contact, LayoutGrid, Save, UserPlus, X } from 'lucide-solid'
+import { Contact as ContactIcon, LayoutGrid, Save, UserPlus, X } from 'lucide-solid'
 import { For, Show } from 'solid-js'
 import bsEventBus from '../../libs/event-bus'
 import MadSignal from '../../libs/mad-signal'
@@ -11,6 +11,7 @@ import Player, { LICENSE_NUMBER_MAX_LENGTH } from '../../libs/player'
 import { players } from '../../libs/players-store'
 import { scrollBottom, scrollTop, toast } from '../../libs/utils'
 import BsCard from '../card'
+import BsContactsEditor from '../contacts-editor'
 import BsEmptyPlayerFallback from '../empty-player-fallback'
 import BsInput from '../input'
 import BsPhotoUpload from '../photo-upload/photo-upload'
@@ -127,75 +128,98 @@ function renderAddingPlayerCard() {
   return BsCard({
     title: (
       <p class="flex flex-row gap-1">
-        <Contact />
+        <ContactIcon />
         {isEditingNewPlayer ? 'Nouveau joueur' : 'Édition du joueur'}
       </p>
     ),
     info: 'Les nom, prénom et numéro de maillot sont obligatoires',
     body: (
-      <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
-        <Show when={currentPlayer?.id}>
-          <BsPhotoUpload
-            hasPhoto={currentPlayer?.hasPhoto ?? false}
-            onChange={(_hasPhoto: boolean, blob?: Blob) => {
-              if (blob) {
-                pendingPhotoBlob.set(blob)
-                pendingPhotoDelete.set(false)
-              } else {
-                pendingPhotoBlob.set(undefined)
-                pendingPhotoDelete.set(true)
-              }
-            }}
-            playerId={currentPlayer?.id}
-          />
+      <>
+        <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
+          <Show when={currentPlayer?.id}>
+            <BsPhotoUpload
+              hasPhoto={currentPlayer?.hasPhoto ?? false}
+              onChange={(_hasPhoto: boolean, blob?: Blob) => {
+                if (blob) {
+                  pendingPhotoBlob.set(blob)
+                  pendingPhotoDelete.set(false)
+                } else {
+                  pendingPhotoBlob.set(undefined)
+                  pendingPhotoDelete.set(true)
+                }
+              }}
+              playerId={currentPlayer?.id}
+            />
+          </Show>
+          {BsInput({
+            type: 'text',
+            label: 'Nom',
+            value: currentPlayer?.lastName,
+            placeholder: 'Dupont',
+            onChange: (value: string) => {
+              setNewPlayerData({ lastName: value })
+            },
+          })}
+          {BsInput({
+            type: 'text',
+            label: 'Prénom',
+            value: currentPlayer?.firstName,
+            placeholder: 'Charlie',
+            onChange: (value: string) => {
+              setNewPlayerData({ firstName: value })
+            },
+          })}
+          {BsInput({
+            type: 'text',
+            label: 'Numéro de maillot',
+            value: currentPlayer?.jerseyNumber,
+            placeholder: '01',
+            onChange: (value: string) => {
+              setNewPlayerData({ jerseyNumber: value })
+            },
+          })}
+          {BsInput({
+            type: 'text',
+            label: 'Surnom',
+            value: currentPlayer?.nicName,
+            placeholder: 'The B',
+            onChange: (value: string) => {
+              setNewPlayerData({ nicName: value })
+            },
+          })}
+          {BsInput({
+            type: 'text',
+            label: 'Numéro de licence',
+            maxLength: LICENSE_NUMBER_MAX_LENGTH,
+            placeholder: 'AB123456789',
+            value: currentPlayer?.licenseNumber,
+            onChange: (value: string) => {
+              setNewPlayerData({ licenseNumber: value })
+            },
+          })}
+          {BsInput({
+            type: 'text',
+            label: 'Téléphone',
+            value: currentPlayer?.phone,
+            placeholder: '06 12 34 56 78',
+            onChange: (value: string) => {
+              setNewPlayerData({ phone: value })
+            },
+          })}
+          {BsInput({
+            type: 'email',
+            label: 'Email',
+            value: currentPlayer?.email,
+            placeholder: 'joueur@example.com',
+            onChange: (value: string) => {
+              setNewPlayerData({ email: value })
+            },
+          })}
+        </form>
+        <Show when={!isEditingNewPlayer && currentPlayer?.id}>
+          <BsContactsEditor playerId={currentPlayer.id} />
         </Show>
-        {BsInput({
-          type: 'text',
-          label: 'Nom',
-          value: currentPlayer?.lastName,
-          placeholder: 'Dupont',
-          onChange: (value: string) => {
-            setNewPlayerData({ lastName: value })
-          },
-        })}
-        {BsInput({
-          type: 'text',
-          label: 'Prénom',
-          value: currentPlayer?.firstName,
-          placeholder: 'Charlie',
-          onChange: (value: string) => {
-            setNewPlayerData({ firstName: value })
-          },
-        })}
-        {BsInput({
-          type: 'text',
-          label: 'Numéro de maillot',
-          value: currentPlayer?.jerseyNumber,
-          placeholder: '01',
-          onChange: (value: string) => {
-            setNewPlayerData({ jerseyNumber: value })
-          },
-        })}
-        {BsInput({
-          type: 'text',
-          label: 'Surnom',
-          value: currentPlayer?.nicName,
-          placeholder: 'The B',
-          onChange: (value: string) => {
-            setNewPlayerData({ nicName: value })
-          },
-        })}
-        {BsInput({
-          type: 'text',
-          label: 'Numéro de licence',
-          maxLength: LICENSE_NUMBER_MAX_LENGTH,
-          placeholder: 'AB123456789',
-          value: currentPlayer?.licenseNumber,
-          onChange: (value: string) => {
-            setNewPlayerData({ licenseNumber: value })
-          },
-        })}
-      </form>
+      </>
     ),
     footer: (
       <div class="footer-buttons-container">

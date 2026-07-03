@@ -56,6 +56,20 @@ export function unmount(child: HTMLElement, parent?: HTMLElement | null) {
   })
 }
 
+/** Trigger a browser download of a Blob via a hidden anchor, using the shared mount/unmount pattern. */
+export function downloadBlob(blob: Blob, fileName: string): void {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+
+  anchor.setAttribute('href', url)
+  anchor.setAttribute('download', fileName)
+  anchor.style.visibility = 'hidden'
+  mount(anchor)
+  anchor.click()
+  unmount(anchor)
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 export async function confirmAction(
   title = 'Confirmation',
   message = 'Cette action est définitive, continuer ?',

@@ -34,6 +34,8 @@ export default class Player {
   public birthDay?: Date
   public nicName?: string
   public hasPhoto = false
+  public phone?: string
+  public email?: string
 
   constructor(data?: PlayerRawData) {
     this.#id = data?.id || getUniqId()
@@ -72,6 +74,8 @@ export default class Player {
     }
 
     this.hasPhoto = data.hasPhoto ?? false
+    this.phone = data.phone
+    this.email = data.email
   }
 
   public getRawData(): PlayerRawData {
@@ -101,6 +105,13 @@ export default class Player {
 
     if (this.birthDay) {
       data.birthDay = this.birthDay.getTime()
+    }
+
+    if (this.phone) {
+      data.phone = this.phone
+    }
+    if (this.email) {
+      data.email = this.email
     }
 
     data.hasPhoto = this.hasPhoto

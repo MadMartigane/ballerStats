@@ -1,4 +1,6 @@
 import { strToU8, unzip, zip } from 'fflate'
+import Contact from '../contact'
+import Contacts from '../contacts'
 import bsEventBus from '../event-bus'
 import Match from '../match'
 import Matchs from '../matchs'
@@ -14,11 +16,20 @@ import {
 import Player, { sortPlayersByJersey } from '../player'
 import Players from '../players'
 import { soundTab } from '../sounds'
-import { getStoredMatchs, getStoredPlayers, getStoredTeams, storeMatchs, storePlayers, storeTeams } from '../store'
+import {
+  getStoredContacts,
+  getStoredMatchs,
+  getStoredPlayers,
+  getStoredTeams,
+  storeContacts,
+  storeMatchs,
+  storePlayers,
+  storeTeams,
+} from '../store'
 import Team from '../team'
 import Teams from '../teams'
 import { DEFAULT_TITLES, persistTitles, titles } from '../trombi-titles-store'
-import { confirmAction, mount, toast, unmount } from '../utils'
+import { confirmAction, downloadBlob, toast } from '../utils'
 import { type ThemeVibration, vibrate } from '../vibrator'
 import type { GlobalDB } from './orchestrator.d'
 
@@ -41,14 +52,17 @@ export class Orchestrator {
   #players: Players = new Players()
   #teams = new Teams()
   #matchs = new Matchs()
-  #lastPlayersRecrod: number | null = null
-  #lastTeamsRecrod: number | null = null
-  #lastMatchsRecrod: number | null = null
+  #contacts = new Contacts()
+  #lastPlayersRecord: number | null = null
+  #lastTeamsRecord: number | null = null
+  #lastMatchsRecord: number | null = null
+  #lastContactsRecord: number | null = null
 
   constructor() {
     this.getStoredPlayers()
     this.getStoredTeams()
     this.getStoredMatchs()
+    this.getStoredContacts()
     this.installEventHandlers()
   }
 
@@ -64,23 +78,31 @@ export class Orchestrator {
     bsEventBus.addEventListener('BS::MATCHS::CHANGE', () => {
       this.storeMatchs()
     })
+
+    bsEventBus.addEventListener('BS::CONTACTS::CHANGE', () => {
+      this.storeContacts()
+    })
   }
-  private updateLastPlayersRecrod() {
-    this.#lastPlayersRecrod = Date.now()
+  private updateLastPlayersRecord() {
+    this.#lastPlayersRecord = Date.now()
   }
 
-  private updateLastTeamsRecrod() {
-    this.#lastTeamsRecrod = Date.now()
+  private updateLastTeamsRecord() {
+    this.#lastTeamsRecord = Date.now()
   }
 
-  private updateLastMatchsRecrod() {
-    this.#lastMatchsRecrod = Date.now()
+  private updateLastMatchsRecord() {
+    this.#lastMatchsRecord = Date.now()
+  }
+
+  private updateLastContactsRecord() {
+    this.#lastContactsRecord = Date.now()
   }
 
   private storePlayers() {
-    this.updateLastPlayersRecrod()
+    this.updateLastPlayersRecord()
 
-    storePlayers(this.#players.getRawData(), this.#lastPlayersRecrod)
+    storePlayers(this.#players.getRawData(), this.#lastPlayersRecord)
       .then(() => {
         this.throwSynchroSuccessEvent()
       })
@@ -90,9 +112,9 @@ export class Orchestrator {
   }
 
   private storeTeams() {
-    this.updateLastTeamsRecrod()
+    this.updateLastTeamsRecord()
 
-    storeTeams(this.#teams.getRawData(), this.#lastTeamsRecrod)
+    storeTeams(this.#teams.getRawData(), this.#lastTeamsRecord)
       .then(() => {
         this.throwSynchroSuccessEvent()
       })
@@ -102,9 +124,21 @@ export class Orchestrator {
   }
 
   private storeMatchs() {
-    this.updateLastMatchsRecrod()
+    this.updateLastMatchsRecord()
 
-    storeMatchs(this.#matchs.getRawData(), this.#lastMatchsRecrod)
+    storeMatchs(this.#matchs.getRawData(), this.#lastMatchsRecord)
+      .then(() => {
+        this.throwSynchroSuccessEvent()
+      })
+      .catch(() => {
+        this.throwSynchroFailEvent()
+      })
+  }
+
+  private storeContacts() {
+    this.updateLastContactsRecord()
+
+    storeContacts(this.#contacts.getRawData(), this.#lastContactsRecord)
       .then(() => {
         this.throwSynchroSuccessEvent()
       })
@@ -124,7 +158,7 @@ export class Orchestrator {
     }
 
     // TODO: add lastRecord (timestamp) in the player and compare each records
-    if (!this.#lastPlayersRecrod || stored.lastRecord > this.#lastPlayersRecrod) {
+    if (!this.#lastPlayersRecord || stored.lastRecord > this.#lastPlayersRecord) {
       this.#players = new Players(stored.data)
       this.throwPlayersUpdatedEvent()
     }
@@ -141,7 +175,7 @@ export class Orchestrator {
     }
 
     // TODO: add lastRecord (timestamp) in the team and compare each records
-    if (!this.#lastTeamsRecrod || stored.lastRecord > this.#lastTeamsRecrod) {
+    if (!this.#lastTeamsRecord || stored.lastRecord > this.#lastTeamsRecord) {
       this.#teams = new Teams(stored.data)
       this.throwTeamsUpdatedEvent()
     }
@@ -158,9 +192,25 @@ export class Orchestrator {
     }
 
     // TODO: add lastRecord (timestamp) in the match and compare each records
-    if (!this.#lastMatchsRecrod || stored.lastRecord > this.#lastMatchsRecrod) {
+    if (!this.#lastMatchsRecord || stored.lastRecord > this.#lastMatchsRecord) {
       this.#matchs = new Matchs(stored.data)
       this.throwTeamsUpdatedEvent()
+    }
+  }
+
+  private async getStoredContacts() {
+    const stored = await getStoredContacts().catch(() => {
+      this.throwSynchroFailEvent()
+    })
+
+    if (!stored) {
+      this.throwSynchroSuccessEvent()
+      return
+    }
+
+    if (!this.#lastContactsRecord || stored.lastRecord > this.#lastContactsRecord) {
+      this.#contacts = new Contacts(stored.data)
+      this.throwContactsUpdatedEvent()
     }
   }
 
@@ -182,10 +232,17 @@ export class Orchestrator {
     }
   }
 
+  private removeAllContacts() {
+    for (const contact of this.Contacts.contacts) {
+      this.Contacts.remove(contact)
+    }
+  }
+
   private async doClearDB() {
     this.removeAllPlayers()
     this.removeAllTeams()
     this.removeAllMatchs()
+    this.removeAllContacts()
     await persistTitles({ ...DEFAULT_TITLES })
     await clearAllPhotos()
   }
@@ -206,6 +263,11 @@ export class Orchestrator {
       this.Matchs.add(newMatch)
     }
 
+    const contactsData = json.contacts || []
+    for (const contactData of contactsData) {
+      this.Contacts.add(new Contact(contactData))
+    }
+
     await persistTitles(json.trombiTitles || { ...DEFAULT_TITLES })
   }
 
@@ -221,6 +283,10 @@ export class Orchestrator {
     return this.#matchs
   }
 
+  public get Contacts() {
+    return this.#contacts
+  }
+
   public throwPlayersUpdatedEvent(mute = false) {
     bsEventBus.dispatchEvent('BS::PLAYERS::CHANGE', mute)
   }
@@ -231,6 +297,10 @@ export class Orchestrator {
 
   public throwMatchsUpdatedEvent(mute = false) {
     bsEventBus.dispatchEvent('BS::MATCHS::CHANGE', mute)
+  }
+
+  public throwContactsUpdatedEvent(mute = false) {
+    bsEventBus.dispatchEvent('BS::CONTACTS::CHANGE', mute)
   }
 
   public throwSynchroSuccessEvent(mute = false) {
@@ -265,6 +335,24 @@ export class Orchestrator {
     return this.#matchs.matchs.find((candidate) => candidate.id === id) || null
   }
 
+  private cleanOrphans<T extends { id: string }>(
+    items: T[],
+    isOrphan: (item: T) => boolean,
+    remove: (item: T) => void,
+    notify: () => void,
+  ) {
+    let cleaned = false
+    for (const item of items) {
+      if (isOrphan(item)) {
+        remove(item)
+        cleaned = true
+      }
+    }
+    if (cleaned) {
+      notify()
+    }
+  }
+
   public bigClean() {
     let cleaned = false
     for (const team of this.Teams.teams) {
@@ -279,8 +367,14 @@ export class Orchestrator {
 
     if (cleaned) {
       this.throwTeamsUpdatedEvent()
-      return
     }
+
+    this.cleanOrphans(
+      this.Contacts.contacts,
+      (contact) => !this.getPlayer(contact.playerId),
+      (contact) => this.Contacts.removeSilent(contact),
+      () => this.throwContactsUpdatedEvent(),
+    )
   }
 
   public getJerseySortedPlayers(playerIds?: Array<string>): Player[] {
@@ -301,6 +395,7 @@ export class Orchestrator {
       players: this.Players.players.map((player) => player.getRawData()),
       teams: this.Teams.teams.map((team) => team.getRawData()),
       matchs: this.Matchs.matchs.map((match) => match.getRawData()),
+      contacts: this.Contacts.contacts.map((contact) => contact.getRawData()),
       trombiTitles: titles,
     }
 
@@ -325,16 +420,8 @@ export class Orchestrator {
     })
 
     const blob = new Blob([zipped], { type: 'application/octet-stream' })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
     const fileName = `baller-stats-export-db-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}${DB_FILE_EXTENSION}`
-    anchor.setAttribute('href', url)
-    anchor.setAttribute('download', fileName)
-    anchor.style.visibility = 'hidden'
-    mount(anchor)
-    anchor.click()
-    unmount(anchor)
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    downloadBlob(blob, fileName)
   }
 
   private async tryParseZip(uint8: Uint8Array): Promise<{ rawData: GlobalDB; photos: Map<string, Blob> } | null> {
@@ -466,7 +553,7 @@ export class Orchestrator {
 
     const proced = await confirmAction(
       'Import DB',
-      `Vous êtes sur le point d\u2019importer ${rawData?.players.length || 0} joueurs, ${rawData?.teams.length || 0} équipes et ${rawData?.matchs.length || 0} matchs.`
+      `Vous êtes sur le point d\u2019importer ${rawData?.players.length || 0} joueurs, ${rawData?.teams.length || 0} équipes, ${rawData?.matchs.length || 0} matchs et ${rawData?.contacts?.length || 0} contacts.`
     )
     if (!proced) {
       return
