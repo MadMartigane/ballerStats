@@ -1,22 +1,9 @@
-import { bsIconPropsToDataStore } from './icons'
-import type { BsIconProps } from './icons.d'
+import BsIconBase from './icon-base'
+import type { BsIconProps } from './icon-base.d'
 
 export default function BsIconBasketballPanel(props: BsIconProps) {
-  const data = bsIconPropsToDataStore(props)
-
   return (
-    <svg
-      aria-label="Basketball panel"
-      fill={data.fill}
-      height={data.height}
-      id="_x32_"
-      role="img"
-      version="1.1"
-      viewBox="0 0 512 512"
-      width={data.width}
-      xmlns:xlink="http://www.w3.org/1999/xlink"
-      xmlns="http://www.w3.org/2000/svg"
-    >
+    <BsIconBase {...props} aria-label="Basketball panel" viewBox="0 0 512 512">
       <g>
         <polygon
           points="386.685,265.591 386.685,122.374 125.315,122.374 125.315,265.591 146.797,265.591 146.797,143.857 
@@ -68,6 +55,6 @@ export default function BsIconBasketballPanel(props: BsIconProps) {
 		c-1.651,5.105-3.371,10.63-5.12,16.608c-1.874,6.315-3.51,12.763-5.146,19.196H512v-17.902V4.22H0z"
         />
       </g>
-    </svg>
+    </BsIconBase>
   )
 }

@@ -68,9 +68,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                           class={`flex flex-row items-center gap-2 rounded-md px-3 py-2 font-medium text-sm ${String(currentHash.get()).endsWith(menuEntry.path) ? 'bg-primary text-primary-content' : 'text-neutral-content hover:bg-primary/60 hover:text-primary-content'}`}
                           href={menuEntry.path}
                         >
-                          {menuEntry.icon(
-                            `${String(currentHash.get()).endsWith(menuEntry.path) ? 'primary-content' : 'neutral-content'}`
-                          )}
+                          {menuEntry.icon()}
                           {menuEntry.label}
                         </a>
                       </Show>
@@ -250,9 +248,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                       class={`flex flex-row items-center gap-2 rounded-md px-3 py-2 font-medium text-base ${String(currentHash.get()).endsWith(menuEntry.path) ? 'bg-primary text-primary-content' : 'text-neutral-content hover:bg-primary/60 hover:text-primary-content'}`}
                       href={menuEntry.path}
                     >
-                      {menuEntry.icon(
-                        `${String(currentHash.get()).endsWith(menuEntry.path) ? 'primary-content' : 'neutral-content'}`
-                      )}
+                      {menuEntry.icon()}
                       {menuEntry.label}
                     </a>
                   </Show>

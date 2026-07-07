@@ -3,7 +3,6 @@ import { lazy } from 'solid-js'
 import BsIconBasketballBall from '../../components/icons/basketball-ball'
 import BsIconBasketballPlayer from '../../components/icons/basketball-player'
 import Home from '../../pages/home'
-import type { DaisyVariant } from '../daisy'
 import type { MenuEntry } from './menu.d'
 import { ROUTE_PLAYERS, ROUTE_TEAMS, ROUTE_TROMBI, ROUTE_TROMBI_TEAM } from './routes'
 
@@ -35,7 +34,7 @@ export const NAVIGATION_MENU_ENTRIES: Array<MenuEntry> = [
   {
     path: ROUTE_PLAYERS,
     label: 'Joueurs',
-    icon: (variant: DaisyVariant = 'neutral-content') => <BsIconBasketballPlayer variant={variant} />,
+    icon: () => <BsIconBasketballPlayer />,
     component: lazy(() => import('../../pages/players')),
     isMenuEntry: true,
   },
@@ -63,7 +62,7 @@ export const NAVIGATION_MENU_ENTRIES: Array<MenuEntry> = [
   {
     path: '/match/:id',
     label: 'Match',
-    icon: (variant: DaisyVariant = 'neutral-content') => <BsIconBasketballBall variant={variant} />,
+    icon: () => <BsIconBasketballBall />,
     component: lazy(() => import('../../pages/match')),
     isMenuEntry: false,
   },

@@ -1,5 +1,4 @@
 import type { JSXElement } from 'solid-js'
-import type { DaisySize, DaisyVariant } from '../daisy'
 
 export type StatMatchActionItemType = 'success' | 'error' | 'secondary'
 
@@ -24,7 +23,7 @@ export type StatMatchActionItem = {
   inGameAction: boolean
   opponentMatter: boolean
   value: number
-  icon: (variant?: DaisyVariant, size?: DaisySize) => JSXElement
+  icon: () => JSXElement
   label1?: string | JSXElement
   label2?: string | JSXElement
   secondaryAction?: boolean

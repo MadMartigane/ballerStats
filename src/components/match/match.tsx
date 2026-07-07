@@ -370,7 +370,7 @@ function renderPlayerButton(opts: {
                   }}
                   type="button"
                 >
-                  {statAction.icon(`${statAction.type}-content`)}
+                  {statAction.icon()}
                 </button>
                 <div class="text-center text-xs">{statAction.label1}</div>
               </div>
@@ -656,7 +656,7 @@ export default function BsMatch(props: BsMatchProps) {
                           }}
                           type="button"
                         >
-                          {statAction.icon(`${statAction.type}-content`)}
+                          {statAction.icon()}
                         </button>
                         <div class="text-center text-xs">{statAction.label1}</div>
                       </div>
@@ -786,7 +786,7 @@ export default function BsMatch(props: BsMatchProps) {
                     }}
                     type="button"
                   >
-                    {item.icon(`${item.type}-content`)}
+                    {item.icon()}
                     <span class="text-2xl">{item.label1}</span>{' '}
                   </button>
                 </Show>

@@ -11,7 +11,6 @@ import {
 } from 'lucide-solid'
 import BsIconBasketballGoal from '../../components/icons/basketball-goal'
 import BsIconBasketballMissedGoal from '../../components/icons/basketball-missed-goal'
-import type { DaisySize, DaisyVariant } from '../daisy'
 import type { StatMatchActionItem } from './stats.d'
 
 export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
@@ -22,7 +21,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     label1: '2 pts',
     type: 'success',
     value: 2,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => <BsIconBasketballGoal size={size} variant={variant} />,
+    icon: () => <BsIconBasketballGoal />,
   },
   {
     name: '2pts',
@@ -31,7 +30,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     label1: '2 pts',
     type: 'error',
     value: 0,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => <BsIconBasketballMissedGoal size={size} variant={variant} />,
+    icon: () => <BsIconBasketballMissedGoal />,
   },
   {
     name: '3pts',
@@ -40,7 +39,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     label1: '3 pts',
     type: 'success',
     value: 3,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => <BsIconBasketballGoal size={size} variant={variant} />,
+    icon: () => <BsIconBasketballGoal />,
   },
   {
     name: '3pts',
@@ -49,7 +48,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     label1: '3 pts',
     type: 'error',
     value: 0,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => <BsIconBasketballMissedGoal size={size} variant={variant} />,
+    icon: () => <BsIconBasketballMissedGoal />,
   },
   {
     name: 'free-throw',
@@ -58,7 +57,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     label1: 'LF',
     type: 'success',
     value: 1,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => <BsIconBasketballGoal size={size} variant={variant} />,
+    icon: () => <BsIconBasketballGoal />,
   },
   {
     name: 'free-throw',
@@ -68,7 +67,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     label2: 'Échec',
     type: 'error',
     value: 0,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => <BsIconBasketballMissedGoal size={size} variant={variant} />,
+    icon: () => <BsIconBasketballMissedGoal />,
   },
   {
     name: 'offensive-rebond',
@@ -78,7 +77,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     label2: 'Rebond Offensif',
     type: 'success',
     value: 1,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => <Hand size={size} />,
+    icon: () => <Hand />,
   },
   {
     name: 'defensive-rebond',
@@ -88,7 +87,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     label2: 'Rebond Defensive',
     type: 'secondary',
     value: 1,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => <Hand size={size} />,
+    icon: () => <Hand />,
   },
   {
     name: 'turnover',
@@ -99,7 +98,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     type: 'error',
     value: 1,
     everyTimeAction: true,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => <CircleOff size={size} />,
+    icon: () => <CircleOff />,
   },
   {
     name: 'steals',
@@ -110,7 +109,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     type: 'success',
     value: 1,
     everyTimeAction: true,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => <BicepsFlexed size={size} />,
+    icon: () => <BicepsFlexed />,
   },
   {
     name: 'foul',
@@ -119,7 +118,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     label1: 'Faute !',
     type: 'error',
     value: 1,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => <Ban size={size} />,
+    icon: () => <Ban />,
   },
   {
     name: 'assist',
@@ -128,7 +127,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     label1: 'Passe D',
     type: 'success',
     value: 1,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => <RedoDot size={size} />,
+    icon: () => <RedoDot />,
   },
   {
     name: 'fiveIn',
@@ -138,7 +137,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     type: 'success',
     value: 0,
     secondaryAction: true,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => <ArrowLeftToLine size={size} />,
+    icon: () => <ArrowLeftToLine />,
   },
   {
     name: 'fiveOut',
@@ -148,7 +147,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     type: 'secondary',
     value: 0,
     secondaryAction: true,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => <ArrowRightFromLine size={size} />,
+    icon: () => <ArrowRightFromLine />,
   },
   {
     name: 'gameStop',
@@ -158,7 +157,7 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     type: 'secondary',
     value: 0,
     secondaryAction: true,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => <CirclePause size={size} />,
+    icon: () => <CirclePause />,
   },
   {
     name: 'gameStart',
@@ -168,6 +167,6 @@ export const STATS_MATCH_ACTIONS: Array<StatMatchActionItem> = [
     type: 'secondary',
     value: 0,
     secondaryAction: true,
-    icon: (variant?: DaisyVariant, size?: DaisySize) => <CirclePlay size={size} />,
+    icon: () => <CirclePlay />,
   },
 ]

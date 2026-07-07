@@ -5,7 +5,6 @@ import GlobalStats from '../components/global-stats'
 import BsIconBasketballBall from '../components/icons/basketball-ball'
 import BsIconBasketballBallOutline from '../components/icons/basketball-ball-outline'
 import BsIconBasketballBallPlain from '../components/icons/basketball-ball-plain'
-import BsIconBasketballBasketMove from '../components/icons/basketball-basket-move'
 import BsIconBasketballPanel from '../components/icons/basketball-panel'
 import BsIconBasketballPlayer from '../components/icons/basketball-player'
 import BsIconPersonPlay from '../components/icons/person-play'
@@ -17,6 +16,9 @@ import { vibrate } from '../libs/vibrator'
 
 const displayDemo = new MadSignal(false)
 const bigCleanInProgress = new MadSignal(false)
+const SHOWCASE_PERSON_PLAY_SIZE = 54
+const SHOWCASE_PANEL_SIZE = 84
+const SHOWCASE_MEDAL_SIZE = 96
 
 export default function Home() {
   return (
@@ -143,14 +145,13 @@ export default function Home() {
           </button>
 
           <div class="flex flex-row gap-4 py-4">
-            <BsIconBasketballBall variant="secondary" />
-            <BsIconPersonPlay size="4xl" />
+            <BsIconBasketballBall class="text-secondary" />
+            <BsIconPersonPlay size={SHOWCASE_PERSON_PLAY_SIZE} />
             <BsIconBasketballBallPlain />
             <BsIconBasketballBallOutline />
             <BsIconBasketballPlayer />
-            <BsIconBasketballPanel size="9xl" variant="primary" />
-            <BsIconBasketballBasketMove size="6xl" variant="accent" />
-            <Medal size={96} />
+            <BsIconBasketballPanel class="text-primary" size={SHOWCASE_PANEL_SIZE} />
+            <Medal size={SHOWCASE_MEDAL_SIZE} />
           </div>
 
           <div class="grid grid-cols-2 content-start gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
