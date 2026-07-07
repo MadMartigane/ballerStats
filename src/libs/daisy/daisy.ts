@@ -6,9 +6,11 @@ const THEME_HTML_TAG = 'html'
 
 export const THEME_AUTO_KEY = 'auto'
 export const THEMES: { [name: string]: string } = {
-  light: 'fantasy',
-  dark: 'dracula',
-  aqua: 'aqua',
+  corporate: 'corporate',
+  dim: 'dim',
+  emerald: 'emerald',
+  pastel: 'pastel',
+  dark: 'dark',
 }
 
 export async function initTheme() {
@@ -18,16 +20,10 @@ export async function initTheme() {
     throw new Error('[daisy::initTheme()] unable to find THE html element.')
   }
 
-  const isSystemPreferDark = window.matchMedia('(prefers-color-scheme: dark)').matches
   const storedPreference = localStorage.getItem(DS_PREF_THEME_STORAGE_KEY)
 
   if (!storedPreference || storedPreference === THEME_AUTO_KEY) {
-    if (isSystemPreferDark) {
-      html.setAttribute(THEME_ATTRIBUTE, THEMES.dark)
-    } else {
-      html.setAttribute(THEME_ATTRIBUTE, THEMES.light)
-    }
-
+    html.removeAttribute(THEME_ATTRIBUTE)
     return Promise.resolve(html)
   }
 
