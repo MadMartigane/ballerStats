@@ -33,8 +33,8 @@ importers:
         specifier: ^2.0.2
         version: 2.0.2
       daisyui:
-        specifier: ^5.0.9
-        version: 5.5.20
+        specifier: ^5.6.14
+        version: 5.6.14
       fake-indexeddb:
         specifier: ^6.2.5
         version: 6.2.5
@@ -973,8 +973,8 @@ packages:
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
-  daisyui@5.5.20:
-    resolution: {integrity: sha512-HemJcjl0Gk9rQ8BcgofN6p+EURrqftQG9wK1Hkxs98i49xe68+QxpNvry+PyxwkIUgrbMpNmZ5ZWjmtffAjfhQ==}
+  daisyui@5.6.14:
+    resolution: {integrity: sha512-PFDSzWbCSok8jNFprlJh3qzat1HeigsX8RKChHrjY8UFBB79idGP17Gtmcv5CaH4EyyhvIn8DDtua4sk6dRzOQ==}
 
   data-urls@7.0.0:
     resolution: {integrity: sha512-23XHcCF+coGYevirZceTVD7NdJOqVn+49IHyxgszm+JIiHLoB2TkmPtsYkNWT1pvRSGkc35L6NHs0yHkN2SumA==}
@@ -2347,7 +2347,7 @@ snapshots:
 
   csstype@3.2.3: {}
 
-  daisyui@5.5.20: {}
+  daisyui@5.6.14: {}
 
   data-urls@7.0.0:
     dependencies:

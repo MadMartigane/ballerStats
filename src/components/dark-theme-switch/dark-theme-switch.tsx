@@ -15,10 +15,11 @@ function onThemeChange(event: Event) {
 
 export default function BsDarkThemeSwitch() {
   const id = `dark-theme-switch-${getShortId()}`
-  const themeValue = new MadSignal(THEMES.light)
+  const defaultTheme = Object.keys(THEMES)[0]
+  const themeValue = new MadSignal(defaultTheme)
 
   getTheme().then((theme) => {
-    themeValue.set(theme || THEMES.light)
+    themeValue.set(theme || defaultTheme)
   })
 
   return (
@@ -37,7 +38,7 @@ export default function BsDarkThemeSwitch() {
 
           <For each={Object.keys(THEMES)}>
             {(name) => (
-              <option selected={themeValue.get() === THEMES[name]} value={THEMES[name]}>
+              <option selected={themeValue.get() === name} value={name}>
                 {name}
               </option>
             )}

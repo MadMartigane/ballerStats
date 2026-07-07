@@ -4,9 +4,11 @@
 
 @plugin "daisyui" {
   themes:
-    fantasy --default,
-    dracula --prefersdark,
-    aqua;
+    corporate --default,
+    dim --prefersdark,
+    emerald,
+    pastel,
+    dark;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
