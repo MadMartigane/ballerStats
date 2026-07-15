@@ -5,6 +5,12 @@ import type Player from '../../libs/player'
 import type { StatMatchSummaryPlayer } from '../../libs/stats'
 import type { BsFullStatTableProps } from './full-stat-table.d'
 
+function formatStatValue(value: number, format?: 'pct' | '1dp'): string {
+  if (format === 'pct') return `${value}%`
+  if (format === '1dp') return value.toFixed(1)
+  return String(value)
+}
+
 function renderTh(playerStats: StatMatchSummaryPlayer, player?: Player | null) {
   return (
     <tr>
@@ -46,6 +52,18 @@ function renderTh(playerStats: StatMatchSummaryPlayer, player?: Player | null) {
         {` ${playerStats.ratio['3pts'].success}/${playerStats.ratio['3pts'].total}`}
         <div>{`(${playerStats.ratio['3pts'].percentage}%)`}</div>
       </td>
+      <td>
+        <span class="text-lg">{playerStats.blocks}</span>
+      </td>
+      <td>
+        <span class="text-lg">{playerStats.eff}</span>
+      </td>
+      <td>
+        <span class="text-lg">{formatStatValue(playerStats.astToRatio, '1dp')}</span>
+      </td>
+      <td>
+        <span class="text-lg">{formatStatValue(playerStats.trueShootingPercentage, 'pct')}</span>
+      </td>
     </tr>
   )
 }
@@ -76,6 +94,10 @@ export function BsFullStatTable(props: BsFullStatTableProps) {
               <th>LF</th>
               <th>2pts</th>
               <th>3pts</th>
+              <th>BLK</th>
+              <th>EFF</th>
+              <th>A/TO</th>
+              <th>TS%</th>
             </tr>
           </thead>
           <tbody>
