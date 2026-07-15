@@ -22,6 +22,8 @@ function editPlayer(player: Player, callback: (player: Player) => void) {
 
 export default function BsPlayer(props: BsPlayerProps) {
   const player = props.player
+  const editPlayerLabel = 'Modifier le joueur'
+  const deletePlayerLabel = 'Supprimer le joueur'
   return (
     <BsTile
       badge={
@@ -32,17 +34,29 @@ export default function BsPlayer(props: BsPlayerProps) {
       footer={
         <>
           <Show when={props.onEdit}>
-            <button class="btn btn-secondary btn-square" onClick={() => editPlayer(player, props.onEdit)} type="button">
-              <UserPen />
-            </button>
+            <div class="tooltip tooltip-top" data-tip={editPlayerLabel}>
+              <button
+                aria-label={editPlayerLabel}
+                class="btn btn-secondary btn-square"
+                onClick={() => editPlayer(player, props.onEdit)}
+                type="button"
+              >
+                <UserPen />
+              </button>
+            </div>
           </Show>
-          <button
-            class="btn btn-secondary btn-square"
-            onClick={() => removePlayer(player).catch(() => toast('Erreur lors de la suppression du joueur.', 'error'))}
-            type="button"
-          >
-            <Trash />
-          </button>
+          <div class="tooltip tooltip-top" data-tip={deletePlayerLabel}>
+            <button
+              aria-label={deletePlayerLabel}
+              class="btn btn-secondary btn-square"
+              onClick={() =>
+                removePlayer(player).catch(() => toast('Erreur lors de la suppression du joueur.', 'error'))
+              }
+              type="button"
+            >
+              <Trash />
+            </button>
+          </div>
         </>
       }
       header={

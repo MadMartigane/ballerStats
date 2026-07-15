@@ -27,7 +27,7 @@ export function BsMatchTypeText(props: BsMatchTypeProps) {
   const size = props.size || 'base'
 
   if (!type) {
-    return <></>
+    return null
   }
 
   return (
@@ -48,7 +48,7 @@ export function BsMatchTypeBadge(props: BsMatchTypeProps) {
   const size = props.size || 'base'
 
   if (!type) {
-    return <></>
+    return null
   }
 
   return (
@@ -61,6 +61,8 @@ export function BsMatchTypeBadge(props: BsMatchTypeProps) {
 export default function BsMatchTile(props: BsMatchTileProps) {
   const match = props.match
   const team = orchestrator.getTeam(match.teamId)
+  const editMatchLabel = 'Modifier le match'
+  const deleteMatchLabel = 'Supprimer le match'
 
   return (
     <BsTile
@@ -68,28 +70,34 @@ export default function BsMatchTile(props: BsMatchTileProps) {
       footer={
         <>
           <Show when={props.onEdit}>
+            <div class="tooltip tooltip-top" data-tip={editMatchLabel}>
+              <button
+                aria-label={editMatchLabel}
+                class="btn btn-secondary btn-square"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  callCallback(match, props?.onEdit)
+                }}
+                type="button"
+              >
+                <FilePenLine />
+              </button>
+            </div>
+          </Show>
+
+          <div class="tooltip tooltip-top" data-tip={deleteMatchLabel}>
             <button
+              aria-label={deleteMatchLabel}
               class="btn btn-secondary btn-square"
               onClick={(event) => {
                 event.stopPropagation()
-                callCallback(match, props?.onEdit)
+                removeMatch(match)
               }}
               type="button"
             >
-              <FilePenLine />
+              <Trash />
             </button>
-          </Show>
-
-          <button
-            class="btn btn-secondary btn-square"
-            onClick={(event) => {
-              event.stopPropagation()
-              removeMatch(match)
-            }}
-            type="button"
-          >
-            <Trash />
-          </button>
+          </div>
         </>
       }
       onClick={() => {

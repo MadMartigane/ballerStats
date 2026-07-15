@@ -20,6 +20,8 @@ function BsContactsEditor(props: BsContactsEditorProps) {
   let currentContact: Contact | null = null
 
   const playerContacts = createMemo(() => allContacts.filter((c) => c.playerId === props.playerId))
+  const editContactLabel = 'Modifier le contact'
+  const deleteContactLabel = 'Supprimer le contact'
 
   function startNewContact() {
     isEditingNewContact = true
@@ -181,12 +183,26 @@ function BsContactsEditor(props: BsContactsEditorProps) {
                         </span>
                       </Show>
                     </div>
-                    <button class="btn btn-square btn-sm" onClick={() => editContact(contact)} type="button">
-                      <Pencil />
-                    </button>
-                    <button class="btn btn-square btn-sm" onClick={() => deleteContact(contact)} type="button">
-                      <Trash />
-                    </button>
+                    <div class="tooltip tooltip-top" data-tip={editContactLabel}>
+                      <button
+                        aria-label={editContactLabel}
+                        class="btn btn-square btn-sm"
+                        onClick={() => editContact(contact)}
+                        type="button"
+                      >
+                        <Pencil />
+                      </button>
+                    </div>
+                    <div class="tooltip tooltip-top" data-tip={deleteContactLabel}>
+                      <button
+                        aria-label={deleteContactLabel}
+                        class="btn btn-square btn-sm"
+                        onClick={() => deleteContact(contact)}
+                        type="button"
+                      >
+                        <Trash />
+                      </button>
+                    </div>
                   </div>
                 )}
               </For>
