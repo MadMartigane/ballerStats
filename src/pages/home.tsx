@@ -1,4 +1,4 @@
-import { BellRing, Loader, Medal, Megaphone, Share, Trash2, Vibrate } from 'lucide-solid'
+import { BellRing, DatabaseZap, Loader, Medal, Megaphone, Share, Trash2, Vibrate } from 'lucide-solid'
 import { Show } from 'solid-js'
 import DarkThemeSwitch from '../components/dark-theme-switch'
 import GlobalStats from '../components/global-stats'
@@ -209,6 +209,21 @@ export default function Home() {
               Toast !
             </button>
           </div>
+
+          <Show when={import.meta.env.DEV}>
+            <div class="divider" />
+            <button
+              class="btn btn-primary"
+              onClick={() => {
+                const seed = (window as unknown as Record<string, () => Promise<void>>).__demoSeed
+                seed?.()
+              }}
+              type="button"
+            >
+              <DatabaseZap />
+              Peupler les données de démo
+            </button>
+          </Show>
         </div>
       </Show>
     </div>

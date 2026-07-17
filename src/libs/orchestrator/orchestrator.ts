@@ -31,7 +31,7 @@ import Teams from '../teams'
 import { DEFAULT_TITLES, persistTitles, titles } from '../trombi-titles-store'
 import { confirmAction, downloadBlob, toast } from '../utils'
 import { type ThemeVibration, vibrate } from '../vibrator'
-import type { GlobalDB } from './orchestrator.d'
+import type { DomainDataset, GlobalDB } from './orchestrator.d'
 
 export const DB_FILE_EXTENSION = '.bstat' as const
 
@@ -238,37 +238,42 @@ export class Orchestrator {
     }
   }
 
-  private async doClearDB() {
+  private clearCollectionsOnly(): void {
     this.removeAllPlayers()
     this.removeAllTeams()
     this.removeAllMatchs()
     this.removeAllContacts()
+  }
+
+  private addAll(dataset: DomainDataset): void {
+    for (const player of dataset.players ?? []) {
+      this.Players.add(player)
+    }
+    for (const team of dataset.teams ?? []) {
+      this.Teams.add(team)
+    }
+    for (const match of dataset.matchs ?? []) {
+      this.Matchs.add(match)
+    }
+    for (const contact of dataset.contacts ?? []) {
+      this.Contacts.add(contact)
+    }
+  }
+
+  private async doClearDB() {
+    this.clearCollectionsOnly()
     await persistTitles({ ...DEFAULT_TITLES })
     await clearAllPhotos()
   }
 
   private async doOverwriteDB(json: GlobalDB) {
-    for (const playerData of json.players) {
-      const newPlayer = new Player(playerData)
-      this.Players.add(newPlayer)
-    }
-
-    for (const teamData of json.teams) {
-      const newTeam = new Team(teamData)
-      this.Teams.add(newTeam)
-    }
-
-    for (const matchData of json.matchs) {
-      const newMatch = new Match(matchData)
-      this.Matchs.add(newMatch)
-    }
-
-    const contactsData = json.contacts || []
-    for (const contactData of contactsData) {
-      this.Contacts.add(new Contact(contactData))
-    }
-
-    await persistTitles(json.trombiTitles || { ...DEFAULT_TITLES })
+    this.addAll({
+      players: json.players.map((p) => new Player(p)),
+      teams: json.teams.map((t) => new Team(t)),
+      matchs: json.matchs.map((m) => new Match(m)),
+      contacts: (json.contacts ?? []).map((c) => new Contact(c)),
+    })
+    await persistTitles(json.trombiTitles ?? { ...DEFAULT_TITLES })
   }
 
   public get Players() {
@@ -335,11 +340,26 @@ export class Orchestrator {
     return this.#matchs.matchs.find((candidate) => candidate.id === id) || null
   }
 
+  /** Atomically replace all domain data with the given dataset. */
+  public replaceDataset(dataset: DomainDataset): void {
+    this.clearCollectionsOnly()
+    this.addAll(dataset)
+  }
+
+  public get hasAnyData(): boolean {
+    return (
+      this.#players.players.length > 0 ||
+      this.#teams.teams.length > 0 ||
+      this.#matchs.matchs.length > 0 ||
+      this.#contacts.contacts.length > 0
+    )
+  }
+
   private cleanOrphans<T extends { id: string }>(
     items: T[],
     isOrphan: (item: T) => boolean,
     remove: (item: T) => void,
-    notify: () => void,
+    notify: () => void
   ) {
     let cleaned = false
     for (const item of items) {
@@ -373,7 +393,7 @@ export class Orchestrator {
       this.Contacts.contacts,
       (contact) => !this.getPlayer(contact.playerId),
       (contact) => this.Contacts.removeSilent(contact),
-      () => this.throwContactsUpdatedEvent(),
+      () => this.throwContactsUpdatedEvent()
     )
   }
 

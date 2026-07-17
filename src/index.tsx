@@ -5,12 +5,16 @@ import './global/font-family'
 
 import { HashRouter, Route } from '@solidjs/router'
 import { CircleAlert, CircleCheckBig, Skull, TriangleAlert } from 'lucide-solid'
-import { For } from 'solid-js'
+import { For, Suspense, lazy } from 'solid-js'
 import { render } from 'solid-js/web'
 import relAppleTouchIconUrl from '/img/apple-touch-icon.png'
 import relIconUrl from '/img/favicon.ico'
 import BsAppBar from './components/app-bar'
 import { NAVIGATION_MENU_ENTRIES } from './libs/menu'
+
+// DEV-only: lazy-load the demo seed initializer. The dynamic import expression
+// is dead-code-eliminated when import.meta.env.DEV is statically false.
+const DemoSeedInit = import.meta.env.DEV ? lazy(() => import('./components/demo/demo-seed-init')) : undefined
 
 const relAppleTouchIcon: HTMLLinkElement | null = document.querySelector('link[rel="apple-touch-icon"]')
 if (relAppleTouchIcon) {
@@ -62,6 +66,7 @@ render(
       </HashRouter>
       <div class="toast toast-end toast-bottom" id="bs-global-toast" />
       {renderTemplateStore()}
+      <Suspense>{DemoSeedInit && <DemoSeedInit />}</Suspense>
     </>
   ),
   root || document.body

@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import Match from '../match'
-import Team from '../team'
+import type Match from '../match'
+import { makeMatch } from '../mock/factories/match.factory'
+import { makeStatEntry } from '../mock/factories/stat-entry.factory'
+import { makeTeam } from '../mock/factories/team.factory'
+import type Team from '../team'
 import { TEAM_OPPONENT_ID } from '../team/team'
 import type { StatMatchSummaryPlayer } from './stats.d'
 import { computeDerivedStats, getFullStats, getStatSummary, safeDivide, safePercentage } from './stats-util'
@@ -15,30 +18,6 @@ const { mockOrchestrator } = vi.hoisted(() => ({
 vi.mock('../orchestrator/orchestrator', () => ({
   default: mockOrchestrator,
 }))
-
-const createMatchStat = (
-  name:
-    | '2pts'
-    | '3pts'
-    | 'free-throw'
-    | 'offensive-rebond'
-    | 'defensive-rebond'
-    | 'assist'
-    | 'foul'
-    | 'turnover'
-    | 'steals'
-    | 'block',
-  type: 'success' | 'error' | 'secondary',
-  value: number,
-  playerId: string | null,
-  timestamp = Date.now()
-) => ({
-  name,
-  type,
-  value,
-  playerId,
-  timestamp,
-})
 
 describe('safeDivide', () => {
   it('returns 0 for zero denominator (no NaN/Infinity)', () => {
@@ -82,7 +61,7 @@ describe('getStatSummary', () => {
   })
 
   it('returns a zeroed summary for an empty match', () => {
-    const summary = getStatSummary(new Match())
+    const summary = getStatSummary(makeMatch())
 
     expect(summary.teamScore).toBe(0)
     expect(summary.opponentScore).toBe(0)
@@ -97,12 +76,13 @@ describe('getStatSummary', () => {
   })
 
   it('keeps team aggregates at 0 when the match contains only opponent actions', () => {
-    const match = new Match({
+    const match = makeMatch({
+      teamId: 'team-1',
       stats: [
-        createMatchStat('2pts', 'success', 2, TEAM_OPPONENT_ID),
-        createMatchStat('3pts', 'success', 3, TEAM_OPPONENT_ID),
-        createMatchStat('foul', 'error', 1, TEAM_OPPONENT_ID),
-        createMatchStat('offensive-rebond', 'success', 1, TEAM_OPPONENT_ID),
+        makeStatEntry('2pts', { type: 'success', value: 2, playerId: TEAM_OPPONENT_ID }),
+        makeStatEntry('3pts', { type: 'success', value: 3, playerId: TEAM_OPPONENT_ID }),
+        makeStatEntry('foul', { type: 'error', value: 1, playerId: TEAM_OPPONENT_ID }),
+        makeStatEntry('offensive-rebond', { type: 'success', value: 1, playerId: TEAM_OPPONENT_ID }),
       ],
     })
 
@@ -145,9 +125,13 @@ describe('getFullStats', () => {
 
   it('keeps player fouls at 0 when the player has no fouls across matches', () => {
     const playerId = 'player-no-fouls'
-    const team = new Team({ id: 'team-1', name: 'Team', playerIds: [playerId] })
-    const match = new Match({
-      stats: [createMatchStat('2pts', 'success', 2, playerId), createMatchStat('assist', 'success', 1, playerId)],
+    const team = makeTeam({ id: 'team-1', name: 'Team', playerIds: [playerId] })
+    const match = makeMatch({
+      teamId: 'team-1',
+      stats: [
+        makeStatEntry('2pts', { type: 'success', value: 2, playerId }),
+        makeStatEntry('assist', { type: 'success', value: 1, playerId }),
+      ],
     })
 
     mockOrchestrator.Matchs.matchs = [match]
