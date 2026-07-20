@@ -16,7 +16,7 @@ function isCurrentPath(candidatPath: string, currentPath: string | null) {
   return cleanPath === candidatPath
 }
 
-function renderMasterTitle(currentPath: string | null) {
+function _renderMasterTitle(currentPath: string | null) {
   let menuEntry = NAVIGATION_MENU_ENTRIES.find((entryCandidate) => isCurrentPath(entryCandidate.path, currentPath))
 
   if (!menuEntry) {
@@ -24,7 +24,7 @@ function renderMasterTitle(currentPath: string | null) {
   }
 
   if (!menuEntry) {
-    menuEntry = NAVIGATION_MENU_ENTRIES[NAVIGATION_MENU_ENTRIES.length - 1]
+    menuEntry = NAVIGATION_MENU_ENTRIES.at(-1)
   }
 
   return (
@@ -45,6 +45,9 @@ function installEventHandlers() {
 
 export default function BsAppBar(props: RouteSectionProps<unknown>) {
   installEventHandlers()
+  const notificationsLabel = 'Afficher les notifications'
+  const userMenuLabel = 'Ouvrir le menu utilisateur'
+  const mainMenuLabel = 'Menu principal'
 
   return (
     <div class="min-h-full font-rajdhani">
@@ -54,7 +57,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
             <div class="flex items-center">
               <div class="shrink-0">
                 <a aria-current="page" href="#/">
-                  <img alt="Baller stats logo" class="h-16 w-16" src={logoSmallUrl} />
+                  <img alt="Baller stats logo" class="h-16 w-16" height={64} src={logoSmallUrl} width={64} />
                 </a>
               </div>
               <div class="hidden md:block">
@@ -68,9 +71,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                           class={`flex flex-row items-center gap-2 rounded-md px-3 py-2 font-medium text-sm ${String(currentHash.get()).endsWith(menuEntry.path) ? 'bg-primary text-primary-content' : 'text-neutral-content hover:bg-primary/60 hover:text-primary-content'}`}
                           href={menuEntry.path}
                         >
-                          {menuEntry.icon(
-                            `${String(currentHash.get()).endsWith(menuEntry.path) ? 'primary-content' : 'neutral-content'}`
-                          )}
+                          {menuEntry.icon()}
                           {menuEntry.label}
                         </a>
                       </Show>
@@ -82,29 +83,30 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
             <div class="hidden md:block">
               <div class="ml-4 flex items-center md:ml-6">
                 {/* Notifications button */}
-                <button
-                  class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                  id="notifications-box-button"
-                  onBlur={() => {
-                    setTimeout(() => {
-                      isNotificationBoxOpen.set(false)
-                    }, 10)
-                  }}
-                  onClick={() => {
-                    isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
-                  }}
-                  type="button"
-                >
-                  <span class="absolute -top-1.5 text-amber-500" />
-                  <span class="sr-only">Afficher les notifications</span>
-                  <Bell />
-                </button>
+                <div class="tooltip tooltip-bottom" data-tip={notificationsLabel}>
+                  <button
+                    aria-label={notificationsLabel}
+                    class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                    id="notifications-box-button"
+                    onBlur={() => {
+                      setTimeout(() => {
+                        isNotificationBoxOpen.set(false)
+                      }, 10)
+                    }}
+                    onClick={() => {
+                      isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
+                    }}
+                    type="button"
+                  >
+                    <span class="absolute -top-1.5 text-amber-500" />
+                    <Bell />
+                  </button>
+                </div>
 
                 {/* Notifications dropdown */}
                 <Show when={isNotificationBoxOpen.get()}>
                   <menu
                     aria-labelledby="notifications-box-button"
-                    aria-orientation="vertical"
                     class="absolute top-16 right-1 z-10 mt-1 w-72 origin-top-right rounded-md bg-gray-800 p-6 py-1 text-gray-400 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-hidden"
                     id="notifications-box"
                     tabindex="-1"
@@ -115,10 +117,11 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
 
                 {/* Profile dropdown */}
                 <div class="relative ml-3">
-                  <div>
+                  <div class="tooltip tooltip-bottom" data-tip={userMenuLabel}>
                     <button
                       aria-expanded="false"
                       aria-haspopup="true"
+                      aria-label={userMenuLabel}
                       class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                       id="user-menu-button"
                       onBlur={() => {
@@ -132,7 +135,6 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                       type="button"
                     >
                       <span class="absolute -inset-1.5" />
-                      <span class="sr-only">Open user menu</span>
                       <UserCog size="24" />
                     </button>
                   </div>
@@ -150,7 +152,6 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                   <Show when={isUserMenuOpen.get()}>
                     <menu
                       aria-labelledby="user-menu-button"
-                      aria-orientation="vertical"
                       class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-slate-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-hidden"
                       tabindex="-1"
                     >
@@ -180,29 +181,30 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
             </div>
             <div class="-mr-2 flex gap-2 md:hidden">
               {/* Notifications button (mobile) */}
-              <button
-                class="relative rounded-full bg-gray-800 p-2 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                id="notifications-box-button"
-                onBlur={() => {
-                  setTimeout(() => {
-                    isNotificationBoxOpen.set(false)
-                  }, 10)
-                }}
-                onClick={() => {
-                  isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
-                }}
-                type="button"
-              >
-                <span class="absolute -top-1.5 text-amber-500" />
-                <span class="sr-only">Afficher les notifications</span>
-                <Bell />
-              </button>
+              <div class="tooltip tooltip-bottom" data-tip={notificationsLabel}>
+                <button
+                  aria-label={notificationsLabel}
+                  class="relative rounded-full bg-gray-800 p-2 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                  id="notifications-box-button"
+                  onBlur={() => {
+                    setTimeout(() => {
+                      isNotificationBoxOpen.set(false)
+                    }, 10)
+                  }}
+                  onClick={() => {
+                    isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
+                  }}
+                  type="button"
+                >
+                  <span class="absolute -top-1.5 text-amber-500" />
+                  <Bell />
+                </button>
+              </div>
 
               {/* Notifications dropdown (mobile) */}
               <Show when={isNotificationBoxOpen.get()}>
                 <menu
                   aria-labelledby="notifications-box-button"
-                  aria-orientation="vertical"
                   class="absolute top-16 right-1 z-10 mt-1 w-72 origin-top-right rounded-md bg-gray-800 p-6 py-1 text-gray-400 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-hidden"
                   id="notifications-box"
                   tabindex="-1"
@@ -212,27 +214,29 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
               </Show>
 
               {/* Mobile menu button */}
-              <button
-                aria-controls="mobile-menu"
-                aria-expanded="false"
-                class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                onBlur={() =>
-                  setTimeout(() => {
-                    isMainMenuOpen.set(false)
-                  }, 10)
-                }
-                onClick={() => {
-                  isMainMenuOpen.set(!isMainMenuOpen.get())
-                }}
-                type="button"
-              >
-                <span class="absolute -inset-0.5" />
-                <span class="sr-only">Ouverture menu principale, version mobile</span>
-                {/* Menu open: "hidden", Menu closed: "block" */}
-                <Menu class={`${isMainMenuOpen.get() ? 'hidden' : 'block'} h-6 w-6`} />
-                {/* Menu open: "block", Menu closed: "hidden" */}
-                <X class={`${isMainMenuOpen.get() ? 'block' : 'hidden'} h-6 w-6`} />
-              </button>
+              <div class="tooltip tooltip-bottom" data-tip={mainMenuLabel}>
+                <button
+                  aria-controls="mobile-menu"
+                  aria-expanded="false"
+                  aria-label={mainMenuLabel}
+                  class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                  onBlur={() =>
+                    setTimeout(() => {
+                      isMainMenuOpen.set(false)
+                    }, 10)
+                  }
+                  onClick={() => {
+                    isMainMenuOpen.set(!isMainMenuOpen.get())
+                  }}
+                  type="button"
+                >
+                  <span class="absolute -inset-0.5" />
+                  {/* Menu open: "hidden", Menu closed: "block" */}
+                  <Menu class={`${isMainMenuOpen.get() ? 'hidden' : 'block'} h-6 w-6`} />
+                  {/* Menu open: "block", Menu closed: "hidden" */}
+                  <X class={`${isMainMenuOpen.get() ? 'block' : 'hidden'} h-6 w-6`} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -250,9 +254,7 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                       class={`flex flex-row items-center gap-2 rounded-md px-3 py-2 font-medium text-base ${String(currentHash.get()).endsWith(menuEntry.path) ? 'bg-primary text-primary-content' : 'text-neutral-content hover:bg-primary/60 hover:text-primary-content'}`}
                       href={menuEntry.path}
                     >
-                      {menuEntry.icon(
-                        `${String(currentHash.get()).endsWith(menuEntry.path) ? 'primary-content' : 'neutral-content'}`
-                      )}
+                      {menuEntry.icon()}
                       {menuEntry.label}
                     </a>
                   </Show>

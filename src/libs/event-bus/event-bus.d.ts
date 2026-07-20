@@ -5,5 +5,4 @@ export type BsEventBusType =
   | 'BS::TEAMS::CHANGE'
   | 'BS::MATCHS::CHANGE'
   | 'BS::CONTACTS::CHANGE'
-  | 'BS::THEME::CHANGE'
   | 'BS::TROMBI_TITLES::CHANGE'

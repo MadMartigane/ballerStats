@@ -1,21 +1,9 @@
-import { bsIconPropsToDataStore } from './icons'
-import type { BsIconProps } from './icons.d'
+import BsIconBase from './icon-base'
+import type { BsIconProps } from './icon-base.d'
 
 export default function BsIconBasketballBall(props: BsIconProps) {
-  const data = bsIconPropsToDataStore(props)
-
   return (
-    <svg
-      aria-label="Basketball ball"
-      fill={data.fill}
-      height={data.height}
-      role="img"
-      version="1.1"
-      viewBox="0 0 77.832 77.832"
-      width={data.width}
-      xmlns:xlink="http://www.w3.org/1999/xlink"
-      xmlns="http://www.w3.org/2000/svg"
-    >
+    <BsIconBase {...props} aria-label="Basketball ball" viewBox="0 0 77.832 77.832">
       <g>
         <path
           d="M38.916,0C17.458,0,0,17.458,0,38.916c0,2.489,0.245,4.923,0.693,7.284l-0.146,0.175c0.07,0.059,0.138,0.109,0.208,0.167
@@ -37,6 +25,6 @@ export default function BsIconBasketballBall(props: BsIconProps) {
 		c1.709-1.742,2.957-3.786,3.758-6.096c0.463,2.295,0.709,4.668,0.709,7.098C74.773,45.725,72.865,52.096,69.557,57.523z"
         />
       </g>
-    </svg>
+    </BsIconBase>
   )
 }

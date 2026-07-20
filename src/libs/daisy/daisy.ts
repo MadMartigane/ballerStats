@@ -1,5 +1,3 @@
-import bsEventBus from '../event-bus'
-
 const DS_PREF_THEME_STORAGE_KEY = 'daisy_theme'
 const THEME_ATTRIBUTE = 'data-theme'
 const THEME_HTML_TAG = 'html'
@@ -38,7 +36,6 @@ export async function setTheme(theme: string | null) {
     localStorage.setItem(DS_PREF_THEME_STORAGE_KEY, theme)
   }
 
-  bsEventBus.dispatchEvent('BS::THEME::CHANGE')
   return initTheme()
 }
 

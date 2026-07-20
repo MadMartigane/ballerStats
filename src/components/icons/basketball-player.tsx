@@ -1,21 +1,9 @@
-import { bsIconPropsToDataStore } from './icons'
-import type { BsIconProps } from './icons.d'
+import BsIconBase from './icon-base'
+import type { BsIconProps } from './icon-base.d'
 
 export default function BsIconBasketballPlayer(props: BsIconProps) {
-  const data = bsIconPropsToDataStore(props)
-
   return (
-    <svg
-      aria-label="Basketball player"
-      fill={data.fill}
-      height={data.height}
-      role="img"
-      version="1.1"
-      viewBox="0 0 563.366 563.365"
-      width={data.width}
-      xmlns:xlink="http://www.w3.org/1999/xlink"
-      xmlns="http://www.w3.org/2000/svg"
-    >
+    <BsIconBase {...props} aria-label="Basketball player" viewBox="0 0 563.366 563.365">
       <g>
         <g>
           <circle cx="319.933" cy="52.594" r="52.594" />
@@ -67,6 +55,6 @@ export default function BsIconBasketballPlayer(props: BsIconProps) {
           />
         </g>
       </g>
-    </svg>
+    </BsIconBase>
   )
 }

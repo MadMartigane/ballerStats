@@ -1,5 +1,4 @@
 import type { JSXElement } from 'solid-js'
-import type { DaisySize, DaisyVariant } from '../daisy'
 
 export type StatMatchActionItemType = 'success' | 'error' | 'secondary'
 
@@ -13,6 +12,7 @@ export type StatMatchActionItemName =
   | 'foul'
   | 'turnover'
   | 'steals'
+  | 'block'
   | 'fiveIn'
   | 'fiveOut'
   | 'gameStop'
@@ -24,11 +24,18 @@ export type StatMatchActionItem = {
   inGameAction: boolean
   opponentMatter: boolean
   value: number
-  icon: (variant?: DaisyVariant, size?: DaisySize) => JSXElement
+  icon: () => JSXElement
   label1?: string | JSXElement
   label2?: string | JSXElement
   secondaryAction?: boolean
   everyTimeAction?: boolean
+}
+
+export type StatMatchSummaryRatio = {
+  success: number
+  fail: number
+  total: number
+  percentage: number
 }
 
 export type StatMatchSummaryPlayer = {
@@ -45,24 +52,9 @@ export type StatMatchSummaryPlayer = {
     total: number
   }
   ratio: {
-    'free-throw': {
-      success: number
-      fail: number
-      total: number
-      percentage: number
-    }
-    '2pts': {
-      success: number
-      fail: number
-      total: number
-      percentage: number
-    }
-    '3pts': {
-      success: number
-      fail: number
-      total: number
-      percentage: number
-    }
+    'free-throw': StatMatchSummaryRatio
+    '2pts': StatMatchSummaryRatio
+    '3pts': StatMatchSummaryRatio
   }
   playTime: number | null
   nbPlayedMatch: number
@@ -70,6 +62,10 @@ export type StatMatchSummaryPlayer = {
   assists: number
   steals: number
   turnover: number
+  blocks: number
+  eff: number
+  astToRatio: number
+  trueShootingPercentage: number
 }
 
 export type StatMatchSummaryRebonds = {
