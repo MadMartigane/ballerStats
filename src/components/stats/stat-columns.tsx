@@ -1,8 +1,7 @@
 import { Shirt, Users } from 'lucide-solid'
 import type { JSXElement } from 'solid-js'
-import type Player from '../../libs/player/player'
-import type { ScoringKey, StatMatchSummaryPlayer } from '../../libs/stats/stats.d'
-import { isTeamPerGameRow, isTeamTotalRow } from '../../libs/stats/stats-util'
+import type Player from '../../libs/player'
+import type { ScoringKey, StatMatchSummaryPlayer } from '../../libs/stats'
 
 export type StatColumnId =
   | 'jersey'
@@ -20,8 +19,7 @@ export type StatColumnId =
   | 'tsPercent'
 
 export interface StatGlossaryEntry {
-  /** Detailed explanation shown in the modal. When absent, no "En savoir plus" button is rendered. */
-  explanation?: string
+  explanation: string
   fullName: string
 }
 
@@ -59,35 +57,22 @@ function renderRatioCell(key: ScoringKey, stats: StatMatchSummaryPlayer) {
 const SCORING_COLUMN_META: Record<ScoringKey, { label: string; glossary?: StatGlossaryEntry }> = {
   '2pts': {
     label: '2pts',
+    glossary: {
+      fullName: 'Tirs à 2 points',
+      explanation: 'Tirs à 2 points réussis / tentés, avec le pourcentage de réussite.',
+    },
   },
   '3pts': {
     label: '3pts',
-  },
-  'free-throw': {
     glossary: {
-      explanation: 'Lancers francs réussis / tentés, avec le pourcentage de réussite.',
-      fullName: 'Lancers Francs',
+      fullName: 'Tirs à 3 points',
+      explanation: 'Tirs à 3 points réussis / tentés, avec le pourcentage de réussite.',
     },
-    label: 'LF',
   },
-}
+} satisfies Record<ScoringKey, { label: string; glossary: StatGlossaryEntry }>
 
 // Iteration order must match column display order
 const SCORING_KEYS = ['free-throw', '2pts', '3pts'] as const satisfies readonly ScoringKey[]
-
-const TEAM_PER_GAME_LABEL = 'Équipe (par match)'
-const TEAM_TOTAL_LABEL = 'Équipe (total)'
-const TEAM_FALLBACK_LABEL = 'Équipe'
-
-function resolveNameLabel(stats: StatMatchSummaryPlayer, player?: Player | null): string {
-  if (isTeamPerGameRow(stats)) {
-    return TEAM_PER_GAME_LABEL
-  }
-  if (isTeamTotalRow(stats)) {
-    return TEAM_TOTAL_LABEL
-  }
-  return player?.nicName || player?.firstName || TEAM_FALLBACK_LABEL
-}
 
 export const STAT_COLUMNS: readonly StatColumn[] = [
   {
@@ -103,12 +88,20 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
   {
     id: 'name',
     label: 'Nom',
-    renderCell: (stats, player) => <td class="text-xl">{resolveNameLabel(stats, player)}</td>,
+    renderCell: (_stats, player) => <td class="text-xl">{player?.nicName || player?.firstName || 'Équipe'}</td>,
+    glossary: {
+      fullName: 'Nom du joueur',
+      explanation: 'Nom ou surnom du joueur. Pour la ligne équipe, affiche « Équipe ».',
+    },
   },
   {
     id: 'pts',
     label: 'Pts',
     renderCell: (stats) => renderScoreCell(stats.scores.total),
+    glossary: {
+      fullName: 'Points',
+      explanation: 'Nombre total de points marqués.',
+    },
   },
   {
     glossary: {
@@ -128,6 +121,10 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     id: 'fouls',
     label: 'Fautes',
     renderCell: (stats) => renderScoreCell(stats.fouls),
+    glossary: {
+      fullName: 'Fautes',
+      explanation: 'Nombre de fautes commises.',
+    },
   },
   {
     glossary: {
@@ -156,6 +153,10 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     id: 'steals',
     label: 'Steals',
     renderCell: (stats) => renderScoreCell(stats.steals),
+    glossary: {
+      fullName: 'Interceptions',
+      explanation: "Nombre de ballons volés à l'adversaire.",
+    },
   },
   ...SCORING_KEYS.map<StatColumn>((key) => ({
     glossary: SCORING_COLUMN_META[key].glossary,
@@ -167,6 +168,10 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     id: 'blocks',
     label: 'BLK',
     renderCell: (stats) => renderScoreCell(stats.blocks),
+    glossary: {
+      fullName: 'Blocks / Contres',
+      explanation: 'Nombre de tirs adverses contrés.',
+    },
   },
   {
     glossary: {
@@ -177,6 +182,10 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     id: 'eff',
     label: 'EFF',
     renderCell: (stats) => renderScoreCell(stats.eff),
+    glossary: {
+      fullName: 'Évaluation / Efficiency',
+      explanation: 'Indice de performance global calculé à partir de toutes les statistiques.',
+    },
   },
   {
     glossary: {
@@ -196,6 +205,10 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     id: 'tsPercent',
     label: 'TS%',
     renderCell: (stats) => renderScoreCell(`${stats.trueShootingPercentage}%`),
+    glossary: {
+      fullName: 'True Shooting %',
+      explanation: 'Pourcentage de réussite au tir pondéré (prend en compte 2pts, 3pts et lancers francs).',
+    },
   },
 ]
 
