@@ -1,5 +1,7 @@
 import type { JSXElement } from 'solid-js'
 
+export type ScoringKey = '2pts' | '3pts' | 'free-throw'
+
 export type StatMatchActionItemType = 'success' | 'error' | 'secondary'
 
 export type StatMatchActionItemName =
@@ -40,22 +42,13 @@ export type StatMatchSummaryRatio = {
 
 export type StatMatchSummaryPlayer = {
   playerId: string
-  scores: {
-    'free-throw': number
-    '2pts': number
-    '3pts': number
-    total: number
-  }
+  scores: Record<ScoringKey, number> & { total: number }
   rebonds: {
     defensive: number
     offensive: number
     total: number
   }
-  ratio: {
-    'free-throw': StatMatchSummaryRatio
-    '2pts': StatMatchSummaryRatio
-    '3pts': StatMatchSummaryRatio
-  }
+  ratio: Record<ScoringKey, StatMatchSummaryRatio>
   playTime: number | null
   nbPlayedMatch: number
   fouls: number

@@ -26,7 +26,8 @@ import { TEAM_OPPONENT_ID } from '../../libs/team/team'
 import { confirmAction, goTo } from '../../libs/utils'
 import { vibrate } from '../../libs/vibrator'
 import BsScoreCard from '../score-card'
-import { BsFullStatTable, BsStatSumUpRebonds } from '../stats'
+import { BsFullStatTable } from '../stats/full-stat-table'
+import { BsStatSumUpRebonds } from '../stats/sum-up-rebonds'
 import type { BsMatchProps } from './match.d'
 
 function openActionMode(playerId: string | undefined, playerOnAction: MadSignal<string | null>) {

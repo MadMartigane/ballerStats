@@ -5,7 +5,7 @@ import './global/font-family'
 
 import { HashRouter, Route } from '@solidjs/router'
 import { CircleAlert, CircleCheckBig, Skull, TriangleAlert } from 'lucide-solid'
-import { For, Suspense, lazy } from 'solid-js'
+import { For, lazy, Suspense } from 'solid-js'
 import { render } from 'solid-js/web'
 import relAppleTouchIconUrl from '/img/apple-touch-icon.png'
 import relIconUrl from '/img/favicon.ico'

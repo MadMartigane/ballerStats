@@ -1,5 +1,5 @@
 import { ChartScatter } from 'lucide-solid'
-import { BsFullStatTable } from '../components/stats'
+import { BsFullStatTable } from '../components/stats/full-stat-table'
 import { getFullStats } from '../libs/stats/stats-util'
 
 export default function Stats() {

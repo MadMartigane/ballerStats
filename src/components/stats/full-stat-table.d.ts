@@ -1,5 +1,5 @@
 import type { StatMatchSummary } from '../../libs/stats'
 
-export type BsFullStatTableProps = {
+export interface BsFullStatTableProps {
   stats: StatMatchSummary
 }
