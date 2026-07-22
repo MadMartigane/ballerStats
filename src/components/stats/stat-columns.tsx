@@ -19,7 +19,8 @@ export type StatColumnId =
   | 'tsPercent'
 
 export interface StatGlossaryEntry {
-  explanation: string
+  /** Detailed explanation shown in the modal. When absent, no "En savoir plus" button is rendered. */
+  explanation?: string
   fullName: string
 }
 
@@ -57,19 +58,11 @@ function renderRatioCell(key: ScoringKey, stats: StatMatchSummaryPlayer) {
 const SCORING_COLUMN_META: Record<ScoringKey, { label: string; glossary?: StatGlossaryEntry }> = {
   '2pts': {
     label: '2pts',
-    glossary: {
-      fullName: 'Tirs à 2 points',
-      explanation: 'Tirs à 2 points réussis / tentés, avec le pourcentage de réussite.',
-    },
   },
   '3pts': {
     label: '3pts',
-    glossary: {
-      fullName: 'Tirs à 3 points',
-      explanation: 'Tirs à 3 points réussis / tentés, avec le pourcentage de réussite.',
-    },
   },
-} satisfies Record<ScoringKey, { label: string; glossary: StatGlossaryEntry }>
+} satisfies Record<ScoringKey, { label: string; glossary?: StatGlossaryEntry }>
 
 // Iteration order must match column display order
 const SCORING_KEYS = ['free-throw', '2pts', '3pts'] as const satisfies readonly ScoringKey[]
@@ -89,19 +82,11 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     id: 'name',
     label: 'Nom',
     renderCell: (_stats, player) => <td class="text-xl">{player?.nicName || player?.firstName || 'Équipe'}</td>,
-    glossary: {
-      fullName: 'Nom du joueur',
-      explanation: 'Nom ou surnom du joueur. Pour la ligne équipe, affiche « Équipe ».',
-    },
   },
   {
     id: 'pts',
     label: 'Pts',
     renderCell: (stats) => renderScoreCell(stats.scores.total),
-    glossary: {
-      fullName: 'Points',
-      explanation: 'Nombre total de points marqués.',
-    },
   },
   {
     glossary: {
@@ -121,10 +106,6 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     id: 'fouls',
     label: 'Fautes',
     renderCell: (stats) => renderScoreCell(stats.fouls),
-    glossary: {
-      fullName: 'Fautes',
-      explanation: 'Nombre de fautes commises.',
-    },
   },
   {
     glossary: {
@@ -155,7 +136,8 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     renderCell: (stats) => renderScoreCell(stats.steals),
     glossary: {
       fullName: 'Interceptions',
-      explanation: "Nombre de ballons volés à l'adversaire.",
+      explanation:
+        "Nombre de ballons volés à l'adversaire (interceptions). Inclut également les efforts francs provoquant une perte de balle — on parle de steals élargies.",
     },
   },
   ...SCORING_KEYS.map<StatColumn>((key) => ({
@@ -168,10 +150,6 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     id: 'blocks',
     label: 'BLK',
     renderCell: (stats) => renderScoreCell(stats.blocks),
-    glossary: {
-      fullName: 'Blocks / Contres',
-      explanation: 'Nombre de tirs adverses contrés.',
-    },
   },
   {
     glossary: {
@@ -184,7 +162,8 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     renderCell: (stats) => renderScoreCell(stats.eff),
     glossary: {
       fullName: 'Évaluation / Efficiency',
-      explanation: 'Indice de performance global calculé à partir de toutes les statistiques.',
+      explanation:
+        'Indice de performance global calculé à partir de toutes les statistiques. Formule simplifiée : (Pts + Rbs + Ass + Steals + BLK) − (Tirs ratés + TO). Exemple : un match à 15 pts, 8 rebonds, 3 passes sans perte de balle donne une EFF de 26.',
     },
   },
   {
@@ -207,7 +186,8 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     renderCell: (stats) => renderScoreCell(`${stats.trueShootingPercentage}%`),
     glossary: {
       fullName: 'True Shooting %',
-      explanation: 'Pourcentage de réussite au tir pondéré (prend en compte 2pts, 3pts et lancers francs).',
+      explanation:
+        'Pourcentage de réussite au tir pondéré. Contrairement au pourcentage classique, le TS% prend en compte la valeur des tirs (3pts > 2pts) et les lancers francs. Formule : Pts / (2 × (Tirs tentés + 0.44 × LF tentés)). Un TS% de 50% est considéré comme une bonne performance.',
     },
   },
 ]
