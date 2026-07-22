@@ -32,15 +32,17 @@ export function BsStatsLegend() {
             <li class="flex items-center justify-between gap-2 rounded-xs px-2 py-1 odd:bg-base-200">
               <span class="whitespace-nowrap font-mono font-semibold">{entry.label}</span>
               <span class="flex-1 truncate text-base-content/80">{entry.glossary.fullName}</span>
-              <button
-                aria-label={`En savoir plus sur ${entry.glossary.fullName}`}
-                class="btn btn-xs btn-ghost print:hidden"
-                onClick={() => open(entry)}
-                type="button"
-              >
-                <HelpCircle />
-                En savoir plus
-              </button>
+              {entry.glossary.explanation && (
+                <button
+                  aria-label={`En savoir plus sur ${entry.glossary.fullName}`}
+                  class="btn btn-xs btn-ghost print:hidden"
+                  onClick={() => open(entry)}
+                  type="button"
+                >
+                  <HelpCircle />
+                  En savoir plus
+                </button>
+              )}
             </li>
           )}
         </For>
