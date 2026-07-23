@@ -2,6 +2,7 @@ import { Shirt, Users } from 'lucide-solid'
 import type { JSXElement } from 'solid-js'
 import type Player from '../../libs/player'
 import type { ScoringKey, StatMatchSummaryPlayer } from '../../libs/stats'
+import { isTeamPerGameRow, isTeamTotalRow } from '../../libs/stats/stats-util'
 
 export type StatColumnId =
   | 'jersey'
@@ -74,6 +75,20 @@ const SCORING_COLUMN_META = {
 // Iteration order must match column display order
 const SCORING_KEYS = ['free-throw', '2pts', '3pts'] as const satisfies readonly ScoringKey[]
 
+const TEAM_PER_GAME_LABEL = 'Équipe (par match)'
+const TEAM_TOTAL_LABEL = 'Équipe (total)'
+const TEAM_FALLBACK_LABEL = 'Équipe'
+
+function resolveNameLabel(stats: StatMatchSummaryPlayer, player?: Player | null): string {
+  if (isTeamPerGameRow(stats)) {
+    return TEAM_PER_GAME_LABEL
+  }
+  if (isTeamTotalRow(stats)) {
+    return TEAM_TOTAL_LABEL
+  }
+  return player?.nicName || player?.firstName || TEAM_FALLBACK_LABEL
+}
+
 export const STAT_COLUMNS: readonly StatColumn[] = [
   {
     id: 'jersey',
@@ -88,7 +103,7 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
   {
     id: 'name',
     label: 'Nom',
-    renderCell: (_stats, player) => <td class="text-xl">{player?.nicName || player?.firstName || 'Équipe'}</td>,
+    renderCell: (stats, player) => <td class="text-xl">{resolveNameLabel(stats, player)}</td>,
   },
   {
     id: 'pts',

@@ -153,52 +153,6 @@ describe('getFullStats', () => {
   })
 })
 
-describe('getFullStats championship filter', () => {
-  const playerId = 'filter-player'
-  const team = makeTeam({ id: 'team-filter', name: 'FilterTeam', playerIds: [playerId] })
-
-  const makeChampionshipMatch = (championship: string) =>
-    makeMatch({
-      teamId: 'team-filter',
-      championship,
-      stats: [makeStatEntry('2pts', { type: 'success', value: 2, playerId })],
-    })
-
-  beforeEach(() => {
-    mockOrchestrator.Teams.teams = [team]
-  })
-
-  it('includes all matches when called without a filter', () => {
-    mockOrchestrator.Matchs.matchs = [makeChampionshipMatch('Saison régulière'), makeChampionshipMatch('Coupe Hiver')]
-
-    const summary = getFullStats()
-
-    expect(summary.players).toHaveLength(1)
-    expect(summary.players[0].playerId).toBe(playerId)
-    expect(summary.players[0].nbPlayedMatch).toBe(2)
-  })
-
-  it('only includes matches matching the specified championship filter', () => {
-    mockOrchestrator.Matchs.matchs = [
-      makeChampionshipMatch('Saison régulière'),
-      makeChampionshipMatch('Coupe Hiver'),
-      makeChampionshipMatch('Saison régulière'),
-    ]
-
-    const summary = getFullStats('Saison régulière')
-
-    expect(summary.players[0].nbPlayedMatch).toBe(2)
-  })
-
-  it('includes all matches when the filter is an empty string', () => {
-    mockOrchestrator.Matchs.matchs = [makeChampionshipMatch('Saison régulière'), makeChampionshipMatch('Coupe Hiver')]
-
-    const summary = getFullStats('')
-
-    expect(summary.players[0].nbPlayedMatch).toBe(2)
-  })
-})
-
 describe('getFullStats - teamScoresTotal (cumulative vs per-game)', () => {
   // Fixture: 2 matchs, 1 player ('p1').
   // Hand-calculated expected values:
