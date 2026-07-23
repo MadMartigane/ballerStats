@@ -3,6 +3,7 @@ import orchestrator from '../orchestrator/orchestrator'
 import { TEAM_OPPONENT_ID } from '../team/team'
 import { clone } from '../utils'
 import type {
+  FullStatSummary,
   StatMatchActionItemName,
   StatMatchActionItemType,
   StatMatchSummary,
@@ -15,6 +16,21 @@ import type {
 const FREE_THROW_ATTEMPT_FACTOR = 0.44
 /** Points-per-possession normalizer in TS% formula */
 const POINTS_PER_POSSESSION = 2
+
+/** Sentinel playerId marking the per-game team aggregate row. */
+export const TEAM_PER_GAME_ID = '__TEAM_PER_GAME__'
+/** Sentinel playerId marking the cumulative team totals row. */
+export const TEAM_TOTAL_ID = '__TEAM_TOTAL__'
+
+/** Returns true when the stats row is the per-game team aggregate row. */
+export function isTeamPerGameRow(stats: StatMatchSummaryPlayer): boolean {
+  return stats.playerId === TEAM_PER_GAME_ID
+}
+
+/** Returns true when the stats row is the cumulative team totals row. */
+export function isTeamTotalRow(stats: StatMatchSummaryPlayer): boolean {
+  return stats.playerId === TEAM_TOTAL_ID
+}
 
 /**
  * Division that never produces NaN or Infinity.
@@ -97,6 +113,51 @@ export function computeDerivedStats(player: StatMatchSummaryPlayer): {
 /** Apply derived stats (EFF, AST/TO, TS%) directly onto a target stat object. */
 function applyDerivedStats(target: StatMatchSummaryPlayer): void {
   Object.assign(target, computeDerivedStats(target))
+}
+
+/** Recompute all ratios' percentages and derived stats on a fully-populated team row. */
+function finalizeTeamScores(team: StatMatchSummaryPlayer): void {
+  recomputeRatioPercentage(team.ratio['2pts'])
+  recomputeRatioPercentage(team.ratio['3pts'])
+  recomputeRatioPercentage(team.ratio['free-throw'])
+  applyDerivedStats(team)
+}
+
+/**
+ * Divide every volume field of a team row by a divisor and recompute derived stats.
+ * The rebonds.total is divided directly (not summed from defensive + offensive) to
+ * avoid double-rounding drift.
+ */
+function divideTeamScoresBy(team: StatMatchSummaryPlayer, divisor: number): void {
+  // Capture the raw total first: dividePlayerStatsBy recomputes total as offensive + defensive.
+  const rawRebondsTotal = team.rebonds.total
+  dividePlayerStatsBy(team, divisor)
+  // Team total is divided directly (not summed) to avoid double-rounding drift.
+  // Accepted trade-off: on the per-game team row, rebonds.total may differ by ±1 from
+  // (offensive + defensive) as displayed, because each component rounds independently.
+  // The headline total stays numerically honest vs. the totals row.
+  team.rebonds.total = safeDivide(rawRebondsTotal, divisor)
+}
+
+/** Clones the per-game team row into a totals row, stamping both sentinel playerIds.
+ *  Returns the totals-row clone; the source is marked as the per-game row. */
+function markTeamRowPair(perGame: StatMatchSummaryPlayer): StatMatchSummaryPlayer {
+  const totals = clone(perGame) as StatMatchSummaryPlayer
+  totals.playerId = TEAM_TOTAL_ID
+  perGame.playerId = TEAM_PER_GAME_ID
+  return totals
+}
+
+/** Rate stats (percentages, AST/TO, TS%) are aggregation-invariant: the RFC requires them
+ *  identical on both team rows, computed from the RAW TOTALS. After per-game division,
+ *  recomputing them from rounded per-game counts would diverge — restore them from the
+ *  totals row instead. */
+function restoreInvariantRates(perGame: StatMatchSummaryPlayer, totals: StatMatchSummaryPlayer): void {
+  perGame.ratio['2pts'].percentage = totals.ratio['2pts'].percentage
+  perGame.ratio['3pts'].percentage = totals.ratio['3pts'].percentage
+  perGame.ratio['free-throw'].percentage = totals.ratio['free-throw'].percentage
+  perGame.astToRatio = totals.astToRatio
+  perGame.trueShootingPercentage = totals.trueShootingPercentage
 }
 
 const RAW_STAT_MATCH_SUMMARY: StatMatchSummary = {
@@ -234,10 +295,6 @@ function getTeamScore(match: Match, playerIds: Array<string>) {
   return playerIds.reduce((score: number, playerId) => score + getPlayerScore(match, playerId), 0)
 }
 
-function isMatchHaveStatOfType(match: Match, statName: StatMatchActionItemName) {
-  return Boolean(match.stats.find((statItem) => statItem.name === statName))
-}
-
 function getTeamScores(players: Array<StatMatchSummaryPlayer>) {
   const rawTeamScores = clone(RAW_STAT_MATCH_SUMMARY.teamScores) as StatMatchSummaryPlayer
 
@@ -272,11 +329,7 @@ function getTeamScores(players: Array<StatMatchSummaryPlayer>) {
     return total
   }, rawTeamScores)
 
-  recomputeRatioPercentage(teamScores.ratio['free-throw'])
-  recomputeRatioPercentage(teamScores.ratio['2pts'])
-  recomputeRatioPercentage(teamScores.ratio['3pts'])
-
-  applyDerivedStats(teamScores)
+  finalizeTeamScores(teamScores)
 
   return teamScores
 }
@@ -456,33 +509,40 @@ function sumPlayerStats(
   return statResult
 }
 
+/** Divide every per-game field of a player row by a divisor.
+ *  rebonds.total is recomputed as the sum of the already-divided defensive + offensive
+ *  components (rather than divided directly) to stay consistent with the per-match shape. */
+function dividePlayerStatsBy(playerSats: StatMatchSummaryPlayer, divisor: number): void {
+  playerSats.fouls = safeDivide(playerSats.fouls, divisor)
+  playerSats.assists = safeDivide(playerSats.assists, divisor)
+  playerSats.blocks = safeDivide(playerSats.blocks, divisor)
+
+  playerSats.turnover = safeDivide(playerSats.turnover, divisor)
+  playerSats.steals = safeDivide(playerSats.steals, divisor)
+
+  playerSats.scores.total = safeDivide(playerSats.scores.total, divisor)
+
+  playerSats.scores['2pts'] = safeDivide(playerSats.scores['2pts'], divisor)
+
+  playerSats.scores['3pts'] = safeDivide(playerSats.scores['3pts'], divisor)
+
+  playerSats.scores['free-throw'] = safeDivide(playerSats.scores['free-throw'], divisor)
+
+  divideRatioBy(playerSats.ratio['2pts'], divisor)
+  divideRatioBy(playerSats.ratio['3pts'], divisor)
+  divideRatioBy(playerSats.ratio['free-throw'], divisor)
+
+  playerSats.rebonds.defensive = safeDivide(playerSats.rebonds.defensive, divisor)
+  playerSats.rebonds.offensive = safeDivide(playerSats.rebonds.offensive, divisor)
+  playerSats.rebonds.total = playerSats.rebonds.offensive + playerSats.rebonds.defensive
+}
+
 function dividePlayerStatsByNbMatch(playerSats: StatMatchSummaryPlayer) {
   if (!playerSats.nbPlayedMatch) {
     return playerSats
   }
 
-  playerSats.fouls = safeDivide(playerSats.fouls, playerSats.nbPlayedMatch)
-  playerSats.assists = safeDivide(playerSats.assists, playerSats.nbPlayedMatch)
-  playerSats.blocks = safeDivide(playerSats.blocks, playerSats.nbPlayedMatch)
-
-  playerSats.turnover = safeDivide(playerSats.turnover, playerSats.nbPlayedMatch)
-  playerSats.steals = safeDivide(playerSats.steals, playerSats.nbPlayedMatch)
-
-  playerSats.scores.total = safeDivide(playerSats.scores.total, playerSats.nbPlayedMatch)
-
-  playerSats.scores['2pts'] = safeDivide(playerSats.scores['2pts'], playerSats.nbPlayedMatch)
-
-  playerSats.scores['3pts'] = safeDivide(playerSats.scores['3pts'], playerSats.nbPlayedMatch)
-
-  playerSats.scores['free-throw'] = safeDivide(playerSats.scores['free-throw'], playerSats.nbPlayedMatch)
-
-  divideRatioBy(playerSats.ratio['2pts'], playerSats.nbPlayedMatch)
-  divideRatioBy(playerSats.ratio['3pts'], playerSats.nbPlayedMatch)
-  divideRatioBy(playerSats.ratio['free-throw'], playerSats.nbPlayedMatch)
-
-  playerSats.rebonds.defensive = safeDivide(playerSats.rebonds.defensive, playerSats.nbPlayedMatch)
-  playerSats.rebonds.offensive = safeDivide(playerSats.rebonds.offensive, playerSats.nbPlayedMatch)
-  playerSats.rebonds.total = playerSats.rebonds.offensive + playerSats.rebonds.defensive
+  dividePlayerStatsBy(playerSats, playerSats.nbPlayedMatch)
 
   return playerSats
 }
@@ -511,12 +571,14 @@ export function getStatSummary(match: Match | null): StatMatchSummary {
   }
 }
 
-export function getFullStats(): StatMatchSummary {
+export function getFullStats(): FullStatSummary {
   // TODO:filter by tournament, date, team, etc.
   const matchs = orchestrator.Matchs.matchs
 
   if (matchs.length === 0) {
-    return clone(RAW_STAT_MATCH_SUMMARY) as StatMatchSummary
+    const base = clone(RAW_STAT_MATCH_SUMMARY) as StatMatchSummary
+    const teamScoresTotal = markTeamRowPair(base.teamScores)
+    return { ...base, teamScoresTotal }
   }
 
   // TODO: get team by argv
@@ -524,31 +586,31 @@ export function getFullStats(): StatMatchSummary {
 
   const stats = matchs.map((match: Match) => getStatSummary(match))
 
-  const fullStats = stats.reduce((statResult: StatMatchSummary, statCurrentMatch: StatMatchSummary) => {
-    statResult.opponentFouls += statCurrentMatch.opponentFouls
+  const summed = clone(RAW_STAT_MATCH_SUMMARY) as StatMatchSummary
 
-    statResult.opponentScore += statCurrentMatch.opponentScore
+  for (const statCurrentMatch of stats) {
+    summed.opponentFouls += statCurrentMatch.opponentFouls
 
-    statResult.teamScore += statCurrentMatch.teamScore
+    summed.opponentScore += statCurrentMatch.opponentScore
 
-    statResult.rebonds.teamTotal += statCurrentMatch.rebonds.teamTotal
+    summed.teamScore += statCurrentMatch.teamScore
 
-    statResult.rebonds.teamOffensive += statCurrentMatch.rebonds.teamOffensive
+    summed.rebonds.teamTotal += statCurrentMatch.rebonds.teamTotal
 
-    statResult.rebonds.teamDefensive += statCurrentMatch.rebonds.teamDefensive
+    summed.rebonds.teamOffensive += statCurrentMatch.rebonds.teamOffensive
 
-    statResult.rebonds.opponentTotal += statCurrentMatch.rebonds.opponentTotal
+    summed.rebonds.teamDefensive += statCurrentMatch.rebonds.teamDefensive
 
-    statResult.rebonds.opponentOffensive += statCurrentMatch.rebonds.opponentOffensive
+    summed.rebonds.opponentTotal += statCurrentMatch.rebonds.opponentTotal
 
-    statResult.rebonds.opponentDefensive += statCurrentMatch.rebonds.opponentDefensive
+    summed.rebonds.opponentOffensive += statCurrentMatch.rebonds.opponentOffensive
 
-    sumPlayerStats(statResult.teamScores, statCurrentMatch.teamScores)
+    summed.rebonds.opponentDefensive += statCurrentMatch.rebonds.opponentDefensive
 
-    return statResult
-  }, clone(RAW_STAT_MATCH_SUMMARY) as StatMatchSummary)
+    sumPlayerStats(summed.teamScores, statCurrentMatch.teamScores)
+  }
 
-  fullStats.players = team.playerIds.map((playerId: string): StatMatchSummaryPlayer => {
+  summed.players = team.playerIds.map((playerId: string): StatMatchSummaryPlayer => {
     const currentPlayerStats = clone(RAW_STAT_MATCH_SUMMARY.teamScores) as StatMatchSummaryPlayer
 
     currentPlayerStats.playerId = playerId
@@ -571,60 +633,51 @@ export function getFullStats(): StatMatchSummary {
     return currentPlayerStats
   })
 
-  fullStats.players.sort((up, down) => down.scores.total - up.scores.total)
+  summed.players.sort((up, down) => down.scores.total - up.scores.total)
 
   const nbMatch = matchs.length
 
-  fullStats.teamScore = safeDivide(fullStats.teamScore, nbMatch)
-  fullStats.opponentScore = safeDivide(fullStats.opponentScore, nbMatch)
-  fullStats.opponentFouls = safeDivide(fullStats.opponentFouls, nbMatch)
+  summed.teamScore = safeDivide(summed.teamScore, nbMatch)
+  summed.opponentScore = safeDivide(summed.opponentScore, nbMatch)
+  summed.opponentFouls = safeDivide(summed.opponentFouls, nbMatch)
 
-  fullStats.rebonds.teamTotal = safeDivide(fullStats.rebonds.teamTotal, nbMatch)
-  fullStats.rebonds.teamOffensive = safeDivide(fullStats.rebonds.teamOffensive, nbMatch)
-  fullStats.rebonds.teamDefensive = safeDivide(fullStats.rebonds.teamDefensive, nbMatch)
-  fullStats.rebonds.opponentTotal = safeDivide(fullStats.rebonds.opponentTotal, nbMatch)
-  fullStats.rebonds.opponentOffensive = safeDivide(fullStats.rebonds.opponentOffensive, nbMatch)
-  fullStats.rebonds.opponentDefensive = safeDivide(fullStats.rebonds.opponentDefensive, nbMatch)
-  fullStats.rebonds.teamTotalPercentage = safePercentage(
-    fullStats.rebonds.teamTotal,
-    fullStats.rebonds.teamTotal + fullStats.rebonds.opponentTotal
+  summed.rebonds.teamTotal = safeDivide(summed.rebonds.teamTotal, nbMatch)
+  summed.rebonds.teamOffensive = safeDivide(summed.rebonds.teamOffensive, nbMatch)
+  summed.rebonds.teamDefensive = safeDivide(summed.rebonds.teamDefensive, nbMatch)
+  summed.rebonds.opponentTotal = safeDivide(summed.rebonds.opponentTotal, nbMatch)
+  summed.rebonds.opponentOffensive = safeDivide(summed.rebonds.opponentOffensive, nbMatch)
+  summed.rebonds.opponentDefensive = safeDivide(summed.rebonds.opponentDefensive, nbMatch)
+  summed.rebonds.teamTotalPercentage = safePercentage(
+    summed.rebonds.teamTotal,
+    summed.rebonds.teamTotal + summed.rebonds.opponentTotal
   )
-  fullStats.rebonds.teamDefensivePercentage = safePercentage(
-    fullStats.rebonds.teamDefensive,
-    fullStats.rebonds.teamDefensive + fullStats.rebonds.opponentDefensive
+  summed.rebonds.teamDefensivePercentage = safePercentage(
+    summed.rebonds.teamDefensive,
+    summed.rebonds.teamDefensive + summed.rebonds.opponentDefensive
   )
-  fullStats.rebonds.teamOffensivePercentage = safePercentage(
-    fullStats.rebonds.teamOffensive,
-    fullStats.rebonds.teamOffensive + fullStats.rebonds.opponentOffensive
+  summed.rebonds.teamOffensivePercentage = safePercentage(
+    summed.rebonds.teamOffensive,
+    summed.rebonds.teamOffensive + summed.rebonds.opponentOffensive
   )
 
-  fullStats.teamScores.scores['free-throw'] = safeDivide(fullStats.teamScores.scores['free-throw'], nbMatch)
-  fullStats.teamScores.scores['2pts'] = safeDivide(fullStats.teamScores.scores['2pts'], nbMatch)
-  fullStats.teamScores.scores['3pts'] = safeDivide(fullStats.teamScores.scores['3pts'], nbMatch)
-  fullStats.teamScores.scores.total = safeDivide(fullStats.teamScores.scores.total, nbMatch)
+  // 1. Finalize the raw summed team row once so percentages and derived stats reflect totals.
+  finalizeTeamScores(summed.teamScores)
 
-  fullStats.teamScores.rebonds.defensive = safeDivide(fullStats.teamScores.rebonds.defensive, nbMatch)
-  fullStats.teamScores.rebonds.offensive = safeDivide(fullStats.teamScores.rebonds.offensive, nbMatch)
-  fullStats.teamScores.rebonds.total = safeDivide(fullStats.teamScores.rebonds.total, nbMatch)
+  // 2. Clone the finalized row into the totals-row clone and stamp both sentinel playerIds.
+  //    Stamping TEAM_PER_GAME_ID on the source here is safe: division math is independent of playerId.
+  const teamScoresTotal = markTeamRowPair(summed.teamScores)
 
-  divideRatioBy(fullStats.teamScores.ratio['2pts'], nbMatch)
-  divideRatioBy(fullStats.teamScores.ratio['3pts'], nbMatch)
-  divideRatioBy(fullStats.teamScores.ratio['free-throw'], nbMatch)
+  // 3. Divide the per-game row uniformly by nbMatch, then re-apply derived stats.
+  // RFC-STATS-TEAM-DUAL-ROW §2.4: legacy per-stat-type divisors (nbMatchFouls,
+  // nbMatchTurnover, nbMatchSteals, nbMatchAssists, nbMatchBlocks) and
+  // isMatchHaveStatOfType were intentionally removed — new season, uniform data.
+  divideTeamScoresBy(summed.teamScores, nbMatch)
+  applyDerivedStats(summed.teamScores)
+  // Rate stats (percentages, AST/TO, TS%) are aggregation-invariant: recomputing
+  // them from rounded per-game counts would diverge from the totals row, so we
+  // restore them from the totals row after the derived-stats recompute. EFF is
+  // a volume stat and stays recomputed from the divided values.
+  restoreInvariantRates(summed.teamScores, teamScoresTotal)
 
-  // Fouls, turnover, steals and assists was not registered on the first matchs.
-  const nbMatchFouls = matchs.filter((match) => isMatchHaveStatOfType(match, 'foul')).length
-  const nbMatchTurnover = matchs.filter((match) => isMatchHaveStatOfType(match, 'turnover')).length
-  const nbMatchSteals = matchs.filter((match) => isMatchHaveStatOfType(match, 'steals')).length
-  const nbMatchAssists = matchs.filter((match) => isMatchHaveStatOfType(match, 'assist')).length
-  const nbMatchBlocks = matchs.filter((match) => isMatchHaveStatOfType(match, 'block')).length
-
-  fullStats.teamScores.fouls = safeDivide(fullStats.teamScores.fouls, nbMatchFouls)
-  fullStats.teamScores.blocks = safeDivide(fullStats.teamScores.blocks, nbMatchBlocks)
-  fullStats.teamScores.turnover = safeDivide(fullStats.teamScores.turnover, nbMatchTurnover)
-  fullStats.teamScores.steals = safeDivide(fullStats.teamScores.steals, nbMatchSteals)
-  fullStats.teamScores.assists = safeDivide(fullStats.teamScores.assists, nbMatchAssists)
-
-  applyDerivedStats(fullStats.teamScores)
-
-  return fullStats
+  return { ...summed, teamScoresTotal }
 }

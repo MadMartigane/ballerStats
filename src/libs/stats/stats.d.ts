@@ -85,3 +85,12 @@ export type StatMatchSummary = {
   teamFouls?: number
   teamSteals?: number
 }
+
+/** Stats accepted by the full stat table: a plain summary, optionally carrying the cumulative totals row. */
+export type StatTableStats = StatMatchSummary & { teamScoresTotal?: StatMatchSummaryPlayer }
+
+/** Multi-match aggregate summary returned by getFullStats(). Always carries the
+ *  raw cumulative team totals row alongside the per-game row. */
+export type FullStatSummary = StatTableStats & {
+  teamScoresTotal: StatMatchSummaryPlayer
+}

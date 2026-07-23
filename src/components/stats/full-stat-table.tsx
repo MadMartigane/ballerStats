@@ -1,10 +1,25 @@
 import { For } from 'solid-js'
 import orchestrator from '../../libs/orchestrator/orchestrator'
+import type { StatMatchSummaryPlayer } from '../../libs/stats'
 import type { BsFullStatTableProps } from './full-stat-table.d'
 import { STAT_COLUMNS } from './stat-columns'
 import { BsStatsLegend } from './stats-legend'
 
+const TEAM_TOTAL_ROW_SEPARATOR_CLASS = 'border-base-300 border-t-2'
+
+interface TeamRow {
+  row: StatMatchSummaryPlayer
+  rowClass?: string
+}
+
 export function BsFullStatTable(props: BsFullStatTableProps) {
+  const teamRows = (): TeamRow[] => [
+    { row: props.stats.teamScores },
+    ...(props.stats.teamScoresTotal
+      ? [{ row: props.stats.teamScoresTotal, rowClass: TEAM_TOTAL_ROW_SEPARATOR_CLASS }]
+      : []),
+  ]
+
   return (
     <div>
       <div class="overflow-x-auto">
@@ -31,9 +46,13 @@ export function BsFullStatTable(props: BsFullStatTableProps) {
               }}
             </For>
 
-            <tr>
-              <For each={STAT_COLUMNS}>{(column) => column.renderCell(props.stats.teamScores)}</For>
-            </tr>
+            <For each={teamRows()}>
+              {(teamRow) => (
+                <tr class={teamRow.rowClass}>
+                  <For each={STAT_COLUMNS}>{(column) => column.renderCell(teamRow.row)}</For>
+                </tr>
+              )}
+            </For>
           </tbody>
         </table>
       </div>
