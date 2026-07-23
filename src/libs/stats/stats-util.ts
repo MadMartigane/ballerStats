@@ -304,7 +304,7 @@ function getTeamScore(match: Match, playerIds: string[]) {
   return playerIds.reduce((score: number, playerId) => score + getPlayerScore(match, playerId), 0)
 }
 
-function getTeamScores(players: StatMatchSummaryPlayer[]) {
+function getTeamScores(players: Array<StatMatchSummaryPlayer>) {
   const rawTeamScores = clone(RAW_STAT_MATCH_SUMMARY.teamScores) as StatMatchSummaryPlayer
 
   const teamScores = players.reduce((total, playerStat) => {
@@ -580,9 +580,9 @@ export function getStatSummary(match: Match | null): StatMatchSummary {
   }
 }
 
-export function getFullStats(championshipFilter?: string): FullStatSummary {
-  const allMatchs = orchestrator.Matchs.matchs
-  const matchs = championshipFilter ? allMatchs.filter((m) => m.championship === championshipFilter) : allMatchs
+export function getFullStats(): FullStatSummary {
+  // TODO:filter by tournament, date, team, etc.
+  const matchs = orchestrator.Matchs.matchs
 
   if (matchs.length === 0) {
     const base = clone(RAW_STAT_MATCH_SUMMARY) as StatMatchSummary
