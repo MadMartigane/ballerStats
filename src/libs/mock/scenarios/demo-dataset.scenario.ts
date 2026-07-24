@@ -11,16 +11,6 @@ import { makePartialMatch, makeScenarioMatch } from './full-game.scenario'
 
 export const TEAM_A_STAR_ID = 'player-1'
 
-const DEMO_CLUB_ID = 'club-demo'
-const DEMO_CLUB_NAME = 'BCC Marseille'
-const DEMO_CLUB_LICENSE = '1310000000'
-
-const CHAMPIONSHIP = {
-  FRIENDLY: 'Amical',
-  REGULAR_SEASON: 'Saison régulière',
-  WINTER_CUP: 'Coupe Hiver',
-} as const
-
 interface PlayerSeed {
   firstName: string
   id: string
@@ -285,6 +275,7 @@ export function seedDemoDataset(): DemoDataset {
     date: matchDate(0),
     opponent: 'Lions de Berlin',
     type: 'home',
+    date: matchDate(0),
   })
 
   const match2 = makeScenarioMatch('blowoutWin', 'team-a', TEAM_A_ROSTER, {
@@ -292,6 +283,7 @@ export function seedDemoDataset(): DemoDataset {
     date: matchDate(1),
     opponent: 'Panthers BC',
     type: 'outside',
+    date: matchDate(1),
   })
 
   const match3 = makeScenarioMatch('blowoutLoss', 'team-a', TEAM_A_ROSTER, {
@@ -299,6 +291,7 @@ export function seedDemoDataset(): DemoDataset {
     date: matchDate(2),
     opponent: 'Sharks United',
     type: 'home',
+    date: matchDate(2),
   })
 
   const match4 = makePartialMatch('team-a', TEAM_A_ROSTER, {
@@ -306,6 +299,25 @@ export function seedDemoDataset(): DemoDataset {
     date: matchDate(3),
     opponent: 'Eagles Junior',
     type: 'outside',
+    date: matchDate(3),
+  })
+
+  // Contacts (last names aligned to new players)
+  const contact1 = makeContact({
+    id: 'contact-1',
+    playerId: 'player-1',
+    firstName: 'Marie',
+    lastName: 'Dupont',
+    relationship: 'mother',
+    phone: '+33000000001',
+  })
+  const contact2 = makeContact({
+    id: 'contact-2',
+    playerId: 'player-2',
+    firstName: 'Paul',
+    lastName: 'Bernard',
+    relationship: 'father',
+    phone: '+33000000002',
   })
 
   return {
