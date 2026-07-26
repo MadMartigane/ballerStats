@@ -12,6 +12,18 @@ import type {
   StatMatchSummaryRebonds,
 } from './stats.d'
 
+export type MatchOutcome = 'win' | 'loss' | 'tie' | 'none'
+
+export function getMatchOutcome(match: Match): { result: MatchOutcome; teamScore: number; opponentScore: number } {
+  if (match.stats.length === 0) {
+    return { result: 'none', teamScore: 0, opponentScore: 0 }
+  }
+  const { teamScore, opponentScore } = getStatSummary(match)
+  // biome-ignore lint/style/noNestedTernary: ternary is required by audit finding P1-1 instead of let/if-else.
+  const result: MatchOutcome = teamScore > opponentScore ? 'win' : teamScore < opponentScore ? 'loss' : 'tie'
+  return { result, teamScore, opponentScore }
+}
+
 /** Standard factor for converting free-throw attempts to shooting possessions (NBA TS% formula) */
 const FREE_THROW_ATTEMPT_FACTOR = 0.44
 /** Points-per-possession normalizer in TS% formula */
@@ -230,17 +242,14 @@ function getPlayerIdsInStats(match: Match) {
   return match.stats
     .filter((stats) => stats.playerId !== TEAM_OPPONENT_ID)
     .map((stats) => stats.playerId)
-    .reduce(
-      (result, playerId) => {
-        if (!playerId || result.includes(playerId)) {
-          return result
-        }
-
-        result.push(playerId)
+    .reduce((result, playerId) => {
+      if (!playerId || result.includes(playerId)) {
         return result
-      },
-      [] as Array<string>
-    )
+      }
+
+      result.push(playerId)
+      return result
+    }, [] as string[])
 }
 
 function getPlayerScore(match: Match, playerId: string) {
@@ -291,11 +300,11 @@ function getPlayerBlocks(match: Match, playerId: string) {
   return getPlayerStatByType(match, playerId, 'block')
 }
 
-function getTeamScore(match: Match, playerIds: Array<string>) {
+function getTeamScore(match: Match, playerIds: string[]) {
   return playerIds.reduce((score: number, playerId) => score + getPlayerScore(match, playerId), 0)
 }
 
-function getTeamScores(players: Array<StatMatchSummaryPlayer>) {
+function getTeamScores(players: StatMatchSummaryPlayer[]) {
   const rawTeamScores = clone(RAW_STAT_MATCH_SUMMARY.teamScores) as StatMatchSummaryPlayer
 
   const teamScores = players.reduce((total, playerStat) => {
@@ -381,15 +390,15 @@ function getOpponentFouls(match: Match) {
   return getPlayerStatByType(match, TEAM_OPPONENT_ID, 'foul')
 }
 
-function getTeamDefensiveRebonds(match: Match, playerIds: Array<string>) {
+function getTeamDefensiveRebonds(match: Match, playerIds: string[]) {
   return playerIds.reduce((result, playerId) => result + getPlayerStatByType(match, playerId, 'defensive-rebond'), 0)
 }
 
-function getTeamOffensiveRebonds(match: Match, playerIds: Array<string>) {
+function getTeamOffensiveRebonds(match: Match, playerIds: string[]) {
   return playerIds.reduce((result, playerId) => result + getPlayerStatByType(match, playerId, 'offensive-rebond'), 0)
 }
 
-function getFullRebondStats(match: Match, playerIds: Array<string>): StatMatchSummaryRebonds {
+function getFullRebondStats(match: Match, playerIds: string[]): StatMatchSummaryRebonds {
   const opponentDefensive = getOpponentDefensiveRebonds(match)
   const opponentOffensive = getOpponentOffensiveRebonds(match)
   const opponentTotal = opponentDefensive + opponentOffensive
@@ -571,9 +580,9 @@ export function getStatSummary(match: Match | null): StatMatchSummary {
   }
 }
 
-export function getFullStats(): FullStatSummary {
-  // TODO:filter by tournament, date, team, etc.
-  const matchs = orchestrator.Matchs.matchs
+export function getFullStats(championshipFilter?: string): FullStatSummary {
+  const allMatchs = orchestrator.Matchs.matchs
+  const matchs = championshipFilter ? allMatchs.filter((m) => m.championship === championshipFilter) : allMatchs
 
   if (matchs.length === 0) {
     const base = clone(RAW_STAT_MATCH_SUMMARY) as StatMatchSummary

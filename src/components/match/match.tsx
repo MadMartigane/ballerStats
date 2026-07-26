@@ -576,6 +576,11 @@ export default function BsMatch(props: BsMatchProps) {
 
   return (
     <div class="w-full">
+      <Show when={match?.championship}>
+        <div class="mb-2 flex justify-center">
+          <span class="badge badge-neutral gap-1">{match?.championship}</span>
+        </div>
+      </Show>
       <div class="w-full rounded-xs border border-neutral bg-secondary text-secondary-content">
         <BsScoreCard
           date={match?.date || null}

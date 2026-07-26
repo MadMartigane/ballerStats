@@ -1,13 +1,13 @@
 import type { JSXElement } from 'solid-js'
 
-export type BsTileProps = {
-  children?: JSXElement | Array<JSXElement>
-  header?: JSXElement
-  title?: JSXElement
+export interface BsTileProps {
   badge?: JSXElement
-  status?: JSXElement
+  body?: JSXElement | JSXElement[]
+  children?: JSXElement | JSXElement[]
+  footer?: JSXElement | JSXElement[]
+  header?: JSXElement
   info?: JSXElement
-  body?: JSXElement | Array<JSXElement>
-  footer?: JSXElement | Array<JSXElement>
   onClick?: (event?: MouseEvent & { currentTarget: HTMLDivElement; target: Element }) => void
+  status?: JSXElement
+  title?: JSXElement
 }

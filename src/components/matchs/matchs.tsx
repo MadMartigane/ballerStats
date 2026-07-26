@@ -1,13 +1,15 @@
 import { MessageCircleWarning, Save, UserPlus, Users, X } from 'lucide-solid'
-import { For, Show } from 'solid-js'
+import { createMemo, For, Show } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import bsEventBus from '../../libs/event-bus'
 import MadSignal from '../../libs/mad-signal'
 import type { MatchRawData, MatchType } from '../../libs/match'
 import Match from '../../libs/match'
+import { getUniqueChampionships, groupMatchesByChampionship } from '../../libs/match/championship-util'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import { goTo, scrollBottom, scrollTop } from '../../libs/utils'
 import BsCard from '../card'
+import BsCombobox from '../combobox/combobox'
 import { BsDatePicker } from '../date-picker/date-picker'
 import BsInput from '../input'
 import BsMatch from '../match-tile'
@@ -19,28 +21,21 @@ let isEditingNewMatch = false
 const isAddingMatch: MadSignal<boolean> = new MadSignal(false)
 const canAddMatch: MadSignal<boolean> = new MadSignal(false)
 const matchLength: MadSignal<number> = new MadSignal(orchestrator.Matchs.length)
-const [matchs, setMatchs] = createStore(getSortedMatchs())
+const [matchs, setMatchs] = createStore(orchestrator.Matchs.matchs)
 const [teams, setTeams] = createStore(orchestrator.Teams.teams)
+const championshipOptions = createMemo(() => getUniqueChampionships(matchs))
+const grouped = createMemo(() => groupMatchesByChampionship(matchs))
 
 let currentMatch: Match | null = null
 
 bsEventBus.addEventListener('BS::MATCHS::CHANGE', () => {
   matchLength.set(orchestrator.Matchs.length)
-  setMatchs(getSortedMatchs())
+  setMatchs(orchestrator.Matchs.matchs)
 })
 
 bsEventBus.addEventListener('BS::TEAMS::CHANGE', () => {
   setTeams(orchestrator.Teams.teams)
 })
-
-function getSortedMatchs() {
-  return orchestrator.Matchs.matchs.sort((a, b) => {
-    const dateA = a.date ? new Date(a.date) : new Date()
-    const dateB = b.date ? new Date(b.date) : new Date()
-
-    return dateA.getTime() - dateB.getTime()
-  })
-}
 
 function setNewMatchData(data: MatchRawData) {
   if (currentMatch) {
@@ -57,7 +52,7 @@ function toggleAddMatch(value: boolean) {
 }
 
 function registerMatch() {
-  if (!currentMatch || !currentMatch.isRegisterable) {
+  if (!currentMatch?.isRegisterable) {
     return
   }
 
@@ -149,6 +144,7 @@ function renderAddingMatchCard() {
     ),
     info: 'Saisissez les info nécessaires pour identifier le match.',
     body: (
+      // biome-ignore lint/a11y/noNoninteractiveElementInteractions: form-level Enter submission is a legacy behavior preserved during audit fixes
       <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
         <BsSelect
           datas={teams.map((team) => ({ value: team.id, label: team.name }))}
@@ -199,6 +195,16 @@ function renderAddingMatchCard() {
           size="lg"
           value={currentMatch?.status === 'unlocked'}
         />
+
+        <BsCombobox
+          label="Championnat"
+          onChange={(value: string) => {
+            setNewMatchData({ championship: value })
+          }}
+          options={championshipOptions()}
+          placeholder="Saisir un championnat…"
+          value={currentMatch?.championship || ''}
+        />
       </form>
     ),
     footer: (
@@ -239,23 +245,30 @@ export default function BsMatchs() {
     <div>
       <Show when={!isAddingMatch.get()}>
         <Show fallback={renderMatchFallback()} when={(matchLength.get() || 0) > 0}>
-          <div class="flex w-full flex-wrap justify-around gap-4">
-            <For each={matchs}>
-              {(match) => (
-                <div class="mx-auto w-fit md:mx-0">
-                  <BsMatch
-                    match={match}
-                    onEdit={(match: Match) => {
-                      editMatch(match)
-                    }}
-                    onStart={(match: Match) => {
-                      startMatch(match)
-                    }}
-                  />
+          <For each={grouped()}>
+            {(group) => (
+              <section class="w-full">
+                <div class="divider">{group.name}</div>
+                <div class="flex w-full flex-wrap justify-around gap-4">
+                  <For each={group.matchs}>
+                    {(match) => (
+                      <div class="mx-auto w-fit md:mx-0">
+                        <BsMatch
+                          match={match}
+                          onEdit={(match: Match) => {
+                            editMatch(match)
+                          }}
+                          onStart={(match: Match) => {
+                            startMatch(match)
+                          }}
+                        />
+                      </div>
+                    )}
+                  </For>
                 </div>
-              )}
-            </For>
-          </div>
+              </section>
+            )}
+          </For>
         </Show>
       </Show>
       <Show fallback={renderAddMatchButton()} when={isAddingMatch.get()}>
