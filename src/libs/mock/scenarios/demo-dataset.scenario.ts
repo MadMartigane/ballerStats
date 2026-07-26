@@ -11,6 +11,12 @@ import { makePartialMatch, makeScenarioMatch } from './full-game.scenario'
 
 export const TEAM_A_STAR_ID = 'player-1'
 
+const CHAMPIONSHIP = {
+  REGULAR_SEASON: 'Saison régulière',
+  WINTER_CUP: 'Coupe Hiver',
+  FRIENDLY: 'Amical',
+} as const
+
 interface PlayerSeed {
   firstName: string
   id: string
@@ -276,6 +282,7 @@ export function seedDemoDataset(): DemoDataset {
     opponent: 'Lions de Berlin',
     type: 'home',
     date: matchDate(0),
+    championship: CHAMPIONSHIP.REGULAR_SEASON,
   })
 
   const match2 = makeScenarioMatch('blowoutWin', 'team-a', TEAM_A_ROSTER, {
@@ -284,6 +291,7 @@ export function seedDemoDataset(): DemoDataset {
     opponent: 'Panthers BC',
     type: 'outside',
     date: matchDate(1),
+    championship: CHAMPIONSHIP.REGULAR_SEASON,
   })
 
   const match3 = makeScenarioMatch('blowoutLoss', 'team-a', TEAM_A_ROSTER, {
@@ -292,6 +300,7 @@ export function seedDemoDataset(): DemoDataset {
     opponent: 'Sharks United',
     type: 'home',
     date: matchDate(2),
+    championship: CHAMPIONSHIP.WINTER_CUP,
   })
 
   const match4 = makePartialMatch('team-a', TEAM_A_ROSTER, {
@@ -300,6 +309,7 @@ export function seedDemoDataset(): DemoDataset {
     opponent: 'Eagles Junior',
     type: 'outside',
     date: matchDate(3),
+    championship: CHAMPIONSHIP.FRIENDLY,
   })
 
   // Contacts (last names aligned to new players)
