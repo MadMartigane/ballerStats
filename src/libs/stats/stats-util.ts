@@ -327,7 +327,7 @@ function getTeamScore(match: Match, playerIds: string[]) {
   return playerIds.reduce((score: number, playerId) => score + getPlayerScore(match, playerId), 0)
 }
 
-function getTeamScores(players: Array<StatMatchSummaryPlayer>) {
+function getTeamScores(players: StatMatchSummaryPlayer[]) {
   const rawTeamScores = clone(RAW_STAT_MATCH_SUMMARY.teamScores) as StatMatchSummaryPlayer
 
   const teamScores = players.reduce((total, playerStat) => {
