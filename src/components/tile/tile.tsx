@@ -10,6 +10,8 @@ function onClick(callback?: (event?: MouseEvent & { currentTarget: HTMLDivElemen
 
 export default function BsTile(props: BsTileProps) {
   return (
+    // biome-ignore lint/a11y/noNoninteractiveElementInteractions: tile is a legacy clickable card, preserved per audit finding P1-1
+    // biome-ignore lint/a11y/noStaticElementInteractions: tile is a legacy clickable card, preserved per audit finding P1-1
     <div
       class={`${props.onClick ? 'cursor-pointer' : ''} card w-80 min-w-80 max-w-80 bg-neutral p-2 text-neutral-content shadow-lg shadow-neutral`}
       onClick={() => {

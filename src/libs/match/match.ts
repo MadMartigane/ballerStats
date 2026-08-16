@@ -12,6 +12,7 @@ export default class Match {
   public stats: Array<MatchStatLogEntry> = []
   public status: MatchStatus = 'unlocked'
   public date: string | null = null
+  public championship: string | null = null
   public playersInTheFive: Array<string> = []
 
   constructor(data?: MatchRawData) {
@@ -31,6 +32,7 @@ export default class Match {
     this.stats = data.stats || []
     this.status = data.status || 'unlocked'
     this.date = data.date || null
+    this.championship = data.championship ?? null
     this.playersInTheFive = data.playersInTheFive || this.playersInTheFive
   }
 
@@ -51,6 +53,7 @@ export default class Match {
       status: this.status,
       stats: clone(this.stats) as Array<MatchStatLogEntry>,
       date: this.date || null,
+      championship: this.championship,
       playersInTheFive: [...this.playersInTheFive],
     }
   }

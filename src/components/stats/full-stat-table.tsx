@@ -1,75 +1,24 @@
-import { Shirt, Users } from 'lucide-solid'
 import { For } from 'solid-js'
 import orchestrator from '../../libs/orchestrator/orchestrator'
-import type Player from '../../libs/player'
 import type { StatMatchSummaryPlayer } from '../../libs/stats'
 import type { BsFullStatTableProps } from './full-stat-table.d'
+import { STAT_COLUMNS } from './stat-columns'
+import { BsStatsLegend } from './stats-legend'
 
-function formatStatValue(value: number, format?: 'pct' | '1dp'): string {
-  if (format === 'pct') return `${value}%`
-  if (format === '1dp') return value.toFixed(1)
-  return String(value)
-}
+const TEAM_TOTAL_ROW_SEPARATOR_CLASS = 'border-base-300 border-t-2'
 
-function renderTh(playerStats: StatMatchSummaryPlayer, player?: Player | null) {
-  return (
-    <tr>
-      <th>
-        <span class="text-2xl">{player?.jerseyNumber || <Users size={28} />}</span>
-      </th>
-      <td class="text-xl">{player?.nicName ? player.nicName : player?.firstName || 'Équipe'}</td>
-      <td>
-        <span class="text-lg">{`${playerStats.scores.total}`}</span>
-      </td>
-      <td>
-        <div class="text-lg">{playerStats.rebonds.total}</div>
-        <span>{`(${playerStats.rebonds.offensive} - ${playerStats.rebonds.defensive})`}</span>
-      </td>
-      <td>
-        <span class="text-lg">{playerStats.fouls}</span>
-      </td>
-      <td>
-        <span class="text-lg">{playerStats.turnover}</span>
-      </td>
-      <td>
-        <span class="text-lg">{playerStats.assists}</span>
-      </td>
-      <td>
-        <span class="text-lg">{playerStats.steals}</span>
-      </td>
-      <td>
-        <span class="text-lg">{`${playerStats.scores['free-throw']}`}</span>
-        {` ${playerStats.ratio['free-throw'].success}/${playerStats.ratio['free-throw'].total}`}
-        <div>{`(${playerStats.ratio['free-throw'].percentage}%)`}</div>
-      </td>
-      <td>
-        <span class="text-lg">{`${playerStats.scores['2pts']}`}</span>
-        {` ${playerStats.ratio['2pts'].success}/${playerStats.ratio['2pts'].total}`}
-        <div>{`(${playerStats.ratio['2pts'].percentage}%)`}</div>
-      </td>
-      <td>
-        <span class="text-lg">{`${playerStats.scores['3pts']}`}</span>
-        {` ${playerStats.ratio['3pts'].success}/${playerStats.ratio['3pts'].total}`}
-        <div>{`(${playerStats.ratio['3pts'].percentage}%)`}</div>
-      </td>
-      <td>
-        <span class="text-lg">{playerStats.blocks}</span>
-      </td>
-      <td>
-        <span class="text-lg">{playerStats.eff}</span>
-      </td>
-      <td>
-        <span class="text-lg">{formatStatValue(playerStats.astToRatio, '1dp')}</span>
-      </td>
-      <td>
-        <span class="text-lg">{formatStatValue(playerStats.trueShootingPercentage, 'pct')}</span>
-      </td>
-    </tr>
-  )
+interface TeamRow {
+  row: StatMatchSummaryPlayer
+  rowClass?: string
 }
 
 export function BsFullStatTable(props: BsFullStatTableProps) {
-  const statSummary = props.stats
+  const teamRows = (): TeamRow[] => [
+    { row: props.stats.teamScores },
+    ...(props.stats.teamScoresTotal
+      ? [{ row: props.stats.teamScoresTotal, rowClass: TEAM_TOTAL_ROW_SEPARATOR_CLASS }]
+      : []),
+  ]
 
   return (
     <div>
@@ -77,46 +26,37 @@ export function BsFullStatTable(props: BsFullStatTableProps) {
         <table class="table-zebra table">
           <thead>
             <tr class="bg-neutral text-neutral-content">
-              <th>
-                <Shirt />
-              </th>
-              <th>Nom</th>
-              <th>Pts</th>
-              <th>Rbs (O-D)</th>
-              <th>Fautes</th>
-              <th>
-                <div>TO</div>
-              </th>
-              <th>
-                <div>Ass</div>
-              </th>
-              <th>Steals</th>
-              <th>LF</th>
-              <th>2pts</th>
-              <th>3pts</th>
-              <th>BLK</th>
-              <th>EFF</th>
-              <th>A/TO</th>
-              <th>TS%</th>
+              <For each={STAT_COLUMNS}>{(column) => <th>{column.renderHeader?.() ?? column.label}</th>}</For>
             </tr>
           </thead>
           <tbody>
-            <For each={statSummary.players}>
+            <For each={props.stats.players}>
               {(playerStats) => {
-                /* Is a global stat like stop and start game, not a player stat */
+                // Skip synthetic entries without a player (e.g. game start/stop, team totals)
                 if (!playerStats.playerId) {
                   return null
                 }
 
                 const player = orchestrator.getPlayer(playerStats.playerId)
-                return renderTh(playerStats, player)
+                return (
+                  <tr>
+                    <For each={STAT_COLUMNS}>{(column) => column.renderCell(playerStats, player)}</For>
+                  </tr>
+                )
               }}
             </For>
 
-            {renderTh(statSummary.teamScores)}
+            <For each={teamRows()}>
+              {(teamRow) => (
+                <tr class={teamRow.rowClass}>
+                  <For each={STAT_COLUMNS}>{(column) => column.renderCell(teamRow.row)}</For>
+                </tr>
+              )}
+            </For>
           </tbody>
         </table>
       </div>
+      <BsStatsLegend />
     </div>
   )
 }

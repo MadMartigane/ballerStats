@@ -3,6 +3,8 @@ import type { MatchRawData, MatchStatLogEntry } from '../../match/match.d'
 import { TEAM_OPPONENT_ID } from '../../team/team'
 import { makeMatch } from '../factories/match.factory'
 import { makeStatEntry } from '../factories/stat-entry.factory'
+import type { MatchScenarioConfig, StatProfile } from './match-profiles'
+import { MATCH_SCENARIOS, STAT_FIELD_SPECS } from './match-profiles'
 
 const GAME_START_TS = 1_700_000_000_000
 const TICK_MS = 1000 // 1 second between actions; deterministic ordering
@@ -13,51 +15,76 @@ function requirePlayers(scope: string, ids: string[]): void {
   }
 }
 
-/** A complete 40-min game with realistic stats for 5-8 players. */
-export function makeFullGameMatch(teamId: string, playerIds: string[], overrides?: Partial<MatchRawData>): Match {
-  requirePlayers('makeFullGameMatch', playerIds)
+// --- Internal helpers ---
+
+/** Build stat entries for one profile, returning the entries and the next free tick. */
+function buildStatsFromProfile(
+  startTick: number,
+  playerId: string,
+  p: StatProfile
+): { entries: MatchStatLogEntry[]; nextTick: number } {
+  let tick = startTick
+  const entries: MatchStatLogEntry[] = []
+  for (const spec of STAT_FIELD_SPECS) {
+    const count = p[spec.field]
+    for (let i = 0; i < count; i++) {
+      entries.push(
+        makeStatEntry(spec.statName, { type: spec.statType, playerId, timestamp: GAME_START_TS + tick++ * TICK_MS })
+      )
+    }
+  }
+  return { entries, nextTick: tick }
+}
+
+// --- Core builder ---
+
+/** Build a locked match from explicit profiles. Scores are implied by the profiles. */
+function buildMatchFromProfiles(
+  teamId: string,
+  lineup: string[],
+  config: MatchScenarioConfig,
+  overrides?: Partial<MatchRawData>
+): Match {
+  requirePlayers('buildMatchFromProfiles', lineup)
+  if (config.profiles.length !== lineup.length) {
+    throw new Error(
+      `[buildMatchFromProfiles] profiles length (${config.profiles.length}) must match lineup (${lineup.length})`
+    )
+  }
 
   const stats: MatchStatLogEntry[] = []
   let tick = 0
-  const push = (count: number, build: (ts: number) => MatchStatLogEntry) => {
-    for (let i = 0; i < count; i++) {
-      stats.push(build(GAME_START_TS + tick++ * TICK_MS))
-    }
-  }
 
-  for (const playerId of playerIds) {
-    push(4, (ts) => makeStatEntry('2pts', { type: 'success', playerId, timestamp: ts }))
-    push(3, (ts) => makeStatEntry('2pts', { type: 'error', playerId, timestamp: ts }))
-    push(2, (ts) => makeStatEntry('3pts', { type: 'success', playerId, timestamp: ts }))
-    push(2, (ts) => makeStatEntry('3pts', { type: 'error', playerId, timestamp: ts }))
-    push(2, (ts) => makeStatEntry('free-throw', { type: 'success', playerId, timestamp: ts }))
-    push(1, (ts) => makeStatEntry('free-throw', { type: 'error', playerId, timestamp: ts }))
-    push(2, (ts) => makeStatEntry('offensive-rebond', { type: 'success', playerId, timestamp: ts }))
-    push(3, (ts) => makeStatEntry('defensive-rebond', { type: 'secondary', playerId, timestamp: ts }))
-    push(3, (ts) => makeStatEntry('assist', { type: 'success', playerId, timestamp: ts }))
-    push(1, (ts) => makeStatEntry('steals', { type: 'success', playerId, timestamp: ts }))
-    push(1, (ts) => makeStatEntry('block', { type: 'success', playerId, timestamp: ts }))
-    push(2, (ts) => makeStatEntry('turnover', { type: 'error', playerId, timestamp: ts }))
-    push(2, (ts) => makeStatEntry('foul', { type: 'error', playerId, timestamp: ts }))
+  for (const [i, playerId] of lineup.entries()) {
+    const result = buildStatsFromProfile(tick, playerId, config.profiles[i])
+    stats.push(...result.entries)
+    tick = result.nextTick
   }
-
-  push(10, (ts) => makeStatEntry('2pts', { type: 'success', playerId: TEAM_OPPONENT_ID, timestamp: ts }))
-  push(4, (ts) => makeStatEntry('3pts', { type: 'success', playerId: TEAM_OPPONENT_ID, timestamp: ts }))
-  push(3, (ts) => makeStatEntry('free-throw', { type: 'success', playerId: TEAM_OPPONENT_ID, timestamp: ts }))
-  push(6, (ts) => makeStatEntry('defensive-rebond', { type: 'secondary', playerId: TEAM_OPPONENT_ID, timestamp: ts }))
-  push(4, (ts) => makeStatEntry('offensive-rebond', { type: 'success', playerId: TEAM_OPPONENT_ID, timestamp: ts }))
-  push(5, (ts) => makeStatEntry('foul', { type: 'error', playerId: TEAM_OPPONENT_ID, timestamp: ts }))
+  const oppResult = buildStatsFromProfile(tick, TEAM_OPPONENT_ID, config.opponent)
+  stats.push(...oppResult.entries)
 
   return makeMatch({
     teamId,
-    opponent: 'Full Game Opponent',
+    opponent: 'Profile Opponent',
     type: 'home',
     status: 'locked',
     date: new Date(GAME_START_TS).toISOString(),
-    playersInTheFive: playerIds.slice(0, 5),
+    playersInTheFive: lineup.slice(0, 5),
     stats,
     ...overrides,
   })
+}
+
+// --- Scenario dispatcher ---
+
+/** Build a match from a named scenario (key of MATCH_SCENARIOS). */
+export function makeScenarioMatch(
+  name: keyof typeof MATCH_SCENARIOS,
+  teamId: string,
+  lineup: string[],
+  overrides?: Partial<MatchRawData>
+): Match {
+  return buildMatchFromProfiles(teamId, lineup, MATCH_SCENARIOS[name], overrides)
 }
 
 /** Empty match (no stats), but still registerable. */

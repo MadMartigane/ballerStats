@@ -17,4 +17,5 @@ export type MatchRawData = {
   playersInTheFive?: Array<string>
   status?: MatchStatus
   date?: string | null
+  championship?: string | null
 }
