@@ -26,17 +26,6 @@ describe('seedDemoDataset', () => {
     expect(ds.contacts).toHaveLength(10)
   })
 
-  it('every player and team belongs to the demo club', () => {
-    const ds = seedDemoDataset()
-    const clubId = ds.clubs[0].id
-    for (const p of ds.players) {
-      expect(p.clubId).toBe(clubId)
-    }
-    for (const t of ds.teams) {
-      expect(t.clubId).toBe(clubId)
-    }
-  })
-
   it('every player has a license number', () => {
     const ds = seedDemoDataset()
     for (const p of ds.players) {
