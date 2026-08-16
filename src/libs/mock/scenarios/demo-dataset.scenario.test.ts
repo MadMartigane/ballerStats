@@ -22,7 +22,28 @@ describe('seedDemoDataset', () => {
     expect(ds.teams).toHaveLength(2)
     expect(ds.players).toHaveLength(10)
     expect(ds.matchs).toHaveLength(4)
-    expect(ds.contacts).toHaveLength(2)
+    expect(ds.contacts).toHaveLength(10)
+  })
+
+  it('every player has a license number', () => {
+    const ds = seedDemoDataset()
+    for (const p of ds.players) {
+      expect(p.licenseNumber).toBeTruthy()
+    }
+  })
+
+  it('every player has at least one complete contact (all fields filled)', () => {
+    const ds = seedDemoDataset()
+    for (const p of ds.players) {
+      const contact = ds.contacts.find((c) => c.playerId === p.id)
+      expect(contact, `player ${p.id} should have a contact`).toBeDefined()
+      expect(contact?.firstName).toBeTruthy()
+      expect(contact?.lastName).toBeTruthy()
+      expect(contact?.phone).toBeTruthy()
+      expect(contact?.email).toBeTruthy()
+      expect(contact?.address).toBeTruthy()
+      expect(contact?.relationship).toBeTruthy()
+    }
   })
 
   it('every entity is registerable', () => {
