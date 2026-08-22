@@ -27,7 +27,6 @@ const minimalSoreToBeRegisterable = 30
 
 export default class Player {
   #id: string
-  clubId?: string
   firstName?: string
   lastName?: string
   jerseyNumber?: string

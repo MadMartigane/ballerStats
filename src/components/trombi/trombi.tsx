@@ -9,6 +9,10 @@ import BsInlineEditableTitle from '../inline-editable-title/inline-editable-titl
 import type { BsTrombiProps } from './trombi.d'
 import BsTrombiPlayerItem from './trombi-player-item'
 
+function saveClubName(value: string) {
+  updateTitle('clubName', value)
+}
+
 function saveTeamName(value: string) {
   updateTitle('teamName', value)
 }
@@ -26,14 +30,13 @@ export default function BsTrombi(props: BsTrombiProps) {
   return (
     <div>
       <div class="my-4 flex flex-col items-center gap-1">
-        <h1 class="font-extrabold text-3xl">
-          <Show fallback={<i>Nom du club</i>} when={currentClub()?.name}>
-            {currentClub()?.name}
-          </Show>
-        </h1>
-        <p class="text-base-content/70 text-xl">
-          Licence : <span class="print:font-bold">{currentClub()?.licenseNumber || '—'}</span>
-        </p>
+        <BsInlineEditableTitle
+          ariaLabel="Nom du club"
+          headingLevel="h1"
+          onSave={saveClubName}
+          placeholder="Nom du club"
+          value={titles.clubName}
+        />
         {props.staticTeamName === undefined ? (
           <BsInlineEditableTitle
             ariaLabel="Nom de l'équipe"
