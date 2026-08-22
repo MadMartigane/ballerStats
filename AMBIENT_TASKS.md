@@ -2,7 +2,6 @@
 
 > File d'attente de tâches pour le travail proactif ambient.
 > Ce fichier est versionné dans git et partagé entre les machines.
-> Voir le skill `ambient-tasks` pour le format et les règles détaillées.
 
 ## Pending
 
