@@ -64,16 +64,14 @@ src/
 This project uses a version-controlled task queue for proactive work via ambient mode.
 
 - **Task file**: `AMBIENT_TASKS.md` at the repository root
-- **Skill**: `.jcode/skills/ambient-tasks/SKILL.md` — load this skill before reading or editing the task file
 - **In-code markers**: `// AMBIENT:` and `// TODO(ambient):` in source files flag proactive work opportunities
 
 ### Rules for the ambient agent only
 
 1. **Read `AMBIENT_TASKS.md` at the start of each ambient cycle** (not during interactive sessions)
-2. Load the `ambient-tasks` skill before manipulating the task file
-3. Search for `AMBIENT:` and `TODO(ambient):` markers in `src/` during scout passes
-4. Task status changes (claim, complete, abandon) are separate commits with `chore(ambient)` or `feat(ambient)` prefixes
-5. All work must pass `pnpm run check` and `pnpm run test` before marking a task done
+2. Search for `AMBIENT:` and `TODO(ambient):` markers in `src/` during scout passes
+3. Task status changes (claim, complete, abandon) are separate commits with `chore(ambient)` or `feat(ambient)` prefixes
+4. All work must pass `pnpm run check` and `pnpm run test` before marking a task done
 
 ## Design System
 
