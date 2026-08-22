@@ -59,7 +59,8 @@ export function BsStatsLegend() {
                 <button
                   aria-label={`En savoir plus sur ${entry.glossary.fullName}`}
                   class="btn btn-xs btn-ghost print:hidden"
-                  onClick={() => open(entry)}
+                  data-column-id={entry.id}
+                  onClick={makeLegendEntryClickHandler(setSelectedEntry, () => dialogEl)}
                   type="button"
                 >
                   <HelpCircle />

@@ -1,7 +1,7 @@
 import { Shirt, Users } from 'lucide-solid'
 import type { JSXElement } from 'solid-js'
-import type Player from '../../libs/player'
-import type { ScoringKey, StatMatchSummaryPlayer } from '../../libs/stats'
+import type Player from '../../libs/player/player'
+import type { ScoringKey, StatMatchSummaryPlayer } from '../../libs/stats/stats.d'
 import { isTeamPerGameRow, isTeamTotalRow } from '../../libs/stats/stats-util'
 
 export type StatColumnId =
@@ -63,7 +63,14 @@ const SCORING_COLUMN_META: Record<ScoringKey, { label: string; glossary?: StatGl
   '3pts': {
     label: '3pts',
   },
-} satisfies Record<ScoringKey, { label: string; glossary?: StatGlossaryEntry }>
+  'free-throw': {
+    glossary: {
+      explanation: 'Lancers francs réussis / tentés, avec le pourcentage de réussite.',
+      fullName: 'Lancers Francs',
+    },
+    label: 'LF',
+  },
+}
 
 // Iteration order must match column display order
 const SCORING_KEYS = ['free-throw', '2pts', '3pts'] as const satisfies readonly ScoringKey[]
@@ -149,11 +156,6 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     id: 'steals',
     label: 'Steals',
     renderCell: (stats) => renderScoreCell(stats.steals),
-    glossary: {
-      fullName: 'Interceptions',
-      explanation:
-        "Nombre de ballons volés à l'adversaire (interceptions). Inclut également les efforts francs provoquant une perte de balle — on parle de steals élargies.",
-    },
   },
   ...SCORING_KEYS.map<StatColumn>((key) => ({
     glossary: SCORING_COLUMN_META[key].glossary,
@@ -175,11 +177,6 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     id: 'eff',
     label: 'EFF',
     renderCell: (stats) => renderScoreCell(stats.eff),
-    glossary: {
-      fullName: 'Évaluation / Efficiency',
-      explanation:
-        'Indice de performance global calculé à partir de toutes les statistiques. Formule simplifiée : (Pts + Rbs + Ass + Steals + BLK) − (Tirs ratés + TO). Exemple : un match à 15 pts, 8 rebonds, 3 passes sans perte de balle donne une EFF de 26.',
-    },
   },
   {
     glossary: {
@@ -199,11 +196,6 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     id: 'tsPercent',
     label: 'TS%',
     renderCell: (stats) => renderScoreCell(`${stats.trueShootingPercentage}%`),
-    glossary: {
-      fullName: 'True Shooting %',
-      explanation:
-        'Pourcentage de réussite au tir pondéré. Contrairement au pourcentage classique, le TS% prend en compte la valeur des tirs (3pts > 2pts) et les lancers francs. Formule : Pts / (2 × (Tirs tentés + 0.44 × LF tentés)). Un TS% de 50% est considéré comme une bonne performance.',
-    },
   },
 ]
 

@@ -1,5 +1,3 @@
-import type Club from '../club/club'
-import type { ClubRawData } from '../club/club.d'
 import type Contact from '../contact/contact'
 import type { ContactRawData } from '../contact/contact.d'
 import type Match from '../match/match'

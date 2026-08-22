@@ -159,9 +159,9 @@ describe('getFullStats championship filter', () => {
 
   const makeChampionshipMatch = (championship: string) =>
     makeMatch({
-      teamId: 'team-filter',
       championship,
-      stats: [makeStatEntry('2pts', { type: 'success', value: 2, playerId })],
+      stats: [makeStatEntry('2pts', { playerId, type: 'success', value: 2 })],
+      teamId: 'team-filter',
     })
 
   beforeEach(() => {

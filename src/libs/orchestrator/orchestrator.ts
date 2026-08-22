@@ -1,8 +1,4 @@
 import { strToU8, unzip, zip } from 'fflate'
-import type Club from '../club/club'
-import type { ClubRawData } from '../club/club.d'
-import { createDefaultClubData, migrateClubData } from '../club/club-migration'
-import Clubs from '../clubs/clubs'
 import Contact from '../contact/contact'
 import Contacts from '../contacts/contacts'
 import bsEventBus from '../event-bus/event-bus'
@@ -18,7 +14,6 @@ import {
   storePhoto,
 } from '../photo-store/photo-store'
 import Player, { sortPlayersByJersey } from '../player/player'
-import type { PlayerRawData } from '../player/player.d'
 import Players from '../players/players'
 import { soundTab } from '../sounds/tab'
 import {
@@ -39,9 +34,7 @@ import {
   storeTeams,
 } from '../store/store'
 import Team from '../team/team'
-import type { TeamRawData } from '../team/team.d'
 import Teams from '../teams/teams'
-import type { TrombiTitles } from '../trombi-titles'
 import { DEFAULT_TITLES, persistTitles, titles } from '../trombi-titles-store'
 import { confirmAction, downloadBlob, toast } from '../utils/utils'
 import { vibrate } from '../vibrator/vibrator'
@@ -81,8 +74,7 @@ export function isGlobalDB(value: unknown): value is GlobalDB {
     Array.isArray(candidate.players) &&
     Array.isArray(candidate.matchs) &&
     Array.isArray(candidate.teams) &&
-    (candidate.contacts === undefined || candidate.contacts === null || Array.isArray(candidate.contacts)) &&
-    (candidate.clubs === undefined || candidate.clubs === null || Array.isArray(candidate.clubs))
+    (candidate.contacts === undefined || candidate.contacts === null || Array.isArray(candidate.contacts))
   )
 }
 
@@ -387,11 +379,11 @@ export class Orchestrator {
   }
 
   private async doOverwriteDB(json: GlobalDB) {
-    const migration = migrateClubData({
-      clubs: json.clubs,
-      players: json.players,
-      teams: json.teams,
-      trombiTitles: json.trombiTitles,
+    this.addAll({
+      contacts: (json.contacts ?? []).map((c) => new Contact(c)),
+      matchs: json.matchs.map((m) => new Match(m)),
+      players: json.players.map((p) => new Player(p)),
+      teams: json.teams.map((t) => new Team(t)),
     })
     this.#clubs = new Clubs(migration.clubs)
     this.addAll({
@@ -420,10 +412,6 @@ export class Orchestrator {
     return this.#contacts
   }
 
-  get Clubs() {
-    return this.#clubs
-  }
-
   throwPlayersUpdatedEvent(mute = false) {
     bsEventBus.dispatchEvent('BS::PLAYERS::CHANGE', mute)
   }
@@ -438,10 +426,6 @@ export class Orchestrator {
 
   throwContactsUpdatedEvent(mute = false) {
     bsEventBus.dispatchEvent('BS::CONTACTS::CHANGE', mute)
-  }
-
-  throwClubsUpdatedEvent(mute = false) {
-    bsEventBus.dispatchEvent('BS::CLUBS::CHANGE', mute)
   }
 
   throwSynchroSuccessEvent(mute = false) {
@@ -551,7 +535,6 @@ export class Orchestrator {
     const date = new Date()
 
     const globalDB: GlobalDB = {
-      clubs: this.Clubs.clubs.map((club) => club.getRawData()),
       contacts: this.Contacts.contacts.map((contact) => contact.getRawData()),
       matchs: this.Matchs.matchs.map((match) => match.getRawData()),
       players: this.Players.players.map((player) => player.getRawData()),
