@@ -4,13 +4,13 @@
 
 ## Tech Stack
 
-- **Framework**: SolidJS 1.x with TypeScript 6.x
+- **Framework**: SolidJS 1.x with TypeScript 7.x
 - **Build**: Vite 8.x (Oxc + Rolldown pipeline)
 - **Styling**: Tailwind CSS 4.x + DaisyUI 5.x
 - **Icons**: Lucide (lucide-solid) 1.x
-- **Routing**: @solidjs/router 0.16.x (HashRouter)
-- **Linting/Formatting**: Biome 2.x + Ultracite preset
-- **Testing**: Vitest 3.x
+- **Routing**: @solidjs/router 1.x (HashRouter)
+- **Linting/Formatting**: Biome 2.5.x + Ultracite 7.10.x preset
+- **Testing**: Vitest 4.x
 - **Agent Skills**: SolidJS best practices (`.opencode/skills/solidjs/SKILL.md`) — auto-loaded for all `.tsx`/`.ts` work
 - **Package Manager**: pnpm (ONLY — no npm)
 
@@ -26,6 +26,8 @@
 - `pnpm run test` — Run tests once
 - `pnpm run test:watch` — Run tests in watch mode
 - `pnpm run test:coverage` — Run tests with coverage report
+- `pnpm run typecheck` — Run TypeScript type checking (`tsc --noEmit`)
+- **Pre-commit hook**: husky runs `pnpm run check` + `pnpm run typecheck` on commit (no tests)
 
 ## Code Style
 

@@ -56,7 +56,9 @@ describe('createRollingNumber', () => {
   })
 
   it('onCleanup clears the pending timeout', async () => {
-    let getValue: () => number
+    // Placeholder satisfies TS definite assignment; createRoot runs its callback
+    // synchronously, so getValue is the real accessor before any use below.
+    let getValue: () => number = () => 0
     const dispose = createRoot((d) => {
       const [source, setSource] = createSignal(0)
       getValue = createRollingNumber(source, 400)

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
-import Contact from '../contact'
+import Contact from '../contact/contact'
 import type { ContactRawData } from '../contact/contact.d'
-import bsEventBus from '../event-bus'
+import bsEventBus from '../event-bus/event-bus'
 import Contacts from './contacts'
 
 const ALREADY_EXISTS_PATTERN = /already exists/
@@ -57,9 +57,9 @@ describe('Contacts', () => {
 
   it('updateContact() updates an existing contact', () => {
     const contacts = new Contacts()
-    contacts.add(new Contact(makeContactData({ id: 'c1', playerId: 'p1', firstName: 'Marie' })))
+    contacts.add(new Contact(makeContactData({ firstName: 'Marie', id: 'c1', playerId: 'p1' })))
 
-    contacts.updateContact(new Contact(makeContactData({ id: 'c1', playerId: 'p1', firstName: 'Marie Updated' })))
+    contacts.updateContact(new Contact(makeContactData({ firstName: 'Marie Updated', id: 'c1', playerId: 'p1' })))
 
     expect(contacts.contacts[0].firstName).toBe('Marie Updated')
   })
@@ -137,9 +137,9 @@ describe('Contacts', () => {
 
   it('contacts getter returns deep clones (mutating returned contacts does not affect internal state)', () => {
     const contacts = new Contacts()
-    contacts.add(new Contact(makeContactData({ id: 'c1', playerId: 'p1', firstName: 'Original' })))
+    contacts.add(new Contact(makeContactData({ firstName: 'Original', id: 'c1', playerId: 'p1' })))
 
-    const retrieved = contacts.contacts[0]
+    const [retrieved] = contacts.contacts
     retrieved.update({ firstName: 'Mutated' })
 
     expect(contacts.contacts[0].firstName).toBe('Original')

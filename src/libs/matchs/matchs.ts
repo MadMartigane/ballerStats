@@ -1,11 +1,11 @@
-import bsEventBus from '../event-bus'
-import type { MatchRawData } from '../match'
-import Match from '../match'
+import bsEventBus from '../event-bus/event-bus'
+import Match from '../match/match'
+import type { MatchRawData } from '../match/match.d'
 
 export default class Matchs {
-  #matchs: Array<Match> = []
+  #matchs: Match[] = []
 
-  constructor(matchDatas?: Array<MatchRawData>) {
+  constructor(matchDatas?: MatchRawData[]) {
     if (matchDatas) {
       this.setFromRawData(matchDatas)
     }
@@ -19,15 +19,16 @@ export default class Matchs {
     return this.#matchs.find((currentMatch) => currentMatch.id === newMatch.id)
   }
 
-  public get matchs(): Array<Match> {
+  get matchs(): Match[] {
     return this.#matchs.map((match: Match): Match => new Match(match.getRawData()))
   }
 
-  public get length() {
+  get length() {
     return this.#matchs.length
   }
 
-  public setFromRawData(data: Array<MatchRawData>) {
+  setFromRawData(data: MatchRawData[]) {
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: legacy callers/tests pass null to empty the collection, which the array parameter type does not reflect.
     if (!data) {
       this.#matchs = []
       return
@@ -36,7 +37,7 @@ export default class Matchs {
     this.#matchs = data.map((matchData: MatchRawData) => new Match(matchData))
   }
 
-  public updateMatch(newMatch: Match) {
+  updateMatch(newMatch: Match) {
     const oldMatch = this.#matchs.find((currentMatch) => currentMatch.id === newMatch.id)
     if (!oldMatch) {
       throw new Error(
@@ -48,11 +49,11 @@ export default class Matchs {
     this.throwUpdatedMatchEvent()
   }
 
-  public getRawData() {
+  getRawData() {
     return this.#matchs.map((match: Match) => match.getRawData())
   }
 
-  public add(newMatch: Match) {
+  add(newMatch: Match) {
     if (!newMatch.isRegisterable) {
       throw new Error(`[BsMatchs.add()] The match id ${newMatch.id} is not registerable, Please complete the data.`)
     }
@@ -68,7 +69,7 @@ export default class Matchs {
     this.throwUpdatedMatchEvent()
   }
 
-  public remove(match: Match) {
+  remove(match: Match) {
     const idx = this.#matchs.findIndex((candidate: Match) => candidate.id === match.id)
 
     if (idx === -1) {

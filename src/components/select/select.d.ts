@@ -4,12 +4,15 @@ export type BsSelectOnChangeEvent = Event & {
   currentTarget: HTMLSelectElement
   target: HTMLSelectElement
 }
-export type BsSelectData = { value: string; label?: string | JSXElement }
+export interface BsSelectData {
+  label?: string | JSXElement
+  value: string
+}
 
 export type BsSelectProps = {
   id?: string
   value?: string | null
-  datas: Array<BsSelectData>
+  datas: BsSelectData[]
   label?: string
   disabled?: boolean
   default?: string | null

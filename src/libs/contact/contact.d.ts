@@ -1,12 +1,12 @@
 export type ContactRelationship = 'mother' | 'father' | 'other'
 
-export type ContactRawData = {
-  id?: string
-  playerId?: string // foreign key -> Player.id (optional in memory; validated before persisting)
+export interface ContactRawData {
+  address?: string // one-line text, intentionally no validation
+  email?: string
   firstName?: string
+  id?: string
   lastName?: string
   phone?: string
-  email?: string
-  address?: string // one-line text, intentionally no validation
+  playerId?: string // foreign key -> Player.id (optional in memory; validated before persisting)
   relationship?: ContactRelationship
 }

@@ -1,17 +1,11 @@
 import { Show } from 'solid-js'
-import { getShortId } from '../../libs/utils'
+import { getShortId } from '../../libs/utils/utils'
 import type { BsInputOnChangeEvent, BsInputProps } from './input.d'
 
 let debounceOnInput: number | null
 
 const defaultOptions: BsInputProps = {
   type: 'text',
-  onBlur: () => {
-    return
-  },
-  onFocus: () => {
-    return
-  },
 }
 
 function onInput(event: BsInputOnChangeEvent, callback?: (value: string) => void) {
@@ -35,6 +29,18 @@ function onChange(event: BsInputOnChangeEvent, callback?: (value: string) => voi
   callback(target.value)
 }
 
+function makeInputChangeHandler(callback: BsInputProps['onChange']) {
+  return (event: BsInputOnChangeEvent) => {
+    onChange(event, callback)
+  }
+}
+
+function makeInputInputHandler(callback: BsInputProps['onChange']) {
+  return (event: BsInputOnChangeEvent) => {
+    onInput(event, callback)
+  }
+}
+
 function adapter(options: BsInputProps): BsInputProps {
   const random = getShortId()
   const id = `hs-floating-gray-input-${options.type}-${random}`
@@ -56,8 +62,8 @@ function renderDaisy(options: BsInputProps) {
         <input
           class="input w-full"
           maxLength={options.maxLength}
-          onChange={(event) => onChange(event, options.onChange)}
-          onInput={(event) => onInput(event, options.onChange)}
+          onChange={makeInputChangeHandler(options.onChange)}
+          onInput={makeInputInputHandler(options.onChange)}
           placeholder={options.placeholder}
           type={options.type}
           value={options.value || ''}

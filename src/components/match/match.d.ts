@@ -1,3 +1,3 @@
-export type BsMatchProps = {
+export interface BsMatchProps {
   id: string
 }

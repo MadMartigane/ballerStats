@@ -1,4 +1,4 @@
-import Match from '../../match'
+import Match from '../../match/match'
 import type { MatchRawData } from '../../match/match.d'
 import { nextId } from '../mock-counter'
 
@@ -10,13 +10,13 @@ const ID_PREFIX = 'mock-match'
  */
 export function makeMatch(overrides: Partial<MatchRawData> = {}): Match {
   const raw: MatchRawData = {
-    opponent: 'Mock Opponent',
-    type: 'home',
-    teamId: 'mock-team-1',
-    status: 'unlocked',
     date: null,
+    opponent: 'Mock Opponent',
     playersInTheFive: [],
     stats: [],
+    status: 'unlocked',
+    teamId: 'mock-team-1',
+    type: 'home',
     ...overrides,
     id: overrides.id ?? nextId(ID_PREFIX),
   }

@@ -1,9 +1,9 @@
 import type { ThemeVibration } from './vibrator.d'
 
-export const themeVibration: { [key in ThemeVibration]: Array<number> } = {
-  single: [100],
+export const themeVibration: { [key in ThemeVibration]: number[] } = {
   double: [100, 50, 100],
   long: [400],
+  single: [100],
 }
 
 export function vibrate(theme: ThemeVibration = 'single') {

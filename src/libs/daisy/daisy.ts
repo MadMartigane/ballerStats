@@ -5,11 +5,14 @@ const THEME_HTML_TAG = 'html'
 export const THEME_AUTO_KEY = 'auto'
 export const THEMES: { [name: string]: string } = {
   corporate: 'corporate',
+  dark: 'dark',
   dim: 'dim',
   emerald: 'emerald',
   pastel: 'pastel',
-  dark: 'dark',
 }
+
+/** Display order for the theme dropdown; kept separate so THEMES can stay alphabetically sorted. */
+export const THEME_ORDER = ['corporate', 'dim', 'emerald', 'pastel', 'dark'] as const
 
 export async function initTheme() {
   const html: HTMLHtmlElement | null = document.querySelector(THEME_HTML_TAG)
@@ -22,11 +25,11 @@ export async function initTheme() {
 
   if (!storedPreference || storedPreference === THEME_AUTO_KEY) {
     html.removeAttribute(THEME_ATTRIBUTE)
-    return Promise.resolve(html)
+  } else {
+    html.setAttribute(THEME_ATTRIBUTE, storedPreference)
   }
 
-  html.setAttribute(THEME_ATTRIBUTE, storedPreference)
-  return Promise.resolve(html)
+  return await Promise.resolve(html)
 }
 
 export async function setTheme(theme: string | null) {
@@ -36,11 +39,11 @@ export async function setTheme(theme: string | null) {
     localStorage.setItem(DS_PREF_THEME_STORAGE_KEY, theme)
   }
 
-  return initTheme()
+  return await initTheme()
 }
 
 export async function resetTheme() {
-  return setTheme(null)
+  return await setTheme(null)
 }
 
 export async function getTheme() {

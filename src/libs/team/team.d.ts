@@ -1,4 +1,4 @@
-export type TeamRawData = {
+export interface TeamRawData {
   id?: string
   name?: string | null
   playerIds?: string[]

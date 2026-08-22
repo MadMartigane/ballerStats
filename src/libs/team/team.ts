@@ -1,13 +1,13 @@
-import { clone, getUniqId } from '../utils'
+import { clone, getUniqId } from '../utils/utils'
 import type { TeamRawData } from './team.d'
 
 export const TEAM_OPPONENT_ID = 'OPPONENT'
 
 export default class Team {
   #id = getUniqId()
-  #playerIds: Array<string> = []
+  #playerIds: string[] = []
 
-  public name: string | null = null
+  name: string | null = null
 
   constructor(data?: TeamRawData) {
     if (data) {
@@ -15,19 +15,19 @@ export default class Team {
     }
   }
 
-  public get id() {
+  get id() {
     return this.#id
   }
 
-  public get isRegisterable() {
+  get isRegisterable() {
     return Boolean(this.name)
   }
 
-  public get playerIds() {
+  get playerIds() {
     return clone(this.#playerIds) as string[]
   }
 
-  public setFromRawData(data: TeamRawData) {
+  setFromRawData(data: TeamRawData) {
     if (data.id) {
       this.#id = data.id
     }
@@ -36,7 +36,7 @@ export default class Team {
     this.#playerIds = data.playerIds || []
   }
 
-  public getRawData(): TeamRawData {
+  getRawData(): TeamRawData {
     return {
       id: this.#id,
       name: this.name,
@@ -44,7 +44,7 @@ export default class Team {
     }
   }
 
-  public update(data: TeamRawData) {
+  update(data: TeamRawData) {
     this.setFromRawData({
       ...this.getRawData(),
       ...data,

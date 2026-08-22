@@ -52,7 +52,7 @@ export function createRollingNumber(
     let step = 0
 
     function tick(): void {
-      step++
+      step += 1
       const displayValue = from + direction * Math.min(step * increment, stepCount)
       setValue(displayValue)
 

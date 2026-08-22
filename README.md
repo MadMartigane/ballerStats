@@ -46,6 +46,9 @@ Web app to collect and visualize your basketball player statistics.
 | `pnpm run test` | Run tests |
 | `pnpm run test:watch` | Run tests in watch mode |
 | `pnpm run test:coverage` | Run tests with coverage |
+| `pnpm run typecheck` | Run TypeScript type checking |
+
+> A husky pre-commit hook runs `pnpm run check` + `pnpm run typecheck` (no tests) on every commit.
 
 ### Project Structure
 
@@ -79,7 +82,7 @@ ballerStats/
 | Library | Purpose | Docs |
 |---|---|---|
 | SolidJS | UI framework | <https://docs.solidjs.com/> |
-| TypeScript 6 | Type system | <https://www.typescriptlang.org/> |
+| TypeScript 7 | Type system | <https://www.typescriptlang.org/> |
 | Vite 8 | Build tool | <https://vite.dev/> |
 | Tailwind CSS 4 | Utility CSS | <https://tailwindcss.com/> |
 | DaisyUI 5 | Component library | <https://daisyui.com/> |

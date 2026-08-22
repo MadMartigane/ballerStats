@@ -1,4 +1,4 @@
-import type Player from '../../libs/player'
+import type Player from '../../libs/player/player'
 
 export interface BsTrombiProps {
   /** Route target for the "Retour" button. Defaults to ROUTE_PLAYERS. */

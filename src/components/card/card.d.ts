@@ -1,8 +1,8 @@
 import type { JSXElement } from 'solid-js'
 
-export type BsCardProps = {
-  title?: JSXElement
-  info?: JSXElement
+export interface BsCardProps {
   body?: JSXElement
   footer?: JSXElement
+  info?: JSXElement
+  title?: JSXElement
 }

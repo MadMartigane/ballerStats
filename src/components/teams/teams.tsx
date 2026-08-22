@@ -1,17 +1,17 @@
 import { MessageCircleWarning, Save, Users, X } from 'lucide-solid'
 import { For, Show } from 'solid-js'
 import { createStore } from 'solid-js/store'
-import bsEventBus from '../../libs/event-bus'
+import bsEventBus from '../../libs/event-bus/event-bus'
 import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
-import type Player from '../../libs/player'
-import type { TeamRawData } from '../../libs/team'
-import Team from '../../libs/team'
-import { scrollBottom, scrollTop } from '../../libs/utils'
-import BsCard from '../card'
-import BsInput from '../input'
+import type Player from '../../libs/player/player'
+import Team from '../../libs/team/team'
+import type { TeamRawData } from '../../libs/team/team.d'
+import { scrollBottom, scrollTop } from '../../libs/utils/utils'
+import BsCard from '../card/card'
+import BsInput from '../input/input'
 import BsSelectMultiple from '../select-multiple/select-multiple'
-import BsTeam from '../team'
+import BsTeam from '../team/team'
 
 let isEditingNewTeam = false
 const isAddingTeam: MadSignal<boolean> = new MadSignal(false)
@@ -41,7 +41,7 @@ function toggleAddTeam(value: boolean) {
 }
 
 function registerTeam() {
-  if (!currentTeam || !currentTeam.isRegisterable) {
+  if (!currentTeam?.isRegisterable) {
     return
   }
 
@@ -73,19 +73,34 @@ function onSubmit(event: KeyboardEvent) {
 }
 
 function updateCurrentTeamPlayerIds(playerIds: string[]) {
-  if (playerIds) {
-    currentTeam?.update({ playerIds })
-    return
-  }
+  // playerIds is a required string[] (always truthy, even when empty), so the previous
+  // fallback branch `update({ playerIds: [] })` was dead code.
+  currentTeam?.update({ playerIds })
+}
 
-  currentTeam?.update({ playerIds: [] })
+function startAddingNewTeam() {
+  isEditingNewTeam = true
+  toggleAddTeam(true)
+  scrollTop()
+}
+
+function cancelAddingTeam() {
+  toggleAddTeam(false)
+  currentTeam = null
+  canAddTeam.set(false)
+  scrollBottom()
+}
+
+function saveTeam() {
+  registerTeam()
+  scrollBottom()
 }
 
 function getSelectDataFromPlayer() {
   return orchestrator.Players.players.map((player) => ({
-    value: player.id,
-    label: player.nicName ? player.nicName : `${player.firstName} ${player.lastName}`,
     badge: renderPlayerBadge(player),
+    label: player.nicName ? player.nicName : `${player.firstName} ${player.lastName}`,
+    value: player.id,
   }))
 }
 
@@ -105,15 +120,7 @@ function renderAddTeamButton() {
     <div class="w-full">
       <hr />
       <div class="footer-buttons-container">
-        <button
-          class="btn btn-primary"
-          onClick={() => {
-            isEditingNewTeam = true
-            toggleAddTeam(true)
-            scrollTop()
-          }}
-          type="button"
-        >
+        <button class="btn btn-primary" onClick={startAddingNewTeam} type="button">
           <Users />
           Ajouter une équipe
         </button>
@@ -135,29 +142,21 @@ function renderPlayerBadge(player: Player) {
 
 function renderAddingTeamCard() {
   return BsCard({
-    title: (
-      <p class="flex flex-row gap-1">
-        <Users />
-        {isEditingNewTeam ? 'Nouvelle équipe' : 'Édition de l’équipe'}
-      </p>
-    ),
-    info: 'Seul le nom de l’équipe est obligatoire',
     body: (
+      // biome-ignore lint/a11y/noNoninteractiveElementInteractions: form-level Enter submission is a legacy behavior preserved during audit fixes
       <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
         {BsInput({
-          type: 'text',
           label: 'Nom',
-          value: currentTeam?.name || '',
-          placeholder: 'BCC U09',
           onChange: (value: string) => {
             setNewTeamData({ name: value })
           },
+          placeholder: 'BCC U09',
+          type: 'text',
+          value: currentTeam?.name || '',
         })}
         <BsSelectMultiple
           data={getSelectDataFromPlayer()}
-          onChange={(playerIds: string[]) => {
-            updateCurrentTeamPlayerIds(playerIds)
-          }}
+          onChange={updateCurrentTeamPlayerIds}
           placeholder="Sélection des joueurs"
           selectedIds={currentTeam?.playerIds}
         />
@@ -165,33 +164,23 @@ function renderAddingTeamCard() {
     ),
     footer: (
       <div class="footer-buttons-container">
-        <button
-          class="btn btn-primary btn-wide"
-          onClick={() => {
-            toggleAddTeam(false)
-            currentTeam = null
-            canAddTeam.set(false)
-            scrollBottom()
-          }}
-          type="button"
-        >
+        <button class="btn btn-primary btn-wide" onClick={cancelAddingTeam} type="button">
           <X />
           Annuler
         </button>
 
-        <button
-          class="btn btn-primary btn-wide"
-          disabled={!canAddTeam.get()}
-          onClick={() => {
-            registerTeam()
-            scrollBottom()
-          }}
-          type="button"
-        >
+        <button class="btn btn-primary btn-wide" disabled={!canAddTeam.get()} onClick={saveTeam} type="button">
           {isEditingNewTeam ? <Users /> : <Save />}
           {isEditingNewTeam ? 'Ajouter' : 'Enregistrer'}
         </button>
       </div>
+    ),
+    info: 'Seul le nom de l’équipe est obligatoire',
+    title: (
+      <p class="flex flex-row gap-1">
+        <Users />
+        {isEditingNewTeam ? 'Nouvelle équipe' : 'Édition de l’équipe'}
+      </p>
     ),
   })
 }
@@ -205,12 +194,7 @@ export default function BsTeams() {
             <For each={teams}>
               {(team) => (
                 <div class="mx-auto w-fit md:mx-0">
-                  <BsTeam
-                    onEdit={(team) => {
-                      editTeam(team)
-                    }}
-                    team={team}
-                  />
+                  <BsTeam onEdit={editTeam} team={team} />
                 </div>
               )}
             </For>

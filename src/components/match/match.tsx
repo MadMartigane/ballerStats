@@ -17,15 +17,16 @@ import {
 import { For, Show } from 'solid-js'
 import { createStore, type SetStoreFunction } from 'solid-js/store'
 import MadSignal from '../../libs/mad-signal'
-import type Match from '../../libs/match'
+import type Match from '../../libs/match/match'
 import orchestrator from '../../libs/orchestrator/orchestrator'
-import type Player from '../../libs/player'
-import { STATS_MATCH_ACTIONS, type StatMatchActionItem, type StatMatchSummary } from '../../libs/stats'
+import type Player from '../../libs/player/player'
+import { STATS_MATCH_ACTIONS } from '../../libs/stats/stats'
+import type { StatMatchActionItem, StatMatchSummary } from '../../libs/stats/stats.d'
 import { getStatSummary } from '../../libs/stats/stats-util'
 import { TEAM_OPPONENT_ID } from '../../libs/team/team'
-import { confirmAction, goTo } from '../../libs/utils'
-import { vibrate } from '../../libs/vibrator'
-import BsScoreCard from '../score-card'
+import { confirmAction, goTo, toast } from '../../libs/utils/utils'
+import { vibrate } from '../../libs/vibrator/vibrator'
+import BsScoreCard from '../score-card/score-card'
 import { BsFullStatTable } from '../stats/full-stat-table'
 import { BsStatSumUpRebonds } from '../stats/sum-up-rebonds'
 import type { BsMatchProps } from './match.d'
@@ -46,14 +47,14 @@ function registerStat(options: {
   setStatSummary: SetStoreFunction<StatMatchSummary>
   disableClearLastAction: MadSignal<boolean>
 }) {
-  if (!options || !options.match) {
+  if (!options.match) {
     return
   }
 
   options.match.stats.push({
-    timestamp: Date.now(),
-    playerId: options.playerId,
     name: options.statAction.name,
+    playerId: options.playerId,
+    timestamp: Date.now(),
     type: options.statAction.type,
     value: options.statAction.value,
   })
@@ -91,7 +92,7 @@ async function removeAction(
   orchestrator.Matchs.updateMatch(match)
 }
 
-async function removeLastAction(
+function removeLastAction(
   match: Match | null,
   setStatSummary: SetStoreFunction<StatMatchSummary>,
   disableClearLastAction: MadSignal<boolean>
@@ -101,7 +102,7 @@ async function removeLastAction(
   }
 
   if (match.status === 'locked') {
-    alert('Match vérouillé !!')
+    toast('Match verrouillé !!', 'warning')
     return
   }
 
@@ -110,7 +111,7 @@ async function removeLastAction(
 
 function getOutFromPlayground(opts: {
   playerId: string
-  playersInTheFive: MadSignal<Array<string>>
+  playersInTheFive: MadSignal<string[]>
   match: Match | null
   statSummary: StatMatchSummary
   setStatSummary: SetStoreFunction<StatMatchSummary>
@@ -133,12 +134,12 @@ function getOutFromPlayground(opts: {
   }
 
   registerStat({
-    playerId: opts.playerId,
-    statAction,
-    match: opts.match,
-    statSummary: opts.statSummary,
-    setStatSummary: opts.setStatSummary,
     disableClearLastAction: opts.disableClearLastAction,
+    match: opts.match,
+    playerId: opts.playerId,
+    setStatSummary: opts.setStatSummary,
+    statAction,
+    statSummary: opts.statSummary,
   })
 
   if (opts.playersInTheFive.get().length === 5) {
@@ -150,7 +151,7 @@ function getOutFromPlayground(opts: {
 
 function getInFromPlayground(opts: {
   playerId: string
-  playersInTheFive: MadSignal<Array<string>>
+  playersInTheFive: MadSignal<string[]>
   match: Match | null
   statSummary: StatMatchSummary
   setStatSummary: SetStoreFunction<StatMatchSummary>
@@ -174,12 +175,12 @@ function getInFromPlayground(opts: {
   }
 
   registerStat({
-    playerId: opts.playerId,
-    statAction,
-    match: opts.match,
-    statSummary: opts.statSummary,
-    setStatSummary: opts.setStatSummary,
     disableClearLastAction: opts.disableClearLastAction,
+    match: opts.match,
+    playerId: opts.playerId,
+    setStatSummary: opts.setStatSummary,
+    statAction,
+    statSummary: opts.statSummary,
   })
 
   if (opts.playersInTheFive.get().length === 5) {
@@ -204,26 +205,205 @@ function stopStartTheGame(opts: {
   }
 
   registerStat({
-    playerId: null,
-    statAction,
-    match: opts.match,
-    statSummary: opts.statSummary,
-    setStatSummary: opts.setStatSummary,
     disableClearLastAction: opts.disableClearLastAction,
+    match: opts.match,
+    playerId: null,
+    setStatSummary: opts.setStatSummary,
+    statAction,
+    statSummary: opts.statSummary,
   })
 
   orchestrator.throwUserActionFeedback('long')
 }
 
-function renderPlayerBench(opts: {
-  player: Player | null
-  playersInTheFive: MadSignal<Array<string>>
-  match: Match | null
-  statSummary: StatMatchSummary
-  setStatSummary: SetStoreFunction<StatMatchSummary>
+interface StatRegistrationContext {
   disableClearLastAction: MadSignal<boolean>
+  match: Match | null
+  setStatSummary: SetStoreFunction<StatMatchSummary>
+  statSummary: StatMatchSummary
+}
+
+interface PlayerBenchRenderOptions extends StatRegistrationContext {
+  player: Player | null
+  playersInTheFive: MadSignal<string[]>
+}
+
+interface PlayerButtonRenderOptions extends StatRegistrationContext {
+  matchIsPlaying: MadSignal<boolean>
+  player: Player | null
+  playerInTheFive: MadSignal<string[]>
+  playerOnAction: MadSignal<string | null>
+}
+
+function makePlayerBenchInClickHandler(opts: PlayerBenchRenderOptions) {
+  return () => {
+    getInFromPlayground({
+      disableClearLastAction: opts.disableClearLastAction,
+      match: opts.match,
+      playerId: opts.player?.id || '',
+      playersInTheFive: opts.playersInTheFive,
+      setStatSummary: opts.setStatSummary,
+      statSummary: opts.statSummary,
+    })
+  }
+}
+
+function makePlayerButtonOutClickHandler(opts: PlayerButtonRenderOptions) {
+  return () => {
+    getOutFromPlayground({
+      disableClearLastAction: opts.disableClearLastAction,
+      match: opts.match,
+      playerId: opts.player?.id || '',
+      playersInTheFive: opts.playerInTheFive,
+      setStatSummary: opts.setStatSummary,
+      statSummary: opts.statSummary,
+    })
+  }
+}
+
+function makePlayerButtonRegisterStatHandler(opts: PlayerButtonRenderOptions, statAction: StatMatchActionItem) {
+  return () => {
+    registerStat({
+      disableClearLastAction: opts.disableClearLastAction,
+      match: opts.match,
+      playerId: opts.player?.id || null,
+      setStatSummary: opts.setStatSummary,
+      statAction,
+      statSummary: opts.statSummary,
+    })
+
+    orchestrator.throwUserActionFeedback()
+  }
+}
+
+function makePlayerActionModeClickHandler(player: Player | null, playerOnAction: MadSignal<string | null>) {
+  return () => {
+    openActionMode(player?.id, playerOnAction)
+  }
+}
+
+function makeOpponentRegisterStatHandler(options: {
+  disableClearLastAction: MadSignal<boolean>
+  match: Match | null
+  setStatSummary: SetStoreFunction<StatMatchSummary>
+  statAction: StatMatchActionItem
+  statSummary: StatMatchSummary
 }) {
-  if (!opts || !opts.player) {
+  return () => {
+    registerStat({
+      disableClearLastAction: options.disableClearLastAction,
+      match: options.match,
+      playerId: TEAM_OPPONENT_ID,
+      setStatSummary: options.setStatSummary,
+      statAction: options.statAction,
+      statSummary: options.statSummary,
+    })
+
+    orchestrator.throwUserActionFeedback()
+  }
+}
+
+function makeOpponentActionModeClickHandler(playerOnAction: MadSignal<string | null>) {
+  return () => {
+    openActionMode(TEAM_OPPONENT_ID, playerOnAction)
+  }
+}
+
+function makeStopStartGameClickHandler(options: {
+  disableClearLastAction: MadSignal<boolean>
+  gameIsPlaying: MadSignal<boolean>
+  match: Match | null
+  setStatSummary: SetStoreFunction<StatMatchSummary>
+  statSummary: StatMatchSummary
+}) {
+  return () => {
+    stopStartTheGame(options)
+  }
+}
+
+function makeRemoveLastActionClickHandler(
+  match: Match | null,
+  setStatSummary: SetStoreFunction<StatMatchSummary>,
+  disableClearLastAction: MadSignal<boolean>
+) {
+  return () => {
+    removeLastAction(match, setStatSummary, disableClearLastAction)
+  }
+}
+
+function makeRemoveLastActionKeyDownHandler(
+  match: Match | null,
+  setStatSummary: SetStoreFunction<StatMatchSummary>,
+  disableClearLastAction: MadSignal<boolean>
+) {
+  return (event: KeyboardEvent) => {
+    if (event.code === 'Enter') {
+      removeLastAction(match, setStatSummary, disableClearLastAction)
+    }
+  }
+}
+
+function makeOpenStatModeClickHandler(isStatMode: MadSignal<boolean>) {
+  return () => {
+    isStatMode.set(true)
+  }
+}
+
+function makeOpenStatModeKeyDownHandler(isStatMode: MadSignal<boolean>) {
+  return (event: KeyboardEvent) => {
+    if (event.code === 'Enter') {
+      isStatMode.set(true)
+    }
+  }
+}
+
+function makePlayerOnActionStatClickHandler(
+  options: {
+    disableClearLastAction: MadSignal<boolean>
+    match: Match | null
+    setStatSummary: SetStoreFunction<StatMatchSummary>
+    statSummary: StatMatchSummary
+  },
+  statAction: StatMatchActionItem,
+  playerOnAction: MadSignal<string | null>
+) {
+  return () => {
+    registerStat({
+      disableClearLastAction: options.disableClearLastAction,
+      match: options.match,
+      playerId: playerOnAction.get(),
+      setStatSummary: options.setStatSummary,
+      statAction,
+      statSummary: options.statSummary,
+    })
+    closeActionMode(playerOnAction)
+  }
+}
+
+function makeBackClickHandler(
+  match: Match | null,
+  isStatMode: MadSignal<boolean>,
+  playerOnAction: MadSignal<string | null>
+) {
+  return (event: MouseEvent) => {
+    event.stopPropagation()
+
+    if (match?.status !== 'locked' && isStatMode.get()) {
+      isStatMode.set(false)
+      return
+    }
+
+    if (match?.status !== 'locked' && playerOnAction.get()) {
+      closeActionMode(playerOnAction)
+      return
+    }
+
+    goTo('matchs')
+  }
+}
+
+function renderPlayerBench(opts: PlayerBenchRenderOptions) {
+  if (!opts.player) {
     return (
       <button class="btn btn-error btn-disabled w-full" type="button">
         Joueur non trouvé
@@ -237,20 +417,7 @@ function renderPlayerBench(opts: {
     <div class="my-3 flex w-full flex-row md:my-4">
       <div class="flex w-full items-center gap-1 rounded-lg border border-primary bg-neutral p-1 text-neutral-content">
         <div class="flex-none">
-          <button
-            class="btn btn-primary"
-            onClick={() => {
-              getInFromPlayground({
-                playerId: opts.player?.id || '',
-                playersInTheFive: opts.playersInTheFive,
-                match: opts.match,
-                statSummary: opts.statSummary,
-                setStatSummary: opts.setStatSummary,
-                disableClearLastAction: opts.disableClearLastAction,
-              })
-            }}
-            type="button"
-          >
+          <button class="btn btn-primary" onClick={makePlayerBenchInClickHandler(opts)} type="button">
             <ArrowUpToLine />
           </button>
           <div class="text-center text-xs">Rentrée</div>
@@ -275,17 +442,8 @@ function renderPlayerBench(opts: {
   )
 }
 
-function renderPlayerButton(opts: {
-  player: Player | null
-  match: Match | null
-  playerInTheFive: MadSignal<Array<string>>
-  statSummary: StatMatchSummary
-  setStatSummary: SetStoreFunction<StatMatchSummary>
-  disableClearLastAction: MadSignal<boolean>
-  matchIsPlaying: MadSignal<boolean>
-  playerOnAction: MadSignal<string | null>
-}) {
-  if (!opts || !opts.player) {
+function renderPlayerButton(opts: PlayerButtonRenderOptions) {
+  if (!opts.player) {
     return (
       <button class="btn btn-error btn-disabled w-full" type="button">
         Joueur non trouvé
@@ -307,20 +465,7 @@ function renderPlayerButton(opts: {
     <div class="my-3 flex w-full flex-row md:my-4">
       <div class="flex w-full items-center gap-1 rounded-lg border border-primary bg-neutral p-1 text-neutral-content">
         <div class="flex-none">
-          <button
-            class="btn btn-primary"
-            onClick={() => {
-              getOutFromPlayground({
-                playerId: opts.player?.id || '',
-                playersInTheFive: opts.playerInTheFive,
-                match: opts.match,
-                statSummary: opts.statSummary,
-                setStatSummary: opts.setStatSummary,
-                disableClearLastAction: opts.disableClearLastAction,
-              })
-            }}
-            type="button"
-          >
+          <button class="btn btn-primary" onClick={makePlayerButtonOutClickHandler(opts)} type="button">
             <ArrowDownToLine />
           </button>
           <div class="text-center text-xs">Sortie</div>
@@ -345,30 +490,8 @@ function renderPlayerButton(opts: {
               <div class="hidden flex-none md:block">
                 <button
                   class={`btn btn-${statAction.type}`}
-                  onClick={() => {
-                    registerStat({
-                      playerId: opts.player?.id || null,
-                      statAction,
-                      match: opts.match,
-                      statSummary: opts.statSummary,
-                      setStatSummary: opts.setStatSummary,
-                      disableClearLastAction: opts.disableClearLastAction,
-                    })
-
-                    orchestrator.throwUserActionFeedback()
-                  }}
-                  onKeyDown={() => {
-                    registerStat({
-                      playerId: opts.player?.id || null,
-                      statAction,
-                      match: opts.match,
-                      statSummary: opts.statSummary,
-                      setStatSummary: opts.setStatSummary,
-                      disableClearLastAction: opts.disableClearLastAction,
-                    })
-
-                    orchestrator.throwUserActionFeedback()
-                  }}
+                  onClick={makePlayerButtonRegisterStatHandler(opts, statAction)}
+                  onKeyDown={makePlayerButtonRegisterStatHandler(opts, statAction)}
                   type="button"
                 >
                   {statAction.icon()}
@@ -382,9 +505,7 @@ function renderPlayerButton(opts: {
         <div class="inline-block md:hidden">
           <button
             class="btn w-32"
-            onClick={() => {
-              openActionMode(opts.player?.id, opts.playerOnAction)
-            }}
+            onClick={makePlayerActionModeClickHandler(opts.player, opts.playerOnAction)}
             type="button"
           >
             Stats !
@@ -404,7 +525,7 @@ function renderPlayerButton(opts: {
 function renderPlayerHeader(playerId: string | null) {
   const player =
     playerId === TEAM_OPPONENT_ID
-      ? { nicName: 'Adversaire', firstName: '', jerseyNumber: 'XX' }
+      ? { firstName: '', jerseyNumber: 'XX', nicName: 'Adversaire' }
       : orchestrator.getPlayer(playerId)
 
   return (
@@ -486,7 +607,7 @@ function renderStatGrid(statSummary: StatMatchSummary) {
 
 function renderTheTeamBench(options: {
   sortedPlayers: Array<Player | null>
-  playersInTheFive: MadSignal<Array<string>>
+  playersInTheFive: MadSignal<string[]>
   match: Match | null
   statSummary: StatMatchSummary
   setStatSummary: SetStoreFunction<StatMatchSummary>
@@ -508,12 +629,12 @@ function renderTheTeamBench(options: {
       {(player) => (
         <Show when={player && !options.playersInTheFive.get().includes(player.id)}>
           {renderPlayerBench({
+            disableClearLastAction: options.disableClearLastAction,
+            match: options.match,
             player,
             playersInTheFive: options.playersInTheFive,
-            statSummary: options.statSummary,
-            match: options.match,
             setStatSummary: options.setStatSummary,
-            disableClearLastAction: options.disableClearLastAction,
+            statSummary: options.statSummary,
           })}
         </Show>
       )}
@@ -523,7 +644,7 @@ function renderTheTeamBench(options: {
 
 function renderTheTeamFive(opts: {
   sortedPlayers: Array<Player | null>
-  playersInTheFive: MadSignal<Array<string>>
+  playersInTheFive: MadSignal<string[]>
   match: Match | null
   statSummary: StatMatchSummary
   setStatSummary: SetStoreFunction<StatMatchSummary>
@@ -545,14 +666,14 @@ function renderTheTeamFive(opts: {
         {(player) => (
           <Show when={player && opts.playersInTheFive.get().includes(player.id)}>
             {renderPlayerButton({
-              player,
-              match: opts.match,
-              playerInTheFive: opts.playersInTheFive,
-              setStatSummary: opts.setStatSummary,
               disableClearLastAction: opts.disableClearLastAction,
-              statSummary: opts.statSummary,
+              match: opts.match,
               matchIsPlaying: opts.matchIsPlaying,
+              player,
+              playerInTheFive: opts.playersInTheFive,
               playerOnAction: opts.playerOnAction,
+              setStatSummary: opts.setStatSummary,
+              statSummary: opts.statSummary,
             })}
           </Show>
         )}
@@ -572,7 +693,7 @@ export default function BsMatch(props: BsMatchProps) {
   const team = orchestrator.getTeam(match?.teamId)
   const sortedPlayers = orchestrator.getJerseySortedPlayers(team?.playerIds)
   const playersInTheFive = new MadSignal(match?.playersInTheFive || [])
-  const matchIsPlaying = new MadSignal(false)
+  const matchIsPlaying: MadSignal<boolean> = new MadSignal(false)
 
   return (
     <div class="w-full">
@@ -603,14 +724,14 @@ export default function BsMatch(props: BsMatchProps) {
         <Show when={!playerOnAction.get()}>
           <div class="w-full">
             {renderTheTeamFive({
-              sortedPlayers,
-              playersInTheFive,
-              match,
-              setStatSummary,
               disableClearLastAction,
-              statSummary,
+              match,
               matchIsPlaying,
               playerOnAction,
+              playersInTheFive,
+              setStatSummary,
+              sortedPlayers,
+              statSummary,
             })}
 
             <hr />
@@ -636,30 +757,20 @@ export default function BsMatch(props: BsMatchProps) {
                       <div class="hidden flex-none md:inline-block">
                         <button
                           class={`btn btn-${statAction.type}`}
-                          onClick={() => {
-                            registerStat({
-                              playerId: TEAM_OPPONENT_ID,
-                              statAction,
-                              match,
-                              statSummary,
-                              setStatSummary,
-                              disableClearLastAction,
-                            })
-
-                            orchestrator.throwUserActionFeedback()
-                          }}
-                          onKeyDown={() => {
-                            registerStat({
-                              playerId: TEAM_OPPONENT_ID,
-                              statAction,
-                              match,
-                              statSummary,
-                              setStatSummary,
-                              disableClearLastAction,
-                            })
-
-                            orchestrator.throwUserActionFeedback()
-                          }}
+                          onClick={makeOpponentRegisterStatHandler({
+                            disableClearLastAction,
+                            match,
+                            setStatSummary,
+                            statAction,
+                            statSummary,
+                          })}
+                          onKeyDown={makeOpponentRegisterStatHandler({
+                            disableClearLastAction,
+                            match,
+                            setStatSummary,
+                            statAction,
+                            statSummary,
+                          })}
                           type="button"
                         >
                           {statAction.icon()}
@@ -671,13 +782,7 @@ export default function BsMatch(props: BsMatchProps) {
                 </For>
 
                 <div class="inline-block md:hidden">
-                  <button
-                    class="btn w-32"
-                    onClick={() => {
-                      openActionMode(TEAM_OPPONENT_ID, playerOnAction)
-                    }}
-                    type="button"
-                  >
+                  <button class="btn w-32" onClick={makeOpponentActionModeClickHandler(playerOnAction)} type="button">
                     Stats !
                   </button>
                 </div>
@@ -692,15 +797,13 @@ export default function BsMatch(props: BsMatchProps) {
 
             <button
               class={`btn btn-lg btn-${matchIsPlaying.get() ? 'error' : 'success'} w-full text-xl`}
-              onClick={() =>
-                stopStartTheGame({
-                  gameIsPlaying: matchIsPlaying,
-                  match,
-                  setStatSummary,
-                  statSummary,
-                  disableClearLastAction,
-                })
-              }
+              onClick={makeStopStartGameClickHandler({
+                disableClearLastAction,
+                gameIsPlaying: matchIsPlaying,
+                match,
+                setStatSummary,
+                statSummary,
+              })}
               type="button"
             >
               <Show when={matchIsPlaying.get()}>
@@ -725,14 +828,8 @@ export default function BsMatch(props: BsMatchProps) {
             <button
               class="btn btn-warning w-full"
               disabled={disableClearLastAction.get()}
-              onClick={() => {
-                removeLastAction(match, setStatSummary, disableClearLastAction)
-              }}
-              onKeyDown={(event: KeyboardEvent) => {
-                if (event.code === 'Enter') {
-                  removeLastAction(match, setStatSummary, disableClearLastAction)
-                }
-              }}
+              onClick={makeRemoveLastActionClickHandler(match, setStatSummary, disableClearLastAction)}
+              onKeyDown={makeRemoveLastActionKeyDownHandler(match, setStatSummary, disableClearLastAction)}
               type="button"
             >
               <Eraser />
@@ -742,26 +839,20 @@ export default function BsMatch(props: BsMatchProps) {
 
             <div class="divider">Le Banc</div>
             {renderTheTeamBench({
-              sortedPlayers,
-              playersInTheFive,
-              match,
-              setStatSummary,
-              statSummary,
               disableClearLastAction,
+              match,
+              playersInTheFive,
+              setStatSummary,
+              sortedPlayers,
+              statSummary,
             })}
 
             <hr />
 
             <button
               class="btn btn-primary w-full"
-              onClick={() => {
-                isStatMode.set(true)
-              }}
-              onKeyDown={(event: KeyboardEvent) => {
-                if (event.code === 'Enter') {
-                  isStatMode.set(true)
-                }
-              }}
+              onClick={makeOpenStatModeClickHandler(isStatMode)}
+              onKeyDown={makeOpenStatModeKeyDownHandler(isStatMode)}
               type="button"
             >
               <ChartLine />
@@ -779,17 +870,11 @@ export default function BsMatch(props: BsMatchProps) {
                 <Show when={!item.secondaryAction}>
                   <button
                     class={`btn btn-${item.type}`}
-                    onClick={() => {
-                      registerStat({
-                        playerId: playerOnAction.get(),
-                        statAction: item,
-                        match,
-                        statSummary,
-                        setStatSummary,
-                        disableClearLastAction,
-                      })
-                      closeActionMode(playerOnAction)
-                    }}
+                    onClick={makePlayerOnActionStatClickHandler(
+                      { disableClearLastAction, match, setStatSummary, statSummary },
+                      item,
+                      playerOnAction
+                    )}
                     type="button"
                   >
                     {item.icon()}
@@ -808,21 +893,7 @@ export default function BsMatch(props: BsMatchProps) {
 
       <button
         class="btn btn-outline w-full print:hidden"
-        onClick={(event) => {
-          event.stopPropagation()
-
-          if (match?.status !== 'locked' && isStatMode.get()) {
-            isStatMode.set(false)
-            return
-          }
-
-          if (match?.status !== 'locked' && playerOnAction.get()) {
-            closeActionMode(playerOnAction)
-            return
-          }
-
-          goTo('matchs')
-        }}
+        onClick={makeBackClickHandler(match, isStatMode, playerOnAction)}
         type="button"
       >
         <ChevronLeft />

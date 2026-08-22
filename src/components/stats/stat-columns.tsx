@@ -1,7 +1,7 @@
 import { Shirt, Users } from 'lucide-solid'
 import type { JSXElement } from 'solid-js'
-import type Player from '../../libs/player'
-import type { ScoringKey, StatMatchSummaryPlayer } from '../../libs/stats'
+import type Player from '../../libs/player/player'
+import type { ScoringKey, StatMatchSummaryPlayer } from '../../libs/stats/stats.d'
 import { isTeamPerGameRow, isTeamTotalRow } from '../../libs/stats/stats-util'
 
 export type StatColumnId =
@@ -56,21 +56,21 @@ function renderRatioCell(key: ScoringKey, stats: StatMatchSummaryPlayer) {
   )
 }
 
-const SCORING_COLUMN_META = {
-  'free-throw': {
-    label: 'LF',
-    glossary: {
-      fullName: 'Lancers Francs',
-      explanation: 'Lancers francs réussis / tentés, avec le pourcentage de réussite.',
-    },
-  },
+const SCORING_COLUMN_META: Record<ScoringKey, { label: string; glossary?: StatGlossaryEntry }> = {
   '2pts': {
     label: '2pts',
   },
   '3pts': {
     label: '3pts',
   },
-} satisfies Record<ScoringKey, { label: string; glossary?: StatGlossaryEntry }>
+  'free-throw': {
+    glossary: {
+      explanation: 'Lancers francs réussis / tentés, avec le pourcentage de réussite.',
+      fullName: 'Lancers Francs',
+    },
+    label: 'LF',
+  },
+}
 
 // Iteration order must match column display order
 const SCORING_KEYS = ['free-throw', '2pts', '3pts'] as const satisfies readonly ScoringKey[]
@@ -93,12 +93,12 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
   {
     id: 'jersey',
     label: 'Maillot',
-    renderHeader: () => <Shirt />,
     renderCell: (_stats, player) => (
       <td>
         <span class="text-2xl">{player?.jerseyNumber || <Users size={FALLBACK_JERSEY_ICON_SIZE} />}</span>
       </td>
     ),
+    renderHeader: () => <Shirt />,
   },
   {
     id: 'name',
@@ -111,6 +111,10 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     renderCell: (stats) => renderScoreCell(stats.scores.total),
   },
   {
+    glossary: {
+      explanation: 'Nombre de rebonds capturés. Entre parenthèses : offensifs (O) et défensifs (D).',
+      fullName: 'Rebonds (Offensifs-Défensifs)',
+    },
     id: 'rebounds',
     label: 'Rbs (O-D)',
     renderCell: (stats) => (
@@ -119,10 +123,6 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
         <span>{`(${stats.rebonds.offensive} - ${stats.rebonds.defensive})`}</span>
       </td>
     ),
-    glossary: {
-      fullName: 'Rebonds (Offensifs-Défensifs)',
-      explanation: 'Nombre de rebonds capturés. Entre parenthèses : offensifs (O) et défensifs (D).',
-    },
   },
   {
     id: 'fouls',
@@ -130,38 +130,38 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     renderCell: (stats) => renderScoreCell(stats.fouls),
   },
   {
+    glossary: {
+      explanation: 'Nombre de fois où le joueur a perdu la possession du ballon.',
+      fullName: 'Turnovers / Balles Perdues',
+    },
     id: 'turnover',
     label: 'TO',
     renderCell: (stats) => renderScoreCell(stats.turnover),
-    glossary: {
-      fullName: 'Turnovers / Balles Perdues',
-      explanation: 'Nombre de fois où le joueur a perdu la possession du ballon.',
-    },
   },
   {
+    glossary: {
+      explanation: 'Nombre de passes ayant directement mené à un panier marqué.',
+      fullName: 'Assists / Passes Décisives',
+    },
     id: 'assists',
     label: 'Ass',
     renderCell: (stats) => renderScoreCell(stats.assists),
-    glossary: {
-      fullName: 'Assists / Passes Décisives',
-      explanation: 'Nombre de passes ayant directement mené à un panier marqué.',
-    },
   },
   {
+    glossary: {
+      explanation:
+        "Nombre de ballons volés à l'adversaire (interceptions). Inclut également les efforts francs provoquant une perte de balle — on parle de steals élargies.",
+      fullName: 'Interceptions',
+    },
     id: 'steals',
     label: 'Steals',
     renderCell: (stats) => renderScoreCell(stats.steals),
-    glossary: {
-      fullName: 'Interceptions',
-      explanation:
-        "Nombre de ballons volés à l'adversaire (interceptions). Inclut également les efforts francs provoquant une perte de balle — on parle de steals élargies.",
-    },
   },
   ...SCORING_KEYS.map<StatColumn>((key) => ({
+    glossary: SCORING_COLUMN_META[key].glossary,
     id: key,
     label: SCORING_COLUMN_META[key].label,
     renderCell: (stats) => renderRatioCell(key, stats),
-    glossary: SCORING_COLUMN_META[key].glossary,
   })),
   {
     id: 'blocks',
@@ -169,36 +169,36 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     renderCell: (stats) => renderScoreCell(stats.blocks),
   },
   {
+    glossary: {
+      explanation:
+        'Indice de performance global calculé à partir de toutes les statistiques. Formule simplifiée : (Pts + Rbs + Ass + Steals + BLK) − (Tirs ratés + TO). Exemple : un match à 15 pts, 8 rebonds, 3 passes sans perte de balle donne une EFF de 26.',
+      fullName: 'Évaluation / Efficiency',
+    },
     id: 'eff',
     label: 'EFF',
     renderCell: (stats) => renderScoreCell(stats.eff),
-    glossary: {
-      fullName: 'Évaluation / Efficiency',
-      explanation:
-        'Indice de performance global calculé à partir de toutes les statistiques. Formule simplifiée : (Pts + Rbs + Ass + Steals + BLK) − (Tirs ratés + TO). Exemple : un match à 15 pts, 8 rebonds, 3 passes sans perte de balle donne une EFF de 26.',
-    },
   },
   {
+    glossary: {
+      explanation: 'Rapport entre passes décisives et balles perdues. > 1 est bon, < 1 est mauvais.',
+      fullName: 'Ratio Assists/Turnovers',
+    },
     id: 'astTo',
     label: 'A/TO',
     renderCell: (stats) => renderScoreCell(stats.astToRatio.toFixed(1)),
-    glossary: {
-      fullName: 'Ratio Assists/Turnovers',
-      explanation: 'Rapport entre passes décisives et balles perdues. > 1 est bon, < 1 est mauvais.',
-    },
   },
   {
+    glossary: {
+      explanation:
+        'Pourcentage de réussite au tir pondéré. Contrairement au pourcentage classique, le TS% prend en compte la valeur des tirs (3pts > 2pts) et les lancers francs. Formule : Pts / (2 × (Tirs tentés + 0.44 × LF tentés)). Un TS% de 50% est considéré comme une bonne performance.',
+      fullName: 'True Shooting %',
+    },
     id: 'tsPercent',
     label: 'TS%',
     renderCell: (stats) => renderScoreCell(`${stats.trueShootingPercentage}%`),
-    glossary: {
-      fullName: 'True Shooting %',
-      explanation:
-        'Pourcentage de réussite au tir pondéré. Contrairement au pourcentage classique, le TS% prend en compte la valeur des tirs (3pts > 2pts) et les lancers francs. Formule : Pts / (2 × (Tirs tentés + 0.44 × LF tentés)). Un TS% de 50% est considéré comme une bonne performance.',
-    },
   },
 ]
 
 export const GLOSSARY_COLUMNS: readonly ColumnWithGlossary[] = STAT_COLUMNS.filter(
-  (col): col is ColumnWithGlossary => col.glossary != null
+  (col): col is ColumnWithGlossary => col.glossary !== undefined
 )

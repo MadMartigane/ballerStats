@@ -1,15 +1,15 @@
 import { FilePenLine, Frown, Lock, LockOpen, Trash, Trophy } from 'lucide-solid'
 import { createMemo, Show } from 'solid-js'
-import type Match from '../../libs/match'
+import type Match from '../../libs/match/match'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import { getMatchOutcome, type MatchOutcome } from '../../libs/stats/stats-util'
-import { confirmAction, toDateTime } from '../../libs/utils'
-import BsTile from '../tile'
+import { confirmAction, toDateTime } from '../../libs/utils/utils'
+import BsTile from '../tile/tile'
 import type { BsMatchTileProps, BsMatchTypeProps } from './match-tile.d'
 
 const MATCH_OUTCOME_LABELS = {
-  win: 'Victoire',
   loss: 'Défaite',
+  win: 'Victoire',
 } as const
 
 async function removeMatch(match: Match) {
@@ -28,9 +28,28 @@ function callCallback(match: Match, callback?: (match: Match) => void) {
   callback(match)
 }
 
+function makeEditMatchClickHandler(match: Match, onEdit?: BsMatchTileProps['onEdit']) {
+  return (event: MouseEvent) => {
+    event.stopPropagation()
+    callCallback(match, onEdit)
+  }
+}
+
+function makeRemoveMatchClickHandler(match: Match) {
+  return (event: MouseEvent) => {
+    event.stopPropagation()
+    removeMatch(match)
+  }
+}
+
+function makeStartMatchClickHandler(match: Match, onStart?: BsMatchTileProps['onStart']) {
+  return () => {
+    callCallback(match, onStart)
+  }
+}
+
 export function BsMatchTypeText(props: BsMatchTypeProps) {
-  const type = props.type
-  const size = props.size || 'base'
+  const { size = 'base', type } = props
 
   if (!type) {
     return null
@@ -50,8 +69,7 @@ export function BsMatchTypeText(props: BsMatchTypeProps) {
 }
 
 export function BsMatchTypeBadge(props: BsMatchTypeProps) {
-  const type = props.type
-  const size = props.size || 'base'
+  const { size = 'base', type } = props
 
   if (!type) {
     return null
@@ -65,7 +83,7 @@ export function BsMatchTypeBadge(props: BsMatchTypeProps) {
 }
 
 export default function BsMatchTile(props: BsMatchTileProps) {
-  const match = props.match
+  const { match } = props
   const team = orchestrator.getTeam(match.teamId)
   const editMatchLabel = 'Modifier le match'
   const deleteMatchLabel = 'Supprimer le match'
@@ -77,17 +95,17 @@ export default function BsMatchTile(props: BsMatchTileProps) {
   const hasResult = createMemo(() => result() !== 'none' && result() !== 'tie')
 
   const BORDER_CLASS: Record<MatchOutcome, string> = {
-    win: 'border-l-4 border-l-success',
     loss: 'border-l-4 border-l-error',
-    tie: '',
     none: '',
+    tie: '',
+    win: 'border-l-4 border-l-success',
   }
 
   const SCORE_CLASS: Record<MatchOutcome, string> = {
-    win: 'text-success',
     loss: 'text-error',
-    tie: '',
     none: '',
+    tie: '',
+    win: 'text-success',
   }
 
   const borderClass = createMemo(() => BORDER_CLASS[result()])
@@ -115,10 +133,7 @@ export default function BsMatchTile(props: BsMatchTileProps) {
                 <button
                   aria-label={editMatchLabel}
                   class="btn btn-secondary btn-square"
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    callCallback(match, props?.onEdit)
-                  }}
+                  onClick={makeEditMatchClickHandler(match, props?.onEdit)}
                   type="button"
                 >
                   <FilePenLine />
@@ -130,10 +145,7 @@ export default function BsMatchTile(props: BsMatchTileProps) {
               <button
                 aria-label={deleteMatchLabel}
                 class="btn btn-secondary btn-square"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  removeMatch(match)
-                }}
+                onClick={makeRemoveMatchClickHandler(match)}
                 type="button"
               >
                 <Trash />
@@ -149,12 +161,10 @@ export default function BsMatchTile(props: BsMatchTileProps) {
             </div>
           </Show>
         }
-        onClick={() => {
-          callCallback(match, props?.onStart)
-        }}
+        onClick={makeStartMatchClickHandler(match, props?.onStart)}
         status={
           <div class="flex items-center justify-between gap-1">
-            <div class="text-sm">{toDateTime(props.match?.date)}</div>
+            <div class="text-sm">{toDateTime(props.match.date)}</div>
             <Show when={props.match.championship}>
               <div class="badge badge-ghost badge-sm max-w-[50%] truncate">{props.match.championship}</div>
             </Show>

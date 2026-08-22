@@ -3,7 +3,7 @@ import { GLOSSARY_COLUMNS, STAT_COLUMNS } from './stat-columns'
 
 describe('stat-columns', () => {
   it('jersey is the only column without a glossary entry', () => {
-    const columnsWithoutGlossary = STAT_COLUMNS.filter((col) => col.glossary == null)
+    const columnsWithoutGlossary = STAT_COLUMNS.filter((col) => col.glossary === undefined)
     expect(columnsWithoutGlossary.map((c) => c.id).sort()).toEqual([
       '2pts',
       '3pts',

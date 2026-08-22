@@ -1,10 +1,11 @@
-import bsEventBus from '../event-bus'
-import Player, { type PlayerRawData } from '../player'
+import bsEventBus from '../event-bus/event-bus'
+import Player from '../player/player'
+import type { PlayerRawData } from '../player/player.d'
 
 export default class Players {
-  #players: Array<Player> = []
+  #players: Player[] = []
 
-  constructor(playerDatas?: Array<PlayerRawData>) {
+  constructor(playerDatas?: PlayerRawData[]) {
     if (playerDatas) {
       this.setFromRawData(playerDatas)
     }
@@ -18,15 +19,16 @@ export default class Players {
     return this.#players.find((currentPlayer) => currentPlayer.id === newPlayer.id)
   }
 
-  public get players(): Array<Player> {
+  get players(): Player[] {
     return this.#players.map((player: Player): Player => new Player(player.getRawData()))
   }
 
-  public get length() {
+  get length() {
     return this.#players.length
   }
 
-  public setFromRawData(data: Array<PlayerRawData>) {
+  setFromRawData(data: PlayerRawData[]) {
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: legacy callers/tests pass null to empty the collection, which the array parameter type does not reflect.
     if (!data) {
       this.#players = []
       return
@@ -36,7 +38,7 @@ export default class Players {
     this.throwUpdatedPlayerEvent()
   }
 
-  public updatePlayer(newPlayer: Player) {
+  updatePlayer(newPlayer: Player) {
     const oldPlayer = this.#players.find((currentPlayer) => currentPlayer.id === newPlayer.id)
     if (!oldPlayer) {
       throw new Error(
@@ -48,11 +50,11 @@ export default class Players {
     this.throwUpdatedPlayerEvent()
   }
 
-  public getRawData() {
+  getRawData() {
     return this.#players.map((player: Player) => player.getRawData())
   }
 
-  public add(newPlayer: Player) {
+  add(newPlayer: Player) {
     if (!newPlayer.isRegisterable) {
       throw new Error(`[BsPlayers.add()] The player id ${newPlayer.id} is not registerable, Please complete the data.`)
     }
@@ -68,7 +70,7 @@ export default class Players {
     this.throwUpdatedPlayerEvent()
   }
 
-  public remove(player: Player) {
+  remove(player: Player) {
     const idx = this.#players.findIndex((candidate: Player) => candidate.id === player.id)
 
     if (idx === -1) {

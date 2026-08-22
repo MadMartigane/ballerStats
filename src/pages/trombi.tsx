@@ -1,6 +1,6 @@
 import { createMemo } from 'solid-js'
 import BsTrombi from '../components/trombi/trombi'
-import { sortPlayersByJersey } from '../libs/player'
+import { sortPlayersByJersey } from '../libs/player/player'
 import { players } from '../libs/players-store'
 
 export default function TrombiPage() {

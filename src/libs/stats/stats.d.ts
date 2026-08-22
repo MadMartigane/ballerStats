@@ -20,70 +20,70 @@ export type StatMatchActionItemName =
   | 'gameStop'
   | 'gameStart'
 
-export type StatMatchActionItem = {
-  name: StatMatchActionItemName
-  type: StatMatchActionItemType
-  inGameAction: boolean
-  opponentMatter: boolean
-  value: number
+export interface StatMatchActionItem {
+  everyTimeAction?: boolean
   icon: () => JSXElement
+  inGameAction: boolean
   label1?: string | JSXElement
   label2?: string | JSXElement
+  name: StatMatchActionItemName
+  opponentMatter: boolean
   secondaryAction?: boolean
-  everyTimeAction?: boolean
+  type: StatMatchActionItemType
+  value: number
 }
 
-export type StatMatchSummaryRatio = {
-  success: number
+export interface StatMatchSummaryRatio {
   fail: number
-  total: number
   percentage: number
+  success: number
+  total: number
 }
 
-export type StatMatchSummaryPlayer = {
+export interface StatMatchSummaryPlayer {
+  assists: number
+  astToRatio: number
+  blocks: number
+  eff: number
+  fouls: number
+  nbPlayedMatch: number
   playerId: string
-  scores: Record<ScoringKey, number> & { total: number }
+  playTime: number | null
+  ratio: Record<ScoringKey, StatMatchSummaryRatio>
   rebonds: {
     defensive: number
     offensive: number
     total: number
   }
-  ratio: Record<ScoringKey, StatMatchSummaryRatio>
-  playTime: number | null
-  nbPlayedMatch: number
-  fouls: number
-  assists: number
+  scores: Record<ScoringKey, number> & { total: number }
   steals: number
-  turnover: number
-  blocks: number
-  eff: number
-  astToRatio: number
   trueShootingPercentage: number
+  turnover: number
 }
 
-export type StatMatchSummaryRebonds = {
-  teamTotal: number
-  teamOffensive: number
-  teamDefensive: number
-  teamTotalPercentage: number
-  teamOffensivePercentage: number
-  teamDefensivePercentage: number
-  opponentTotal: number
+export interface StatMatchSummaryRebonds {
   opponentDefensive: number
   opponentOffensive: number
+  opponentTotal: number
+  teamDefensive: number
+  teamDefensivePercentage: number
+  teamOffensive: number
+  teamOffensivePercentage: number
+  teamTotal: number
+  teamTotalPercentage: number
 }
 
-export type StatMatchSummary = {
-  teamScore: number
-  teamScores: StatMatchSummaryPlayer
-  opponentScore: number
+export interface StatMatchSummary {
   opponentFouls: number
-  players: Array<StatMatchSummaryPlayer>
+  opponentScore: number
+  players: StatMatchSummaryPlayer[]
   rebonds: StatMatchSummaryRebonds
   teamAssists?: number
-  teamTurnover?: number
   teamFouls?: number
+  teamScore: number
+  teamScores: StatMatchSummaryPlayer
   teamSteals?: number
+  teamTurnover?: number
 }
 
 /** Stats accepted by the full stat table: a plain summary, optionally carrying the cumulative totals row. */

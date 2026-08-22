@@ -1,10 +1,10 @@
 import { Shirt, Trash, UserPen } from 'lucide-solid'
 import { Show } from 'solid-js'
 import orchestrator from '../../libs/orchestrator/orchestrator'
-import type Player from '../../libs/player'
-import { confirmAction, toast } from '../../libs/utils'
+import type Player from '../../libs/player/player'
+import { confirmAction, toast } from '../../libs/utils/utils'
 import BsAvatar from '../avatar/avatar'
-import BsTile from '../tile'
+import BsTile from '../tile/tile'
 import type { BsPlayerProps } from './player.d'
 
 async function removePlayer(player: Player) {
@@ -20,8 +20,20 @@ function editPlayer(player: Player, callback: (player: Player) => void) {
   callback(player)
 }
 
+function makeEditPlayerClickHandler(player: Player, onEdit: BsPlayerProps['onEdit']) {
+  return () => {
+    editPlayer(player, onEdit)
+  }
+}
+
+function makeRemovePlayerClickHandler(player: Player) {
+  return () => {
+    removePlayer(player).catch(() => toast('Erreur lors de la suppression du joueur.', 'error'))
+  }
+}
+
 export default function BsPlayer(props: BsPlayerProps) {
-  const player = props.player
+  const { player } = props
   const editPlayerLabel = 'Modifier le joueur'
   const deletePlayerLabel = 'Supprimer le joueur'
   return (
@@ -38,7 +50,7 @@ export default function BsPlayer(props: BsPlayerProps) {
               <button
                 aria-label={editPlayerLabel}
                 class="btn btn-secondary btn-square"
-                onClick={() => editPlayer(player, props.onEdit)}
+                onClick={makeEditPlayerClickHandler(player, props.onEdit)}
                 type="button"
               >
                 <UserPen />
@@ -49,9 +61,7 @@ export default function BsPlayer(props: BsPlayerProps) {
             <button
               aria-label={deletePlayerLabel}
               class="btn btn-secondary btn-square"
-              onClick={() =>
-                removePlayer(player).catch(() => toast('Erreur lors de la suppression du joueur.', 'error'))
-              }
+              onClick={makeRemovePlayerClickHandler(player)}
               type="button"
             >
               <Trash />

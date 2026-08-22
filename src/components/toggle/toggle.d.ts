@@ -1,13 +1,13 @@
-import type { DaisySize } from '../../libs/daisy'
+import type { DaisySize } from '../../libs/daisy/daisy.d'
 
 export type BsToggleOnChangeEvent = Event & {
   currentTarget: HTMLInputElement
   target: HTMLInputElement
 }
 
-export type BsToggleProps = {
-  value?: boolean
+export interface BsToggleProps {
   label?: string
-  size?: DaisySize
   onChange?: (value: boolean) => void
+  size?: DaisySize
+  value?: boolean
 }

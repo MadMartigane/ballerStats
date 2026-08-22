@@ -1,12 +1,12 @@
-import { getUniqId } from '../utils'
+import { getUniqId } from '../utils/utils'
 import type { ContactRawData, ContactRelationship } from './contact.d'
 
-export const CONTACT_RELATIONSHIPS: ReadonlyArray<ContactRelationship> = ['mother', 'father', 'other']
+export const CONTACT_RELATIONSHIPS: readonly ContactRelationship[] = ['mother', 'father', 'other']
 
 export const RELATIONSHIP_LABELS: ReadonlyArray<{ value: ContactRelationship; label: string }> = [
-  { value: 'mother', label: 'Mère' },
-  { value: 'father', label: 'Père' },
-  { value: 'other', label: 'Autre' },
+  { label: 'Mère', value: 'mother' },
+  { label: 'Père', value: 'father' },
+  { label: 'Autre', value: 'other' },
 ]
 
 export function isContactRelationship(value: unknown): value is ContactRelationship {
@@ -19,13 +19,13 @@ export function getRelationshipLabel(relationship: ContactRelationship): string 
 
 export default class Contact {
   #id: string
-  public playerId?: string
-  public firstName?: string
-  public lastName?: string
-  public phone?: string
-  public email?: string
-  public address?: string
-  public relationship: ContactRelationship = 'other' as ContactRelationship
+  playerId?: string
+  firstName?: string
+  lastName?: string
+  phone?: string
+  email?: string
+  address?: string
+  relationship: ContactRelationship = 'other' as ContactRelationship
 
   constructor(data?: ContactRawData) {
     this.#id = data?.id || getUniqId()
@@ -38,15 +38,15 @@ export default class Contact {
     }
   }
 
-  public get id() {
+  get id() {
     return this.#id
   }
 
-  public get isRegisterable(): boolean {
+  get isRegisterable(): boolean {
     return Boolean(this.playerId)
   }
 
-  public setFromRawData(data: ContactRawData) {
+  setFromRawData(data: ContactRawData) {
     if (data.id) {
       this.#id = data.id
     }
@@ -59,7 +59,7 @@ export default class Contact {
     this.relationship = isContactRelationship(data.relationship) ? data.relationship : 'other'
   }
 
-  public getRawData(): ContactRawData {
+  getRawData(): ContactRawData {
     const data: ContactRawData = {
       id: this.#id,
       playerId: this.playerId,
@@ -85,7 +85,7 @@ export default class Contact {
     return data
   }
 
-  public update(data: Partial<ContactRawData>) {
+  update(data: Partial<ContactRawData>) {
     this.setFromRawData({
       ...this.getRawData(),
       ...data,

@@ -3,7 +3,8 @@ import { Bell, Menu, UserCog, X } from 'lucide-solid'
 import { createEffect, For, Show } from 'solid-js'
 import logoSmallUrl from '/img/logo_small.png'
 import MadSignal from '../../libs/mad-signal'
-import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu'
+import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu/menu'
+import type { MenuEntry } from '../../libs/menu/menu.d'
 
 const isUserMenuOpen: MadSignal<boolean> = new MadSignal(false)
 const isMainMenuOpen: MadSignal<boolean> = new MadSignal(false)
@@ -14,6 +15,36 @@ const idInUrlPattern = /\/\d+/
 function isCurrentPath(candidatPath: string, currentPath: string | null) {
   const cleanPath = currentPath?.replace(idInUrlPattern, '/:id')
   return cleanPath === candidatPath
+}
+
+function closeNotificationBox() {
+  setTimeout(() => {
+    isNotificationBoxOpen.set(false)
+  }, 10)
+}
+
+function toggleNotificationBox() {
+  isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
+}
+
+function closeUserMenu() {
+  setTimeout(() => {
+    isUserMenuOpen.set(false)
+  }, 10)
+}
+
+function toggleUserMenu() {
+  isUserMenuOpen.set(!isUserMenuOpen.get())
+}
+
+function closeMainMenu() {
+  setTimeout(() => {
+    isMainMenuOpen.set(false)
+  }, 10)
+}
+
+function toggleMainMenu() {
+  isMainMenuOpen.set(!isMainMenuOpen.get())
 }
 
 function _renderMasterTitle(currentPath: string | null) {
@@ -27,10 +58,17 @@ function _renderMasterTitle(currentPath: string | null) {
     menuEntry = NAVIGATION_MENU_ENTRIES.at(-1)
   }
 
+  if (!menuEntry) {
+    // Unreachable: NAVIGATION_MENU_ENTRIES is a non-empty static array, so at least one fallback above matches.
+    throw new Error('[app-bar] Cannot resolve a master title: NAVIGATION_MENU_ENTRIES is empty.')
+  }
+
+  const resolvedMenuEntry: MenuEntry = menuEntry
+
   return (
     <span>
-      <span class="inline-flex px-1">{menuEntry.icon()}</span>
-      <span class="inline-flex">{menuEntry.label}</span>
+      <span class="inline-flex px-1">{resolvedMenuEntry.icon()}</span>
+      <span class="inline-flex">{resolvedMenuEntry.label}</span>
     </span>
   )
 }
@@ -88,14 +126,8 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                     aria-label={notificationsLabel}
                     class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                     id="notifications-box-button"
-                    onBlur={() => {
-                      setTimeout(() => {
-                        isNotificationBoxOpen.set(false)
-                      }, 10)
-                    }}
-                    onClick={() => {
-                      isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
-                    }}
+                    onBlur={closeNotificationBox}
+                    onClick={toggleNotificationBox}
                     type="button"
                   >
                     <span class="absolute -top-1.5 text-amber-500" />
@@ -124,14 +156,8 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                       aria-label={userMenuLabel}
                       class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                       id="user-menu-button"
-                      onBlur={() => {
-                        setTimeout(() => {
-                          isUserMenuOpen.set(false)
-                        }, 10)
-                      }}
-                      onClick={() => {
-                        isUserMenuOpen.set(!isUserMenuOpen.get())
-                      }}
+                      onBlur={closeUserMenu}
+                      onClick={toggleUserMenu}
                       type="button"
                     >
                       <span class="absolute -inset-1.5" />
@@ -186,14 +212,8 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                   aria-label={notificationsLabel}
                   class="relative rounded-full bg-gray-800 p-2 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                   id="notifications-box-button"
-                  onBlur={() => {
-                    setTimeout(() => {
-                      isNotificationBoxOpen.set(false)
-                    }, 10)
-                  }}
-                  onClick={() => {
-                    isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
-                  }}
+                  onBlur={closeNotificationBox}
+                  onClick={toggleNotificationBox}
                   type="button"
                 >
                   <span class="absolute -top-1.5 text-amber-500" />
@@ -220,14 +240,8 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                   aria-expanded="false"
                   aria-label={mainMenuLabel}
                   class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                  onBlur={() =>
-                    setTimeout(() => {
-                      isMainMenuOpen.set(false)
-                    }, 10)
-                  }
-                  onClick={() => {
-                    isMainMenuOpen.set(!isMainMenuOpen.get())
-                  }}
+                  onBlur={closeMainMenu}
+                  onClick={toggleMainMenu}
                   type="button"
                 >
                   <span class="absolute -inset-0.5" />

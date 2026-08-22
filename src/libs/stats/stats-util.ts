@@ -1,7 +1,7 @@
-import type Match from '../match'
+import type Match from '../match/match'
 import orchestrator from '../orchestrator/orchestrator'
 import { TEAM_OPPONENT_ID } from '../team/team'
-import { clone } from '../utils'
+import { clone } from '../utils/utils'
 import type {
   FullStatSummary,
   StatMatchActionItemName,
@@ -16,12 +16,12 @@ export type MatchOutcome = 'win' | 'loss' | 'tie' | 'none'
 
 export function getMatchOutcome(match: Match): { result: MatchOutcome; teamScore: number; opponentScore: number } {
   if (match.stats.length === 0) {
-    return { result: 'none', teamScore: 0, opponentScore: 0 }
+    return { opponentScore: 0, result: 'none', teamScore: 0 }
   }
   const { teamScore, opponentScore } = getStatSummary(match)
   // biome-ignore lint/style/noNestedTernary: ternary is required by audit finding P1-1 instead of let/if-else.
   const result: MatchOutcome = teamScore > opponentScore ? 'win' : teamScore < opponentScore ? 'loss' : 'tie'
-  return { result, teamScore, opponentScore }
+  return { opponentScore, result, teamScore }
 }
 
 /** Standard factor for converting free-throw attempts to shooting possessions (NBA TS% formula) */
@@ -119,7 +119,7 @@ export function computeDerivedStats(player: StatMatchSummaryPlayer): {
   // TS% = PTS / (2 × (FGA + 0.44 × FTA)) × 100
   const trueShootingPercentage = safePercentage(points, POINTS_PER_POSSESSION * (fga + FREE_THROW_ATTEMPT_FACTOR * fta))
 
-  return { eff, astToRatio, trueShootingPercentage }
+  return { astToRatio, eff, trueShootingPercentage }
 }
 
 /** Apply derived stats (EFF, AST/TO, TS%) directly onto a target stat object. */
@@ -173,69 +173,69 @@ function restoreInvariantRates(perGame: StatMatchSummaryPlayer, totals: StatMatc
 }
 
 const RAW_STAT_MATCH_SUMMARY: StatMatchSummary = {
+  opponentFouls: 0,
+  opponentScore: 0,
+  players: [],
+  rebonds: {
+    opponentDefensive: 0,
+    opponentOffensive: 0,
+    opponentTotal: 0,
+    teamDefensive: 0,
+    teamDefensivePercentage: 0,
+    teamOffensive: 0,
+    teamOffensivePercentage: 0,
+    teamTotal: 0,
+    teamTotalPercentage: 0,
+  },
+  teamAssists: 0,
+  teamFouls: 0,
   teamScore: 0,
   teamScores: {
-    playTime: 0,
-    playerId: '',
+    assists: 0,
+    astToRatio: 0,
+    blocks: 0,
+    eff: 0,
+    fouls: 0,
     nbPlayedMatch: 0,
-    scores: {
-      '2pts': 0,
-      '3pts': 0,
-      'free-throw': 0,
-      total: 0,
+    playerId: '',
+    playTime: 0,
+    ratio: {
+      '2pts': {
+        fail: 0,
+        percentage: 0,
+        success: 0,
+        total: 0,
+      },
+      '3pts': {
+        fail: 0,
+        percentage: 0,
+        success: 0,
+        total: 0,
+      },
+      'free-throw': {
+        fail: 0,
+        percentage: 0,
+        success: 0,
+        total: 0,
+      },
     },
     rebonds: {
       defensive: 0,
       offensive: 0,
       total: 0,
     },
-    ratio: {
-      'free-throw': {
-        success: 0,
-        fail: 0,
-        total: 0,
-        percentage: 0,
-      },
-      '2pts': {
-        success: 0,
-        fail: 0,
-        total: 0,
-        percentage: 0,
-      },
-      '3pts': {
-        success: 0,
-        fail: 0,
-        total: 0,
-        percentage: 0,
-      },
+    scores: {
+      '2pts': 0,
+      '3pts': 0,
+      'free-throw': 0,
+      total: 0,
     },
-    fouls: 0,
-    turnover: 0,
     steals: 0,
-    assists: 0,
-    blocks: 0,
-    eff: 0,
-    astToRatio: 0,
     trueShootingPercentage: 0,
+    turnover: 0,
   },
-  opponentScore: 0,
-  opponentFouls: 0,
-  players: [],
-  teamAssists: 0,
-  teamTurnover: 0,
   teamSteals: 0,
-  teamFouls: 0,
-  rebonds: {
-    teamTotal: 0,
-    teamOffensive: 0,
-    teamDefensive: 0,
-    teamTotalPercentage: 0,
-    teamOffensivePercentage: 0,
-    teamDefensivePercentage: 0,
-    opponentTotal: 0,
-    opponentDefensive: 0,
-    opponentOffensive: 0,
-  },
+  teamTurnover: 0,
 }
 
 function getPlayerIdsInStats(match: Match) {
@@ -412,15 +412,15 @@ function getFullRebondStats(match: Match, playerIds: string[]): StatMatchSummary
   const teamTotalPercentage = safeDivide(teamDefensivePercentage + teamOffensivePercentage, 2)
 
   return {
-    teamTotal,
-    teamOffensive,
-    teamDefensive,
-    teamTotalPercentage,
-    teamOffensivePercentage,
-    teamDefensivePercentage,
-    opponentTotal,
     opponentDefensive,
     opponentOffensive,
+    opponentTotal,
+    teamDefensive,
+    teamDefensivePercentage,
+    teamOffensive,
+    teamOffensivePercentage,
+    teamTotal,
+    teamTotalPercentage,
   }
 }
 
@@ -429,43 +429,43 @@ function getPlayersStatsByMatch(match: Match) {
   return playerIds
     .map((playerId) => {
       const playerStats = {
+        assists: getPlayerAssists(match, playerId),
+        blocks: getPlayerBlocks(match, playerId),
+        fouls: getPlayerFouls(match, playerId),
         playerId,
-        scores: {
-          '2pts': getPlayerStatByType(match, playerId, '2pts'),
-          '3pts': getPlayerStatByType(match, playerId, '3pts'),
-          'free-throw': getPlayerStatByType(match, playerId, 'free-throw'),
-          total: 0,
+        ratio: {
+          '2pts': {
+            fail: getPlayerNumberByType(match, playerId, '2pts', 'error'),
+            percentage: 0,
+            success: getPlayerNumberByType(match, playerId, '2pts', 'success'),
+            total: 0,
+          },
+          '3pts': {
+            fail: getPlayerNumberByType(match, playerId, '3pts', 'error'),
+            percentage: 0,
+            success: getPlayerNumberByType(match, playerId, '3pts', 'success'),
+            total: 0,
+          },
+          'free-throw': {
+            fail: getPlayerNumberByType(match, playerId, 'free-throw', 'error'),
+            percentage: 0,
+            success: getPlayerNumberByType(match, playerId, 'free-throw', 'success'),
+            total: 0,
+          },
         },
         rebonds: {
           defensive: getPlayerDefensiveRebonds(match, playerId),
           offensive: getPlayerOffensiveRebonds(match, playerId),
           total: 0,
         },
-        ratio: {
-          'free-throw': {
-            success: getPlayerNumberByType(match, playerId, 'free-throw', 'success'),
-            fail: getPlayerNumberByType(match, playerId, 'free-throw', 'error'),
-            total: 0,
-            percentage: 0,
-          },
-          '2pts': {
-            success: getPlayerNumberByType(match, playerId, '2pts', 'success'),
-            fail: getPlayerNumberByType(match, playerId, '2pts', 'error'),
-            total: 0,
-            percentage: 0,
-          },
-          '3pts': {
-            success: getPlayerNumberByType(match, playerId, '3pts', 'success'),
-            fail: getPlayerNumberByType(match, playerId, '3pts', 'error'),
-            total: 0,
-            percentage: 0,
-          },
+        scores: {
+          '2pts': getPlayerStatByType(match, playerId, '2pts'),
+          '3pts': getPlayerStatByType(match, playerId, '3pts'),
+          'free-throw': getPlayerStatByType(match, playerId, 'free-throw'),
+          total: 0,
         },
-        assists: getPlayerAssists(match, playerId),
-        fouls: getPlayerFouls(match, playerId),
-        turnover: getPlayerTurnovers(match, playerId),
         steals: getPlayerSteals(match, playerId),
-        blocks: getPlayerBlocks(match, playerId),
+        turnover: getPlayerTurnovers(match, playerId),
       }
 
       playerStats.scores.total =
@@ -567,16 +567,16 @@ export function getStatSummary(match: Match | null): StatMatchSummary {
   const teamScores = getTeamScores(players)
 
   return {
-    teamScore: getTeamScore(match, playerIds),
-    teamScores,
-    opponentScore: getOpponentScore(match),
     opponentFouls: getOpponentFouls(match),
+    opponentScore: getOpponentScore(match),
     players,
     rebonds,
     teamAssists: getTeamAssists(players),
-    teamTurnover: getTeamTurnovers(players),
-    teamSteals: getTeamSteals(players),
     teamFouls: getTeamFouls(players),
+    teamScore: getTeamScore(match, playerIds),
+    teamScores,
+    teamSteals: getTeamSteals(players),
+    teamTurnover: getTeamTurnovers(players),
   }
 }
 
@@ -591,7 +591,7 @@ export function getFullStats(championshipFilter?: string): FullStatSummary {
   }
 
   // TODO: get team by argv
-  const team = orchestrator.Teams.teams[0]
+  const [team] = orchestrator.Teams.teams
 
   const stats = matchs.map((match: Match) => getStatSummary(match))
 
@@ -632,7 +632,7 @@ export function getFullStats(championshipFilter?: string): FullStatSummary {
 
         sumPlayerStats(currentPlayerStats, playerStats)
 
-        currentPlayerStats.nbPlayedMatch++
+        currentPlayerStats.nbPlayedMatch += 1
       }
     }
 

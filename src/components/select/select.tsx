@@ -1,12 +1,12 @@
 import { For, mergeProps, Show } from 'solid-js'
 import { createStore } from 'solid-js/store'
-import { getShortId } from '../../libs/utils'
+import { getShortId } from '../../libs/utils/utils'
 import type { BsSelectOnChangeEvent, BsSelectProps } from './select.d'
 
 const defaultOptions: BsSelectProps = {
+  datas: [],
   default: null,
   disabled: false,
-  datas: [],
 }
 
 function onChange(event: BsSelectOnChangeEvent, options: BsSelectProps) {
@@ -19,6 +19,12 @@ function onChange(event: BsSelectOnChangeEvent, options: BsSelectProps) {
 
   if (options.onChange) {
     options.onChange(event)
+  }
+}
+
+function makeSelectChangeHandler(options: BsSelectProps) {
+  return (event: BsSelectOnChangeEvent) => {
+    onChange(event, options)
   }
 }
 
@@ -51,7 +57,7 @@ function renderDaisy(props: BsSelectProps) {
           class="select select-bordered w-full"
           disabled={options.disabled}
           id={options.id}
-          onChange={(event) => onChange(event, options)}
+          onChange={makeSelectChangeHandler(options)}
         >
           <Show when={!options.value && !options.default && options.placeholder}>
             <option selected>{options.placeholder}</option>

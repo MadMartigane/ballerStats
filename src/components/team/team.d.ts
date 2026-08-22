@@ -1,5 +1,5 @@
 import type { JSX } from 'solid-js'
-import type Team from '../../libs/team'
+import type Team from '../../libs/team/team'
 
 export type BsTeamProps = {
   team: Team

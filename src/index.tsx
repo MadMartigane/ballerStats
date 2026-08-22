@@ -9,8 +9,8 @@ import { For, lazy, Suspense } from 'solid-js'
 import { render } from 'solid-js/web'
 import relAppleTouchIconUrl from '/img/apple-touch-icon.png'
 import relIconUrl from '/img/favicon.ico'
-import BsAppBar from './components/app-bar'
-import { NAVIGATION_MENU_ENTRIES } from './libs/menu'
+import BsAppBar from './components/app-bar/app-bar'
+import { NAVIGATION_MENU_ENTRIES } from './libs/menu/menu'
 
 // DEV-only: lazy-load the demo seed initializer. The dynamic import expression
 // is dead-code-eliminated when import.meta.env.DEV is statically false.

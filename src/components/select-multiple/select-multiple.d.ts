@@ -1,18 +1,18 @@
 import type { JSXElement } from 'solid-js'
 import type { SetStoreFunction } from 'solid-js/store'
 
-export type BsSelectDataSet = {
-  value: string
-  label: string
+export interface BsSelectDataSet {
   badge: JSXElement
+  label: string
+  value: string
 }
 
-export type BsSelectMultipleProps = {
-  label?: string
-  placeholder?: string
+export interface BsSelectMultipleProps {
   data?: BsSelectDataSet[]
-  selectedIds?: string[]
+  label?: string
   onChange?: (playerIds: string[]) => void
+  placeholder?: string
+  selectedIds?: string[]
 }
 
 export type BsSelectMultipleDataSelect = {

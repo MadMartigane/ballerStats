@@ -3,10 +3,24 @@ import { ArrowLeft } from 'lucide-solid'
 import { For, Show } from 'solid-js'
 import { ROUTE_PLAYERS } from '../../libs/menu/routes'
 import { titles, updateTitle } from '../../libs/trombi-titles-store'
-import BsEmptyPlayerFallback from '../empty-player-fallback'
+import BsEmptyPlayerFallback from '../empty-player-fallback/empty-player-fallback'
 import BsInlineEditableTitle from '../inline-editable-title/inline-editable-title'
 import type { BsTrombiProps } from './trombi.d'
 import BsTrombiPlayerItem from './trombi-player-item'
+
+function saveClubName(value: string) {
+  updateTitle('clubName', value)
+}
+
+function saveTeamName(value: string) {
+  updateTitle('teamName', value)
+}
+
+function makeBackHandler(backRoute: string | undefined, navigate: (path: string) => void) {
+  return () => {
+    navigate(backRoute ?? ROUTE_PLAYERS)
+  }
+}
 
 export default function BsTrombi(props: BsTrombiProps) {
   const navigate = useNavigate()
@@ -17,7 +31,7 @@ export default function BsTrombi(props: BsTrombiProps) {
         <BsInlineEditableTitle
           ariaLabel="Nom du club"
           headingLevel="h1"
-          onSave={(value) => updateTitle('clubName', value)}
+          onSave={saveClubName}
           placeholder="Nom du club"
           value={titles.clubName}
         />
@@ -25,7 +39,7 @@ export default function BsTrombi(props: BsTrombiProps) {
           <BsInlineEditableTitle
             ariaLabel="Nom de l'équipe"
             headingLevel="h2"
-            onSave={(value) => updateTitle('teamName', value)}
+            onSave={saveTeamName}
             placeholder="Nom de l'équipe"
             value={titles.teamName}
           />
@@ -46,9 +60,7 @@ export default function BsTrombi(props: BsTrombiProps) {
       <div class="footer-buttons-container print:hidden">
         <button
           class="btn btn-secondary print:hidden"
-          onClick={() => {
-            navigate(props.backRoute ?? ROUTE_PLAYERS)
-          }}
+          onClick={makeBackHandler(props.backRoute, navigate)}
           type="button"
         >
           <ArrowLeft />

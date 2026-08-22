@@ -1,19 +1,18 @@
 import { MessageCircleWarning, Save, UserPlus, Users, X } from 'lucide-solid'
 import { createMemo, For, Show } from 'solid-js'
 import { createStore } from 'solid-js/store'
-import bsEventBus from '../../libs/event-bus'
+import bsEventBus from '../../libs/event-bus/event-bus'
 import MadSignal from '../../libs/mad-signal'
-import type { MatchRawData, MatchType } from '../../libs/match'
-import Match from '../../libs/match'
 import { getUniqueChampionships, groupMatchesByChampionship } from '../../libs/match/championship-util'
+import Match from '../../libs/match/match'
+import type { MatchRawData, MatchType } from '../../libs/match/match.d'
 import orchestrator from '../../libs/orchestrator/orchestrator'
-import { goTo, scrollBottom, scrollTop } from '../../libs/utils'
-import BsCard from '../card'
+import { goTo, scrollBottom, scrollTop } from '../../libs/utils/utils'
+import BsCard from '../card/card'
 import BsCombobox from '../combobox/combobox'
 import { BsDatePicker } from '../date-picker/date-picker'
-import BsInput from '../input'
-import BsMatch from '../match-tile'
-import { BsMatchTypeText } from '../match-tile/match-tile'
+import BsInput from '../input/input'
+import BsMatch, { BsMatchTypeText } from '../match-tile/match-tile'
 import BsSelect from '../select/select'
 import BsToggle from '../toggle/toggle'
 
@@ -93,6 +92,40 @@ function onStatusChange(isOpen: boolean) {
   setNewMatchData({ status: isOpen ? 'unlocked' : 'locked' })
 }
 
+function updateMatchOpponent(value: string) {
+  setNewMatchData({ opponent: value })
+}
+
+function onMatchTypeInput(value: string) {
+  onTypeChange(value as MatchType)
+}
+
+function updateMatchDate(value: string) {
+  setNewMatchData({ date: value })
+}
+
+function updateMatchChampionship(value: string) {
+  setNewMatchData({ championship: value })
+}
+
+function startAddingNewMatch() {
+  isEditingNewMatch = true
+  toggleAddMatch(true)
+  scrollTop()
+}
+
+function cancelAddingMatch() {
+  toggleAddMatch(false)
+  currentMatch = null
+  canAddMatch.set(false)
+  scrollBottom()
+}
+
+function saveMatch() {
+  registerMatch()
+  scrollBottom()
+}
+
 function onSubmit(event: KeyboardEvent) {
   if (event.key !== 'Enter') {
     return
@@ -117,15 +150,7 @@ function renderAddMatchButton() {
     <div class="w-full">
       <hr />
       <div class="footer-buttons-container">
-        <button
-          class="btn btn-primary btn-wide"
-          onClick={() => {
-            isEditingNewMatch = true
-            toggleAddMatch(true)
-            scrollTop()
-          }}
-          type="button"
-        >
+        <button class="btn btn-primary btn-wide" onClick={startAddingNewMatch} type="button">
           <UserPlus />
           Ajouter un match
         </button>
@@ -136,31 +161,20 @@ function renderAddMatchButton() {
 
 function renderAddingMatchCard() {
   return BsCard({
-    title: (
-      <p class="flex flex-row gap-1">
-        <Users />
-        {isEditingNewMatch ? 'Nouveau match' : 'Édition du match'}
-      </p>
-    ),
-    info: 'Saisissez les info nécessaires pour identifier le match.',
     body: (
       // biome-ignore lint/a11y/noNoninteractiveElementInteractions: form-level Enter submission is a legacy behavior preserved during audit fixes
       <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
         <BsSelect
-          datas={teams.map((team) => ({ value: team.id, label: team.name }))}
+          datas={teams.map((team) => ({ label: team.name, value: team.id }))}
           label="Mon Équipe"
-          onValueChange={(value: string) => {
-            onTeamChange(value)
-          }}
+          onValueChange={onTeamChange}
           placeholder="Sélectionnez l’équipe"
           value={currentMatch?.teamId}
         />
 
         <BsInput
           label="Nom de l’adversaire"
-          onChange={(value: string) => {
-            setNewMatchData({ opponent: value })
-          }}
+          onChange={updateMatchOpponent}
           placeholder="…"
           type="text"
           value={currentMatch?.opponent || ''}
@@ -168,39 +182,26 @@ function renderAddingMatchCard() {
 
         <BsSelect
           datas={[
-            { value: 'home', label: <BsMatchTypeText type="home" /> },
-            { value: 'outside', label: <BsMatchTypeText type="outside" /> },
+            { label: <BsMatchTypeText type="home" />, value: 'home' },
+            { label: <BsMatchTypeText type="outside" />, value: 'outside' },
           ]}
           default={currentMatch && (currentMatch.type as string)}
           label="Localité"
-          onValueChange={(value: string) => {
-            onTypeChange(value as MatchType)
-          }}
+          onValueChange={onMatchTypeInput}
         />
 
-        <BsDatePicker
-          label="Date du match"
-          onChange={(value: string) => {
-            setNewMatchData({ date: value })
-          }}
-          value={currentMatch?.date}
-          withTime={true}
-        />
+        <BsDatePicker label="Date du match" onChange={updateMatchDate} value={currentMatch?.date} withTime={true} />
 
         <BsToggle
           label="Match ouvert"
-          onChange={(checked) => {
-            onStatusChange(checked)
-          }}
+          onChange={onStatusChange}
           size="lg"
           value={currentMatch?.status === 'unlocked'}
         />
 
         <BsCombobox
           label="Championnat"
-          onChange={(value: string) => {
-            setNewMatchData({ championship: value })
-          }}
+          onChange={updateMatchChampionship}
           options={championshipOptions()}
           placeholder="Saisir un championnat…"
           value={currentMatch?.championship || ''}
@@ -209,33 +210,23 @@ function renderAddingMatchCard() {
     ),
     footer: (
       <div class="footer-buttons-container">
-        <button
-          class="btn btn-primary btn-wide"
-          onClick={() => {
-            toggleAddMatch(false)
-            currentMatch = null
-            canAddMatch.set(false)
-            scrollBottom()
-          }}
-          type="button"
-        >
+        <button class="btn btn-primary btn-wide" onClick={cancelAddingMatch} type="button">
           <X />
           Annuler
         </button>
 
-        <button
-          class="btn btn-primary btn-wide"
-          disabled={!canAddMatch.get()}
-          onClick={() => {
-            registerMatch()
-            scrollBottom()
-          }}
-          type="button"
-        >
+        <button class="btn btn-primary btn-wide" disabled={!canAddMatch.get()} onClick={saveMatch} type="button">
           {isEditingNewMatch ? <UserPlus /> : <Save />}
           {isEditingNewMatch ? 'Ajouter' : 'Enregistrer'}
         </button>
       </div>
+    ),
+    info: 'Saisissez les info nécessaires pour identifier le match.',
+    title: (
+      <p class="flex flex-row gap-1">
+        <Users />
+        {isEditingNewMatch ? 'Nouveau match' : 'Édition du match'}
+      </p>
     ),
   })
 }
@@ -253,15 +244,7 @@ export default function BsMatchs() {
                   <For each={group.matchs}>
                     {(match) => (
                       <div class="mx-auto w-fit md:mx-0">
-                        <BsMatch
-                          match={match}
-                          onEdit={(match: Match) => {
-                            editMatch(match)
-                          }}
-                          onStart={(match: Match) => {
-                            startMatch(match)
-                          }}
-                        />
+                        <BsMatch match={match} onEdit={editMatch} onStart={startMatch} />
                       </div>
                     )}
                   </For>

@@ -2,27 +2,50 @@ import { HelpCircle, X } from 'lucide-solid'
 import { createSignal, createUniqueId, For, Show } from 'solid-js'
 import { type ColumnWithGlossary, GLOSSARY_COLUMNS } from './stat-columns'
 
+function makeLegendEntryClickHandler(
+  setSelectedEntry: (entry: ColumnWithGlossary | null) => void,
+  getDialog: () => HTMLDialogElement | undefined
+) {
+  return (event: MouseEvent) => {
+    const { columnId } = (event.currentTarget as HTMLElement).dataset
+    const entry = GLOSSARY_COLUMNS.find((candidate) => candidate.id === columnId)
+    if (!entry) {
+      return
+    }
+    setSelectedEntry(entry)
+    const dialog = getDialog()
+    if (!dialog?.open) {
+      dialog?.showModal()
+    }
+  }
+}
+
+function makeClearSelectedEntryHandler(setSelectedEntry: (entry: ColumnWithGlossary | null) => void) {
+  return () => {
+    setSelectedEntry(null)
+  }
+}
+
+function makeDialogCloseHandler(getDialog: () => HTMLDialogElement | undefined) {
+  return () => {
+    getDialog()?.close()
+  }
+}
+
+function makeBackdropClickHandler(getDialog: () => HTMLDialogElement | undefined) {
+  return (event: MouseEvent) => {
+    if (event.target === getDialog()) {
+      getDialog()?.close()
+    }
+  }
+}
+
 export function BsStatsLegend() {
   const titleId = createUniqueId()
   const [selectedEntry, setSelectedEntry] = createSignal<ColumnWithGlossary | null>(null)
 
   // biome-ignore lint/suspicious/noUnassignedVariables: assigned by SolidJS ref prop
   let dialogEl: HTMLDialogElement | undefined
-
-  const open = (entry: ColumnWithGlossary) => {
-    setSelectedEntry(entry)
-    if (!dialogEl?.open) {
-      dialogEl?.showModal()
-    }
-  }
-
-  const close = () => dialogEl?.close()
-
-  const onBackdropClick = (event: MouseEvent) => {
-    if (event.target === dialogEl) {
-      close()
-    }
-  }
 
   return (
     <div class="mt-2">
@@ -36,7 +59,8 @@ export function BsStatsLegend() {
                 <button
                   aria-label={`En savoir plus sur ${entry.glossary.fullName}`}
                   class="btn btn-xs btn-ghost print:hidden"
-                  onClick={() => open(entry)}
+                  data-column-id={entry.id}
+                  onClick={makeLegendEntryClickHandler(setSelectedEntry, () => dialogEl)}
                   type="button"
                 >
                   <HelpCircle />
@@ -53,8 +77,8 @@ export function BsStatsLegend() {
       <dialog
         aria-labelledby={titleId}
         class="modal modal-bottom sm:modal-middle"
-        onClick={onBackdropClick}
-        onClose={() => setSelectedEntry(null)}
+        onClick={makeBackdropClickHandler(() => dialogEl)}
+        onClose={makeClearSelectedEntryHandler(setSelectedEntry)}
         ref={dialogEl}
       >
         <div class="modal-box">
@@ -67,7 +91,12 @@ export function BsStatsLegend() {
                     <h2 class="font-bold text-lg" id={titleId} tabIndex={-1}>
                       {glossaryEntry.glossary.fullName}
                     </h2>
-                    <button aria-label="Fermer" class="btn btn-square btn-sm" onClick={close} type="button">
+                    <button
+                      aria-label="Fermer"
+                      class="btn btn-square btn-sm"
+                      onClick={makeDialogCloseHandler(() => dialogEl)}
+                      type="button"
+                    >
                       <X />
                     </button>
                   </div>
@@ -79,7 +108,7 @@ export function BsStatsLegend() {
           </Show>
 
           <div class="modal-action">
-            <button class="btn btn-primary" onClick={close} type="button">
+            <button class="btn btn-primary" onClick={makeDialogCloseHandler(() => dialogEl)} type="button">
               Fermer
             </button>
           </div>

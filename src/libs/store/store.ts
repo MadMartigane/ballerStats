@@ -1,7 +1,7 @@
-import type { ContactRawData } from '../contact'
-import type { MatchRawData } from '../match'
-import type { PlayerRawData } from '../player'
-import type { TeamRawData } from '../team'
+import type { ContactRawData } from '../contact/contact.d'
+import type { MatchRawData } from '../match/match.d'
+import type { PlayerRawData } from '../player/player.d'
+import type { TeamRawData } from '../team/team.d'
 import type { StoredItemData } from './store.d'
 
 export const STORAGE_PLAYERS_KEY = 'BS_PLAYERS'
@@ -12,7 +12,7 @@ export const STORAGE_CONTACTS_KEY = 'BS_CONTACTS'
 
 export function storeData<T>(key: string, data: T, lastRecord?: number | null): Promise<void> {
   return new Promise((resolve) => {
-    localStorage.setItem(key, JSON.stringify({ lastRecord: lastRecord || Date.now(), data }))
+    localStorage.setItem(key, JSON.stringify({ data, lastRecord: lastRecord || Date.now() }))
     resolve()
   })
 }

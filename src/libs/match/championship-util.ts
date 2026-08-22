@@ -1,5 +1,5 @@
 import { createSignal, onCleanup } from 'solid-js'
-import bsEventBus from '../event-bus'
+import bsEventBus from '../event-bus/event-bus'
 import type Match from './match'
 
 /** Display label for matches with no championship (null/undefined/empty). */
@@ -62,5 +62,5 @@ export function groupMatchesByChampionship(matchs: Match[]): { name: string; mat
       }
       return a.localeCompare(b)
     })
-    .map((name) => ({ name, matchs: groups.get(name) ?? [] }))
+    .map((name) => ({ matchs: groups.get(name) ?? [], name }))
 }

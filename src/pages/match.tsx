@@ -6,7 +6,8 @@ export default function Matchs() {
 
   return (
     <div class="w-full">
-      <BsMatch id={params.id} />
+      {/* The /match/:id route guarantees a param, so the fallback never surfaces. */}
+      <BsMatch id={params.id ?? ''} />
     </div>
   )
 }

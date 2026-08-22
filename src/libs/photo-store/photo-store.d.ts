@@ -1,4 +1,4 @@
-export type PhotoEntry = {
-  playerId: string
+export interface PhotoEntry {
   blob: Blob
+  playerId: string
 }

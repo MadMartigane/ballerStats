@@ -1,6 +1,6 @@
 import { createStore } from 'solid-js/store'
 
-import { getStoredDataSync, STORAGE_TROMBI_TITLES_KEY, storeData } from './store'
+import { getStoredDataSync, STORAGE_TROMBI_TITLES_KEY, storeData } from './store/store'
 import type { TrombiTitles } from './trombi-titles'
 
 export const DEFAULT_TITLES: TrombiTitles = {

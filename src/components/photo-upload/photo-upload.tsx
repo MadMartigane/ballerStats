@@ -3,13 +3,20 @@ import { createMemo, createResource, createSignal, Show } from 'solid-js'
 import { compressPhoto } from '../../libs/photo-compressor/photo-compressor'
 import { getPhoto } from '../../libs/photo-store/photo-store'
 import { useBlobUrl } from '../../libs/photo-store/use-blob-url'
-import { toast } from '../../libs/utils'
+import { toast } from '../../libs/utils/utils'
 import type { BsPhotoUploadProps } from './photo-upload.d'
+
+function makeFileInputClickHandler(getFileInput: () => HTMLInputElement | undefined) {
+  return () => {
+    getFileInput()?.click()
+  }
+}
 
 export default function BsPhotoUpload(props: BsPhotoUploadProps) {
   const [pendingBlob, setPendingBlob] = createSignal<Blob | undefined>(undefined)
   const [isDeleted, setIsDeleted] = createSignal(false)
   const pendingBlobUrl = useBlobUrl(() => pendingBlob())
+  // biome-ignore lint/suspicious/noUnassignedVariables: SolidJS assigns refs directly via the ref prop, so the variable is written outside regular JS.
   let fileInputRef: HTMLInputElement | undefined
 
   const [existingPhoto] = createResource(
@@ -56,11 +63,11 @@ export default function BsPhotoUpload(props: BsPhotoUploadProps) {
         }
         when={displayUrl()}
       >
-        <img alt="Photo preview" class="h-20 w-20 rounded-full object-cover" src={displayUrl()} />
+        <img alt="Aperçu" class="h-20 w-20 rounded-full object-cover" height={80} src={displayUrl()} width={80} />
       </Show>
 
       <div class="flex flex-row gap-2">
-        <button class="btn btn-primary btn-sm" onClick={() => fileInputRef?.click()} type="button">
+        <button class="btn btn-primary btn-sm" onClick={makeFileInputClickHandler(() => fileInputRef)} type="button">
           <Camera class="h-4 w-4" />
           {pendingBlob() || (props.hasPhoto && !isDeleted()) ? 'Changer' : 'Ajouter'}
         </button>

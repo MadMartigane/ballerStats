@@ -29,11 +29,11 @@ export default function Stats() {
       <div class="mt-4 max-w-sm">
         <BsSelect
           datas={[
-            { value: '', label: 'Tous les championnats' },
-            ...championshipOptions().map((c) => ({ value: c, label: c })),
+            { label: 'Tous les championnats', value: '' },
+            ...championshipOptions().map((c) => ({ label: c, value: c })),
           ]}
           label="Championnat"
-          onValueChange={(value: string) => setChampionshipFilter(value)}
+          onValueChange={setChampionshipFilter}
           value={championshipFilter()}
         />
       </div>

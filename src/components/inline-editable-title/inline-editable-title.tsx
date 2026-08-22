@@ -12,6 +12,12 @@ function adaptor(options: BsInlineEditableTitleProps): BsInlineEditableTitleProp
   return mergeProps({ maxLength: DEFAULT_MAX_LENGTH }, options)
 }
 
+function makeDraftInputHandler(setDraft: (value: string) => void) {
+  return (event: Event & { currentTarget: HTMLInputElement }) => {
+    setDraft(event.currentTarget.value)
+  }
+}
+
 export default function BsInlineEditableTitle(props: BsInlineEditableTitleProps) {
   const data = adaptor(props)
   const [isEditing, setIsEditing] = createSignal(false)
@@ -20,6 +26,7 @@ export default function BsInlineEditableTitle(props: BsInlineEditableTitleProps)
   const headingClass = HEADING_CLASSES[data.headingLevel]
   const editAriaLabel = `Modifier : ${data.ariaLabel}`
 
+  // biome-ignore lint/suspicious/noUnassignedVariables: SolidJS assigns refs directly via the ref prop, so the variable is written outside regular JS.
   let inputRef!: HTMLInputElement
 
   createEffect(() => {
@@ -85,9 +92,7 @@ export default function BsInlineEditableTitle(props: BsInlineEditableTitleProps)
           class="input input-sm w-full"
           maxlength={data.maxLength}
           onBlur={save}
-          onInput={(event) => {
-            setDraft(event.currentTarget.value)
-          }}
+          onInput={makeDraftInputHandler(setDraft)}
           onKeyDown={onKeyDown}
           ref={inputRef}
           type="text"

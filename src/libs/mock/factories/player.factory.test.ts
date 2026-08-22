@@ -25,7 +25,7 @@ describe('makePlayer', () => {
   })
 
   it('round-trips overrides through getRawData()', () => {
-    const raw = makePlayer({ firstName: 'Alice', lastName: 'Bob', jerseyNumber: '23' }).getRawData()
+    const raw = makePlayer({ firstName: 'Alice', jerseyNumber: '23', lastName: 'Bob' }).getRawData()
     expect(raw.firstName).toBe('Alice')
     expect(raw.lastName).toBe('Bob')
     expect(raw.jerseyNumber).toBe('23')

@@ -1,5 +1,4 @@
-export type BsPhotoUploadProps = {
-  playerId: string
+export interface BsPhotoUploadProps {
   hasPhoto: boolean
   /**
    * Called when the user adds, updates, or deletes a photo.
@@ -13,4 +12,5 @@ export type BsPhotoUploadProps = {
    *   the player's `hasPhoto` flag accordingly.
    */
   onChange: (hasPhoto: boolean, blob?: Blob) => void
+  playerId: string
 }

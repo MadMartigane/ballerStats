@@ -1,4 +1,4 @@
-import type Match from '../../match'
+import type Match from '../../match/match'
 import type { MatchRawData, MatchStatLogEntry } from '../../match/match.d'
 import { TEAM_OPPONENT_ID } from '../../team/team'
 import { makeMatch } from '../factories/match.factory'
@@ -27,10 +27,10 @@ function buildStatsFromProfile(
   const entries: MatchStatLogEntry[] = []
   for (const spec of STAT_FIELD_SPECS) {
     const count = p[spec.field]
-    for (let i = 0; i < count; i++) {
-      entries.push(
-        makeStatEntry(spec.statName, { type: spec.statType, playerId, timestamp: GAME_START_TS + tick++ * TICK_MS })
-      )
+    for (let i = 0; i < count; i += 1) {
+      const timestamp = GAME_START_TS + tick * TICK_MS
+      tick += 1
+      entries.push(makeStatEntry(spec.statName, { playerId, timestamp, type: spec.statType }))
     }
   }
   return { entries, nextTick: tick }
@@ -64,13 +64,13 @@ function buildMatchFromProfiles(
   stats.push(...oppResult.entries)
 
   return makeMatch({
-    teamId,
-    opponent: 'Profile Opponent',
-    type: 'home',
-    status: 'locked',
     date: new Date(GAME_START_TS).toISOString(),
+    opponent: 'Profile Opponent',
     playersInTheFive: lineup.slice(0, 5),
     stats,
+    status: 'locked',
+    teamId,
+    type: 'home',
     ...overrides,
   })
 }
@@ -90,12 +90,12 @@ export function makeScenarioMatch(
 /** Empty match (no stats), but still registerable. */
 export function makeEmptyMatch(teamId: string, overrides?: Partial<MatchRawData>): Match {
   return makeMatch({
-    teamId,
+    date: null,
     opponent: 'Empty Opponent',
-    type: 'home',
     stats: [],
     status: 'unlocked',
-    date: null,
+    teamId,
+    type: 'home',
     ...overrides,
   })
 }
@@ -106,18 +106,18 @@ export function makePartialMatch(teamId: string, playerIds: string[], overrides?
   requirePlayers('makePartialMatch', starters)
   const stats: MatchStatLogEntry[] = []
   for (const [i, playerId] of starters.entries()) {
-    stats.push(makeStatEntry('2pts', { type: 'success', playerId, timestamp: GAME_START_TS + i }))
-    stats.push(makeStatEntry('assist', { type: 'success', playerId, timestamp: GAME_START_TS + i + 10 }))
+    stats.push(makeStatEntry('2pts', { playerId, timestamp: GAME_START_TS + i, type: 'success' }))
+    stats.push(makeStatEntry('assist', { playerId, timestamp: GAME_START_TS + i + 10, type: 'success' }))
   }
-  stats.push(makeStatEntry('2pts', { type: 'success', playerId: TEAM_OPPONENT_ID, timestamp: GAME_START_TS + 100 }))
+  stats.push(makeStatEntry('2pts', { playerId: TEAM_OPPONENT_ID, timestamp: GAME_START_TS + 100, type: 'success' }))
   return makeMatch({
-    teamId,
-    opponent: 'Partial Opponent',
-    type: 'home',
-    status: 'unlocked',
     date: new Date(GAME_START_TS).toISOString(),
+    opponent: 'Partial Opponent',
     playersInTheFive: starters,
     stats,
+    status: 'unlocked',
+    teamId,
+    type: 'home',
     ...overrides,
   })
 }

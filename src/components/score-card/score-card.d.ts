@@ -1,10 +1,10 @@
-import type { MatchType } from '../../libs/match'
+import type { MatchType } from '../../libs/match/match.d'
 
-export type BsScoreCardProps = {
-  localScore: number
-  visitorScore: number
+export interface BsScoreCardProps {
   date?: string | null
-  location?: MatchType
   localName?: string | null
+  localScore: number
+  location?: MatchType
   visitorName?: string | null
+  visitorScore: number
 }

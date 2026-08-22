@@ -1,6 +1,6 @@
-export type BsAvatarProps = {
-  playerId: string
-  hasPhoto: boolean
+export interface BsAvatarProps {
   displayName: string
+  hasPhoto: boolean
+  playerId: string
   size?: number
 }

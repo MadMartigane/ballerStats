@@ -1,8 +1,8 @@
-import type Contact from '../../contact'
+import type Contact from '../../contact/contact'
 import type { ContactRelationship } from '../../contact/contact.d'
-import type Match from '../../match'
-import type Player from '../../player'
-import type Team from '../../team'
+import type Match from '../../match/match'
+import type Player from '../../player/player'
+import type Team from '../../team/team'
 import { makeContact } from '../factories/contact.factory'
 import { makePlayer } from '../factories/player.factory'
 import { makeTeam } from '../factories/team.factory'
@@ -11,9 +11,9 @@ import { makePartialMatch, makeScenarioMatch } from './full-game.scenario'
 export const TEAM_A_STAR_ID = 'player-1'
 
 const CHAMPIONSHIP = {
+  FRIENDLY: 'Amical',
   REGULAR_SEASON: 'Saison régulière',
   WINTER_CUP: 'Coupe Hiver',
-  FRIENDLY: 'Amical',
 } as const
 
 interface PlayerSeed {
@@ -29,83 +29,83 @@ interface PlayerSeed {
 const PLAYERS: readonly PlayerSeed[] = [
   // --- Team A (Les Aigles) ---
   {
-    id: 'player-1',
     firstName: 'Marius',
-    lastName: 'Dupont',
+    id: 'player-1',
     jerseyNumber: '07',
+    lastName: 'Dupont',
     licenseNumber: '1310000101',
     nicName: 'Marius',
   }, // star
   {
-    id: 'player-2',
     firstName: 'Lucas',
-    lastName: 'Bernard',
+    id: 'player-2',
     jerseyNumber: '11',
+    lastName: 'Bernard',
     licenseNumber: '1310000102',
     nicName: 'Luca',
   }, // good
   {
-    id: 'player-3',
     firstName: 'Théo',
-    lastName: 'Moreau',
+    id: 'player-3',
     jerseyNumber: '23',
+    lastName: 'Moreau',
     licenseNumber: '1310000103',
     nicName: 'Théo',
   }, // avg
   {
-    id: 'player-4',
     firstName: 'Noah',
-    lastName: 'Lefebvre',
+    id: 'player-4',
     jerseyNumber: '05',
+    lastName: 'Lefebvre',
     licenseNumber: '1310000104',
     nicName: 'No',
   }, // avg
   {
-    id: 'player-5',
     firstName: 'Ethan',
-    lastName: 'Garcia',
+    id: 'player-5',
     jerseyNumber: '14',
+    lastName: 'Garcia',
     licenseNumber: '1310000105',
     nicName: 'Eth',
   }, // weak
   // --- Team B (Les Tigres) ---
   {
-    id: 'player-6',
     firstName: 'Marius',
-    lastName: 'Petit',
+    id: 'player-6',
     jerseyNumber: '03',
+    lastName: 'Petit',
     licenseNumber: '1310000106',
     nicName: 'Mari',
   }, // star (no matches)
   {
-    id: 'player-7',
     firstName: 'Hugo',
-    lastName: 'Roux',
+    id: 'player-7',
     jerseyNumber: '08',
+    lastName: 'Roux',
     licenseNumber: '1310000107',
     nicName: 'Hug',
   }, // good
   {
-    id: 'player-8',
     firstName: 'Léo',
-    lastName: 'Fontaine',
+    id: 'player-8',
     jerseyNumber: '15',
+    lastName: 'Fontaine',
     licenseNumber: '1310000108',
     nicName: 'Léo',
   }, // avg
   {
-    id: 'player-9',
     firstName: 'Adam',
-    lastName: 'Girard',
+    id: 'player-9',
     jerseyNumber: '21',
+    lastName: 'Girard',
     licenseNumber: '1310000109',
     nicName: 'Ad',
   }, // avg
   {
-    id: 'player-10',
     firstName: 'Natan',
-    lastName: 'Mercier',
+    id: 'player-10',
     jerseyNumber: '32',
+    lastName: 'Mercier',
     licenseNumber: '1310000110',
     nicName: 'Nat',
   }, // weak
@@ -128,104 +128,104 @@ interface ContactSeed {
 // One complete contact per player (every field has a value).
 const CONTACTS: readonly ContactSeed[] = [
   {
-    id: 'contact-1',
-    playerId: 'player-1',
-    firstName: 'Marie',
-    lastName: 'Dupont',
-    relationship: 'mother',
-    phone: '+33612345671',
-    email: 'marie.dupont@example.com',
     address: '12 Rue des Lilas, 13001 Marseille',
+    email: 'marie.dupont@example.com',
+    firstName: 'Marie',
+    id: 'contact-1',
+    lastName: 'Dupont',
+    phone: '+33612345671',
+    playerId: 'player-1',
+    relationship: 'mother',
   },
   {
-    id: 'contact-2',
-    playerId: 'player-2',
-    firstName: 'Paul',
-    lastName: 'Bernard',
-    relationship: 'father',
-    phone: '+33612345672',
-    email: 'paul.bernard@example.com',
     address: '4 Avenue de la Plage, 13007 Marseille',
+    email: 'paul.bernard@example.com',
+    firstName: 'Paul',
+    id: 'contact-2',
+    lastName: 'Bernard',
+    phone: '+33612345672',
+    playerId: 'player-2',
+    relationship: 'father',
   },
   {
-    id: 'contact-3',
-    playerId: 'player-3',
-    firstName: 'Sophie',
-    lastName: 'Moreau',
-    relationship: 'mother',
-    phone: '+33612345673',
-    email: 'sophie.moreau@example.com',
     address: '28 Boulevard Michelet, 13008 Marseille',
+    email: 'sophie.moreau@example.com',
+    firstName: 'Sophie',
+    id: 'contact-3',
+    lastName: 'Moreau',
+    phone: '+33612345673',
+    playerId: 'player-3',
+    relationship: 'mother',
   },
   {
-    id: 'contact-4',
-    playerId: 'player-4',
-    firstName: 'Julien',
-    lastName: 'Lefebvre',
-    relationship: 'father',
-    phone: '+33612345674',
-    email: 'julien.lefebvre@example.com',
     address: '9 Rue Saint-Ferréol, 13001 Marseille',
+    email: 'julien.lefebvre@example.com',
+    firstName: 'Julien',
+    id: 'contact-4',
+    lastName: 'Lefebvre',
+    phone: '+33612345674',
+    playerId: 'player-4',
+    relationship: 'father',
   },
   {
-    id: 'contact-5',
-    playerId: 'player-5',
-    firstName: 'Carmen',
-    lastName: 'Garcia',
-    relationship: 'mother',
-    phone: '+33612345675',
-    email: 'carmen.garcia@example.com',
     address: '17 Chemin du Vallon, 13011 Marseille',
+    email: 'carmen.garcia@example.com',
+    firstName: 'Carmen',
+    id: 'contact-5',
+    lastName: 'Garcia',
+    phone: '+33612345675',
+    playerId: 'player-5',
+    relationship: 'mother',
   },
   {
-    id: 'contact-6',
-    playerId: 'player-6',
-    firstName: 'Antoine',
-    lastName: 'Petit',
-    relationship: 'father',
-    phone: '+33612345676',
-    email: 'antoine.petit@example.com',
     address: '33 Rue de la République, 13002 Marseille',
-  },
-  {
-    id: 'contact-7',
-    playerId: 'player-7',
-    firstName: 'Claire',
-    lastName: 'Roux',
-    relationship: 'mother',
-    phone: '+33612345677',
-    email: 'claire.roux@example.com',
-    address: '5 Impasse des Oliviers, 13012 Marseille',
-  },
-  {
-    id: 'contact-8',
-    playerId: 'player-8',
-    firstName: 'Nicolas',
-    lastName: 'Fontaine',
+    email: 'antoine.petit@example.com',
+    firstName: 'Antoine',
+    id: 'contact-6',
+    lastName: 'Petit',
+    phone: '+33612345676',
+    playerId: 'player-6',
     relationship: 'father',
-    phone: '+33612345678',
-    email: 'nicolas.fontaine@example.com',
-    address: '21 Avenue du Prado, 13006 Marseille',
   },
   {
-    id: 'contact-9',
-    playerId: 'player-9',
-    firstName: 'Sarah',
-    lastName: 'Girard',
+    address: '5 Impasse des Oliviers, 13012 Marseille',
+    email: 'claire.roux@example.com',
+    firstName: 'Claire',
+    id: 'contact-7',
+    lastName: 'Roux',
+    phone: '+33612345677',
+    playerId: 'player-7',
     relationship: 'mother',
-    phone: '+33612345679',
-    email: 'sarah.girard@example.com',
-    address: '8 Rue de l’Église, 13005 Marseille',
   },
   {
-    id: 'contact-10',
-    playerId: 'player-10',
-    firstName: 'Thomas',
-    lastName: 'Mercier',
-    relationship: 'other',
-    phone: '+33612345680',
-    email: 'thomas.mercier@example.com',
+    address: '21 Avenue du Prado, 13006 Marseille',
+    email: 'nicolas.fontaine@example.com',
+    firstName: 'Nicolas',
+    id: 'contact-8',
+    lastName: 'Fontaine',
+    phone: '+33612345678',
+    playerId: 'player-8',
+    relationship: 'father',
+  },
+  {
+    address: '8 Rue de l’Église, 13005 Marseille',
+    email: 'sarah.girard@example.com',
+    firstName: 'Sarah',
+    id: 'contact-9',
+    lastName: 'Girard',
+    phone: '+33612345679',
+    playerId: 'player-9',
+    relationship: 'mother',
+  },
+  {
     address: '2 Place du Général de Gaulle, 13004 Marseille',
+    email: 'thomas.mercier@example.com',
+    firstName: 'Thomas',
+    id: 'contact-10',
+    lastName: 'Mercier',
+    phone: '+33612345680',
+    playerId: 'player-10',
+    relationship: 'other',
   },
 ]
 
@@ -247,10 +247,10 @@ export interface DemoDataset {
 export function seedDemoDataset(): DemoDataset {
   const players = PLAYERS.map((p) =>
     makePlayer({
-      id: p.id,
       firstName: p.firstName,
-      lastName: p.lastName,
+      id: p.id,
       jerseyNumber: p.jerseyNumber,
+      lastName: p.lastName,
       licenseNumber: p.licenseNumber,
       nicName: p.nicName,
     })
@@ -258,14 +258,14 @@ export function seedDemoDataset(): DemoDataset {
 
   const contacts = CONTACTS.map((c) =>
     makeContact({
-      id: c.id,
-      playerId: c.playerId,
-      firstName: c.firstName,
-      lastName: c.lastName,
-      relationship: c.relationship,
-      phone: c.phone,
-      email: c.email,
       address: c.address,
+      email: c.email,
+      firstName: c.firstName,
+      id: c.id,
+      lastName: c.lastName,
+      phone: c.phone,
+      playerId: c.playerId,
+      relationship: c.relationship,
     })
   )
 
@@ -274,37 +274,37 @@ export function seedDemoDataset(): DemoDataset {
 
   // 4 matches — all for team A (team B keeps zero matches), varied scenarios:
   const match1 = makeScenarioMatch('closeWin', 'team-a', TEAM_A_ROSTER, {
+    championship: CHAMPIONSHIP.REGULAR_SEASON,
+    date: matchDate(0),
     opponent: 'Lions de Berlin',
     type: 'home',
-    date: matchDate(0),
-    championship: CHAMPIONSHIP.REGULAR_SEASON,
   })
 
   const match2 = makeScenarioMatch('blowoutWin', 'team-a', TEAM_A_ROSTER, {
+    championship: CHAMPIONSHIP.REGULAR_SEASON,
+    date: matchDate(1),
     opponent: 'Panthers BC',
     type: 'outside',
-    date: matchDate(1),
-    championship: CHAMPIONSHIP.REGULAR_SEASON,
   })
 
   const match3 = makeScenarioMatch('blowoutLoss', 'team-a', TEAM_A_ROSTER, {
+    championship: CHAMPIONSHIP.WINTER_CUP,
+    date: matchDate(2),
     opponent: 'Sharks United',
     type: 'home',
-    date: matchDate(2),
-    championship: CHAMPIONSHIP.WINTER_CUP,
   })
 
   const match4 = makePartialMatch('team-a', TEAM_A_ROSTER, {
+    championship: CHAMPIONSHIP.FRIENDLY,
+    date: matchDate(3),
     opponent: 'Eagles Junior',
     type: 'outside',
-    date: matchDate(3),
-    championship: CHAMPIONSHIP.FRIENDLY,
   })
 
   return {
-    teams: [teamA, teamB],
-    players,
-    matchs: [match1, match2, match3, match4],
     contacts,
+    matchs: [match1, match2, match3, match4],
+    players,
+    teams: [teamA, teamB],
   }
 }

@@ -1,9 +1,9 @@
 import { strToU8, unzip, zip } from 'fflate'
-import Contact from '../contact'
-import Contacts from '../contacts'
-import bsEventBus from '../event-bus'
-import Match from '../match'
-import Matchs from '../matchs'
+import Contact from '../contact/contact'
+import Contacts from '../contacts/contacts'
+import bsEventBus from '../event-bus/event-bus'
+import Match from '../match/match'
+import Matchs from '../matchs/matchs'
 import {
   clearAllPhotos,
   deletePhoto,
@@ -13,9 +13,9 @@ import {
   PHOTO_MIME_TYPE,
   storePhoto,
 } from '../photo-store/photo-store'
-import Player, { sortPlayersByJersey } from '../player'
-import Players from '../players'
-import { soundTab } from '../sounds'
+import Player, { sortPlayersByJersey } from '../player/player'
+import Players from '../players/players'
+import { soundTab } from '../sounds/tab'
 import {
   getStoredContacts,
   getStoredMatchs,
@@ -25,20 +25,21 @@ import {
   storeMatchs,
   storePlayers,
   storeTeams,
-} from '../store'
-import Team from '../team'
-import Teams from '../teams'
+} from '../store/store'
+import Team from '../team/team'
+import Teams from '../teams/teams'
 import { DEFAULT_TITLES, persistTitles, titles } from '../trombi-titles-store'
-import { confirmAction, downloadBlob, toast } from '../utils'
-import { type ThemeVibration, vibrate } from '../vibrator'
+import { confirmAction, downloadBlob, toast } from '../utils/utils'
+import { vibrate } from '../vibrator/vibrator'
+import type { ThemeVibration } from '../vibrator/vibrator.d'
 import type { DomainDataset, GlobalDB } from './orchestrator.d'
 
 export const DB_FILE_EXTENSION = '.bstat' as const
 
 const THEME_VIBRATION_TO_DURATION: { [key in ThemeVibration]: number } = {
-  single: 100,
   double: 100,
   long: 200,
+  single: 100,
 }
 
 export class ParseError extends Error {
@@ -46,6 +47,28 @@ export class ParseError extends Error {
     super(message)
     this.name = 'ParseError'
   }
+}
+
+/**
+ * Runtime shape check for archives parsed from JSON. `JSON.parse` results are
+ * cast to `GlobalDB` at the call sites, but a malformed archive can omit keys
+ * that the type declares as non-optional (e.g. `players`), so the cast alone
+ * cannot guarantee the shape. This guard rejects such archives before any
+ * field access, keeping the import flow on its friendly error path.
+ */
+export function isGlobalDB(value: unknown): value is GlobalDB {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const candidate = value as Record<string, unknown>
+  return (
+    Boolean(candidate.timestamp) &&
+    Array.isArray(candidate.players) &&
+    Array.isArray(candidate.matchs) &&
+    Array.isArray(candidate.teams) &&
+    (candidate.contacts === undefined || candidate.contacts === null || Array.isArray(candidate.contacts))
+  )
 }
 
 export class Orchestrator {
@@ -268,55 +291,55 @@ export class Orchestrator {
 
   private async doOverwriteDB(json: GlobalDB) {
     this.addAll({
+      contacts: (json.contacts ?? []).map((c) => new Contact(c)),
+      matchs: json.matchs.map((m) => new Match(m)),
       players: json.players.map((p) => new Player(p)),
       teams: json.teams.map((t) => new Team(t)),
-      matchs: json.matchs.map((m) => new Match(m)),
-      contacts: (json.contacts ?? []).map((c) => new Contact(c)),
     })
     await persistTitles(json.trombiTitles ?? { ...DEFAULT_TITLES })
   }
 
-  public get Players() {
+  get Players() {
     return this.#players
   }
 
-  public get Teams() {
+  get Teams() {
     return this.#teams
   }
 
-  public get Matchs() {
+  get Matchs() {
     return this.#matchs
   }
 
-  public get Contacts() {
+  get Contacts() {
     return this.#contacts
   }
 
-  public throwPlayersUpdatedEvent(mute = false) {
+  throwPlayersUpdatedEvent(mute = false) {
     bsEventBus.dispatchEvent('BS::PLAYERS::CHANGE', mute)
   }
 
-  public throwTeamsUpdatedEvent(mute = false) {
+  throwTeamsUpdatedEvent(mute = false) {
     bsEventBus.dispatchEvent('BS::TEAMS::CHANGE', mute)
   }
 
-  public throwMatchsUpdatedEvent(mute = false) {
+  throwMatchsUpdatedEvent(mute = false) {
     bsEventBus.dispatchEvent('BS::MATCHS::CHANGE', mute)
   }
 
-  public throwContactsUpdatedEvent(mute = false) {
+  throwContactsUpdatedEvent(mute = false) {
     bsEventBus.dispatchEvent('BS::CONTACTS::CHANGE', mute)
   }
 
-  public throwSynchroSuccessEvent(mute = false) {
+  throwSynchroSuccessEvent(mute = false) {
     bsEventBus.dispatchEvent('BS::SYNCHRO::SUCCESS', mute)
   }
 
-  public throwSynchroFailEvent(mute = false) {
+  throwSynchroFailEvent(mute = false) {
     bsEventBus.dispatchEvent('BS::SYNCHRO::FAIL', mute)
   }
 
-  public getPlayer(id?: string | null) {
+  getPlayer(id?: string | null) {
     if (!id) {
       return null
     }
@@ -324,7 +347,7 @@ export class Orchestrator {
     return this.#players.players.find((candidate) => candidate.id === id) || null
   }
 
-  public getTeam(id?: string | null) {
+  getTeam(id?: string | null) {
     if (!id) {
       return null
     }
@@ -332,7 +355,7 @@ export class Orchestrator {
     return this.#teams.teams.find((candidate) => candidate.id === id) || null
   }
 
-  public getMatch(id?: string | null) {
+  getMatch(id?: string | null) {
     if (!id) {
       return null
     }
@@ -341,12 +364,12 @@ export class Orchestrator {
   }
 
   /** Atomically replace all domain data with the given dataset. */
-  public replaceDataset(dataset: DomainDataset): void {
+  replaceDataset(dataset: DomainDataset): void {
     this.clearCollectionsOnly()
     this.addAll(dataset)
   }
 
-  public get hasAnyData(): boolean {
+  get hasAnyData(): boolean {
     return (
       this.#players.players.length > 0 ||
       this.#teams.teams.length > 0 ||
@@ -373,7 +396,7 @@ export class Orchestrator {
     }
   }
 
-  public bigClean() {
+  bigClean() {
     let cleaned = false
     for (const team of this.Teams.teams) {
       const cleanPlayerIds = team.playerIds.filter((playerId) => Boolean(this.getPlayer(playerId)))
@@ -397,7 +420,7 @@ export class Orchestrator {
     )
   }
 
-  public getJerseySortedPlayers(playerIds?: Array<string>): Player[] {
+  getJerseySortedPlayers(playerIds?: string[]): Player[] {
     if (!playerIds) {
       return []
     }
@@ -407,15 +430,15 @@ export class Orchestrator {
     return sortPlayersByJersey(players)
   }
 
-  public async exportDB() {
+  async exportDB() {
     const date = new Date()
 
     const globalDB: GlobalDB = {
-      timestamp: date.getTime(),
+      contacts: this.Contacts.contacts.map((contact) => contact.getRawData()),
+      matchs: this.Matchs.matchs.map((match) => match.getRawData()),
       players: this.Players.players.map((player) => player.getRawData()),
       teams: this.Teams.teams.map((team) => team.getRawData()),
-      matchs: this.Matchs.matchs.map((match) => match.getRawData()),
-      contacts: this.Contacts.contacts.map((contact) => contact.getRawData()),
+      timestamp: date.getTime(),
       trombiTitles: titles,
     }
 
@@ -424,9 +447,14 @@ export class Orchestrator {
     }
 
     const photoEntries = await getAllPhotoEntries()
-    for (const entry of photoEntries) {
-      const buffer = await entry.blob.arrayBuffer()
-      files[`photos/${entry.playerId}${PHOTO_FILE_EXTENSION}`] = new Uint8Array(buffer)
+    const photoDatas = await Promise.all(
+      photoEntries.map(async (entry) => {
+        const buffer = await entry.blob.arrayBuffer()
+        return { data: new Uint8Array(buffer), filePath: `photos/${entry.playerId}${PHOTO_FILE_EXTENSION}` }
+      })
+    )
+    for (const { data, filePath } of photoDatas) {
+      files[filePath] = data
     }
 
     const zipped = await new Promise<Uint8Array>((resolve, reject) => {
@@ -439,7 +467,9 @@ export class Orchestrator {
       })
     })
 
-    const blob = new Blob([zipped], { type: 'application/octet-stream' })
+    // Copy into a concrete ArrayBuffer-backed view so the part satisfies BlobPart
+    // (TS 5.7+ generic TypedArrays); the copy preserves the exact zip bytes.
+    const blob = new Blob([new Uint8Array(zipped)], { type: 'application/octet-stream' })
     const fileName = `baller-stats-export-db-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}${DB_FILE_EXTENSION}`
     downloadBlob(blob, fileName)
   }
@@ -467,9 +497,9 @@ export class Orchestrator {
     }
 
     const decoder = new TextDecoder()
-    const rawData = JSON.parse(decoder.decode(dataJson)) as GlobalDB
+    const rawData: unknown = JSON.parse(decoder.decode(dataJson))
 
-    if (!rawData || !rawData.timestamp) {
+    if (!isGlobalDB(rawData)) {
       throw new ParseError('Invalid archive data')
     }
 
@@ -481,14 +511,14 @@ export class Orchestrator {
       const photoPath = `photos/${playerData.id}${PHOTO_FILE_EXTENSION}`
       const photoData = unzipped[photoPath]
       if (photoData) {
-        photos.set(playerData.id, new Blob([photoData], { type: PHOTO_MIME_TYPE }))
+        photos.set(playerData.id, new Blob([new Uint8Array(photoData)], { type: PHOTO_MIME_TYPE }))
         return playerData
       }
       // Photo referenced in metadata but missing from archive — correct the flag
       return { ...playerData, hasPhoto: false }
     })
 
-    return { rawData: { ...rawData, players: correctedPlayers }, photos }
+    return { photos, rawData: { ...rawData, players: correctedPlayers } }
   }
 
   private async parseImportData(uint8: Uint8Array): Promise<{ rawData: GlobalDB; photos?: Map<string, Blob> }> {
@@ -500,9 +530,9 @@ export class Orchestrator {
 
     // Legacy JSON fallback
     const text = new TextDecoder().decode(uint8)
-    const rawData = JSON.parse(text) as GlobalDB
+    const rawData: unknown = JSON.parse(text)
 
-    if (!rawData || !rawData.timestamp) {
+    if (!isGlobalDB(rawData)) {
       throw new ParseError('Invalid archive data')
     }
 
@@ -517,7 +547,7 @@ export class Orchestrator {
   ): Promise<Uint8Array> {
     const input = event.target || event.currentTarget
     const files = input?.files
-    if (!files || !files[0]) {
+    if (!files?.[0]) {
       throw new Error('No file selected')
     }
     const buffer = await files[0].arrayBuffer()
@@ -545,7 +575,7 @@ export class Orchestrator {
     }
   }
 
-  public async importDB(
+  async importDB(
     event: Event & {
       currentTarget: HTMLInputElement
       target: HTMLInputElement
@@ -573,7 +603,7 @@ export class Orchestrator {
 
     const proced = await confirmAction(
       'Import DB',
-      `Vous êtes sur le point d\u2019importer ${rawData?.players.length || 0} joueurs, ${rawData?.teams.length || 0} équipes, ${rawData?.matchs.length || 0} matchs et ${rawData?.contacts?.length || 0} contacts.`
+      `Vous êtes sur le point d\u2019importer ${rawData.players.length || 0} joueurs, ${rawData.teams.length || 0} équipes, ${rawData.matchs.length || 0} matchs et ${rawData.contacts?.length || 0} contacts.`
     )
     if (!proced) {
       return
@@ -593,15 +623,8 @@ export class Orchestrator {
     }
   }
 
-  public get Photos() {
+  get Photos() {
     return {
-      store: async (playerId: string, blob: Blob) => {
-        await storePhoto(playerId, blob)
-        const player = this.getPlayer(playerId)
-        if (player) {
-          player.hasPhoto = true
-        }
-      },
       delete: async (playerId: string) => {
         await deletePhoto(playerId)
         const player = this.getPlayer(playerId)
@@ -609,12 +632,19 @@ export class Orchestrator {
           player.hasPhoto = false
         }
       },
-      hasPhoto,
       getAll: getAllPhotoEntries,
+      hasPhoto,
+      store: async (playerId: string, blob: Blob) => {
+        await storePhoto(playerId, blob)
+        const player = this.getPlayer(playerId)
+        if (player) {
+          player.hasPhoto = true
+        }
+      },
     }
   }
 
-  public blink(duration: number): Promise<void> {
+  blink(duration: number): Promise<void> {
     const main = document.querySelector('main')
     return new Promise((resolve) => {
       if (!main) {
@@ -631,7 +661,7 @@ export class Orchestrator {
     })
   }
 
-  public throwUserActionFeedback(theme: ThemeVibration = 'single') {
+  throwUserActionFeedback(theme: ThemeVibration = 'single') {
     vibrate(theme)
 
     const duration = THEME_VIBRATION_TO_DURATION[theme] || THEME_VIBRATION_TO_DURATION.single

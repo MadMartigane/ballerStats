@@ -29,6 +29,7 @@ export default function BsCombobox(props: BsComboboxProps) {
   const [highlight, setHighlight] = createSignal(0)
   const inputId = props.id ?? createUniqueId()
   const listboxId = createUniqueId()
+  // biome-ignore lint/suspicious/noUnassignedVariables: SolidJS assigns refs directly via the ref prop, so the variable is written outside regular JS.
   let containerRef: HTMLDivElement | undefined
 
   const filtered = createMemo(() => filterOptions(props.options, props.value))
@@ -39,7 +40,7 @@ export default function BsCombobox(props: BsComboboxProps) {
 
   onMount(() => {
     const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target
+      const { target } = event
       if (containerRef && target instanceof Node && !containerRef.contains(target)) {
         setIsOpen(false)
       }
@@ -58,6 +59,18 @@ export default function BsCombobox(props: BsComboboxProps) {
     if (trimmed) {
       props.onChange(trimmed)
       setIsOpen(false)
+    }
+  }
+
+  const handleInput = (event: InputEvent & { currentTarget: HTMLInputElement }) => {
+    props.onChange(event.currentTarget.value)
+    setIsOpen(true)
+  }
+
+  const handleOptionClick = (event: MouseEvent & { currentTarget: HTMLElement }) => {
+    const { value } = event.currentTarget.dataset
+    if (value !== undefined) {
+      selectOption(value)
     }
   }
 
@@ -104,7 +117,7 @@ export default function BsCombobox(props: BsComboboxProps) {
     'menu dropdown-content absolute top-full right-0 z-50 mt-1 w-2/3 rounded-box bg-base-200 shadow-lg'
 
   return (
-    <div class="relative flex w-full" ref={(el) => (containerRef = el)}>
+    <div class="relative flex w-full" ref={containerRef}>
       <label class="flex w-full">
         <Show when={props.label}>
           <div class="label w-1/3">{props.label}</div>
@@ -118,10 +131,7 @@ export default function BsCombobox(props: BsComboboxProps) {
             class="input input-bordered w-full"
             id={inputId}
             onFocus={openDropdown}
-            onInput={(e) => {
-              props.onChange(e.currentTarget.value)
-              setIsOpen(true)
-            }}
+            onInput={handleInput}
             onKeyDown={onKeyDown}
             placeholder={props.placeholder ?? ''}
             role="combobox"
@@ -136,32 +146,31 @@ export default function BsCombobox(props: BsComboboxProps) {
         <ul class={listboxClass} id={listboxId} role="listbox">
           <For each={filtered()}>
             {(opt, i) => (
-              <>
-                {/* biome-ignore lint/a11y/useFocusableInteractive: keyboard focus is managed by the combobox input via aria-activedescendant. */}
-                {/* biome-ignore lint/a11y/useKeyWithClickEvents: keyboard selection is handled by the combobox input. */}
-                {/* biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: using li role="option" inside a listbox. */}
-                <li
-                  aria-selected={highlight() === i()}
-                  class={highlight() === i() ? 'bg-primary/20' : ''}
-                  id={optionId(i())}
-                  onClick={() => selectOption(opt)}
-                  role="option"
-                >
-                  <span>{opt}</span>
-                </li>
-              </>
+              // biome-ignore lint/a11y/useFocusableInteractive: listbox options stay unfocusable; the combobox input tracks the active option via aria-activedescendant.
+              // biome-ignore lint/a11y/useKeyWithClickEvents: keyboard selection is handled by the combobox input's onKeyDown.
+              <li
+                aria-selected={highlight() === i()}
+                class={highlight() === i() ? 'bg-primary/20' : ''}
+                data-value={opt}
+                id={optionId(i())}
+                onClick={handleOptionClick}
+                // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: ARIA listbox option pattern; role="option" is required for the combobox pattern.
+                role="option"
+              >
+                <span>{opt}</span>
+              </li>
             )}
           </For>
           <Show when={canCreate()}>
-            <li class="my-1 border-base-300 border-t" role="separator" />
-            {/* biome-ignore lint/a11y/useFocusableInteractive: keyboard focus is managed by the combobox input via aria-activedescendant. */}
-            {/* biome-ignore lint/a11y/useKeyWithClickEvents: keyboard selection is handled by the combobox input. */}
-            {/* biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: using li role="option" inside a listbox. */}
+            <li aria-hidden="true" class="my-1 border-base-300 border-t" />
+            {/* biome-ignore lint/a11y/useFocusableInteractive: listbox options stay unfocusable; the combobox input tracks the active option via aria-activedescendant. */}
+            {/* biome-ignore lint/a11y/useKeyWithClickEvents: keyboard selection is handled by the combobox input's onKeyDown. */}
             <li
               aria-selected={highlight() === filtered().length}
               class={highlight() === filtered().length ? 'bg-primary/20' : ''}
               id={optionId(filtered().length)}
               onClick={createNew}
+              // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: ARIA listbox option pattern; role="option" is required for the combobox pattern.
               role="option"
             >
               <span>Créer «{props.value.trim()}»</span>
