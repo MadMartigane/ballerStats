@@ -20,11 +20,13 @@ export default class Matchs {
   }
 
   get matchs(): Match[] {
-    return this.#matchs.map((match: Match): Match => new Match(match.getRawData()))
+    return this.#matchs
+      .filter((match: Match): boolean => match.deletedAt === null)
+      .map((match: Match) => new Match(match.getRawData()))
   }
 
   get length() {
-    return this.#matchs.length
+    return this.#matchs.filter((match: Match): boolean => match.deletedAt === null).length
   }
 
   setFromRawData(data: MatchRawData[]) {
@@ -38,7 +40,7 @@ export default class Matchs {
   }
 
   updateMatch(newMatch: Match) {
-    const oldMatch = this.#matchs.find((currentMatch) => currentMatch.id === newMatch.id)
+    const oldMatch = this.getMatch(newMatch)
     if (!oldMatch) {
       throw new Error(
         `[BsMatchs.updateMatch()] The match id ${newMatch.id} doesn't exist, Please use .add() method instead.`
@@ -70,13 +72,17 @@ export default class Matchs {
   }
 
   remove(match: Match) {
-    const idx = this.#matchs.findIndex((candidate: Match) => candidate.id === match.id)
-
-    if (idx === -1) {
+    const target = this.getMatch(match)
+    if (!target) {
       throw new Error(`[BsMatchs.remove()] The match id ${match.id} not found, Unable to remove it.`)
     }
+    target.markAsDeleted()
+    this.throwUpdatedMatchEvent()
+  }
 
-    this.#matchs.splice(idx, 1)
+  /** Hard-wipe (no tombstone) — used by overwrite import. */
+  clear() {
+    this.#matchs = []
     this.throwUpdatedMatchEvent()
   }
 }

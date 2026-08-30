@@ -19,6 +19,8 @@ export function getRelationshipLabel(relationship: ContactRelationship): string 
 
 export default class Contact {
   #id: string
+  #updatedAt: number
+  #deletedAt: number | null
   playerId?: string
   firstName?: string
   lastName?: string
@@ -29,6 +31,8 @@ export default class Contact {
 
   constructor(data?: ContactRawData) {
     this.#id = data?.id || getUniqId()
+    this.#updatedAt = data?.updatedAt ?? (data?.id ? 0 : Date.now())
+    this.#deletedAt = data?.deletedAt ?? null
 
     if (data) {
       this.setFromRawData(data)
@@ -42,6 +46,25 @@ export default class Contact {
     return this.#id
   }
 
+  get updatedAt() {
+    return this.#updatedAt
+  }
+
+  get deletedAt() {
+    return this.#deletedAt
+  }
+
+  /** Stamp the entity as modified now. Mutable operations must call this. */
+  private touch() {
+    this.#updatedAt = Date.now()
+  }
+
+  /** Soft-delete: keep the record, stamp it as deleted. */
+  markAsDeleted() {
+    this.#deletedAt = Date.now()
+    this.touch()
+  }
+
   get isRegisterable(): boolean {
     return Boolean(this.playerId)
   }
@@ -49,6 +72,12 @@ export default class Contact {
   setFromRawData(data: ContactRawData) {
     if (data.id) {
       this.#id = data.id
+    }
+    if (data.updatedAt !== undefined) {
+      this.#updatedAt = data.updatedAt
+    }
+    if (data.deletedAt !== undefined) {
+      this.#deletedAt = data.deletedAt
     }
     this.playerId = data.playerId
     this.firstName = data.firstName
@@ -61,9 +90,11 @@ export default class Contact {
 
   getRawData(): ContactRawData {
     const data: ContactRawData = {
+      deletedAt: this.#deletedAt,
       id: this.#id,
       playerId: this.playerId,
       relationship: this.relationship,
+      updatedAt: this.#updatedAt,
     }
 
     if (this.firstName) {
@@ -90,5 +121,6 @@ export default class Contact {
       ...this.getRawData(),
       ...data,
     })
+    this.touch()
   }
 }

@@ -27,6 +27,8 @@ const minimalSoreToBeRegisterable = 30
 
 export default class Player {
   #id: string
+  #updatedAt: number
+  #deletedAt: number | null
   firstName?: string
   lastName?: string
   jerseyNumber?: string
@@ -39,6 +41,8 @@ export default class Player {
 
   constructor(data?: PlayerRawData) {
     this.#id = data?.id || getUniqId()
+    this.#updatedAt = data?.updatedAt ?? (data?.id ? 0 : Date.now())
+    this.#deletedAt = data?.deletedAt ?? null
 
     if (data) {
       this.setFromRawData(data)
@@ -47,6 +51,25 @@ export default class Player {
 
   get id() {
     return this.#id
+  }
+
+  get updatedAt() {
+    return this.#updatedAt
+  }
+
+  get deletedAt() {
+    return this.#deletedAt
+  }
+
+  /** Stamp the entity as modified now. Mutable operations must call this. */
+  private touch() {
+    this.#updatedAt = Date.now()
+  }
+
+  /** Soft-delete: keep the record, stamp it as deleted. */
+  markAsDeleted() {
+    this.#deletedAt = Date.now()
+    this.touch()
   }
 
   get isRegisterable() {
@@ -63,6 +86,12 @@ export default class Player {
 
   setFromRawData(data: PlayerRawData) {
     this.#id = data.id || this.#id
+    if (data.updatedAt !== undefined) {
+      this.#updatedAt = data.updatedAt
+    }
+    if (data.deletedAt !== undefined) {
+      this.#deletedAt = data.deletedAt
+    }
     this.firstName = data.firstName
     this.lastName = data.lastName
     this.jerseyNumber = data.jerseyNumber || (data as { jersayNumber?: string }).jersayNumber
@@ -80,7 +109,9 @@ export default class Player {
 
   getRawData(): PlayerRawData {
     const data: PlayerRawData = {
+      deletedAt: this.#deletedAt,
       id: this.#id,
+      updatedAt: this.#updatedAt,
     }
 
     if (this.firstName) {
@@ -124,6 +155,7 @@ export default class Player {
       ...this.getRawData(),
       ...data,
     })
+    this.touch()
   }
 }
 

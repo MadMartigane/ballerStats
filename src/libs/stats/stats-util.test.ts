@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type Match from '../match/match'
 import { makeMatch } from '../mock/factories/match.factory'
+import { makePlayer as makePlayerFactory } from '../mock/factories/player.factory'
 import { makeStatEntry } from '../mock/factories/stat-entry.factory'
 import { makeTeam } from '../mock/factories/team.factory'
+import type Player from '../player/player'
 import type Team from '../team/team'
 import { TEAM_OPPONENT_ID } from '../team/team'
 import type { StatMatchSummaryPlayer } from './stats.d'
@@ -16,12 +18,16 @@ import {
   TEAM_TOTAL_ID,
 } from './stats-util'
 
-const { mockOrchestrator } = vi.hoisted(() => ({
-  mockOrchestrator: {
+const { mockOrchestrator } = vi.hoisted(() => {
+  const mock = {
+    getPlayer: (id: string | null | undefined): Player | null =>
+      mock.Players.players.find((player) => player.id === id && player.deletedAt === null) ?? null,
     Matchs: { matchs: [] as Match[] },
+    Players: { players: [] as Player[] },
     Teams: { teams: [] as Team[] },
-  },
-}))
+  }
+  return { mockOrchestrator: mock }
+})
 
 vi.mock('../orchestrator/orchestrator', () => ({
   default: mockOrchestrator,
@@ -143,6 +149,7 @@ describe('getFullStats', () => {
     })
 
     mockOrchestrator.Matchs.matchs = [match]
+    mockOrchestrator.Players.players = [makePlayerFactory({ id: playerId })]
     mockOrchestrator.Teams.teams = [team]
 
     const summary = getFullStats()
@@ -150,6 +157,29 @@ describe('getFullStats', () => {
     expect(summary.players).toHaveLength(1)
     expect(summary.players[0].playerId).toBe(playerId)
     expect(summary.players[0].fouls).toBe(0)
+  })
+
+  it('skips tombstoned player ids in team.playerIds (no stats row)', () => {
+    const liveId = 'live-player'
+    const deletedId = 'deleted-player'
+    const team = makeTeam({ id: 'team-ts', name: 'Team', playerIds: [liveId, deletedId] })
+    const match = makeMatch({
+      stats: [
+        makeStatEntry('2pts', { playerId: liveId, type: 'success', value: 2 }),
+        makeStatEntry('2pts', { playerId: deletedId, type: 'success', value: 2 }),
+      ],
+      teamId: 'team-ts',
+    })
+    const deletedPlayer = makePlayerFactory({ id: deletedId })
+    deletedPlayer.markAsDeleted()
+
+    mockOrchestrator.Matchs.matchs = [match]
+    mockOrchestrator.Players.players = [makePlayerFactory({ id: liveId }), deletedPlayer]
+    mockOrchestrator.Teams.teams = [team]
+
+    const summary = getFullStats()
+
+    expect(summary.players.map((p) => p.playerId)).toEqual([liveId])
   })
 })
 
@@ -165,6 +195,7 @@ describe('getFullStats championship filter', () => {
     })
 
   beforeEach(() => {
+    mockOrchestrator.Players.players = [makePlayerFactory({ id: playerId })]
     mockOrchestrator.Teams.teams = [team]
   })
 
@@ -260,6 +291,7 @@ describe('getFullStats - teamScoresTotal (cumulative vs per-game)', () => {
   // state explicitly to assert the zeroed-totals branch.
   beforeEach(() => {
     mockOrchestrator.Matchs.matchs = [matchA, matchB]
+    mockOrchestrator.Players.players = [makePlayerFactory({ id: playerId })]
     mockOrchestrator.Teams.teams = [team]
   })
 
@@ -344,6 +376,7 @@ describe('getFullStats - teamScoresTotal (cumulative vs per-game)', () => {
 
     // Override shared fixture: this case registers its own divergent-rounding orchestrator state.
     mockOrchestrator.Matchs.matchs = [divergentMatchA, divergentMatchB]
+    mockOrchestrator.Players.players = [makePlayerFactory({ id: divergentPlayerId })]
     mockOrchestrator.Teams.teams = [teamDiv]
 
     const summary = getFullStats()
@@ -440,6 +473,7 @@ describe('getFullStats - teamScoresTotal (cumulative vs per-game)', () => {
 
     // Override shared fixture: this case registers its own rebond-heavy orchestrator state.
     mockOrchestrator.Matchs.matchs = [reboundsMatchA, reboundsMatchB]
+    mockOrchestrator.Players.players = [makePlayerFactory({ id: reboundsPlayerId })]
     mockOrchestrator.Teams.teams = [teamReb]
 
     const summary = getFullStats()

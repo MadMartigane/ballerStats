@@ -11,6 +11,7 @@ export type MatchStatLogEntry = Pick<StatMatchActionItem, 'name' | 'type' | 'val
 export interface MatchRawData {
   championship?: string | null
   date?: string | null
+  deletedAt?: number | null // tombstone: ms epoch when soft-deleted, null when live (absent on legacy data)
   id?: string
   opponent?: string | null
   playersInTheFive?: string[]
@@ -18,4 +19,5 @@ export interface MatchRawData {
   status?: MatchStatus
   teamId?: string | null
   type?: MatchType
+  updatedAt?: number // ms epoch of last mutation (0 on legacy data)
 }

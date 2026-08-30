@@ -28,6 +28,9 @@ export function slugifyTeamName(name: string | null | undefined): string {
  *  - includes the player's own email when set
  *  - includes each contact email where contact.playerId === player.id
  *
+ * Player ids that no longer resolve to a live player (deleted/missing) are
+ * skipped entirely, so their contacts are not exported.
+ *
  * Values are trimmed, empties filtered out, and duplicates removed
  * (case-insensitive on the trimmed value, original casing preserved).
  */
@@ -56,7 +59,11 @@ export function collectTeamEmails(team: Team, players: Player[], contacts: Conta
   const candidates: string[] = []
   for (const playerId of team.playerIds) {
     const player = playersById.get(playerId)
-    if (player?.email) {
+    if (!player) {
+      continue
+    }
+
+    if (player.email) {
       candidates.push(player.email)
     }
 

@@ -78,4 +78,22 @@ describe('collectTeamEmails', () => {
 
     expect(collectTeamEmails(team, players, [])).toEqual([])
   })
+
+  it('skips player ids that do not resolve to a live player (deleted/missing)', () => {
+    const team = new Team({ id: 't1', name: 'Team', playerIds: ['p1', 'deleted', 'p2'] })
+    const players = [
+      new Player({ email: 'p1@example.com', id: 'p1' }),
+      new Player({ email: 'p2@example.com', id: 'p2' }),
+    ]
+    const contacts = [
+      new Contact({ email: 'mom.p1@example.com', id: 'c1', playerId: 'p1', relationship: 'mother' }),
+      new Contact({ email: 'ghost@example.com', id: 'c2', playerId: 'deleted', relationship: 'other' }),
+    ]
+
+    expect(collectTeamEmails(team, players, contacts)).toEqual([
+      'p1@example.com',
+      'mom.p1@example.com',
+      'p2@example.com',
+    ])
+  })
 })

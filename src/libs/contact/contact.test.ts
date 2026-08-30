@@ -6,6 +6,7 @@ describe('Contact', () => {
   it('round-trips all fields through getRawData() including optional ones', () => {
     const raw: ContactRawData = {
       address: '1 Rue Pierre',
+      deletedAt: null,
       email: 'marie@example.com',
       firstName: 'Marie',
       id: 'contact-1',
@@ -13,6 +14,7 @@ describe('Contact', () => {
       phone: '+1234567890',
       playerId: 'player-1',
       relationship: 'mother',
+      updatedAt: 0,
     }
 
     const contact = new Contact(raw)
@@ -89,7 +91,13 @@ describe('Contact', () => {
     expect(contact.relationship).toBe('other')
     expect(contact.firstName).toBeUndefined()
     expect(contact.lastName).toBeUndefined()
-    expect(contact.getRawData()).toEqual({ id: contact.id, playerId: '', relationship: 'other' })
+    expect(contact.getRawData()).toEqual({
+      deletedAt: null,
+      id: contact.id,
+      playerId: '',
+      relationship: 'other',
+      updatedAt: expect.any(Number),
+    })
   })
 
   it('isRegisterable is true only when a playerId is set', () => {

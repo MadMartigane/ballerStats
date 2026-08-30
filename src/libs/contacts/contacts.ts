@@ -20,11 +20,13 @@ export default class Contacts {
   }
 
   get contacts(): Contact[] {
-    return this.#contacts.map((contact: Contact): Contact => new Contact(contact.getRawData()))
+    return this.#contacts
+      .filter((contact: Contact): boolean => contact.deletedAt === null)
+      .map((contact: Contact): Contact => new Contact(contact.getRawData()))
   }
 
   get length() {
-    return this.#contacts.length
+    return this.#contacts.filter((contact: Contact): boolean => contact.deletedAt === null).length
   }
 
   setFromRawData(data: ContactRawData[]) {
@@ -40,7 +42,7 @@ export default class Contacts {
 
   getByPlayerId(playerId: string): Contact[] {
     return this.#contacts
-      .filter((contact) => contact.playerId === playerId)
+      .filter((contact) => contact.playerId === playerId && contact.deletedAt === null)
       .map((contact) => new Contact(contact.getRawData()))
   }
 
@@ -52,7 +54,7 @@ export default class Contacts {
       )
     }
 
-    oldContact.setFromRawData(newContact.getRawData())
+    oldContact.update(newContact.getRawData())
     this.throwUpdatedContactEvent()
   }
 
@@ -74,20 +76,25 @@ export default class Contacts {
   }
 
   remove(contact: Contact) {
-    const idx = this.#contacts.findIndex((candidate) => candidate.id === contact.id)
-    if (idx === -1) {
+    const target = this.getContact(contact)
+    if (!target) {
       throw new Error(`[Contacts.remove()] The contact id ${contact.id} not found.`)
     }
-
-    this.#contacts.splice(idx, 1)
+    target.markAsDeleted()
     this.throwUpdatedContactEvent()
   }
 
   removeSilent(contact: Contact) {
-    const idx = this.#contacts.findIndex((candidate) => candidate.id === contact.id)
-    if (idx === -1) {
+    const target = this.getContact(contact)
+    if (!target) {
       throw new Error(`[Contacts.removeSilent()] The contact id ${contact.id} not found.`)
     }
-    this.#contacts.splice(idx, 1)
+    target.markAsDeleted()
+  }
+
+  /** Hard-wipe (no tombstone) — used by overwrite import. */
+  clear() {
+    this.#contacts = []
+    this.throwUpdatedContactEvent()
   }
 }

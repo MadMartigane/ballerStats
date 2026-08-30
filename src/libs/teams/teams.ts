@@ -20,11 +20,13 @@ export default class Teams {
   }
 
   get teams(): Team[] {
-    return this.#teams.map((team: Team): Team => new Team(team.getRawData()))
+    return this.#teams
+      .filter((team: Team): boolean => team.deletedAt === null)
+      .map((team: Team) => new Team(team.getRawData()))
   }
 
   get length() {
-    return this.#teams.length
+    return this.#teams.filter((team: Team): boolean => team.deletedAt === null).length
   }
 
   setFromRawData(data: TeamRawData[]) {
@@ -38,14 +40,14 @@ export default class Teams {
   }
 
   updateTeam(newTeam: Team) {
-    const oldTeam = this.#teams.find((currentTeam) => currentTeam.id === newTeam.id)
+    const oldTeam = this.getTeam(newTeam)
     if (!oldTeam) {
       throw new Error(
         `[BsTeams.updateTeam()] The team id ${newTeam.id} doesn't exist, Please use .add() method instead.`
       )
     }
 
-    oldTeam.setFromRawData(newTeam.getRawData())
+    oldTeam.update(newTeam.getRawData())
     this.throwUpdatedTeamEvent()
   }
 
@@ -70,13 +72,17 @@ export default class Teams {
   }
 
   remove(team: Team) {
-    const idx = this.#teams.findIndex((candidate: Team) => candidate.id === team.id)
-
-    if (idx === -1) {
+    const target = this.getTeam(team)
+    if (!target) {
       throw new Error(`[BsTeams.remove()] The team id ${team.id} not found, Unable to remove it.`)
     }
+    target.markAsDeleted()
+    this.throwUpdatedTeamEvent()
+  }
 
-    this.#teams.splice(idx, 1)
+  /** Hard-wipe (no tombstone) — used by overwrite import. */
+  clear() {
+    this.#teams = []
     this.throwUpdatedTeamEvent()
   }
 }

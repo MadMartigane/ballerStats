@@ -20,11 +20,13 @@ export default class Players {
   }
 
   get players(): Player[] {
-    return this.#players.map((player: Player): Player => new Player(player.getRawData()))
+    return this.#players
+      .filter((player: Player): boolean => player.deletedAt === null)
+      .map((player: Player) => new Player(player.getRawData()))
   }
 
   get length() {
-    return this.#players.length
+    return this.#players.filter((player: Player): boolean => player.deletedAt === null).length
   }
 
   setFromRawData(data: PlayerRawData[]) {
@@ -39,14 +41,14 @@ export default class Players {
   }
 
   updatePlayer(newPlayer: Player) {
-    const oldPlayer = this.#players.find((currentPlayer) => currentPlayer.id === newPlayer.id)
+    const oldPlayer = this.getPlayer(newPlayer)
     if (!oldPlayer) {
       throw new Error(
         `[BsPlayers.updatePlayer()] The player id ${newPlayer.id} doesn't exist, Please use .add() method instead.`
       )
     }
 
-    oldPlayer.setFromRawData(newPlayer.getRawData())
+    oldPlayer.update(newPlayer.getRawData())
     this.throwUpdatedPlayerEvent()
   }
 
@@ -71,13 +73,17 @@ export default class Players {
   }
 
   remove(player: Player) {
-    const idx = this.#players.findIndex((candidate: Player) => candidate.id === player.id)
-
-    if (idx === -1) {
+    const target = this.getPlayer(player)
+    if (!target) {
       throw new Error(`[BsPlayers.remove()] The player id ${player.id} not found, Unable to remove it.`)
     }
+    target.markAsDeleted()
+    this.throwUpdatedPlayerEvent()
+  }
 
-    this.#players.splice(idx, 1)
+  /** Hard-wipe (no tombstone) — used by overwrite import. */
+  clear() {
+    this.#players = []
     this.throwUpdatedPlayerEvent()
   }
 }

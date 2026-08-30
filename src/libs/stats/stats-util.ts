@@ -619,28 +619,31 @@ export function getFullStats(championshipFilter?: string): FullStatSummary {
     sumPlayerStats(summed.teamScores, statCurrentMatch.teamScores)
   }
 
-  summed.players = team.playerIds.map((playerId: string): StatMatchSummaryPlayer => {
-    const currentPlayerStats = clone(RAW_STAT_MATCH_SUMMARY.teamScores) as StatMatchSummaryPlayer
+  // Resolve ids at the lookup site so tombstoned/missing players never appear as rows.
+  summed.players = team.playerIds
+    .filter((playerId: string) => orchestrator.getPlayer(playerId))
+    .map((playerId: string): StatMatchSummaryPlayer => {
+      const currentPlayerStats = clone(RAW_STAT_MATCH_SUMMARY.teamScores) as StatMatchSummaryPlayer
 
-    currentPlayerStats.playerId = playerId
+      currentPlayerStats.playerId = playerId
 
-    for (const stat of stats) {
-      for (const playerStats of stat.players) {
-        if (playerStats.playerId !== playerId) {
-          continue
+      for (const stat of stats) {
+        for (const playerStats of stat.players) {
+          if (playerStats.playerId !== playerId) {
+            continue
+          }
+
+          sumPlayerStats(currentPlayerStats, playerStats)
+
+          currentPlayerStats.nbPlayedMatch += 1
         }
-
-        sumPlayerStats(currentPlayerStats, playerStats)
-
-        currentPlayerStats.nbPlayedMatch += 1
       }
-    }
 
-    dividePlayerStatsByNbMatch(currentPlayerStats)
-    applyDerivedStats(currentPlayerStats)
+      dividePlayerStatsByNbMatch(currentPlayerStats)
+      applyDerivedStats(currentPlayerStats)
 
-    return currentPlayerStats
-  })
+      return currentPlayerStats
+    })
 
   summed.players.sort((up, down) => down.scores.total - up.scores.total)
 

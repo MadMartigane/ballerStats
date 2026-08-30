@@ -50,6 +50,45 @@ export class ParseError extends Error {
 }
 
 /**
+ * Per-record last-write-wins merge: for each incoming item, keep the copy with
+ * the higher `updatedAt` (legacy data without it counts as 0); on ties keep the
+ * in-memory (`current`) copy. Returns `current` itself when nothing changed.
+ */
+export function mergeByUpdatedAt<T extends { id?: string; updatedAt?: number }>(current: T[], incoming: T[]): T[] {
+  if (incoming.length === 0) {
+    return current
+  }
+
+  const merged = [...current]
+  let changed = false
+
+  for (const item of incoming) {
+    const existingIndex = merged.findIndex((existing) => existing.id !== undefined && existing.id === item.id)
+    if (existingIndex === -1) {
+      merged.push(item)
+      changed = true
+    } else if ((item.updatedAt ?? 0) > (merged[existingIndex].updatedAt ?? 0)) {
+      merged[existingIndex] = item
+      changed = true
+    }
+  }
+
+  return changed ? merged : current
+}
+
+/** Highest `updatedAt` among items — the stored envelope's `lastRecord`. */
+function maxUpdatedAt<T extends { updatedAt?: number }>(items: T[]): number {
+  let max = 0
+  for (const item of items) {
+    const timestamp = item.updatedAt ?? 0
+    if (timestamp > max) {
+      max = timestamp
+    }
+  }
+  return max
+}
+
+/**
  * Runtime shape check for archives parsed from JSON. `JSON.parse` results are
  * cast to `GlobalDB` at the call sites, but a malformed archive can omit keys
  * that the type declares as non-optional (e.g. `players`), so the cast alone
@@ -76,10 +115,6 @@ export class Orchestrator {
   #teams = new Teams()
   #matchs = new Matchs()
   #contacts = new Contacts()
-  #lastPlayersRecord: number | null = null
-  #lastTeamsRecord: number | null = null
-  #lastMatchsRecord: number | null = null
-  #lastContactsRecord: number | null = null
 
   constructor() {
     this.getStoredPlayers()
@@ -106,26 +141,11 @@ export class Orchestrator {
       this.storeContacts()
     })
   }
-  private updateLastPlayersRecord() {
-    this.#lastPlayersRecord = Date.now()
-  }
-
-  private updateLastTeamsRecord() {
-    this.#lastTeamsRecord = Date.now()
-  }
-
-  private updateLastMatchsRecord() {
-    this.#lastMatchsRecord = Date.now()
-  }
-
-  private updateLastContactsRecord() {
-    this.#lastContactsRecord = Date.now()
-  }
 
   private storePlayers() {
-    this.updateLastPlayersRecord()
+    const rawData = this.#players.getRawData()
 
-    storePlayers(this.#players.getRawData(), this.#lastPlayersRecord)
+    storePlayers(rawData, maxUpdatedAt(rawData))
       .then(() => {
         this.throwSynchroSuccessEvent()
       })
@@ -135,9 +155,9 @@ export class Orchestrator {
   }
 
   private storeTeams() {
-    this.updateLastTeamsRecord()
+    const rawData = this.#teams.getRawData()
 
-    storeTeams(this.#teams.getRawData(), this.#lastTeamsRecord)
+    storeTeams(rawData, maxUpdatedAt(rawData))
       .then(() => {
         this.throwSynchroSuccessEvent()
       })
@@ -147,9 +167,9 @@ export class Orchestrator {
   }
 
   private storeMatchs() {
-    this.updateLastMatchsRecord()
+    const rawData = this.#matchs.getRawData()
 
-    storeMatchs(this.#matchs.getRawData(), this.#lastMatchsRecord)
+    storeMatchs(rawData, maxUpdatedAt(rawData))
       .then(() => {
         this.throwSynchroSuccessEvent()
       })
@@ -159,9 +179,9 @@ export class Orchestrator {
   }
 
   private storeContacts() {
-    this.updateLastContactsRecord()
+    const rawData = this.#contacts.getRawData()
 
-    storeContacts(this.#contacts.getRawData(), this.#lastContactsRecord)
+    storeContacts(rawData, maxUpdatedAt(rawData))
       .then(() => {
         this.throwSynchroSuccessEvent()
       })
@@ -180,9 +200,11 @@ export class Orchestrator {
       return
     }
 
-    // TODO: add lastRecord (timestamp) in the player and compare each records
-    if (!this.#lastPlayersRecord || stored.lastRecord > this.#lastPlayersRecord) {
-      this.#players = new Players(stored.data)
+    // Per-record LWW merge: higher updatedAt wins, ties keep the in-memory copy.
+    const current = this.#players.getRawData()
+    const merged = mergeByUpdatedAt(current, stored.data)
+    if (merged !== current) {
+      this.#players = new Players(merged)
       this.throwPlayersUpdatedEvent()
     }
   }
@@ -197,9 +219,11 @@ export class Orchestrator {
       return
     }
 
-    // TODO: add lastRecord (timestamp) in the team and compare each records
-    if (!this.#lastTeamsRecord || stored.lastRecord > this.#lastTeamsRecord) {
-      this.#teams = new Teams(stored.data)
+    // Per-record LWW merge: higher updatedAt wins, ties keep the in-memory copy.
+    const current = this.#teams.getRawData()
+    const merged = mergeByUpdatedAt(current, stored.data)
+    if (merged !== current) {
+      this.#teams = new Teams(merged)
       this.throwTeamsUpdatedEvent()
     }
   }
@@ -214,10 +238,12 @@ export class Orchestrator {
       return
     }
 
-    // TODO: add lastRecord (timestamp) in the match and compare each records
-    if (!this.#lastMatchsRecord || stored.lastRecord > this.#lastMatchsRecord) {
-      this.#matchs = new Matchs(stored.data)
-      this.throwTeamsUpdatedEvent()
+    // Per-record LWW merge: higher updatedAt wins, ties keep the in-memory copy.
+    const current = this.#matchs.getRawData()
+    const merged = mergeByUpdatedAt(current, stored.data)
+    if (merged !== current) {
+      this.#matchs = new Matchs(merged)
+      this.throwMatchsUpdatedEvent()
     }
   }
 
@@ -231,55 +257,60 @@ export class Orchestrator {
       return
     }
 
-    if (!this.#lastContactsRecord || stored.lastRecord > this.#lastContactsRecord) {
-      this.#contacts = new Contacts(stored.data)
+    // Per-record LWW merge: higher updatedAt wins, ties keep the in-memory copy.
+    const current = this.#contacts.getRawData()
+    const merged = mergeByUpdatedAt(current, stored.data)
+    if (merged !== current) {
+      this.#contacts = new Contacts(merged)
       this.throwContactsUpdatedEvent()
     }
   }
 
-  private removeAllPlayers() {
-    for (const player of this.Players.players) {
-      this.Players.remove(player)
-    }
-  }
-
-  private removeAllTeams() {
-    for (const team of this.Teams.teams) {
-      this.Teams.remove(team)
-    }
-  }
-
-  private removeAllMatchs() {
-    for (const match of this.Matchs.matchs) {
-      this.Matchs.remove(match)
-    }
-  }
-
-  private removeAllContacts() {
-    for (const contact of this.Contacts.contacts) {
-      this.Contacts.remove(contact)
-    }
-  }
-
   private clearCollectionsOnly(): void {
-    this.removeAllPlayers()
-    this.removeAllTeams()
-    this.removeAllMatchs()
-    this.removeAllContacts()
+    this.Players.clear()
+    this.Teams.clear()
+    this.Matchs.clear()
+    this.Contacts.clear()
   }
 
+  /** Append, or per-id LWW-merge, incoming entities into the in-memory collections. */
   private addAll(dataset: DomainDataset): void {
-    for (const player of dataset.players ?? []) {
-      this.Players.add(player)
+    this.#players = new Players(
+      mergeByUpdatedAt(
+        this.#players.getRawData(),
+        (dataset.players ?? []).map((player) => player.getRawData())
+      )
+    )
+    this.#teams = new Teams(
+      mergeByUpdatedAt(
+        this.#teams.getRawData(),
+        (dataset.teams ?? []).map((team) => team.getRawData())
+      )
+    )
+    this.#matchs = new Matchs(
+      mergeByUpdatedAt(
+        this.#matchs.getRawData(),
+        (dataset.matchs ?? []).map((match) => match.getRawData())
+      )
+    )
+    this.#contacts = new Contacts(
+      mergeByUpdatedAt(
+        this.#contacts.getRawData(),
+        (dataset.contacts ?? []).map((contact) => contact.getRawData())
+      )
+    )
+
+    if ((dataset.players ?? []).length > 0) {
+      this.throwPlayersUpdatedEvent()
     }
-    for (const team of dataset.teams ?? []) {
-      this.Teams.add(team)
+    if ((dataset.teams ?? []).length > 0) {
+      this.throwTeamsUpdatedEvent()
     }
-    for (const match of dataset.matchs ?? []) {
-      this.Matchs.add(match)
+    if ((dataset.matchs ?? []).length > 0) {
+      this.throwMatchsUpdatedEvent()
     }
-    for (const contact of dataset.contacts ?? []) {
-      this.Contacts.add(contact)
+    if ((dataset.contacts ?? []).length > 0) {
+      this.throwContactsUpdatedEvent()
     }
   }
 
@@ -369,6 +400,120 @@ export class Orchestrator {
     this.addAll(dataset)
   }
 
+  /**
+   * LWW-merge server data into the in-memory collections (see `addAll`).
+   * Exposed for the sync pull path; change events still fire so the UI
+   * refreshes, and the sync manager guards its own collectors against echo.
+   */
+  applyRemote(dataset: DomainDataset): void {
+    this.addAll(dataset)
+  }
+
+  /**
+   * Overrides records whose id matches the incoming server data (no LWW merge),
+   * keeping every other record untouched. Used when the server rejected a local
+   * write (scoring lease) so its copy becomes authoritative locally.
+   */
+  overwriteById(dataset: DomainDataset): void {
+    const incomingPlayers = new Map((dataset.players ?? []).map((player) => [player.id, player.getRawData()]))
+    const incomingTeams = new Map((dataset.teams ?? []).map((team) => [team.id, team.getRawData()]))
+    const incomingMatchs = new Map((dataset.matchs ?? []).map((match) => [match.id, match.getRawData()]))
+    const incomingContacts = new Map((dataset.contacts ?? []).map((contact) => [contact.id, contact.getRawData()]))
+
+    if (incomingPlayers.size > 0) {
+      this.#players = new Players(
+        this.#players.getRawData().map((raw) => (raw.id ? (incomingPlayers.get(raw.id) ?? raw) : raw))
+      )
+    }
+    if (incomingTeams.size > 0) {
+      this.#teams = new Teams(
+        this.#teams.getRawData().map((raw) => (raw.id ? (incomingTeams.get(raw.id) ?? raw) : raw))
+      )
+      this.throwTeamsUpdatedEvent()
+    }
+    if (incomingMatchs.size > 0) {
+      this.#matchs = new Matchs(
+        this.#matchs.getRawData().map((raw) => (raw.id ? (incomingMatchs.get(raw.id) ?? raw) : raw))
+      )
+      this.throwMatchsUpdatedEvent()
+    }
+    if (incomingContacts.size > 0) {
+      this.#contacts = new Contacts(
+        this.#contacts.getRawData().map((raw) => (raw.id ? (incomingContacts.get(raw.id) ?? raw) : raw))
+      )
+      this.throwContactsUpdatedEvent()
+    }
+  }
+
+  /**
+   * Re-keys local records after PocketBase created them server-side (legacy
+   * numeric-string ids are not valid PB ids). Rewrites every foreign key:
+   * team.playerIds, match teamId/playersInTheFive/stats[].playerId and
+   * contact.playerId. Identity changes do not bump updatedAt.
+   */
+  rewriteIdentities(rewrites: {
+    players?: Record<string, string>
+    teams?: Record<string, string>
+    matchs?: Record<string, string>
+    contacts?: Record<string, string>
+  }): void {
+    const playerMap = rewrites.players ?? {}
+    const teamMap = rewrites.teams ?? {}
+    const matchMap = rewrites.matchs ?? {}
+    const contactMap = rewrites.contacts ?? {}
+    const playerCount = Object.keys(playerMap).length
+    const teamCount = Object.keys(teamMap).length
+    const matchCount = Object.keys(matchMap).length
+    const contactCount = Object.keys(contactMap).length
+
+    if (playerCount > 0) {
+      // Players' constructor dispatches BS::PLAYERS::CHANGE via setFromRawData,
+      // so the UI refreshes exactly once (echo-safe for the sync collector).
+      this.#players = new Players(
+        this.#players.getRawData().map((raw) => {
+          const id = raw.id ? (playerMap[raw.id] ?? raw.id) : raw.id
+          return id === raw.id ? raw : { ...raw, id }
+        })
+      )
+    }
+    if (teamCount > 0 || playerCount > 0) {
+      this.#teams = new Teams(
+        this.#teams.getRawData().map((raw) => {
+          const id = raw.id ? (teamMap[raw.id] ?? raw.id) : raw.id
+          const playerIds = (raw.playerIds ?? []).map((playerId) => playerMap[playerId] ?? playerId)
+          return id === raw.id ? { ...raw, playerIds } : { ...raw, id, playerIds }
+        })
+      )
+      this.throwTeamsUpdatedEvent()
+    }
+    if (matchCount > 0 || teamCount > 0 || playerCount > 0) {
+      this.#matchs = new Matchs(
+        this.#matchs.getRawData().map((raw) => {
+          const id = raw.id ? (matchMap[raw.id] ?? raw.id) : raw.id
+          const teamId = raw.teamId ? (teamMap[raw.teamId] ?? raw.teamId) : null
+          const playersInTheFive = (raw.playersInTheFive ?? []).map((playerId) => playerMap[playerId] ?? playerId)
+          const stats = (raw.stats ?? []).map((entry) =>
+            entry.playerId ? { ...entry, playerId: playerMap[entry.playerId] ?? entry.playerId } : entry
+          )
+          return id === raw.id
+            ? { ...raw, playersInTheFive, stats, teamId }
+            : { ...raw, id, playersInTheFive, stats, teamId }
+        })
+      )
+      this.throwMatchsUpdatedEvent()
+    }
+    if (contactCount > 0 || playerCount > 0) {
+      this.#contacts = new Contacts(
+        this.#contacts.getRawData().map((raw) => {
+          const id = raw.id ? (contactMap[raw.id] ?? raw.id) : raw.id
+          const playerId = raw.playerId ? (playerMap[raw.playerId] ?? raw.playerId) : raw.playerId
+          return id === raw.id ? { ...raw, playerId } : { ...raw, id, playerId }
+        })
+      )
+      this.throwContactsUpdatedEvent()
+    }
+  }
+
   get hasAnyData(): boolean {
     return (
       this.#players.players.length > 0 ||
@@ -434,10 +579,10 @@ export class Orchestrator {
     const date = new Date()
 
     const globalDB: GlobalDB = {
-      contacts: this.Contacts.contacts.map((contact) => contact.getRawData()),
-      matchs: this.Matchs.matchs.map((match) => match.getRawData()),
-      players: this.Players.players.map((player) => player.getRawData()),
-      teams: this.Teams.teams.map((team) => team.getRawData()),
+      contacts: this.Contacts.getRawData(),
+      matchs: this.Matchs.getRawData(),
+      players: this.Players.getRawData(),
+      teams: this.Teams.getRawData(),
       timestamp: date.getTime(),
       trombiTitles: titles,
     }
@@ -630,6 +775,7 @@ export class Orchestrator {
         const player = this.getPlayer(playerId)
         if (player) {
           player.hasPhoto = false
+          this.Players.updatePlayer(player)
         }
       },
       getAll: getAllPhotoEntries,
@@ -639,6 +785,7 @@ export class Orchestrator {
         const player = this.getPlayer(playerId)
         if (player) {
           player.hasPhoto = true
+          this.Players.updatePlayer(player)
         }
       },
     }

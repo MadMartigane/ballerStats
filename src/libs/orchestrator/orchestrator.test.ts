@@ -2,7 +2,7 @@ import { strToU8, zipSync } from 'fflate'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ContactRawData } from '../contact/contact.d'
 import { confirmAction, toast } from '../utils/utils'
-import { isGlobalDB, Orchestrator, ParseError } from './orchestrator'
+import { isGlobalDB, mergeByUpdatedAt, Orchestrator, ParseError } from './orchestrator'
 import type { GlobalDB } from './orchestrator.d'
 
 vi.mock('../utils/utils')
@@ -152,6 +152,78 @@ describe('tryParseZip (zip path)', () => {
   it('treats non-zip bytes as a legacy fallback signal (returns null)', async () => {
     const arbitrary = strToU8('this is not a zip archive at all')
     await expect(orchestrator.tryParseZip(arbitrary)).resolves.toBeNull()
+  })
+})
+
+describe('mergeByUpdatedAt', () => {
+  interface MergeItem {
+    deletedAt?: number | null
+    id?: string
+    updatedAt?: number
+    value: string
+  }
+
+  const live: MergeItem = { id: 'a', updatedAt: 100, value: 'live' }
+  const newer: MergeItem = { id: 'a', updatedAt: 200, value: 'newer' }
+  const older: MergeItem = { id: 'a', updatedAt: 50, value: 'older' }
+
+  it('merges different ids, keeping both', () => {
+    const other: MergeItem = { id: 'b', updatedAt: 10, value: 'other' }
+    expect(mergeByUpdatedAt([live], [other])).toEqual([live, other])
+  })
+
+  it('replaces an existing id when the incoming updatedAt is higher', () => {
+    expect(mergeByUpdatedAt([live], [newer])).toEqual([newer])
+  })
+
+  it('keeps the current copy on equal updatedAt', () => {
+    const tie: MergeItem = { id: 'a', updatedAt: 100, value: 'tie' }
+    expect(mergeByUpdatedAt([live], [tie])).toEqual([live])
+  })
+
+  it('keeps the current copy when the incoming updatedAt is lower', () => {
+    expect(mergeByUpdatedAt([live], [older])).toEqual([live])
+  })
+
+  it('treats legacy incoming data without updatedAt as 0', () => {
+    const legacy: MergeItem = { id: 'a', value: 'legacy' }
+    expect(mergeByUpdatedAt([live], [legacy])).toEqual([live])
+  })
+
+  it('a newer tombstone wins over an older live copy', () => {
+    const tombstone: MergeItem = { deletedAt: 150, id: 'a', updatedAt: 150, value: 'deleted' }
+    expect(mergeByUpdatedAt([live], [tombstone])).toEqual([tombstone])
+  })
+
+  it('returns the current array when nothing changes', () => {
+    const current: MergeItem[] = [live]
+    expect(mergeByUpdatedAt(current, [older])).toBe(current)
+    expect(mergeByUpdatedAt(current, [])).toBe(current)
+  })
+})
+
+describe('old-shaped GlobalDB (numeric string ids, no timestamps)', () => {
+  it('isGlobalDB still accepts records without updatedAt/deletedAt', () => {
+    const legacyGlobal: Record<string, unknown> = {
+      contacts: [{ id: '1', playerId: '2', relationship: 'mother' }],
+      matchs: [{ id: '3', opponent: 'Team', teamId: '4', type: 'home' }],
+      players: [{ firstName: 'A', id: '1', lastName: 'B' }],
+      teams: [{ id: '4', name: 'Team', playerIds: ['1'] }],
+      timestamp: 1_700_000_000_000,
+    }
+    expect(isGlobalDB(legacyGlobal)).toBe(true)
+  })
+
+  it('parseImportData accepts a legacy-shaped archive', async () => {
+    const legacyGlobal: GlobalDB = {
+      contacts: [{ id: '1', playerId: '2', relationship: 'mother' }],
+      matchs: [{ id: '3', opponent: 'Team', teamId: '4', type: 'home' }],
+      players: [{ firstName: 'A', id: '1', lastName: 'B' }],
+      teams: [{ id: '4', name: 'Team', playerIds: ['1'] }],
+      timestamp: 1_700_000_000_000,
+    }
+    const result = await orchestrator.parseImportData(archiveBytes(legacyGlobal))
+    expect(result.rawData.players[0]).toMatchObject({ firstName: 'A', id: '1', lastName: 'B' })
   })
 })
 

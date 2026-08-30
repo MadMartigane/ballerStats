@@ -1,14 +1,20 @@
 import type { DaisyAlert } from '../daisy/daisy.d'
 
-const antropyFator = 3
+// PocketBase-compatible id: 15 chars from [a-z0-9].
+const ID_CHARACTERS = 'abcdefghijklmnopqrstuvwxyz0123456789'
+const ID_LENGTH = 15
 
 // Hoisted to module scope: used by toDateTime on every call.
 const TIME_WITHOUT_SECONDS_REGEX = /:\d{2}$/
 
 export function getUniqId(): string {
-  const array = new Uint32Array(antropyFator)
+  const array = new Uint32Array(ID_LENGTH)
   crypto.getRandomValues(array)
-  return String(array[Math.floor(Math.random() * antropyFator)])
+  let id = ''
+  for (let i = 0; i < ID_LENGTH; i += 1) {
+    id += ID_CHARACTERS[array[i] % ID_CHARACTERS.length]
+  }
+  return id
 }
 
 export function getShortId(): string {
