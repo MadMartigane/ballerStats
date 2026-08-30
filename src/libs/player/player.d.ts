@@ -1,5 +1,6 @@
 export interface PlayerRawData {
   birthDay?: number // timestamp
+  clubId?: string
   email?: string // player's direct email address (optional)
   firstName?: string
   hasPhoto?: boolean

@@ -1,3 +1,4 @@
+import type { ClubRawData } from '../club/club.d'
 import type { ContactRawData } from '../contact/contact.d'
 import type { MatchRawData } from '../match/match.d'
 import type { PlayerRawData } from '../player/player.d'

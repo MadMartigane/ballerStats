@@ -44,7 +44,7 @@ export default class Team {
   }
 
   getRawData(): TeamRawData {
-    return {
+    const data: TeamRawData = {
       id: this.#id,
       name: this.name,
       playerIds: <string[]>clone(this.#playerIds),

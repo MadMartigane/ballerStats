@@ -86,7 +86,8 @@ export function isGlobalDB(value: unknown): value is GlobalDB {
     Array.isArray(candidate.players) &&
     Array.isArray(candidate.matchs) &&
     Array.isArray(candidate.teams) &&
-    (candidate.contacts === undefined || candidate.contacts === null || Array.isArray(candidate.contacts))
+    (candidate.contacts === undefined || candidate.contacts === null || Array.isArray(candidate.contacts)) &&
+    (candidate.clubs === undefined || candidate.clubs === null || Array.isArray(candidate.clubs))
   )
 }
 
@@ -237,11 +238,11 @@ export class Orchestrator {
   }
 
   private async doOverwriteDB(json: GlobalDB) {
-    this.addAll({
-      contacts: (json.contacts ?? []).map((c) => new Contact(c)),
-      matchs: json.matchs.map((m) => new Match(m)),
-      players: json.players.map((p) => new Player(p)),
-      teams: json.teams.map((t) => new Team(t)),
+    const migration = migrateClubData({
+      clubs: json.clubs,
+      players: json.players,
+      teams: json.teams,
+      trombiTitles: json.trombiTitles,
     })
     batch(() => {
       replaceAllPlayers(migration.players)
