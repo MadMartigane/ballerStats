@@ -1,4 +1,8 @@
 import { strToU8, unzip, zip } from 'fflate'
+import type Club from '../club/club'
+import type { ClubRawData } from '../club/club.d'
+import { createDefaultClubData, migrateClubData } from '../club/club-migration'
+import Clubs from '../clubs/clubs'
 import Contact from '../contact/contact'
 import Contacts from '../contacts/contacts'
 import bsEventBus from '../event-bus/event-bus'
@@ -14,20 +18,30 @@ import {
   storePhoto,
 } from '../photo-store/photo-store'
 import Player, { sortPlayersByJersey } from '../player/player'
+import type { PlayerRawData } from '../player/player.d'
 import Players from '../players/players'
 import { soundTab } from '../sounds/tab'
 import {
+  getStoredClubs,
   getStoredContacts,
+  getStoredDataSync,
   getStoredMatchs,
   getStoredPlayers,
   getStoredTeams,
+  STORAGE_CLUBS_KEY,
+  STORAGE_PLAYERS_KEY,
+  STORAGE_TEAMS_KEY,
+  STORAGE_TROMBI_TITLES_KEY,
+  storeClubs,
   storeContacts,
   storeMatchs,
   storePlayers,
   storeTeams,
 } from '../store/store'
 import Team from '../team/team'
+import type { TeamRawData } from '../team/team.d'
 import Teams from '../teams/teams'
+import type { TrombiTitles } from '../trombi-titles'
 import { DEFAULT_TITLES, persistTitles, titles } from '../trombi-titles-store'
 import { confirmAction, downloadBlob, toast } from '../utils/utils'
 import { vibrate } from '../vibrator/vibrator'
@@ -67,7 +81,8 @@ export function isGlobalDB(value: unknown): value is GlobalDB {
     Array.isArray(candidate.players) &&
     Array.isArray(candidate.matchs) &&
     Array.isArray(candidate.teams) &&
-    (candidate.contacts === undefined || candidate.contacts === null || Array.isArray(candidate.contacts))
+    (candidate.contacts === undefined || candidate.contacts === null || Array.isArray(candidate.contacts)) &&
+    (candidate.clubs === undefined || candidate.clubs === null || Array.isArray(candidate.clubs))
   )
 }
 
@@ -76,16 +91,20 @@ export class Orchestrator {
   #teams = new Teams()
   #matchs = new Matchs()
   #contacts = new Contacts()
+  #clubs = new Clubs()
   #lastPlayersRecord: number | null = null
   #lastTeamsRecord: number | null = null
   #lastMatchsRecord: number | null = null
   #lastContactsRecord: number | null = null
+  #lastClubsRecord: number | null = null
 
   constructor() {
+    this.runStartupMigration()
     this.getStoredPlayers()
     this.getStoredTeams()
     this.getStoredMatchs()
     this.getStoredContacts()
+    this.getStoredClubs()
     this.installEventHandlers()
   }
 
@@ -105,7 +124,51 @@ export class Orchestrator {
     bsEventBus.addEventListener('BS::CONTACTS::CHANGE', () => {
       this.storeContacts()
     })
+
+    bsEventBus.addEventListener('BS::CLUBS::CHANGE', () => {
+      this.storeClubs()
+    })
   }
+
+  /**
+   * One-time bridge to the Club entity (startup + older .bstat imports). Runs
+   * synchronously so migrated data is persisted before the async loaders resolve
+   * (localStorage writes are synchronous), guaranteeing a club for the UI.
+   */
+  private runStartupMigration(): void {
+    const storedClubs = getStoredDataSync<ClubRawData[]>(STORAGE_CLUBS_KEY)
+    const storedTitles = getStoredDataSync<TrombiTitles>(STORAGE_TROMBI_TITLES_KEY)
+    const storedPlayers = getStoredDataSync<PlayerRawData[]>(STORAGE_PLAYERS_KEY)
+    const storedTeams = getStoredDataSync<TeamRawData[]>(STORAGE_TEAMS_KEY)
+
+    const migration = migrateClubData({
+      clubs: storedClubs?.data,
+      players: storedPlayers?.data,
+      teams: storedTeams?.data,
+      trombiTitles: storedTitles?.data,
+    })
+
+    if (!migration.changed) {
+      return
+    }
+
+    this.#clubs = new Clubs(migration.clubs)
+    this.#players = new Players(migration.players)
+    this.#teams = new Teams(migration.teams)
+
+    if (migration.players.length > 0) {
+      this.#lastPlayersRecord = Date.now()
+      storePlayers(migration.players, this.#lastPlayersRecord)
+    }
+    if (migration.teams.length > 0) {
+      this.#lastTeamsRecord = Date.now()
+      storeTeams(migration.teams, this.#lastTeamsRecord)
+    }
+    this.#lastClubsRecord = Date.now()
+    storeClubs(migration.clubs, this.#lastClubsRecord)
+    persistTitles(migration.trombiTitles)
+  }
+
   private updateLastPlayersRecord() {
     this.#lastPlayersRecord = Date.now()
   }
@@ -120,6 +183,10 @@ export class Orchestrator {
 
   private updateLastContactsRecord() {
     this.#lastContactsRecord = Date.now()
+  }
+
+  private updateLastClubsRecord() {
+    this.#lastClubsRecord = Date.now()
   }
 
   private storePlayers() {
@@ -162,6 +229,18 @@ export class Orchestrator {
     this.updateLastContactsRecord()
 
     storeContacts(this.#contacts.getRawData(), this.#lastContactsRecord)
+      .then(() => {
+        this.throwSynchroSuccessEvent()
+      })
+      .catch(() => {
+        this.throwSynchroFailEvent()
+      })
+  }
+
+  private storeClubs() {
+    this.updateLastClubsRecord()
+
+    storeClubs(this.#clubs.getRawData(), this.#lastClubsRecord)
       .then(() => {
         this.throwSynchroSuccessEvent()
       })
@@ -237,6 +316,22 @@ export class Orchestrator {
     }
   }
 
+  private async getStoredClubs() {
+    const stored = await getStoredClubs().catch(() => {
+      this.throwSynchroFailEvent()
+    })
+
+    if (!stored) {
+      this.throwSynchroSuccessEvent()
+      return
+    }
+
+    if (!this.#lastClubsRecord || stored.lastRecord > this.#lastClubsRecord) {
+      this.#clubs = new Clubs(stored.data)
+      this.throwClubsUpdatedEvent()
+    }
+  }
+
   private removeAllPlayers() {
     for (const player of this.Players.players) {
       this.Players.remove(player)
@@ -287,16 +382,26 @@ export class Orchestrator {
     this.clearCollectionsOnly()
     await persistTitles({ ...DEFAULT_TITLES })
     await clearAllPhotos()
+    this.#clubs = new Clubs([createDefaultClubData()])
+    this.throwClubsUpdatedEvent()
   }
 
   private async doOverwriteDB(json: GlobalDB) {
+    const migration = migrateClubData({
+      clubs: json.clubs,
+      players: json.players,
+      teams: json.teams,
+      trombiTitles: json.trombiTitles,
+    })
+    this.#clubs = new Clubs(migration.clubs)
     this.addAll({
       contacts: (json.contacts ?? []).map((c) => new Contact(c)),
       matchs: json.matchs.map((m) => new Match(m)),
-      players: json.players.map((p) => new Player(p)),
-      teams: json.teams.map((t) => new Team(t)),
+      players: migration.players.map((p) => new Player(p)),
+      teams: migration.teams.map((t) => new Team(t)),
     })
-    await persistTitles(json.trombiTitles ?? { ...DEFAULT_TITLES })
+    await persistTitles(migration.trombiTitles)
+    this.throwClubsUpdatedEvent()
   }
 
   get Players() {
@@ -315,6 +420,10 @@ export class Orchestrator {
     return this.#contacts
   }
 
+  get Clubs() {
+    return this.#clubs
+  }
+
   throwPlayersUpdatedEvent(mute = false) {
     bsEventBus.dispatchEvent('BS::PLAYERS::CHANGE', mute)
   }
@@ -329,6 +438,10 @@ export class Orchestrator {
 
   throwContactsUpdatedEvent(mute = false) {
     bsEventBus.dispatchEvent('BS::CONTACTS::CHANGE', mute)
+  }
+
+  throwClubsUpdatedEvent(mute = false) {
+    bsEventBus.dispatchEvent('BS::CLUBS::CHANGE', mute)
   }
 
   throwSynchroSuccessEvent(mute = false) {
@@ -367,6 +480,10 @@ export class Orchestrator {
   replaceDataset(dataset: DomainDataset): void {
     this.clearCollectionsOnly()
     this.addAll(dataset)
+    if (dataset.clubs !== undefined) {
+      this.#clubs = new Clubs(dataset.clubs.map((club: Club) => club.getRawData()))
+      this.throwClubsUpdatedEvent()
+    }
   }
 
   get hasAnyData(): boolean {
@@ -434,6 +551,7 @@ export class Orchestrator {
     const date = new Date()
 
     const globalDB: GlobalDB = {
+      clubs: this.Clubs.clubs.map((club) => club.getRawData()),
       contacts: this.Contacts.contacts.map((contact) => contact.getRawData()),
       matchs: this.Matchs.matchs.map((match) => match.getRawData()),
       players: this.Players.players.map((player) => player.getRawData()),

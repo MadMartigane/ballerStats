@@ -1,3 +1,4 @@
+import type { ClubRawData } from '../club/club.d'
 import type { ContactRawData } from '../contact/contact.d'
 import type { MatchRawData } from '../match/match.d'
 import type { PlayerRawData } from '../player/player.d'
@@ -9,6 +10,7 @@ export const STORAGE_TEAMS_KEY = 'BS_TEAMS'
 export const STORAGE_MATCHS_KEY = 'BS_MATCHS'
 export const STORAGE_TROMBI_TITLES_KEY = 'BS_TROMBI_TITLES'
 export const STORAGE_CONTACTS_KEY = 'BS_CONTACTS'
+export const STORAGE_CLUBS_KEY = 'BS_CLUBS'
 
 export function storeData<T>(key: string, data: T, lastRecord?: number | null): Promise<void> {
   return new Promise((resolve) => {
@@ -70,4 +72,12 @@ export function storeContacts(contacts: ContactRawData[], lastRecord?: number | 
 
 export function getStoredContacts(): Promise<StoredItemData<ContactRawData[]> | null> {
   return getStoredData<ContactRawData[]>(STORAGE_CONTACTS_KEY)
+}
+
+export function storeClubs(clubs: ClubRawData[], lastRecord?: number | null): Promise<void> {
+  return storeData(STORAGE_CLUBS_KEY, clubs, lastRecord)
+}
+
+export function getStoredClubs(): Promise<StoredItemData<ClubRawData[]> | null> {
+  return getStoredData<ClubRawData[]>(STORAGE_CLUBS_KEY)
 }

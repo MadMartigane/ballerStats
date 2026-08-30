@@ -19,10 +19,22 @@ describe('seedDemoDataset', () => {
 
   it('returns the expected counts', () => {
     const ds = seedDemoDataset()
+    expect(ds.clubs).toHaveLength(1)
     expect(ds.teams).toHaveLength(2)
     expect(ds.players).toHaveLength(10)
     expect(ds.matchs).toHaveLength(4)
     expect(ds.contacts).toHaveLength(10)
+  })
+
+  it('every player and team belongs to the demo club', () => {
+    const ds = seedDemoDataset()
+    const clubId = ds.clubs[0].id
+    for (const p of ds.players) {
+      expect(p.clubId).toBe(clubId)
+    }
+    for (const t of ds.teams) {
+      expect(t.clubId).toBe(clubId)
+    }
   })
 
   it('every player has a license number', () => {

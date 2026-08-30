@@ -27,6 +27,7 @@ const minimalSoreToBeRegisterable = 30
 
 export default class Player {
   #id: string
+  clubId?: string
   firstName?: string
   lastName?: string
   jerseyNumber?: string
@@ -63,6 +64,7 @@ export default class Player {
 
   setFromRawData(data: PlayerRawData) {
     this.#id = data.id || this.#id
+    this.clubId = data.clubId
     this.firstName = data.firstName
     this.lastName = data.lastName
     this.jerseyNumber = data.jerseyNumber || (data as { jersayNumber?: string }).jersayNumber
@@ -81,6 +83,10 @@ export default class Player {
   getRawData(): PlayerRawData {
     const data: PlayerRawData = {
       id: this.#id,
+    }
+
+    if (this.clubId) {
+      data.clubId = this.clubId
     }
 
     if (this.firstName) {

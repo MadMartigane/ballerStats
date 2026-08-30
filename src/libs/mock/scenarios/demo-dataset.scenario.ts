@@ -1,3 +1,4 @@
+import Club from '../../club/club'
 import type Contact from '../../contact/contact'
 import type { ContactRelationship } from '../../contact/contact.d'
 import type Match from '../../match/match'
@@ -9,6 +10,10 @@ import { makeTeam } from '../factories/team.factory'
 import { makePartialMatch, makeScenarioMatch } from './full-game.scenario'
 
 export const TEAM_A_STAR_ID = 'player-1'
+
+const DEMO_CLUB_ID = 'club-demo'
+const DEMO_CLUB_NAME = 'BCC Marseille'
+const DEMO_CLUB_LICENSE = '1310000000'
 
 const CHAMPIONSHIP = {
   FRIENDLY: 'Amical',
@@ -237,6 +242,7 @@ function matchDate(weekOffset: number): string {
 }
 
 export interface DemoDataset {
+  clubs: Club[]
   contacts: Contact[]
   matchs: Match[]
   players: Player[]
@@ -247,6 +253,7 @@ export interface DemoDataset {
 export function seedDemoDataset(): DemoDataset {
   const players = PLAYERS.map((p) =>
     makePlayer({
+      clubId: DEMO_CLUB_ID,
       firstName: p.firstName,
       id: p.id,
       jerseyNumber: p.jerseyNumber,
@@ -269,8 +276,8 @@ export function seedDemoDataset(): DemoDataset {
     })
   )
 
-  const teamA = makeTeam({ id: 'team-a', name: 'Les Aigles', playerIds: TEAM_A_ROSTER })
-  const teamB = makeTeam({ id: 'team-b', name: 'Les Tigres', playerIds: TEAM_B_ROSTER })
+  const teamA = makeTeam({ clubId: DEMO_CLUB_ID, id: 'team-a', name: 'Les Aigles', playerIds: TEAM_A_ROSTER })
+  const teamB = makeTeam({ clubId: DEMO_CLUB_ID, id: 'team-b', name: 'Les Tigres', playerIds: TEAM_B_ROSTER })
 
   // 4 matches — all for team A (team B keeps zero matches), varied scenarios:
   const match1 = makeScenarioMatch('closeWin', 'team-a', TEAM_A_ROSTER, {
@@ -302,6 +309,7 @@ export function seedDemoDataset(): DemoDataset {
   })
 
   return {
+    clubs: [new Club({ id: DEMO_CLUB_ID, licenseNumber: DEMO_CLUB_LICENSE, name: DEMO_CLUB_NAME })],
     contacts,
     matchs: [match1, match2, match3, match4],
     players,
