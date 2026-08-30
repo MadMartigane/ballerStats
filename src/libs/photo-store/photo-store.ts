@@ -1,11 +1,14 @@
-import { clear, createStore, del, entries, get, set } from 'idb-keyval'
+import { clear, del, entries, get, set } from 'idb-keyval'
 import type Player from '../player/player'
+import { makeSharedStore } from '../sync/idb'
 import type { PhotoEntry } from './photo-store.d'
 
 export const PHOTO_FILE_EXTENSION = '.webp'
 export const PHOTO_MIME_TYPE = 'image/webp'
 
-const photoStore = createStore('baller-stats-db', 'photos')
+// Shares one schema owner with the sync stores (outbox, sync meta) so every
+// object store is created on the same database upgrade.
+const photoStore = makeSharedStore('photos')
 
 export async function storePhoto(playerId: string, blob: Blob): Promise<void> {
   await set(playerId, blob, photoStore)
