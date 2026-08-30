@@ -14,12 +14,23 @@ import {
   User,
   Users,
 } from 'lucide-solid'
-import { For, Show } from 'solid-js'
+import { createMemo, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import { createStore, type SetStoreFunction } from 'solid-js/store'
+import { canManageStaff, currentRole, currentUser, isLoggedIn } from '../../libs/auth/auth'
+import {
+  acquireMatchLease,
+  getLeaseHolderFromError,
+  isLeaseHeldError,
+  LEASE_HEARTBEAT_MS,
+  leaseStateForMe,
+  releaseMatchLease,
+} from '../../libs/lease/lease'
+import type { LeaseHolder, LeaseStateForMe } from '../../libs/lease/lease.d'
 import MadSignal from '../../libs/mad-signal'
 import type Match from '../../libs/match/match'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import type Player from '../../libs/player/player'
+import { isAuthEnabled } from '../../libs/pocketbase/client'
 import { STATS_MATCH_ACTIONS } from '../../libs/stats/stats'
 import type { StatMatchActionItem, StatMatchSummary } from '../../libs/stats/stats.d'
 import { getStatSummary } from '../../libs/stats/stats-util'
@@ -29,6 +40,7 @@ import { vibrate } from '../../libs/vibrator/vibrator'
 import BsScoreCard from '../score-card/score-card'
 import { BsFullStatTable } from '../stats/full-stat-table'
 import { BsStatSumUpRebonds } from '../stats/sum-up-rebonds'
+import BsLeaseBanner from './lease-banner'
 import type { BsMatchProps } from './match.d'
 
 function openActionMode(playerId: string | undefined, playerOnAction: MadSignal<string | null>) {
@@ -37,6 +49,11 @@ function openActionMode(playerId: string | undefined, playerOnAction: MadSignal<
 
 function closeActionMode(playerOnAction: MadSignal<string | null>) {
   playerOnAction.set(null)
+}
+
+/** Count on-court ids that still resolve to a live player (tombstoned/missing excluded). */
+function countLiveInFive(playerIds: string[]): number {
+  return playerIds.filter((playerId) => orchestrator.getPlayer(playerId)).length
 }
 
 function registerStat(options: {
@@ -222,6 +239,9 @@ interface StatRegistrationContext {
   setStatSummary: SetStoreFunction<StatMatchSummary>
   statSummary: StatMatchSummary
 }
+
+/** Scoring-lease state from the perspective of the live scoring screen. */
+type LeaseUiState = LeaseStateForMe | 'offline' | 'unknown'
 
 interface PlayerBenchRenderOptions extends StatRegistrationContext {
   player: Player | null
@@ -615,7 +635,7 @@ function renderTheTeamBench(options: {
 }) {
   const inTheFive = options.playersInTheFive.get()
 
-  if (inTheFive.length === options.sortedPlayers.length) {
+  if (countLiveInFive(inTheFive) === options.sortedPlayers.length) {
     return (
       <div class="alert alert-info">
         <Meh size={42} />
@@ -652,7 +672,7 @@ function renderTheTeamFive(opts: {
   matchIsPlaying: MadSignal<boolean>
   playerOnAction: MadSignal<string | null>
 }) {
-  if (opts.playersInTheFive.get().length < 1) {
+  if (countLiveInFive(opts.playersInTheFive.get()) < 1) {
     return (
       <div class="alert alert-info">
         <MessageSquareWarning size={42} />
@@ -661,7 +681,7 @@ function renderTheTeamFive(opts: {
     )
   }
   return (
-    <div class={`${opts.playersInTheFive.get().length === 5 ? '' : 'bg-warning/50'} rounded-xs`}>
+    <div class={`${countLiveInFive(opts.playersInTheFive.get()) === 5 ? '' : 'bg-warning/50'} rounded-xs`}>
       <For each={opts.sortedPlayers}>
         {(player) => (
           <Show when={player && opts.playersInTheFive.get().includes(player.id)}>
@@ -695,6 +715,87 @@ export default function BsMatch(props: BsMatchProps) {
   const playersInTheFive = new MadSignal(match?.playersInTheFive || [])
   const matchIsPlaying: MadSignal<boolean> = new MadSignal(false)
 
+  // Live-scoring lease: only the active scorer may push stats to the server.
+  const [leaseState, setLeaseState] = createSignal<LeaseUiState>('unknown')
+  const [leaseHolderName, setLeaseHolderName] = createSignal<string | null>(null)
+  const leaseBlocked = createMemo(() => leaseState() === 'taken-by-other')
+  let holdsLease = false
+  let leaseTimer: ReturnType<typeof setInterval> | undefined
+
+  function resolveHolderName(holder: LeaseHolder | null): string | null {
+    return holder?.name || holder?.email || null
+  }
+
+  async function runLeaseCycle(): Promise<void> {
+    const userId = isLoggedIn() ? (currentUser.get()?.id ?? null) : null
+    if (!isAuthEnabled || !userId) {
+      return
+    }
+    try {
+      const result = await acquireMatchLease(matchId)
+      holdsLease = true
+      setLeaseHolderName(null)
+      setLeaseState(leaseStateForMe({ scorer: result.scorer, scorerLockUntil: result.scorerLockUntil }, userId))
+    } catch (err) {
+      if (isLeaseHeldError(err)) {
+        holdsLease = false
+        setLeaseHolderName(resolveHolderName(getLeaseHolderFromError(err)))
+        setLeaseState('taken-by-other')
+      } else {
+        // Server unreachable: local scoring stays enabled, the next cycle
+        // retries silently (the server hook remains the safety net).
+        holdsLease = false
+        setLeaseState('offline')
+      }
+    }
+  }
+
+  async function forceTakeLease(): Promise<void> {
+    const confirmed = await confirmAction(
+      'Prendre la main',
+      'La saisie est en cours par un autre utilisateur. Voulez-vous prendre la main ?',
+      'Non',
+      'Prendre la main'
+    )
+    if (!confirmed) {
+      return
+    }
+    const userId = currentUser.get()?.id ?? null
+    if (!userId) {
+      return
+    }
+    try {
+      const result = await acquireMatchLease(matchId, { force: true })
+      holdsLease = true
+      setLeaseHolderName(null)
+      setLeaseState(leaseStateForMe({ scorer: result.scorer, scorerLockUntil: result.scorerLockUntil }, userId))
+      toast('Vous avez pris la main sur la saisie.', 'success')
+    } catch {
+      toast('Impossible de prendre la main.', 'error')
+    }
+  }
+
+  onMount(() => {
+    if (!isAuthEnabled || !isLoggedIn() || match?.status === 'locked') {
+      return
+    }
+    runLeaseCycle()
+    leaseTimer = setInterval(() => {
+      runLeaseCycle()
+    }, LEASE_HEARTBEAT_MS)
+  })
+
+  onCleanup(() => {
+    if (leaseTimer) {
+      clearInterval(leaseTimer)
+      leaseTimer = undefined
+    }
+    if (holdsLease) {
+      // Best effort: on failure the server TTL expires by itself.
+      releaseMatchLease(matchId).catch(() => undefined)
+    }
+  })
+
   return (
     <div class="w-full">
       <Show when={match?.championship}>
@@ -713,177 +814,201 @@ export default function BsMatch(props: BsMatchProps) {
         />
       </div>
 
-      <Show when={!isStatMode.get()}>
-        <div class="divider">
-          Le 5 (
-          <span class={playersInTheFive.get().length === 5 ? 'text-success' : 'text-error'}>
-            {playersInTheFive.get().length}
-          </span>
-          )
+      <Show when={leaseBlocked()}>
+        <div class="my-3">
+          <BsLeaseBanner
+            holderName={leaseHolderName()}
+            onForce={forceTakeLease}
+            showForceButton={canManageStaff(currentRole.get())}
+          />
         </div>
-        <Show when={!playerOnAction.get()}>
-          <div class="w-full">
-            {renderTheTeamFive({
-              disableClearLastAction,
-              match,
-              matchIsPlaying,
-              playerOnAction,
-              playersInTheFive,
-              setStatSummary,
-              sortedPlayers,
-              statSummary,
-            })}
+      </Show>
 
-            <hr />
-
-            <div class="my-3 flex w-full flex-row md:my-4">
-              <div class="flex w-full items-center gap-1 rounded-lg border border-primary bg-accent p-1 text-accent-content">
-                <div class="flex-none">
-                  <Users size={32} />
-                </div>
-                <div class="inline-block flex-auto">
-                  <div class="text-center text-xl">Équipe adverse</div>
-                </div>
-                <For each={STATS_MATCH_ACTIONS}>
-                  {(statAction) => (
-                    <Show
-                      when={
-                        !statAction.secondaryAction &&
-                        statAction.opponentMatter &&
-                        ((matchIsPlaying.get() && statAction.inGameAction) ||
-                          (!matchIsPlaying.get() && !statAction.inGameAction))
-                      }
-                    >
-                      <div class="hidden flex-none md:inline-block">
-                        <button
-                          class={`btn btn-${statAction.type}`}
-                          onClick={makeOpponentRegisterStatHandler({
-                            disableClearLastAction,
-                            match,
-                            setStatSummary,
-                            statAction,
-                            statSummary,
-                          })}
-                          onKeyDown={makeOpponentRegisterStatHandler({
-                            disableClearLastAction,
-                            match,
-                            setStatSummary,
-                            statAction,
-                            statSummary,
-                          })}
-                          type="button"
-                        >
-                          {statAction.icon()}
-                        </button>
-                        <div class="text-center text-xs">{statAction.label1}</div>
-                      </div>
-                    </Show>
-                  )}
-                </For>
-
-                <div class="inline-block md:hidden">
-                  <button class="btn w-32" onClick={makeOpponentActionModeClickHandler(playerOnAction)} type="button">
-                    Stats !
-                  </button>
-                </div>
-
-                <div class="flex w-8 flex-col rounded-xs bg-slate-400/50 text-center">
-                  <div class="text-success">{statSummary.opponentScore || 0}</div>
-                  <div class="text-accent-content">{statSummary.rebonds.opponentTotal || 0}</div>
-                  <div class="text-error">{statSummary.opponentFouls || 0}</div>
-                </div>
-              </div>
-            </div>
-
-            <button
-              class={`btn btn-lg btn-${matchIsPlaying.get() ? 'error' : 'success'} w-full text-xl`}
-              onClick={makeStopStartGameClickHandler({
+      <Show when={!isStatMode.get()}>
+        <Show when={leaseBlocked()}>
+          <button
+            class="btn btn-primary w-full"
+            onClick={makeOpenStatModeClickHandler(isStatMode)}
+            onKeyDown={makeOpenStatModeKeyDownHandler(isStatMode)}
+            type="button"
+          >
+            <ChartLine />
+            Tableau des stats
+            <ChevronRight />
+          </button>
+        </Show>
+        <Show when={!leaseBlocked()}>
+          <div class="divider">
+            Le 5 (
+            <span class={countLiveInFive(playersInTheFive.get()) === 5 ? 'text-success' : 'text-error'}>
+              {countLiveInFive(playersInTheFive.get())}
+            </span>
+            )
+          </div>
+          <Show when={!playerOnAction.get()}>
+            <div class="w-full">
+              {renderTheTeamFive({
                 disableClearLastAction,
-                gameIsPlaying: matchIsPlaying,
                 match,
+                matchIsPlaying,
+                playerOnAction,
+                playersInTheFive,
                 setStatSummary,
+                sortedPlayers,
                 statSummary,
               })}
-              type="button"
-            >
-              <Show when={matchIsPlaying.get()}>
-                {
-                  <>
-                    <CirclePause size={32} />
-                    Arrêt du jeu
-                  </>
-                }
-              </Show>
-              <Show when={!matchIsPlaying.get()}>
-                {
-                  <>
-                    <CirclePlay size={32} />
-                    Reprise du jeu
-                  </>
-                }
-              </Show>
-            </button>
-            <hr />
 
-            <button
-              class="btn btn-warning w-full"
-              disabled={disableClearLastAction.get()}
-              onClick={makeRemoveLastActionClickHandler(match, setStatSummary, disableClearLastAction)}
-              onKeyDown={makeRemoveLastActionKeyDownHandler(match, setStatSummary, disableClearLastAction)}
-              type="button"
-            >
-              <Eraser />
-              Effacer la dernière action
-              <TriangleAlert />
-            </button>
+              <hr />
 
-            <div class="divider">Le Banc</div>
-            {renderTheTeamBench({
-              disableClearLastAction,
-              match,
-              playersInTheFive,
-              setStatSummary,
-              sortedPlayers,
-              statSummary,
-            })}
-
-            <hr />
-
-            <button
-              class="btn btn-primary w-full"
-              onClick={makeOpenStatModeClickHandler(isStatMode)}
-              onKeyDown={makeOpenStatModeKeyDownHandler(isStatMode)}
-              type="button"
-            >
-              <ChartLine />
-              Tableau des stats
-              <ChevronRight />
-            </button>
-          </div>
-        </Show>
-
-        <Show when={playerOnAction.get()}>
-          {renderPlayerHeader(playerOnAction.get())}
-          <div class="grid w-full grid-cols-2 gap-3 py-2">
-            <For each={STATS_MATCH_ACTIONS}>
-              {(item) => (
-                <Show when={!item.secondaryAction}>
-                  <button
-                    class={`btn btn-${item.type}`}
-                    onClick={makePlayerOnActionStatClickHandler(
-                      { disableClearLastAction, match, setStatSummary, statSummary },
-                      item,
-                      playerOnAction
+              <div class="my-3 flex w-full flex-row md:my-4">
+                <div class="flex w-full items-center gap-1 rounded-lg border border-primary bg-accent p-1 text-accent-content">
+                  <div class="flex-none">
+                    <Users size={32} />
+                  </div>
+                  <div class="inline-block flex-auto">
+                    <div class="text-center text-xl">Équipe adverse</div>
+                  </div>
+                  <For each={STATS_MATCH_ACTIONS}>
+                    {(statAction) => (
+                      <Show
+                        when={
+                          !statAction.secondaryAction &&
+                          statAction.opponentMatter &&
+                          ((matchIsPlaying.get() && statAction.inGameAction) ||
+                            (!matchIsPlaying.get() && !statAction.inGameAction))
+                        }
+                      >
+                        <div class="hidden flex-none md:inline-block">
+                          <button
+                            class={`btn btn-${statAction.type}`}
+                            onClick={makeOpponentRegisterStatHandler({
+                              disableClearLastAction,
+                              match,
+                              setStatSummary,
+                              statAction,
+                              statSummary,
+                            })}
+                            onKeyDown={makeOpponentRegisterStatHandler({
+                              disableClearLastAction,
+                              match,
+                              setStatSummary,
+                              statAction,
+                              statSummary,
+                            })}
+                            type="button"
+                          >
+                            {statAction.icon()}
+                          </button>
+                          <div class="text-center text-xs">{statAction.label1}</div>
+                        </div>
+                      </Show>
                     )}
-                    type="button"
-                  >
-                    {item.icon()}
-                    <span class="text-2xl">{item.label1}</span>{' '}
-                  </button>
+                  </For>
+
+                  <div class="inline-block md:hidden">
+                    <button class="btn w-32" onClick={makeOpponentActionModeClickHandler(playerOnAction)} type="button">
+                      Stats !
+                    </button>
+                  </div>
+
+                  <div class="flex w-8 flex-col rounded-xs bg-slate-400/50 text-center">
+                    <div class="text-success">{statSummary.opponentScore || 0}</div>
+                    <div class="text-accent-content">{statSummary.rebonds.opponentTotal || 0}</div>
+                    <div class="text-error">{statSummary.opponentFouls || 0}</div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                class={`btn btn-lg btn-${matchIsPlaying.get() ? 'error' : 'success'} w-full text-xl`}
+                onClick={makeStopStartGameClickHandler({
+                  disableClearLastAction,
+                  gameIsPlaying: matchIsPlaying,
+                  match,
+                  setStatSummary,
+                  statSummary,
+                })}
+                type="button"
+              >
+                <Show when={matchIsPlaying.get()}>
+                  {
+                    <>
+                      <CirclePause size={32} />
+                      Arrêt du jeu
+                    </>
+                  }
                 </Show>
-              )}
-            </For>
-          </div>
+                <Show when={!matchIsPlaying.get()}>
+                  {
+                    <>
+                      <CirclePlay size={32} />
+                      Reprise du jeu
+                    </>
+                  }
+                </Show>
+              </button>
+              <hr />
+
+              <button
+                class="btn btn-warning w-full"
+                disabled={disableClearLastAction.get()}
+                onClick={makeRemoveLastActionClickHandler(match, setStatSummary, disableClearLastAction)}
+                onKeyDown={makeRemoveLastActionKeyDownHandler(match, setStatSummary, disableClearLastAction)}
+                type="button"
+              >
+                <Eraser />
+                Effacer la dernière action
+                <TriangleAlert />
+              </button>
+
+              <div class="divider">Le Banc</div>
+              {renderTheTeamBench({
+                disableClearLastAction,
+                match,
+                playersInTheFive,
+                setStatSummary,
+                sortedPlayers,
+                statSummary,
+              })}
+
+              <hr />
+
+              <button
+                class="btn btn-primary w-full"
+                onClick={makeOpenStatModeClickHandler(isStatMode)}
+                onKeyDown={makeOpenStatModeKeyDownHandler(isStatMode)}
+                type="button"
+              >
+                <ChartLine />
+                Tableau des stats
+                <ChevronRight />
+              </button>
+            </div>
+          </Show>
+
+          <Show when={playerOnAction.get()}>
+            {renderPlayerHeader(playerOnAction.get())}
+            <div class="grid w-full grid-cols-2 gap-3 py-2">
+              <For each={STATS_MATCH_ACTIONS}>
+                {(item) => (
+                  <Show when={!item.secondaryAction}>
+                    <button
+                      class={`btn btn-${item.type}`}
+                      onClick={makePlayerOnActionStatClickHandler(
+                        { disableClearLastAction, match, setStatSummary, statSummary },
+                        item,
+                        playerOnAction
+                      )}
+                      type="button"
+                    >
+                      {item.icon()}
+                      <span class="text-2xl">{item.label1}</span>{' '}
+                    </button>
+                  </Show>
+                )}
+              </For>
+            </div>
+          </Show>
         </Show>
       </Show>
 
