@@ -1,4 +1,4 @@
-import { BadgeAlert, ChartScatter, FileSliders, LayoutGrid, MonitorDot, User, Users } from 'lucide-solid'
+import { BadgeAlert, ChartScatter, FileSliders, LayoutGrid, LogIn, MonitorDot, User, Users } from 'lucide-solid'
 import { lazy } from 'solid-js'
 import BsIconBasketballBall from '../../components/icons/basketball-ball'
 import BsIconBasketballPlayer from '../../components/icons/basketball-player'
@@ -30,6 +30,13 @@ export const NAVIGATION_MENU_ENTRIES: MenuEntry[] = [
     isMenuEntry: false,
     label: 'Profile',
     path: '/user',
+  },
+  {
+    component: lazy(() => import('../../pages/login')),
+    icon: () => <LogIn />,
+    isMenuEntry: false,
+    label: 'Connexion',
+    path: '/login',
   },
   {
     component: lazy(() => import('../../pages/players')),
