@@ -1,16 +1,32 @@
-import { type RouteSectionProps, useLocation } from '@solidjs/router'
-import { Bell, Menu, UserCog, X } from 'lucide-solid'
+import { A, type RouteSectionProps, useLocation } from '@solidjs/router'
+import { Bell, LogIn, LogOut, Menu, UserCog, Users, X } from 'lucide-solid'
 import { createEffect, For, Show } from 'solid-js'
 import logoSmallUrl from '/img/logo_small.png'
+import { canManageStaff, currentUser, isLoggedIn, logout } from '../../libs/auth/auth'
 import MadSignal from '../../libs/mad-signal'
 import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu/menu'
 import type { MenuEntry } from '../../libs/menu/menu.d'
+import { isAuthEnabled } from '../../libs/pocketbase/client'
+import { goTo } from '../../libs/utils/utils'
+import BsSyncIndicator from '../sync/sync-indicator'
 
 const isUserMenuOpen: MadSignal<boolean> = new MadSignal(false)
 const isMainMenuOpen: MadSignal<boolean> = new MadSignal(false)
 const isNotificationBoxOpen: MadSignal<boolean> = new MadSignal(false)
 const currentHash: MadSignal<string> = new MadSignal('')
 const idInUrlPattern = /\/\d+/
+
+const userMenuItemClass =
+  'block rounded-md px-3 py-2 font-medium text-base text-slate-100 hover:bg-slate-700 hover:text-white'
+const mobileMenuItemClass =
+  'block rounded-md px-3 py-2 font-medium text-base text-neutral-content hover:bg-primary/60 hover:text-primary-content'
+
+function handleLogout() {
+  logout()
+  closeUserMenu()
+  closeMainMenu()
+  goTo('/')
+}
 
 function isCurrentPath(candidatPath: string, currentPath: string | null) {
   const cleanPath = currentPath?.replace(idInUrlPattern, '/:id')
@@ -181,30 +197,54 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
                       class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-slate-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-hidden"
                       tabindex="-1"
                     >
-                      {/* Active: "bg-gray-100", Not Active: "" */}
-                      <a
-                        class="block rounded-md px-3 py-2 font-medium text-base text-slate-100 hover:bg-slate-700 hover:text-white"
-                        href="/user"
-                        id="user-menu-item-0"
-                        role="menuitem"
-                        tabindex="-1"
+                      <Show
+                        fallback={
+                          <Show when={isAuthEnabled}>
+                            <A
+                              class={userMenuItemClass}
+                              href="/login"
+                              id="user-menu-item-0"
+                              role="menuitem"
+                              tabindex="-1"
+                            >
+                              <LogIn class="inline h-4 w-4" />
+                              Connexion
+                            </A>
+                          </Show>
+                        }
+                        when={isLoggedIn()}
                       >
-                        Mon Profile
-                      </a>
-                      <a
-                        class="block rounded-md px-3 py-2 font-medium text-base text-slate-100 hover:bg-slate-700 hover:text-white"
-                        href="/config"
-                        id="user-menu-item-1"
-                        role="menuitem"
-                        tabindex="-1"
-                      >
-                        Configuration
-                      </a>
+                        <li aria-disabled="true" class="px-3 py-2 text-slate-400 text-xs">
+                          {currentUser.get()?.email}
+                        </li>
+                        <A class={userMenuItemClass} href="/user" role="menuitem">
+                          <UserCog class="inline h-4 w-4" />
+                          Mon profil
+                        </A>
+                        <Show when={canManageStaff()}>
+                          <A class={userMenuItemClass} href="/users" role="menuitem">
+                            <Users class="inline h-4 w-4" />
+                            Utilisateurs
+                          </A>
+                        </Show>
+                        <button
+                          class={`${userMenuItemClass} w-full`}
+                          onClick={handleLogout}
+                          role="menuitem"
+                          type="button"
+                        >
+                          <LogOut class="inline h-4 w-4" />
+                          Déconnexion
+                        </button>
+                      </Show>
                     </menu>
                   </Show>
                 </div>
               </div>
             </div>
+            <Show when={isLoggedIn() && isAuthEnabled}>
+              <BsSyncIndicator />
+            </Show>
             <div class="-mr-2 flex gap-2 md:hidden">
               {/* Notifications button (mobile) */}
               <div class="tooltip tooltip-bottom" data-tip={notificationsLabel}>
@@ -277,18 +317,24 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
             </div>
             <div class="border-gray-700 border-t pt-4 pb-3">
               <div class="mt-3 space-y-1 px-2">
-                <a
-                  class="block rounded-md px-3 py-2 font-medium text-base text-neutral-content hover:bg-primary/60 hover:text-primary-content"
-                  href="/user"
-                >
-                  Mon Profile
-                </a>
-                <a
-                  class="block rounded-md px-3 py-2 font-medium text-base text-neutral-content hover:bg-primary/60 hover:text-primary-content"
-                  href="/config"
-                >
-                  Configuration
-                </a>
+                <Show when={!isLoggedIn() && isAuthEnabled}>
+                  <A class={mobileMenuItemClass} href="/login">
+                    Connexion
+                  </A>
+                </Show>
+                <Show when={isLoggedIn()}>
+                  <A class={mobileMenuItemClass} href="/user">
+                    Mon profil
+                  </A>
+                  <Show when={canManageStaff()}>
+                    <A class={mobileMenuItemClass} href="/users">
+                      Utilisateurs
+                    </A>
+                  </Show>
+                  <button class={`${mobileMenuItemClass} w-full`} onClick={handleLogout} type="button">
+                    Déconnexion
+                  </button>
+                </Show>
               </div>
             </div>
           </div>

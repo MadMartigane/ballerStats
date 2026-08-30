@@ -10,7 +10,9 @@ import { render } from 'solid-js/web'
 import relAppleTouchIconUrl from '/img/apple-touch-icon.png'
 import relIconUrl from '/img/favicon.ico'
 import BsAppBar from './components/app-bar/app-bar'
+import AuthInit from './libs/auth/auth-init'
 import { NAVIGATION_MENU_ENTRIES } from './libs/menu/menu'
+import SyncInit from './libs/sync/sync-init'
 
 // DEV-only: lazy-load the demo seed initializer. The dynamic import expression
 // is dead-code-eliminated when import.meta.env.DEV is statically false.
@@ -67,6 +69,8 @@ render(
       <div class="toast toast-end toast-bottom" id="bs-global-toast" />
       {renderTemplateStore()}
       <Suspense>{DemoSeedInit && <DemoSeedInit />}</Suspense>
+      <AuthInit />
+      <SyncInit />
     </>
   ),
   root || document.body
