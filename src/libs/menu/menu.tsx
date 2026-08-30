@@ -18,6 +18,13 @@ export const NAVIGATION_MENU_ENTRIES: MenuEntry[] = [
     path: '/',
   },
   {
+    component: lazy(() => import('../../pages/club')),
+    icon: () => <Building2 />,
+    isMenuEntry: true,
+    label: 'Club',
+    path: ROUTE_CLUB,
+  },
+  {
     component: lazy(() => import('../../pages/users')),
     icon: () => <Users />,
     isMenuEntry: false,

@@ -7,6 +7,7 @@ export default class Team {
   #id = getUniqId()
   #playerIds: string[] = []
 
+  clubId?: string
   name: string | null = null
 
   constructor(data?: TeamRawData) {
@@ -38,7 +39,7 @@ export default class Team {
   }
 
   getRawData(): TeamRawData {
-    return {
+    const data: TeamRawData = {
       id: this.#id,
       name: this.name,
       playerIds: <string[]>clone(this.#playerIds),
