@@ -1,2 +1,8 @@
 node_modules
 dist
+
+# PocketBase (infra/pocketbase)
+infra/pocketbase/pocketbase
+infra/pocketbase/pb_data/
+infra/pocketbase/tmp/
+infra/pocketbase/*.zip
