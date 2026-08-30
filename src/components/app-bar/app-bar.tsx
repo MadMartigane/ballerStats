@@ -16,16 +16,6 @@ function isCurrentPath(candidatPath: string, currentPath: string | null) {
   return cleanPath === candidatPath
 }
 
-function closeNotificationBox() {
-  setTimeout(() => {
-    isNotificationBoxOpen.set(false)
-  }, 10)
-}
-
-function toggleNotificationBox() {
-  isNotificationBoxOpen.set(!isNotificationBoxOpen.get())
-}
-
 function closeUserMenu() {
   setTimeout(() => {
     isUserMenuOpen.set(false)
@@ -118,33 +108,6 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
             </div>
             <div class="hidden md:block">
               <div class="ml-4 flex items-center md:ml-6">
-                {/* Notifications button */}
-                <div class="tooltip tooltip-bottom" data-tip={notificationsLabel}>
-                  <button
-                    aria-label={notificationsLabel}
-                    class="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                    id="notifications-box-button"
-                    onBlur={closeNotificationBox}
-                    onClick={toggleNotificationBox}
-                    type="button"
-                  >
-                    <span class="absolute -top-1.5 text-amber-500" />
-                    <Bell />
-                  </button>
-                </div>
-
-                {/* Notifications dropdown */}
-                <Show when={isNotificationBoxOpen.get()}>
-                  <menu
-                    aria-labelledby="notifications-box-button"
-                    class="absolute top-16 right-1 z-10 mt-1 w-72 origin-top-right rounded-md bg-gray-800 p-6 py-1 text-gray-400 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-hidden"
-                    id="notifications-box"
-                    tabindex="-1"
-                  >
-                    Aucune notification
-                  </menu>
-                </Show>
-
                 {/* Profile dropdown */}
                 <div class="relative ml-3">
                   <div class="tooltip tooltip-bottom" data-tip={userMenuLabel}>
@@ -204,33 +167,6 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
               </div>
             </div>
             <div class="-mr-2 flex gap-2 md:hidden">
-              {/* Notifications button (mobile) */}
-              <div class="tooltip tooltip-bottom" data-tip={notificationsLabel}>
-                <button
-                  aria-label={notificationsLabel}
-                  class="relative rounded-full bg-gray-800 p-2 text-gray-400 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                  id="notifications-box-button"
-                  onBlur={closeNotificationBox}
-                  onClick={toggleNotificationBox}
-                  type="button"
-                >
-                  <span class="absolute -top-1.5 text-amber-500" />
-                  <Bell />
-                </button>
-              </div>
-
-              {/* Notifications dropdown (mobile) */}
-              <Show when={isNotificationBoxOpen.get()}>
-                <menu
-                  aria-labelledby="notifications-box-button"
-                  class="absolute top-16 right-1 z-10 mt-1 w-72 origin-top-right rounded-md bg-gray-800 p-6 py-1 text-gray-400 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-hidden"
-                  id="notifications-box"
-                  tabindex="-1"
-                >
-                  Aucune notification
-                </menu>
-              </Show>
-
               {/* Mobile menu button */}
               <div class="tooltip tooltip-bottom" data-tip={mainMenuLabel}>
                 <button
