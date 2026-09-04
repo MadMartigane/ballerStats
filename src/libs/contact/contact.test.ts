@@ -5,13 +5,13 @@ import type { ContactRawData } from './contact.d'
 describe('Contact', () => {
   it('round-trips all fields through getRawData() including optional ones', () => {
     const raw: ContactRawData = {
-      id: 'contact-1',
-      playerId: 'player-1',
+      address: '1 Rue Pierre',
+      email: 'marie@example.com',
       firstName: 'Marie',
+      id: 'contact-1',
       lastName: 'Curie',
       phone: '+1234567890',
-      email: 'marie@example.com',
-      address: '1 Rue Pierre',
+      playerId: 'player-1',
       relationship: 'mother',
     }
 
@@ -43,11 +43,11 @@ describe('Contact', () => {
 
   it('update() merges partial data without losing other fields', () => {
     const contact = new Contact({
-      id: 'contact-1',
-      playerId: 'player-1',
-      firstName: 'Marie',
-      lastName: 'Curie',
       email: 'marie@example.com',
+      firstName: 'Marie',
+      id: 'contact-1',
+      lastName: 'Curie',
+      playerId: 'player-1',
       relationship: 'mother',
     })
 

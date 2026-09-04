@@ -3,13 +3,13 @@ export type BsDatePickerOnChangeEvent = Event & {
   target: HTMLInputElement
 }
 
-export type BsDatePickerProps = {
-  id?: string
-  value?: string | null
-  label?: string
+export interface BsDatePickerProps {
   disabled?: boolean
-  withTime?: boolean
-  placeholder?: string | null
-  onValueChange?: (value: string) => void
+  id?: string
+  label?: string
   onChange?: (value: string) => void
+  onValueChange?: (value: string) => void
+  placeholder?: string | null
+  value?: string | null
+  withTime?: boolean
 }

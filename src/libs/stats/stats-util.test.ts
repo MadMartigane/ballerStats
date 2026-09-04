@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type Match from '../match'
+import type Match from '../match/match'
 import { makeMatch } from '../mock/factories/match.factory'
 import { makeStatEntry } from '../mock/factories/stat-entry.factory'
 import { makeTeam } from '../mock/factories/team.factory'
-import type Team from '../team'
+import type Team from '../team/team'
 import { TEAM_OPPONENT_ID } from '../team/team'
 import type { StatMatchSummaryPlayer } from './stats.d'
 import {
@@ -85,13 +85,13 @@ describe('getStatSummary', () => {
 
   it('keeps team aggregates at 0 when the match contains only opponent actions', () => {
     const match = makeMatch({
-      teamId: 'team-1',
       stats: [
-        makeStatEntry('2pts', { type: 'success', value: 2, playerId: TEAM_OPPONENT_ID }),
-        makeStatEntry('3pts', { type: 'success', value: 3, playerId: TEAM_OPPONENT_ID }),
-        makeStatEntry('foul', { type: 'error', value: 1, playerId: TEAM_OPPONENT_ID }),
-        makeStatEntry('offensive-rebond', { type: 'success', value: 1, playerId: TEAM_OPPONENT_ID }),
+        makeStatEntry('2pts', { playerId: TEAM_OPPONENT_ID, type: 'success', value: 2 }),
+        makeStatEntry('3pts', { playerId: TEAM_OPPONENT_ID, type: 'success', value: 3 }),
+        makeStatEntry('foul', { playerId: TEAM_OPPONENT_ID, type: 'error', value: 1 }),
+        makeStatEntry('offensive-rebond', { playerId: TEAM_OPPONENT_ID, type: 'success', value: 1 }),
       ],
+      teamId: 'team-1',
     })
 
     const summary = getStatSummary(match)
@@ -135,11 +135,11 @@ describe('getFullStats', () => {
     const playerId = 'player-no-fouls'
     const team = makeTeam({ id: 'team-1', name: 'Team', playerIds: [playerId] })
     const match = makeMatch({
-      teamId: 'team-1',
       stats: [
-        makeStatEntry('2pts', { type: 'success', value: 2, playerId }),
-        makeStatEntry('assist', { type: 'success', value: 1, playerId }),
+        makeStatEntry('2pts', { playerId, type: 'success', value: 2 }),
+        makeStatEntry('assist', { playerId, type: 'success', value: 1 }),
       ],
+      teamId: 'team-1',
     })
 
     mockOrchestrator.Matchs.matchs = [match]
@@ -159,9 +159,9 @@ describe('getFullStats championship filter', () => {
 
   const makeChampionshipMatch = (championship: string) =>
     makeMatch({
-      teamId: 'team-filter',
       championship,
-      stats: [makeStatEntry('2pts', { type: 'success', value: 2, playerId })],
+      stats: [makeStatEntry('2pts', { playerId, type: 'success', value: 2 })],
+      teamId: 'team-filter',
     })
 
   beforeEach(() => {
@@ -224,35 +224,35 @@ describe('getFullStats - teamScoresTotal (cumulative vs per-game)', () => {
   const team = makeTeam({ id: 'team-1', name: 'Team', playerIds: [playerId] })
 
   const matchA = makeMatch({
-    teamId: 'team-1',
     stats: [
-      makeStatEntry('2pts', { type: 'success', value: 2, playerId }),
-      makeStatEntry('2pts', { type: 'success', value: 2, playerId }),
-      makeStatEntry('2pts', { type: 'success', value: 2, playerId }),
-      makeStatEntry('2pts', { type: 'success', value: 2, playerId }),
-      makeStatEntry('2pts', { type: 'success', value: 2, playerId }),
+      makeStatEntry('2pts', { playerId, type: 'success', value: 2 }),
+      makeStatEntry('2pts', { playerId, type: 'success', value: 2 }),
+      makeStatEntry('2pts', { playerId, type: 'success', value: 2 }),
+      makeStatEntry('2pts', { playerId, type: 'success', value: 2 }),
+      makeStatEntry('2pts', { playerId, type: 'success', value: 2 }),
       makeStatEntry('assist', { playerId }),
       makeStatEntry('assist', { playerId }),
-      makeStatEntry('turnover', { type: 'error', playerId }),
-      makeStatEntry('foul', { type: 'error', playerId }),
-      makeStatEntry('foul', { type: 'error', playerId }),
-      makeStatEntry('foul', { type: 'error', playerId }),
-      makeStatEntry('foul', { type: 'error', playerId }),
+      makeStatEntry('turnover', { playerId, type: 'error' }),
+      makeStatEntry('foul', { playerId, type: 'error' }),
+      makeStatEntry('foul', { playerId, type: 'error' }),
+      makeStatEntry('foul', { playerId, type: 'error' }),
+      makeStatEntry('foul', { playerId, type: 'error' }),
     ],
+    teamId: 'team-1',
   })
 
   const matchB = makeMatch({
-    teamId: 'team-1',
     stats: [
-      makeStatEntry('2pts', { type: 'success', value: 2, playerId }),
-      makeStatEntry('2pts', { type: 'success', value: 2, playerId }),
-      makeStatEntry('2pts', { type: 'success', value: 2, playerId }),
+      makeStatEntry('2pts', { playerId, type: 'success', value: 2 }),
+      makeStatEntry('2pts', { playerId, type: 'success', value: 2 }),
+      makeStatEntry('2pts', { playerId, type: 'success', value: 2 }),
       makeStatEntry('assist', { playerId }),
-      makeStatEntry('turnover', { type: 'error', playerId }),
-      makeStatEntry('turnover', { type: 'error', playerId }),
-      makeStatEntry('foul', { type: 'error', playerId }),
-      makeStatEntry('foul', { type: 'error', playerId }),
+      makeStatEntry('turnover', { playerId, type: 'error' }),
+      makeStatEntry('turnover', { playerId, type: 'error' }),
+      makeStatEntry('foul', { playerId, type: 'error' }),
+      makeStatEntry('foul', { playerId, type: 'error' }),
     ],
+    teamId: 'team-1',
   })
 
   // Shared setup: register the two-match fixture so each `it` only carries its
@@ -320,30 +320,30 @@ describe('getFullStats - teamScoresTotal (cumulative vs per-game)', () => {
     //     turnover  = safeDivide(3, 2) = 2
     //       → AST/TO (pre-restore) = Math.round((1/2) * 10) / 10 = 5/10 = 0.5  ← would differ
     //   Per-game (post-restoreInvariantRates): FT% = 33, AST/TO = 0.3 (match totals)
-    const playerId = 'p-div'
-    const teamDiv = makeTeam({ id: 'team-div', name: 'TeamDiv', playerIds: [playerId] })
+    const divergentPlayerId = 'p-div'
+    const teamDiv = makeTeam({ id: 'team-div', name: 'TeamDiv', playerIds: [divergentPlayerId] })
 
-    const matchA = makeMatch({
-      teamId: 'team-div',
+    const divergentMatchA = makeMatch({
       stats: [
-        makeStatEntry('free-throw', { type: 'success', playerId }),
-        makeStatEntry('free-throw', { type: 'error', playerId }),
-        makeStatEntry('assist', { playerId }),
-        makeStatEntry('turnover', { type: 'error', playerId }),
-        makeStatEntry('turnover', { type: 'error', playerId }),
+        makeStatEntry('free-throw', { playerId: divergentPlayerId, type: 'success' }),
+        makeStatEntry('free-throw', { playerId: divergentPlayerId, type: 'error' }),
+        makeStatEntry('assist', { playerId: divergentPlayerId }),
+        makeStatEntry('turnover', { playerId: divergentPlayerId, type: 'error' }),
+        makeStatEntry('turnover', { playerId: divergentPlayerId, type: 'error' }),
       ],
+      teamId: 'team-div',
     })
 
-    const matchB = makeMatch({
-      teamId: 'team-div',
+    const divergentMatchB = makeMatch({
       stats: [
-        makeStatEntry('free-throw', { type: 'error', playerId }),
-        makeStatEntry('turnover', { type: 'error', playerId }),
+        makeStatEntry('free-throw', { playerId: divergentPlayerId, type: 'error' }),
+        makeStatEntry('turnover', { playerId: divergentPlayerId, type: 'error' }),
       ],
+      teamId: 'team-div',
     })
 
     // Override shared fixture: this case registers its own divergent-rounding orchestrator state.
-    mockOrchestrator.Matchs.matchs = [matchA, matchB]
+    mockOrchestrator.Matchs.matchs = [divergentMatchA, divergentMatchB]
     mockOrchestrator.Teams.teams = [teamDiv]
 
     const summary = getFullStats()
@@ -417,29 +417,29 @@ describe('getFullStats - teamScoresTotal (cumulative vs per-game)', () => {
     //              total (override) = safeDivide(6, 2) = 3
     //   so total(3) !== off(2) + def(2) (= 4)  ← pins divideTeamScoresBy's rebonds override
     //   and total(3) === safeDivide(teamScoresTotal.total, nbMatch)             ← pins the override semantics
-    const playerId = 'p1'
-    const teamReb = makeTeam({ id: 'team-reb', name: 'TeamReb', playerIds: [playerId] })
+    const reboundsPlayerId = 'p1'
+    const teamReb = makeTeam({ id: 'team-reb', name: 'TeamReb', playerIds: [reboundsPlayerId] })
 
-    const matchA = makeMatch({
-      teamId: 'team-reb',
+    const reboundsMatchA = makeMatch({
       stats: [
-        makeStatEntry('offensive-rebond', { type: 'success', value: 1, playerId }),
-        makeStatEntry('offensive-rebond', { type: 'success', value: 1, playerId }),
-        makeStatEntry('defensive-rebond', { type: 'secondary', value: 1, playerId }),
+        makeStatEntry('offensive-rebond', { playerId: reboundsPlayerId, type: 'success', value: 1 }),
+        makeStatEntry('offensive-rebond', { playerId: reboundsPlayerId, type: 'success', value: 1 }),
+        makeStatEntry('defensive-rebond', { playerId: reboundsPlayerId, type: 'secondary', value: 1 }),
       ],
+      teamId: 'team-reb',
     })
 
-    const matchB = makeMatch({
-      teamId: 'team-reb',
+    const reboundsMatchB = makeMatch({
       stats: [
-        makeStatEntry('offensive-rebond', { type: 'success', value: 1, playerId }),
-        makeStatEntry('defensive-rebond', { type: 'secondary', value: 1, playerId }),
-        makeStatEntry('defensive-rebond', { type: 'secondary', value: 1, playerId }),
+        makeStatEntry('offensive-rebond', { playerId: reboundsPlayerId, type: 'success', value: 1 }),
+        makeStatEntry('defensive-rebond', { playerId: reboundsPlayerId, type: 'secondary', value: 1 }),
+        makeStatEntry('defensive-rebond', { playerId: reboundsPlayerId, type: 'secondary', value: 1 }),
       ],
+      teamId: 'team-reb',
     })
 
     // Override shared fixture: this case registers its own rebond-heavy orchestrator state.
-    mockOrchestrator.Matchs.matchs = [matchA, matchB]
+    mockOrchestrator.Matchs.matchs = [reboundsMatchA, reboundsMatchB]
     mockOrchestrator.Teams.teams = [teamReb]
 
     const summary = getFullStats()
@@ -461,24 +461,24 @@ describe('getFullStats - teamScoresTotal (cumulative vs per-game)', () => {
 describe('computeDerivedStats', () => {
   // Helper: minimal StatMatchSummaryPlayer for the function
   const makePlayer = (overrides: Partial<StatMatchSummaryPlayer> = {}): StatMatchSummaryPlayer => ({
-    playerId: '',
-    nbPlayedMatch: 1,
-    playTime: null,
-    scores: { '2pts': 0, '3pts': 0, 'free-throw': 0, total: 0 },
-    rebonds: { offensive: 0, defensive: 0, total: 0 },
-    ratio: {
-      '2pts': { success: 0, fail: 0, total: 0, percentage: 0 },
-      '3pts': { success: 0, fail: 0, total: 0, percentage: 0 },
-      'free-throw': { success: 0, fail: 0, total: 0, percentage: 0 },
-    },
-    fouls: 0,
     assists: 0,
-    steals: 0,
-    turnover: 0,
+    astToRatio: 0,
     blocks: 0,
     eff: 0,
-    astToRatio: 0,
+    fouls: 0,
+    nbPlayedMatch: 1,
+    playerId: '',
+    playTime: null,
+    ratio: {
+      '2pts': { fail: 0, percentage: 0, success: 0, total: 0 },
+      '3pts': { fail: 0, percentage: 0, success: 0, total: 0 },
+      'free-throw': { fail: 0, percentage: 0, success: 0, total: 0 },
+    },
+    rebonds: { defensive: 0, offensive: 0, total: 0 },
+    scores: { '2pts': 0, '3pts': 0, 'free-throw': 0, total: 0 },
+    steals: 0,
     trueShootingPercentage: 0,
+    turnover: 0,
     ...overrides,
   })
 
@@ -486,17 +486,17 @@ describe('computeDerivedStats', () => {
     // 10 pts, 5 reb, 3 ast, 2 stl, 1 blk, 4 missed FG, 1 missed FT, 2 TO
     // EFF = 10 + 5 + 3 + 2 + 1 - 4 - 1 - 2 = 14
     const player = makePlayer({
-      scores: { '2pts': 0, '3pts': 0, 'free-throw': 0, total: 10 },
-      rebonds: { offensive: 2, defensive: 3, total: 5 },
       assists: 3,
-      steals: 2,
       blocks: 1,
-      turnover: 2,
       ratio: {
-        '2pts': { success: 0, fail: 3, total: 3, percentage: 0 },
-        '3pts': { success: 0, fail: 1, total: 1, percentage: 0 },
-        'free-throw': { success: 0, fail: 1, total: 1, percentage: 0 },
+        '2pts': { fail: 3, percentage: 0, success: 0, total: 3 },
+        '3pts': { fail: 1, percentage: 0, success: 0, total: 1 },
+        'free-throw': { fail: 1, percentage: 0, success: 0, total: 1 },
       },
+      rebonds: { defensive: 3, offensive: 2, total: 5 },
+      scores: { '2pts': 0, '3pts': 0, 'free-throw': 0, total: 10 },
+      steals: 2,
+      turnover: 2,
     })
     const result = computeDerivedStats(player)
     expect(result.eff).toBe(14)
@@ -511,12 +511,12 @@ describe('computeDerivedStats', () => {
     // 20 pts on 8 FGA and 4 FTA
     // TS% = 20 / (2 * (8 + 0.44*4)) * 100 = 20 / (2 * 9.76) * 100 = 20/19.52*100 ≈ 102
     const player = makePlayer({
-      scores: { '2pts': 0, '3pts': 0, 'free-throw': 0, total: 20 },
       ratio: {
-        '2pts': { success: 0, fail: 4, total: 4, percentage: 0 },
-        '3pts': { success: 0, fail: 4, total: 4, percentage: 0 },
-        'free-throw': { success: 0, fail: 4, total: 4, percentage: 0 },
+        '2pts': { fail: 4, percentage: 0, success: 0, total: 4 },
+        '3pts': { fail: 4, percentage: 0, success: 0, total: 4 },
+        'free-throw': { fail: 4, percentage: 0, success: 0, total: 4 },
       },
+      scores: { '2pts': 0, '3pts': 0, 'free-throw': 0, total: 20 },
     })
     const result = computeDerivedStats(player)
     // safePercentage(20, 2*(8+0.44*4)) = safePercentage(20, 19.52) = Math.round(20/19.52*100) = Math.round(102.45...) = 102

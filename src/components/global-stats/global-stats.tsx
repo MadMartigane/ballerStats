@@ -1,7 +1,7 @@
 import { Dot } from 'lucide-solid'
-import bsEventBus from '../../libs/event-bus'
+import bsEventBus from '../../libs/event-bus/event-bus'
 import MadSignal from '../../libs/mad-signal'
-import orchestrator from '../../libs/orchestrator'
+import orchestrator from '../../libs/orchestrator/orchestrator'
 
 function installEventHandlers(nbPlayers: MadSignal<number>, nbTeams: MadSignal<number>) {
   bsEventBus.addEventListener('BS::PLAYERS::CHANGE', () => {

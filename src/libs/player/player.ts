@@ -1,4 +1,4 @@
-import { getUniqId } from '../utils'
+import { getUniqId } from '../utils/utils'
 import type { PlayerRawData } from './player.d'
 
 export const LICENSE_NUMBER_MAX_LENGTH = 12
@@ -7,35 +7,36 @@ const scoreFields: {
   [key: string]: { score: number; isSet: (player: Player) => boolean }
 } = {
   firstName: {
-    score: 10,
     isSet: (player: Player) => Boolean(player.firstName),
-  },
-  lastName: {
     score: 10,
-    isSet: (player: Player) => Boolean(player.lastName),
-  },
-  nicName: {
-    score: 20,
-    isSet: (player: Player) => Boolean(player.nicName),
   },
   jerseyNumber: {
-    score: 10,
     isSet: (player: Player) => Boolean(player.jerseyNumber),
+    score: 10,
+  },
+  lastName: {
+    isSet: (player: Player) => Boolean(player.lastName),
+    score: 10,
+  },
+  nicName: {
+    isSet: (player: Player) => Boolean(player.nicName),
+    score: 20,
   },
 }
 const minimalSoreToBeRegisterable = 30
 
 export default class Player {
   #id: string
-  public firstName?: string
-  public lastName?: string
-  public jerseyNumber?: string
-  public licenseNumber?: string
-  public birthDay?: Date
-  public nicName?: string
-  public hasPhoto = false
-  public phone?: string
-  public email?: string
+  clubId?: string
+  firstName?: string
+  lastName?: string
+  jerseyNumber?: string
+  licenseNumber?: string
+  birthDay?: Date
+  nicName?: string
+  hasPhoto = false
+  phone?: string
+  email?: string
 
   constructor(data?: PlayerRawData) {
     this.#id = data?.id || getUniqId()
@@ -45,11 +46,11 @@ export default class Player {
     }
   }
 
-  public get id() {
+  get id() {
     return this.#id
   }
 
-  public get isRegisterable() {
+  get isRegisterable() {
     const score = Object.keys(scoreFields).reduce((previousScore: number, field: string) => {
       if (scoreFields[field].isSet(this)) {
         return previousScore + scoreFields[field].score
@@ -61,8 +62,9 @@ export default class Player {
     return score >= minimalSoreToBeRegisterable
   }
 
-  public setFromRawData(data: PlayerRawData) {
+  setFromRawData(data: PlayerRawData) {
     this.#id = data.id || this.#id
+    this.clubId = data.clubId
     this.firstName = data.firstName
     this.lastName = data.lastName
     this.jerseyNumber = data.jerseyNumber || (data as { jersayNumber?: string }).jersayNumber
@@ -78,9 +80,13 @@ export default class Player {
     this.email = data.email
   }
 
-  public getRawData(): PlayerRawData {
+  getRawData(): PlayerRawData {
     const data: PlayerRawData = {
       id: this.#id,
+    }
+
+    if (this.clubId) {
+      data.clubId = this.clubId
     }
 
     if (this.firstName) {
@@ -119,7 +125,7 @@ export default class Player {
     return data
   }
 
-  public update(data: PlayerRawData) {
+  update(data: PlayerRawData) {
     this.setFromRawData({
       ...this.getRawData(),
       ...data,

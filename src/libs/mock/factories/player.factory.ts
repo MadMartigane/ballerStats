@@ -1,4 +1,4 @@
-import Player from '../../player'
+import Player from '../../player/player'
 import type { PlayerRawData } from '../../player/player.d'
 import { nextId } from '../mock-counter'
 
@@ -11,9 +11,9 @@ const ID_PREFIX = 'mock-player'
 export function makePlayer(overrides: Partial<PlayerRawData> = {}): Player {
   const raw: PlayerRawData = {
     firstName: 'Player',
-    lastName: 'Mock',
-    jerseyNumber: '0',
     hasPhoto: false,
+    jerseyNumber: '0',
+    lastName: 'Mock',
     ...overrides,
     id: overrides.id ?? nextId(ID_PREFIX),
   }

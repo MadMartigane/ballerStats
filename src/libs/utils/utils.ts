@@ -1,6 +1,9 @@
-import type { DaisyAlert } from '../daisy'
+import type { DaisyAlert } from '../daisy/daisy.d'
 
 const antropyFator = 3
+
+// Hoisted to module scope: used by toDateTime on every call.
+const TIME_WITHOUT_SECONDS_REGEX = /:\d{2}$/
 
 export function getUniqId(): string {
   const array = new Uint32Array(antropyFator)
@@ -18,15 +21,15 @@ export function clone(data: unknown): unknown {
 
 export function scrollTop() {
   setTimeout(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({ behavior: 'smooth', top: 0 })
   }, 100)
 }
 
 export function scrollBottom() {
   setTimeout(() => {
     window.scrollTo({
-      top: document.documentElement.scrollHeight - window.innerHeight,
       behavior: 'smooth',
+      top: document.documentElement.scrollHeight - window.innerHeight,
     })
   }, 100)
 }
@@ -38,7 +41,7 @@ export function goTo(path: string) {
 
 export function goBack() {
   // Do not use timeout here
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+  window.scrollTo({ behavior: 'smooth', top: 0 })
   window.history.back()
 }
 
@@ -70,7 +73,7 @@ export function downloadBlob(blob: Blob, fileName: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-export async function confirmAction(
+export function confirmAction(
   title = 'Confirmation',
   message = 'Cette action est définitive, continuer ?',
   cancel = 'Non',
@@ -148,7 +151,7 @@ export function toDateTime(dateString: string | null) {
   }
 
   const date = new Date(dateString)
-  return `${date.toLocaleDateString('fr-FR')} - ${date.toLocaleTimeString('fr-FR').replace(/:\d{2}$/, '')}`
+  return `${date.toLocaleDateString('fr-FR')} - ${date.toLocaleTimeString('fr-FR').replace(TIME_WITHOUT_SECONDS_REGEX, '')}`
 }
 
 export function toast(message: string, variant?: DaisyAlert) {

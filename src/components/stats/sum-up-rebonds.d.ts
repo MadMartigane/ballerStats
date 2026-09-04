@@ -1,5 +1,5 @@
-import type { StatMatchSummary } from '../../libs/stats'
+import type { StatMatchSummary } from '../../libs/stats/stats.d'
 
-export type BsStatSumUpRebondsProps = {
+export interface BsStatSumUpRebondsProps {
   stats: StatMatchSummary
 }

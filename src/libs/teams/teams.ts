@@ -1,10 +1,11 @@
-import bsEventBus from '../event-bus'
-import Team, { type TeamRawData } from '../team'
+import bsEventBus from '../event-bus/event-bus'
+import Team from '../team/team'
+import type { TeamRawData } from '../team/team.d'
 
 export default class Teams {
-  #teams: Array<Team> = []
+  #teams: Team[] = []
 
-  constructor(teamDatas?: Array<TeamRawData>) {
+  constructor(teamDatas?: TeamRawData[]) {
     if (teamDatas) {
       this.setFromRawData(teamDatas)
     }
@@ -18,15 +19,16 @@ export default class Teams {
     return this.#teams.find((currentTeam) => currentTeam.id === newTeam.id)
   }
 
-  public get teams(): Array<Team> {
+  get teams(): Team[] {
     return this.#teams.map((team: Team): Team => new Team(team.getRawData()))
   }
 
-  public get length() {
+  get length() {
     return this.#teams.length
   }
 
-  public setFromRawData(data: Array<TeamRawData>) {
+  setFromRawData(data: TeamRawData[]) {
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: legacy callers/tests pass null to empty the collection, which the array parameter type does not reflect.
     if (!data) {
       this.#teams = []
       return
@@ -35,7 +37,7 @@ export default class Teams {
     this.#teams = data.map((teamData: TeamRawData) => new Team(teamData))
   }
 
-  public updateTeam(newTeam: Team) {
+  updateTeam(newTeam: Team) {
     const oldTeam = this.#teams.find((currentTeam) => currentTeam.id === newTeam.id)
     if (!oldTeam) {
       throw new Error(
@@ -47,11 +49,11 @@ export default class Teams {
     this.throwUpdatedTeamEvent()
   }
 
-  public getRawData() {
+  getRawData() {
     return this.#teams.map((team: Team) => team.getRawData())
   }
 
-  public add(newTeam: Team) {
+  add(newTeam: Team) {
     if (!newTeam.isRegisterable) {
       throw new Error(`[BsTeams.add()] The team id ${newTeam.id} is not registerable, Please complete the data.`)
     }
@@ -67,7 +69,7 @@ export default class Teams {
     this.throwUpdatedTeamEvent()
   }
 
-  public remove(team: Team) {
+  remove(team: Team) {
     const idx = this.#teams.findIndex((candidate: Team) => candidate.id === team.id)
 
     if (idx === -1) {

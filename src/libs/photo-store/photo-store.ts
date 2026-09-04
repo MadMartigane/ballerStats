@@ -11,7 +11,7 @@ export async function storePhoto(playerId: string, blob: Blob): Promise<void> {
   await set(playerId, blob, photoStore)
 }
 
-export async function getPhoto(playerId: string): Promise<Blob | undefined> {
+export function getPhoto(playerId: string): Promise<Blob | undefined> {
   return get<Blob>(playerId, photoStore)
 }
 
@@ -27,9 +27,9 @@ export async function clearAllPhotos(): Promise<void> {
   await clear(photoStore)
 }
 
-export async function getAllPhotoEntries(): Promise<Array<PhotoEntry>> {
+export async function getAllPhotoEntries(): Promise<PhotoEntry[]> {
   const allEntries = await entries<string, Blob>(photoStore)
-  return Array.from(allEntries, ([playerId, blob]) => ({ playerId, blob }))
+  return Array.from(allEntries, ([playerId, blob]) => ({ blob, playerId }))
 }
 
 export async function setPhotoAndFlag(player: Player, blob: Blob): Promise<void> {

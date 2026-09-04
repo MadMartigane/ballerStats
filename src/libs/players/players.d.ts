@@ -1,5 +1,5 @@
-import type BsPlayer from '../player'
+import type BsPlayer from '../player/player'
 
-export type PlayersOptions = {
-  list: Array<BsPlayer>
+export interface PlayersOptions {
+  list: BsPlayer[]
 }

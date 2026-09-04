@@ -5,7 +5,8 @@ import type { BsAvatarProps } from './avatar.d'
 
 function getPlayerHue(playerId: string): number {
   let hash = 0
-  for (let i = 0; i < playerId.length; i++) {
+  for (let i = 0; i < playerId.length; i += 1) {
+    // biome-ignore lint/suspicious/noBitwiseOperators: legacy hue hash; changing it alters existing avatar colors
     hash = playerId.charCodeAt(i) + ((hash << 5) - hash)
   }
   return Math.abs(hash) % 360
@@ -30,9 +31,9 @@ export default function BsAvatar(props: BsAvatarProps) {
           class="flex items-center justify-center rounded-full font-bold text-white"
           style={{
             'background-color': `hsl(${hue()}, 70%, 45%)`,
-            width: `${size()}px`,
-            height: `${size()}px`,
             'font-size': `${size() * 0.4}px`,
+            height: `${size()}px`,
+            width: `${size()}px`,
           }}
         >
           {initial()}

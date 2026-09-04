@@ -1,6 +1,6 @@
 import { For } from 'solid-js'
 import orchestrator from '../../libs/orchestrator/orchestrator'
-import type { StatMatchSummaryPlayer } from '../../libs/stats'
+import type { StatMatchSummaryPlayer } from '../../libs/stats/stats.d'
 import type { BsFullStatTableProps } from './full-stat-table.d'
 import { STAT_COLUMNS } from './stat-columns'
 import { BsStatsLegend } from './stats-legend'

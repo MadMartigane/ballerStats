@@ -1,23 +1,20 @@
 import { CircleX } from 'lucide-solid'
 import { For, Show } from 'solid-js'
 import { createStore, type SetStoreFunction } from 'solid-js/store'
-import { getShortId } from '../../libs/utils'
+import { getShortId } from '../../libs/utils/utils'
 import BsSelect from '../select/select'
 import type { BsSelectDataSet, BsSelectMultipleDataSelect, BsSelectMultipleProps } from './select-multiple.d'
 
 const defaultPlaceholder = 'Sélection…'
 
-function getAvailableDataSets(allDataSets: Array<BsSelectDataSet>, alreadySelectedDataSets: Array<string>) {
-  return allDataSets.reduce(
-    (result, currentDataSet) => {
-      if (!alreadySelectedDataSets.includes(currentDataSet.value)) {
-        result.push(currentDataSet)
-      }
+function getAvailableDataSets(allDataSets: BsSelectDataSet[], alreadySelectedDataSets: string[]) {
+  return allDataSets.reduce((result, currentDataSet) => {
+    if (!alreadySelectedDataSets.includes(currentDataSet.value)) {
+      result.push(currentDataSet)
+    }
 
-      return result
-    },
-    [] as Array<BsSelectDataSet>
-  )
+    return result
+  }, [] as BsSelectDataSet[])
 }
 
 function getSelectDataSetFromAvailableDataSets(
@@ -27,9 +24,9 @@ function getSelectDataSetFromAvailableDataSets(
   const data = placeholder
     ? [
         {
-          value: '',
-          label: availableBsSelectDataSets.length ? placeholder : 'Aucun joueur disponible.',
           badge: <span>Error</span>,
+          label: availableBsSelectDataSets.length ? placeholder : 'Aucun joueur disponible.',
+          value: '',
         },
       ]
     : []
@@ -48,9 +45,9 @@ function getDataFromProps(props: BsSelectMultipleProps) {
     placeholder: defaultPlaceholder,
     selectId: `bs-select-multiple-${getShortId()}`,
     ...props,
-    selectedIds: props.selectedIds || [],
-    disable,
     availables: dataForSelect,
+    disable,
+    selectedIds: props.selectedIds || [],
     setAvailables,
   } as BsSelectMultipleDataSelect
 }
@@ -94,7 +91,7 @@ function unselectDataSet(
   setProps: SetStoreFunction<BsSelectMultipleDataSelect>,
   dataSet: BsSelectDataSet
 ) {
-  if (!props.selectedIds || !props.selectedIds.includes(dataSet.value)) {
+  if (!props.selectedIds?.includes(dataSet.value)) {
     return
   }
 
@@ -103,6 +100,25 @@ function unselectDataSet(
   setProps('selectedIds', newSelection)
 
   onSelectionChange(props, setProps)
+}
+
+function makeUnselectDataSetClickHandler(
+  props: BsSelectMultipleDataSelect,
+  setProps: SetStoreFunction<BsSelectMultipleDataSelect>,
+  dataSet: BsSelectDataSet
+) {
+  return () => {
+    unselectDataSet(props, setProps, dataSet)
+  }
+}
+
+function makeSelectMultipleChangeHandler(
+  props: BsSelectMultipleDataSelect,
+  setProps: SetStoreFunction<BsSelectMultipleDataSelect>
+) {
+  return (event: Event & { currentTarget: HTMLSelectElement; target: Element }) => {
+    onSelect(event, props, setProps)
+  }
 }
 
 function renderBsSelectDataSetBadge(
@@ -115,9 +131,7 @@ function renderBsSelectDataSetBadge(
       {dataSet.badge}
       <button
         class="btn btn-circle btn-xs btn-ghost"
-        onClick={() => {
-          unselectDataSet(props, setProps, dataSet)
-        }}
+        onClick={makeUnselectDataSetClickHandler(props, setProps, dataSet)}
         type="button"
       >
         <CircleX />
@@ -159,9 +173,7 @@ export default function BsSelectMultiple(props: BsSelectMultipleProps) {
         default=""
         disabled={selectProps.disable}
         id={selectProps.selectId}
-        onChange={(event) => {
-          onSelect(event, selectProps, setSelectProps)
-        }}
+        onChange={makeSelectMultipleChangeHandler(selectProps, setSelectProps)}
       />
     </div>
   )

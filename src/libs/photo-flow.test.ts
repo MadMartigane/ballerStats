@@ -11,6 +11,7 @@ vi.mock('browser-image-compression', () => ({
 import { compressPhoto } from './photo-compressor/photo-compressor'
 import { clearAllPhotos, deletePhoto, hasPhoto, storePhoto } from './photo-store/photo-store'
 import Player from './player/player'
+import type { PlayerRawData } from './player/player.d'
 
 const MOCK_COMPRESSED_BLOB = new Blob(['compressed-webp-data'], { type: 'image/webp' })
 
@@ -42,7 +43,7 @@ describe('photo flow integration', () => {
   })
 
   it('stores photo and updates player hasPhoto flag', async () => {
-    const player = new Player({ firstName: 'Alice', lastName: 'Dupont', jerseyNumber: '10' })
+    const player = new Player({ firstName: 'Alice', jerseyNumber: '10', lastName: 'Dupont' })
     expect(player.hasPhoto).toBe(false)
 
     await storePhoto(player.id, MOCK_COMPRESSED_BLOB)
@@ -54,7 +55,7 @@ describe('photo flow integration', () => {
   })
 
   it('getRawData includes hasPhoto as false', () => {
-    const player = new Player({ firstName: 'Bob', lastName: 'Martin', jerseyNumber: '23' })
+    const player = new Player({ firstName: 'Bob', jerseyNumber: '23', lastName: 'Martin' })
     expect(player.hasPhoto).toBe(false)
 
     const rawData = player.getRawData()
@@ -62,22 +63,23 @@ describe('photo flow integration', () => {
   })
 
   it('setFromRawData handles legacy data without hasPhoto', () => {
-    const player = new Player({ firstName: 'Charlie', lastName: 'Durand', jerseyNumber: '5' })
+    const player = new Player({ firstName: 'Charlie', jerseyNumber: '5', lastName: 'Durand' })
 
-    player.setFromRawData({ id: player.id, firstName: 'Charlie', lastName: 'Durand', jerseyNumber: '5' })
+    player.setFromRawData({ firstName: 'Charlie', id: player.id, jerseyNumber: '5', lastName: 'Durand' })
     expect(player.hasPhoto).toBe(false)
   })
 
   it('setFromRawData correctly reads hasPhoto true', () => {
     const player = new Player({ firstName: 'Dave' })
 
-    player.setFromRawData({ id: player.id, firstName: 'Dave', hasPhoto: true })
+    player.setFromRawData({ firstName: 'Dave', hasPhoto: true, id: player.id })
     expect(player.hasPhoto).toBe(true)
   })
 
   it('should migrate legacy jersayNumber field to jerseyNumber', () => {
     const player = new Player()
-    player.setFromRawData({ jersayNumber: '10' })
+    // Simulates legacy stored data that used the old misspelled field name.
+    player.setFromRawData({ jersayNumber: '10' } as PlayerRawData & { jersayNumber?: string })
     expect(player.jerseyNumber).toBe('10')
   })
 })

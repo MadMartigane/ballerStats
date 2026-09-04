@@ -1,21 +1,21 @@
 import { useNavigate } from '@solidjs/router'
 import { Contact as ContactIcon, LayoutGrid, Save, UserPlus, X } from 'lucide-solid'
 import { For, Show } from 'solid-js'
-import bsEventBus from '../../libs/event-bus'
+import bsEventBus from '../../libs/event-bus/event-bus'
 import MadSignal from '../../libs/mad-signal'
 import { ROUTE_TROMBI } from '../../libs/menu/routes'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import { deletePhotoAndFlag, setPhotoAndFlag } from '../../libs/photo-store/photo-store'
-import type { PlayerRawData } from '../../libs/player'
-import Player, { LICENSE_NUMBER_MAX_LENGTH } from '../../libs/player'
+import Player, { LICENSE_NUMBER_MAX_LENGTH } from '../../libs/player/player'
+import type { PlayerRawData } from '../../libs/player/player.d'
 import { players } from '../../libs/players-store'
-import { scrollBottom, scrollTop, toast } from '../../libs/utils'
-import BsCard from '../card'
-import BsContactsEditor from '../contacts-editor'
-import BsEmptyPlayerFallback from '../empty-player-fallback'
-import BsInput from '../input'
+import { scrollBottom, scrollTop, toast } from '../../libs/utils/utils'
+import BsCard from '../card/card'
+import BsContactsEditor from '../contacts-editor/contacts-editor'
+import BsEmptyPlayerFallback from '../empty-player-fallback/empty-player-fallback'
+import BsInput from '../input/input'
 import BsPhotoUpload from '../photo-upload/photo-upload'
-import BsPlayer from '../player'
+import BsPlayer from '../player/player'
 
 let isEditingNewPlayer = false
 const isAddingPlayer: MadSignal<boolean> = new MadSignal(false)
@@ -23,7 +23,7 @@ const canAddPlayer: MadSignal<boolean> = new MadSignal(false)
 const playerLength: MadSignal<number> = new MadSignal(orchestrator.Players.length)
 
 let currentPlayer: Player | null = null
-const pendingPhotoBlob: MadSignal<Blob | undefined> = new MadSignal(undefined)
+const pendingPhotoBlob: MadSignal<Blob | undefined> = new MadSignal<Blob | undefined>(undefined)
 const pendingPhotoDelete: MadSignal<boolean> = new MadSignal(false)
 
 bsEventBus.addEventListener('BS::PLAYERS::CHANGE', () => {
@@ -54,8 +54,45 @@ function resetCurrentPlayer() {
   canAddPlayer.set(false)
 }
 
+function startAddingNewPlayer() {
+  isEditingNewPlayer = true
+  currentPlayer = new Player()
+  canAddPlayer.set(false)
+  resetPhotoState()
+  toggleAddPlayer(true)
+  scrollTop()
+}
+
+function onPhotoChange(_hasPhoto: boolean, blob?: Blob) {
+  if (blob) {
+    pendingPhotoBlob.set(blob)
+    pendingPhotoDelete.set(false)
+  } else {
+    pendingPhotoBlob.set(undefined)
+    pendingPhotoDelete.set(true)
+  }
+}
+
+function cancelAddingPlayer() {
+  toggleAddPlayer(false)
+  resetCurrentPlayer()
+  resetPhotoState()
+  scrollBottom()
+}
+
+function savePlayer() {
+  registerPlayer()
+    .then(() => scrollBottom())
+    .catch(() => toast("Erreur lors de l'enregistrement du joueur.", 'error'))
+}
+
+function editPlayerFromTile(player: Player) {
+  editPlayer(player)
+  scrollTop()
+}
+
 async function registerPlayer() {
-  if (!currentPlayer || !currentPlayer.isRegisterable) {
+  if (!currentPlayer?.isRegisterable) {
     return
   }
 
@@ -100,18 +137,7 @@ function renderAddPlayerButton(onTrombiClick: () => void) {
     <div class="w-full">
       <hr />
       <div class="footer-buttons-container">
-        <button
-          class="btn btn-primary"
-          onClick={() => {
-            isEditingNewPlayer = true
-            currentPlayer = new Player()
-            canAddPlayer.set(false)
-            resetPhotoState()
-            toggleAddPlayer(true)
-            scrollTop()
-          }}
-          type="button"
-        >
+        <button class="btn btn-primary" onClick={startAddingNewPlayer} type="button">
           <UserPlus />
           Ajouter un joueur
         </button>
@@ -126,131 +152,107 @@ function renderAddPlayerButton(onTrombiClick: () => void) {
 
 function renderAddingPlayerCard() {
   return BsCard({
-    title: (
-      <p class="flex flex-row gap-1">
-        <ContactIcon />
-        {isEditingNewPlayer ? 'Nouveau joueur' : 'Édition du joueur'}
-      </p>
-    ),
-    info: 'Les nom, prénom et numéro de maillot sont obligatoires',
     body: (
       <>
+        {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: form-level Enter submission is a legacy behavior preserved during audit fixes */}
         <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
           <Show when={currentPlayer?.id}>
             <BsPhotoUpload
               hasPhoto={currentPlayer?.hasPhoto ?? false}
-              onChange={(_hasPhoto: boolean, blob?: Blob) => {
-                if (blob) {
-                  pendingPhotoBlob.set(blob)
-                  pendingPhotoDelete.set(false)
-                } else {
-                  pendingPhotoBlob.set(undefined)
-                  pendingPhotoDelete.set(true)
-                }
-              }}
-              playerId={currentPlayer?.id}
+              onChange={onPhotoChange}
+              playerId={currentPlayer?.id ?? ''}
             />
           </Show>
           {BsInput({
-            type: 'text',
             label: 'Nom',
-            value: currentPlayer?.lastName,
-            placeholder: 'Dupont',
             onChange: (value: string) => {
               setNewPlayerData({ lastName: value })
             },
+            placeholder: 'Dupont',
+            type: 'text',
+            value: currentPlayer?.lastName,
           })}
           {BsInput({
-            type: 'text',
             label: 'Prénom',
-            value: currentPlayer?.firstName,
-            placeholder: 'Charlie',
             onChange: (value: string) => {
               setNewPlayerData({ firstName: value })
             },
+            placeholder: 'Charlie',
+            type: 'text',
+            value: currentPlayer?.firstName,
           })}
           {BsInput({
-            type: 'text',
             label: 'Numéro de maillot',
-            value: currentPlayer?.jerseyNumber,
-            placeholder: '01',
             onChange: (value: string) => {
               setNewPlayerData({ jerseyNumber: value })
             },
+            placeholder: '01',
+            type: 'text',
+            value: currentPlayer?.jerseyNumber,
           })}
           {BsInput({
-            type: 'text',
             label: 'Surnom',
-            value: currentPlayer?.nicName,
-            placeholder: 'The B',
             onChange: (value: string) => {
               setNewPlayerData({ nicName: value })
             },
+            placeholder: 'The B',
+            type: 'text',
+            value: currentPlayer?.nicName,
           })}
           {BsInput({
-            type: 'text',
             label: 'Numéro de licence',
             maxLength: LICENSE_NUMBER_MAX_LENGTH,
-            placeholder: 'AB123456789',
-            value: currentPlayer?.licenseNumber,
             onChange: (value: string) => {
               setNewPlayerData({ licenseNumber: value })
             },
+            placeholder: 'AB123456789',
+            type: 'text',
+            value: currentPlayer?.licenseNumber,
           })}
           {BsInput({
-            type: 'text',
             label: 'Téléphone',
-            value: currentPlayer?.phone,
-            placeholder: '06 12 34 56 78',
             onChange: (value: string) => {
               setNewPlayerData({ phone: value })
             },
+            placeholder: '06 12 34 56 78',
+            type: 'text',
+            value: currentPlayer?.phone,
           })}
           {BsInput({
-            type: 'email',
             label: 'Email',
-            value: currentPlayer?.email,
-            placeholder: 'joueur@example.com',
             onChange: (value: string) => {
               setNewPlayerData({ email: value })
             },
+            placeholder: 'joueur@example.com',
+            type: 'email',
+            value: currentPlayer?.email,
           })}
         </form>
         <Show when={!isEditingNewPlayer && currentPlayer?.id}>
-          <BsContactsEditor playerId={currentPlayer.id} />
+          {/* The Show condition above guarantees a non-null player with a truthy id when rendered. */}
+          <BsContactsEditor playerId={currentPlayer?.id ?? ''} />
         </Show>
       </>
     ),
     footer: (
       <div class="footer-buttons-container">
-        <button
-          class="btn btn-primary btn-wide"
-          onClick={() => {
-            toggleAddPlayer(false)
-            resetCurrentPlayer()
-            resetPhotoState()
-            scrollBottom()
-          }}
-          type="button"
-        >
+        <button class="btn btn-primary btn-wide" onClick={cancelAddingPlayer} type="button">
           <X />
           Annuler
         </button>
 
-        <button
-          class="btn btn-primary btn-wide"
-          disabled={!canAddPlayer.get()}
-          onClick={() => {
-            registerPlayer()
-              .then(() => scrollBottom())
-              .catch(() => toast("Erreur lors de l'enregistrement du joueur.", 'error'))
-          }}
-          type="button"
-        >
+        <button class="btn btn-primary btn-wide" disabled={!canAddPlayer.get()} onClick={savePlayer} type="button">
           {isEditingNewPlayer ? <UserPlus /> : <Save />}
           {isEditingNewPlayer ? 'Ajouter' : 'Enregistrer'}
         </button>
       </div>
+    ),
+    info: 'Les nom, prénom et numéro de maillot sont obligatoires',
+    title: (
+      <p class="flex flex-row gap-1">
+        <ContactIcon />
+        {isEditingNewPlayer ? 'Nouveau joueur' : 'Édition du joueur'}
+      </p>
     ),
   })
 }
@@ -266,13 +268,7 @@ export default function BsPlayers() {
             <For each={players}>
               {(player) => (
                 <div class="mx-auto w-fit md:mx-0">
-                  <BsPlayer
-                    onEdit={(player) => {
-                      editPlayer(player)
-                      scrollTop()
-                    }}
-                    player={player}
-                  />
+                  <BsPlayer onEdit={editPlayerFromTile} player={player} />
                 </div>
               )}
             </For>

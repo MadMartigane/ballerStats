@@ -4,13 +4,13 @@
 
 ## Tech Stack
 
-- **Framework**: SolidJS 1.x with TypeScript 6.x
+- **Framework**: SolidJS 1.x with TypeScript 7.x
 - **Build**: Vite 8.x (Oxc + Rolldown pipeline)
 - **Styling**: Tailwind CSS 4.x + DaisyUI 5.x
 - **Icons**: Lucide (lucide-solid) 1.x
-- **Routing**: @solidjs/router 0.16.x (HashRouter)
-- **Linting/Formatting**: Biome 2.x + Ultracite preset
-- **Testing**: Vitest 3.x
+- **Routing**: @solidjs/router 1.x (HashRouter)
+- **Linting/Formatting**: Biome 2.5.x + Ultracite 7.10.x preset
+- **Testing**: Vitest 4.x
 - **Agent Skills**: SolidJS best practices (`.opencode/skills/solidjs/SKILL.md`) — auto-loaded for all `.tsx`/`.ts` work
 - **Package Manager**: pnpm (ONLY — no npm)
 
@@ -26,6 +26,8 @@
 - `pnpm run test` — Run tests once
 - `pnpm run test:watch` — Run tests in watch mode
 - `pnpm run test:coverage` — Run tests with coverage report
+- `pnpm run typecheck` — Run TypeScript type checking (`tsc --noEmit`)
+- **Pre-commit hook**: husky runs `pnpm run check` + `pnpm run typecheck` on commit (no tests)
 
 ## Code Style
 
@@ -54,6 +56,22 @@ src/
 - **State**: SolidJS stores (`createStore`) + custom signal wrappers (`MadSignal`)
 - **Icons**: All imported from `lucide-solid` — check lucide.dev for available icons
 - **Deployment**: `pre-prod` and `prod` scripts copy to `/var/www/` paths — Linux-only
+
+## Ambient Tasks
+
+> **Scope**: This section applies **only** to the ambient agent running proactive background cycles. Regular interactive dev sessions should **not** follow this workflow — it would disrupt normal development.
+
+This project uses a version-controlled task queue for proactive work via ambient mode.
+
+- **Task file**: `AMBIENT_TASKS.md` at the repository root
+- **In-code markers**: `// AMBIENT:` and `// TODO(ambient):` in source files flag proactive work opportunities
+
+### Rules for the ambient agent only
+
+1. **Read `AMBIENT_TASKS.md` at the start of each ambient cycle** (not during interactive sessions)
+2. Search for `AMBIENT:` and `TODO(ambient):` markers in `src/` during scout passes
+3. Task status changes (claim, complete, abandon) are separate commits with `chore(ambient)` or `feat(ambient)` prefixes
+4. All work must pass `pnpm run check` and `pnpm run test` before marking a task done
 
 ## Design System
 

@@ -1,7 +1,7 @@
 import { Show } from 'solid-js'
 import { createRollingNumber } from '../../libs/rolling-number'
-import { toDateTime } from '../../libs/utils'
-import { BsMatchTypeBadge } from '../match-tile'
+import { toDateTime } from '../../libs/utils/utils'
+import { BsMatchTypeBadge } from '../match-tile/match-tile'
 import type { BsScoreCardProps } from './score-card.d'
 
 export default function BsScoreCard(props: BsScoreCardProps) {

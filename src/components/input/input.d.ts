@@ -5,14 +5,14 @@ export type BsInputOnChangeEvent = Event & {
   target: HTMLInputElement
 }
 
-export type BsInputProps = {
+export interface BsInputProps {
   id?: string
+  label?: string
+  maxLength?: number
+  onBlur?: () => void
+  onChange?: (value: string) => void
+  onFocus?: () => void
+  placeholder?: string
   type?: BsInputPropsType
   value?: string
-  label?: string
-  placeholder?: string
-  maxLength?: number
-  onChange?: (value: string) => void
-  onBlur?: () => void
-  onFocus?: () => void
 }

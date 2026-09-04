@@ -10,6 +10,12 @@ function onChange(event: BsToggleOnChangeEvent, callback?: (value: boolean) => v
   callback(target.checked)
 }
 
+function makeToggleChangeHandler(callback: BsToggleProps['onChange']) {
+  return (event: BsToggleOnChangeEvent) => {
+    onChange(event, callback)
+  }
+}
+
 export default function BsToggle(props: BsToggleProps) {
   const size = props.size || 'base'
 
@@ -22,9 +28,7 @@ export default function BsToggle(props: BsToggleProps) {
           <input
             checked={props.value}
             class={`toggle toggle-primary toggle-${size}`}
-            onChange={(event) => {
-              onChange(event, props.onChange)
-            }}
+            onChange={makeToggleChangeHandler(props.onChange)}
             type="checkbox"
           />
         </div>

@@ -1,3 +1,3 @@
-export type BsContactsEditorProps = {
+export interface BsContactsEditorProps {
   playerId: string
 }

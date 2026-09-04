@@ -1,5 +1,5 @@
 export class Sound {
-  private url: string
+  private readonly url: string
   private sound: HTMLAudioElement | null = null
 
   constructor(url: string) {
@@ -10,7 +10,7 @@ export class Sound {
     this.sound = new Audio(this.url)
   }
 
-  public play() {
+  play() {
     if (!this.sound) {
       this.load()
     }

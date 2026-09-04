@@ -1,90 +1,97 @@
-import { BadgeAlert, ChartScatter, FileSliders, LayoutGrid, MonitorDot, User, Users } from 'lucide-solid'
+import { BadgeAlert, Building2, ChartScatter, FileSliders, LayoutGrid, MonitorDot, User, Users } from 'lucide-solid'
 import { lazy } from 'solid-js'
 import BsIconBasketballBall from '../../components/icons/basketball-ball'
 import BsIconBasketballPlayer from '../../components/icons/basketball-player'
 import Home from '../../pages/home'
 import type { MenuEntry } from './menu.d'
-import { ROUTE_PLAYERS, ROUTE_TEAMS, ROUTE_TROMBI, ROUTE_TROMBI_TEAM } from './routes'
+import { ROUTE_CLUB, ROUTE_PLAYERS, ROUTE_TEAMS, ROUTE_TROMBI, ROUTE_TROMBI_TEAM } from './routes'
 
 export const HASH_REPLACE_PATTERN = /^#\//
 
-export const NAVIGATION_MENU_ENTRIES: Array<MenuEntry> = [
+export const NAVIGATION_MENU_ENTRIES: MenuEntry[] = [
   {
-    path: '/',
-    label: 'Dashbord',
-    icon: () => <MonitorDot />,
     // icon: () => <img class="w-8 h-8" src="/img/logo_tiny.png" />,
     component: Home,
+    icon: () => <MonitorDot />,
     isMenuEntry: false,
+    label: 'Dashbord',
+    path: '/',
   },
   {
-    path: '/users',
-    label: 'Utilisateurs',
-    icon: () => <Users />,
+    component: lazy(() => import('../../pages/club')),
+    icon: () => <Building2 />,
+    isMenuEntry: true,
+    label: 'Club',
+    path: ROUTE_CLUB,
+  },
+  {
     component: lazy(() => import('../../pages/users')),
-    isMenuEntry: false,
-  },
-  {
-    path: '/user',
-    label: 'Profile',
-    icon: () => <User />,
-    component: lazy(() => import('../../pages/user')),
-    isMenuEntry: false,
-  },
-  {
-    path: ROUTE_PLAYERS,
-    label: 'Joueurs',
-    icon: () => <BsIconBasketballPlayer />,
-    component: lazy(() => import('../../pages/players')),
-    isMenuEntry: true,
-  },
-  {
-    path: ROUTE_TROMBI,
-    label: 'Trombinoscope',
-    icon: () => <LayoutGrid />,
-    component: lazy(() => import('../../pages/trombi')),
-    isMenuEntry: false,
-  },
-  {
-    path: ROUTE_TROMBI_TEAM,
-    label: 'Trombinoscope équipe',
-    icon: () => <LayoutGrid />,
-    component: lazy(() => import('../../pages/trombi-team')),
-    isMenuEntry: false,
-  },
-  {
-    path: ROUTE_TEAMS,
-    label: 'Équipes',
     icon: () => <Users />,
+    isMenuEntry: false,
+    label: 'Utilisateurs',
+    path: '/users',
+  },
+  {
+    component: lazy(() => import('../../pages/user')),
+    icon: () => <User />,
+    isMenuEntry: false,
+    label: 'Profile',
+    path: '/user',
+  },
+  {
+    component: lazy(() => import('../../pages/players')),
+    icon: () => <BsIconBasketballPlayer />,
+    isMenuEntry: true,
+    label: 'Joueurs',
+    path: ROUTE_PLAYERS,
+  },
+  {
+    component: lazy(() => import('../../pages/trombi')),
+    icon: () => <LayoutGrid />,
+    isMenuEntry: false,
+    label: 'Trombinoscope',
+    path: ROUTE_TROMBI,
+  },
+  {
+    component: lazy(() => import('../../pages/trombi-team')),
+    icon: () => <LayoutGrid />,
+    isMenuEntry: false,
+    label: 'Trombinoscope équipe',
+    path: ROUTE_TROMBI_TEAM,
+  },
+  {
     component: lazy(() => import('../../pages/teams')),
+    icon: () => <Users />,
     isMenuEntry: true,
+    label: 'Équipes',
+    path: ROUTE_TEAMS,
   },
   {
-    path: '/match/:id',
-    label: 'Match',
-    icon: () => <BsIconBasketballBall />,
     component: lazy(() => import('../../pages/match')),
+    icon: () => <BsIconBasketballBall />,
     isMenuEntry: false,
+    label: 'Match',
+    path: '/match/:id',
   },
   {
-    path: '/matchs',
-    label: 'Matchs',
-    icon: () => <FileSliders />,
     component: lazy(() => import('../../pages/matchs')),
+    icon: () => <FileSliders />,
     isMenuEntry: true,
+    label: 'Matchs',
+    path: '/matchs',
   },
   {
-    path: '/stats',
-    label: 'Statistiques',
-    icon: () => <ChartScatter />,
     component: lazy(() => import('../../pages/stats')),
+    icon: () => <ChartScatter />,
     isMenuEntry: true,
+    label: 'Statistiques',
+    path: '/stats',
   },
   {
-    path: '/*',
-    label: '404 Not Found',
-    icon: () => <BadgeAlert />,
     component: lazy(() => import('../../pages/404')),
+    icon: () => <BadgeAlert />,
     isMenuEntry: false,
+    label: '404 Not Found',
+    path: '/*',
   },
 ]

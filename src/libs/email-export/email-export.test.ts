@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import Contact from '../contact'
-import Player from '../player'
-import Team from '../team'
+import Contact from '../contact/contact'
+import Player from '../player/player'
+import Team from '../team/team'
 import { collectTeamEmails, slugifyTeamName } from './email-export'
 
 describe('slugifyTeamName', () => {
@@ -32,12 +32,12 @@ describe('collectTeamEmails', () => {
   it('collects player email and contact emails in playerIds order', () => {
     const team = new Team({ id: 't1', name: 'My Team', playerIds: ['p1', 'p2'] })
     const players = [
-      new Player({ id: 'p1', email: 'p1@example.com' }),
-      new Player({ id: 'p2', email: 'p2@example.com' }),
+      new Player({ email: 'p1@example.com', id: 'p1' }),
+      new Player({ email: 'p2@example.com', id: 'p2' }),
     ]
     const contacts = [
-      new Contact({ id: 'c1', playerId: 'p1', email: 'mom.p1@example.com', relationship: 'mother' }),
-      new Contact({ id: 'c2', playerId: 'p2', email: 'dad.p2@example.com', relationship: 'father' }),
+      new Contact({ email: 'mom.p1@example.com', id: 'c1', playerId: 'p1', relationship: 'mother' }),
+      new Contact({ email: 'dad.p2@example.com', id: 'c2', playerId: 'p2', relationship: 'father' }),
     ]
 
     expect(collectTeamEmails(team, players, contacts)).toEqual([
@@ -51,8 +51,8 @@ describe('collectTeamEmails', () => {
   it('deduplicates identical emails', () => {
     const team = new Team({ id: 't1', name: 'Team', playerIds: ['p1', 'p2'] })
     const players = [
-      new Player({ id: 'p1', email: 'shared@example.com' }),
-      new Player({ id: 'p2', email: 'shared@example.com' }),
+      new Player({ email: 'shared@example.com', id: 'p1' }),
+      new Player({ email: 'shared@example.com', id: 'p2' }),
     ]
 
     expect(collectTeamEmails(team, players, [])).toEqual(['shared@example.com'])
@@ -60,8 +60,8 @@ describe('collectTeamEmails', () => {
 
   it('filters empty and whitespace-only emails', () => {
     const team = new Team({ id: 't1', name: 'Team', playerIds: ['p1', 'p2'] })
-    const players = [new Player({ id: 'p1', email: '  ' }), new Player({ id: 'p2', email: 'valid@example.com' })]
-    const contacts = [new Contact({ id: 'c1', playerId: 'p2', email: '', relationship: 'other' })]
+    const players = [new Player({ email: '  ', id: 'p1' }), new Player({ email: 'valid@example.com', id: 'p2' })]
+    const contacts = [new Contact({ email: '', id: 'c1', playerId: 'p2', relationship: 'other' })]
 
     expect(collectTeamEmails(team, players, contacts)).toEqual(['valid@example.com'])
   })

@@ -1,4 +1,4 @@
-import BsMatchs from '../components/matchs'
+import BsMatchs from '../components/matchs/matchs'
 
 export default function Matchs() {
   return (

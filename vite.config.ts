@@ -3,11 +3,11 @@ import { defineConfig } from 'vite'
 import solidPlugin from 'vite-plugin-solid'
 
 export default defineConfig({
+  build: {
+    target: 'esnext',
+  },
   plugins: [solidPlugin(), tailwindcss()],
   server: {
     port: 3000,
-  },
-  build: {
-    target: 'esnext',
   },
 })

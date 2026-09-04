@@ -1,10 +1,11 @@
-import Contact, { type ContactRawData } from '../contact'
-import bsEventBus from '../event-bus'
+import Contact from '../contact/contact'
+import type { ContactRawData } from '../contact/contact.d'
+import bsEventBus from '../event-bus/event-bus'
 
 export default class Contacts {
-  #contacts: Array<Contact> = []
+  #contacts: Contact[] = []
 
-  constructor(contactDatas?: Array<ContactRawData>) {
+  constructor(contactDatas?: ContactRawData[]) {
     if (contactDatas) {
       this.setFromRawData(contactDatas)
     }
@@ -18,15 +19,16 @@ export default class Contacts {
     return this.#contacts.find((current) => current.id === newContact.id)
   }
 
-  public get contacts(): Array<Contact> {
+  get contacts(): Contact[] {
     return this.#contacts.map((contact: Contact): Contact => new Contact(contact.getRawData()))
   }
 
-  public get length() {
+  get length() {
     return this.#contacts.length
   }
 
-  public setFromRawData(data: Array<ContactRawData>) {
+  setFromRawData(data: ContactRawData[]) {
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: legacy callers/tests pass null to empty the collection, which the array parameter type does not reflect.
     if (!data) {
       this.#contacts = []
       return
@@ -36,13 +38,13 @@ export default class Contacts {
     this.throwUpdatedContactEvent()
   }
 
-  public getByPlayerId(playerId: string): Array<Contact> {
+  getByPlayerId(playerId: string): Contact[] {
     return this.#contacts
       .filter((contact) => contact.playerId === playerId)
       .map((contact) => new Contact(contact.getRawData()))
   }
 
-  public updateContact(newContact: Contact) {
+  updateContact(newContact: Contact) {
     const oldContact = this.getContact(newContact)
     if (!oldContact) {
       throw new Error(
@@ -54,11 +56,11 @@ export default class Contacts {
     this.throwUpdatedContactEvent()
   }
 
-  public getRawData() {
+  getRawData() {
     return this.#contacts.map((contact: Contact) => contact.getRawData())
   }
 
-  public add(newContact: Contact) {
+  add(newContact: Contact) {
     if (!newContact.isRegisterable) {
       throw new Error('[Contacts.add()] Contact is not registerable (missing playerId).')
     }
@@ -71,7 +73,7 @@ export default class Contacts {
     this.throwUpdatedContactEvent()
   }
 
-  public remove(contact: Contact) {
+  remove(contact: Contact) {
     const idx = this.#contacts.findIndex((candidate) => candidate.id === contact.id)
     if (idx === -1) {
       throw new Error(`[Contacts.remove()] The contact id ${contact.id} not found.`)
@@ -81,7 +83,7 @@ export default class Contacts {
     this.throwUpdatedContactEvent()
   }
 
-  public removeSilent(contact: Contact) {
+  removeSilent(contact: Contact) {
     const idx = this.#contacts.findIndex((candidate) => candidate.id === contact.id)
     if (idx === -1) {
       throw new Error(`[Contacts.removeSilent()] The contact id ${contact.id} not found.`)

@@ -28,6 +28,18 @@ function onChange(event: BsDatePickerOnChangeEvent, callback?: (value: string) =
   callback(target.value)
 }
 
+function makeDatePickerChangeHandler(callback: BsDatePickerProps['onChange']) {
+  return (event: BsDatePickerOnChangeEvent) => {
+    onChange(event, callback)
+  }
+}
+
+function makeDatePickerInputHandler(callback: BsDatePickerProps['onChange']) {
+  return (event: BsDatePickerOnChangeEvent) => {
+    onInput(event, callback)
+  }
+}
+
 export function BsDatePicker(props: BsDatePickerProps) {
   return (
     <label class="flex w-full">
@@ -37,8 +49,8 @@ export function BsDatePicker(props: BsDatePickerProps) {
       <div class={props.label ? 'w-2/3' : 'w-full'}>
         <input
           class="input w-full"
-          onChange={(event) => onChange(event, props.onChange)}
-          onInput={(event) => onInput(event, props.onChange)}
+          onChange={makeDatePickerChangeHandler(props.onChange)}
+          onInput={makeDatePickerInputHandler(props.onChange)}
           placeholder={props.placeholder || ''}
           type={props.withTime ? 'datetime-local' : 'date'}
           value={props.value || ''}

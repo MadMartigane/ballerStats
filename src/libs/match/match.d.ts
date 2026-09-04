@@ -1,4 +1,4 @@
-import type { StatMatchActionItem } from '../stats'
+import type { StatMatchActionItem } from '../stats/stats.d'
 
 export type MatchType = 'home' | 'outside'
 export type MatchStatus = 'locked' | 'unlocked'
@@ -8,14 +8,14 @@ export type MatchStatLogEntry = Pick<StatMatchActionItem, 'name' | 'type' | 'val
   timestamp: number
 }
 
-export type MatchRawData = {
+export interface MatchRawData {
+  championship?: string | null
+  date?: string | null
   id?: string
   opponent?: string | null
-  type?: MatchType
-  teamId?: string | null
-  stats?: Array<MatchStatLogEntry>
-  playersInTheFive?: Array<string>
+  playersInTheFive?: string[]
+  stats?: MatchStatLogEntry[]
   status?: MatchStatus
-  date?: string | null
-  championship?: string | null
+  teamId?: string | null
+  type?: MatchType
 }

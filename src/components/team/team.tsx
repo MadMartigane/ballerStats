@@ -4,9 +4,9 @@ import { For, Show } from 'solid-js'
 import { collectTeamEmails, slugifyTeamName } from '../../libs/email-export/email-export'
 import { buildTeamTrombiPath } from '../../libs/menu/routes'
 import orchestrator from '../../libs/orchestrator/orchestrator'
-import type Team from '../../libs/team'
-import { confirmAction, downloadBlob, scrollTop, toast } from '../../libs/utils'
-import BsTile from '../tile'
+import type Team from '../../libs/team/team'
+import { confirmAction, downloadBlob, scrollTop, toast } from '../../libs/utils/utils'
+import BsTile from '../tile/tile'
 import type { BsTeamProps } from './team.d'
 
 async function removeTeam(team: Team) {
@@ -39,8 +39,27 @@ function handleExportEmails(team: Team, label: string) {
   toast(`${emails.length} email(s) exporté(s) pour l'équipe ${label}.`, 'success')
 }
 
+function makeExportEmailsClickHandler(team: Team, label: string) {
+  return () => {
+    handleExportEmails(team, label)
+  }
+}
+
+function makeEditTeamClickHandler(team: Team, onEdit: BsTeamProps['onEdit']) {
+  return () => {
+    editTeam(team, onEdit)
+    scrollTop()
+  }
+}
+
+function makeRemoveTeamClickHandler(team: Team) {
+  return () => {
+    removeTeam(team)
+  }
+}
+
 export default function BsTeam(props: BsTeamProps) {
-  const team = props.team
+  const { team } = props
   const label = teamLabel(team)
 
   return (
@@ -51,7 +70,7 @@ export default function BsTeam(props: BsTeamProps) {
             <button
               aria-label={`Exporter les emails de l'équipe ${label}`}
               class="btn btn-square btn-secondary"
-              onClick={() => handleExportEmails(team, label)}
+              onClick={makeExportEmailsClickHandler(team, label)}
               type="button"
             >
               <Mail />
@@ -71,10 +90,7 @@ export default function BsTeam(props: BsTeamProps) {
               <button
                 aria-label={`Modifier l'équipe ${label}`}
                 class="btn btn-square btn-secondary"
-                onClick={() => {
-                  editTeam(team, props.onEdit)
-                  scrollTop()
-                }}
+                onClick={makeEditTeamClickHandler(team, props.onEdit)}
                 type="button"
               >
                 <UserPen />
@@ -85,9 +101,7 @@ export default function BsTeam(props: BsTeamProps) {
             <button
               aria-label={`Supprimer l'équipe ${label}`}
               class="btn btn-square btn-secondary"
-              onClick={() => {
-                removeTeam(team)
-              }}
+              onClick={makeRemoveTeamClickHandler(team)}
               type="button"
             >
               <Trash />

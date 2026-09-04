@@ -1,20 +1,36 @@
 import { Mail, Pencil, Phone, Plus, Save, Trash, X } from 'lucide-solid'
 import { createMemo, For, Show } from 'solid-js'
-import Contact, {
-  type ContactRawData,
-  getRelationshipLabel,
-  isContactRelationship,
-  RELATIONSHIP_LABELS,
-} from '../../libs/contact'
+import Contact, { getRelationshipLabel, isContactRelationship, RELATIONSHIP_LABELS } from '../../libs/contact/contact'
+import type { ContactRawData } from '../../libs/contact/contact.d'
 import { contacts as allContacts } from '../../libs/contacts-store'
 import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
-import { toast } from '../../libs/utils'
-import BsInput from '../input'
+import { toast } from '../../libs/utils/utils'
+import BsInput from '../input/input'
 import BsSelect from '../select/select'
 import type { BsContactsEditorProps } from './contacts-editor.d'
 
-function BsContactsEditor(props: BsContactsEditorProps) {
+function makeContactRelationshipChangeHandler(setNewContactData: (data: Partial<ContactRawData>) => void) {
+  return (value: string) => {
+    if (isContactRelationship(value)) {
+      setNewContactData({ relationship: value })
+    }
+  }
+}
+
+function makeEditContactClickHandler(editContact: (contact: Contact) => void, contact: Contact) {
+  return () => {
+    editContact(contact)
+  }
+}
+
+function makeDeleteContactClickHandler(deleteContact: (contact: Contact) => void, contact: Contact) {
+  return () => {
+    deleteContact(contact)
+  }
+}
+
+export default function BsContactsEditor(props: BsContactsEditorProps) {
   const isAddingContact: MadSignal<boolean> = new MadSignal(false)
   let isEditingNewContact = false
   let currentContact: Contact | null = null
@@ -72,6 +88,84 @@ function BsContactsEditor(props: BsContactsEditorProps) {
     }
   }
 
+  /**
+   * Render the add/edit form for the current contact.
+   *
+   * It runs when the `Show` above activates, so `currentContact` is read from
+   * the live binding at that moment. The local annotated alias prevents
+   * TypeScript from narrowing the mutable outer variable to its `null`
+   * initializer across the closure assignments.
+   */
+  function renderContactEditForm() {
+    const editedContact: Contact | null = currentContact
+
+    return (
+      <div class="flex flex-col gap-2 rounded-lg bg-base-200 p-3">
+        {BsInput({
+          label: 'Nom',
+          onChange: (value: string) => {
+            setNewContactData({ lastName: value })
+          },
+          placeholder: 'Dupont',
+          type: 'text',
+          value: editedContact?.lastName,
+        })}
+        {BsInput({
+          label: 'Prénom',
+          onChange: (value: string) => {
+            setNewContactData({ firstName: value })
+          },
+          placeholder: 'Charlie',
+          type: 'text',
+          value: editedContact?.firstName,
+        })}
+        <BsSelect
+          datas={[...RELATIONSHIP_LABELS]}
+          label="Relation"
+          onValueChange={makeContactRelationshipChangeHandler(setNewContactData)}
+          value={editedContact?.relationship}
+        />
+        {BsInput({
+          label: 'Téléphone',
+          onChange: (value: string) => {
+            setNewContactData({ phone: value })
+          },
+          placeholder: '06 12 34 56 78',
+          type: 'text',
+          value: editedContact?.phone,
+        })}
+        {BsInput({
+          label: 'Email',
+          onChange: (value: string) => {
+            setNewContactData({ email: value })
+          },
+          placeholder: 'contact@example.com',
+          type: 'email',
+          value: editedContact?.email,
+        })}
+        {BsInput({
+          label: 'Adresse',
+          onChange: (value: string) => {
+            setNewContactData({ address: value })
+          },
+          placeholder: '12 rue du Sport, 75001 Paris',
+          type: 'text',
+          value: editedContact?.address,
+        })}
+        <div class="footer-buttons-container">
+          <button class="btn btn-primary btn-wide" onClick={cancelContactEdit} type="button">
+            <X />
+            Annuler
+          </button>
+          <button class="btn btn-primary btn-wide" onClick={registerContact} type="button">
+            <Save />
+            Enregistrer
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       <hr class="my-2" />
@@ -86,75 +180,7 @@ function BsContactsEditor(props: BsContactsEditorProps) {
           </Show>
         </div>
 
-        <Show when={isAddingContact.get()}>
-          <div class="flex flex-col gap-2 rounded-lg bg-base-200 p-3">
-            {BsInput({
-              type: 'text',
-              label: 'Nom',
-              value: currentContact?.lastName,
-              placeholder: 'Dupont',
-              onChange: (value: string) => {
-                setNewContactData({ lastName: value })
-              },
-            })}
-            {BsInput({
-              type: 'text',
-              label: 'Prénom',
-              value: currentContact?.firstName,
-              placeholder: 'Charlie',
-              onChange: (value: string) => {
-                setNewContactData({ firstName: value })
-              },
-            })}
-            <BsSelect
-              datas={RELATIONSHIP_LABELS}
-              label="Relation"
-              onValueChange={(value: string) => {
-                if (isContactRelationship(value)) {
-                  setNewContactData({ relationship: value })
-                }
-              }}
-              value={currentContact?.relationship}
-            />
-            {BsInput({
-              type: 'text',
-              label: 'Téléphone',
-              value: currentContact?.phone,
-              placeholder: '06 12 34 56 78',
-              onChange: (value: string) => {
-                setNewContactData({ phone: value })
-              },
-            })}
-            {BsInput({
-              type: 'email',
-              label: 'Email',
-              value: currentContact?.email,
-              placeholder: 'contact@example.com',
-              onChange: (value: string) => {
-                setNewContactData({ email: value })
-              },
-            })}
-            {BsInput({
-              type: 'text',
-              label: 'Adresse',
-              value: currentContact?.address,
-              placeholder: '12 rue du Sport, 75001 Paris',
-              onChange: (value: string) => {
-                setNewContactData({ address: value })
-              },
-            })}
-            <div class="footer-buttons-container">
-              <button class="btn btn-primary btn-wide" onClick={cancelContactEdit} type="button">
-                <X />
-                Annuler
-              </button>
-              <button class="btn btn-primary btn-wide" onClick={registerContact} type="button">
-                <Save />
-                Enregistrer
-              </button>
-            </div>
-          </div>
-        </Show>
+        <Show when={isAddingContact.get()}>{renderContactEditForm()}</Show>
 
         <Show when={!isAddingContact.get()}>
           <Show
@@ -187,7 +213,7 @@ function BsContactsEditor(props: BsContactsEditorProps) {
                       <button
                         aria-label={editContactLabel}
                         class="btn btn-square btn-sm"
-                        onClick={() => editContact(contact)}
+                        onClick={makeEditContactClickHandler(editContact, contact)}
                         type="button"
                       >
                         <Pencil />
@@ -197,7 +223,7 @@ function BsContactsEditor(props: BsContactsEditorProps) {
                       <button
                         aria-label={deleteContactLabel}
                         class="btn btn-square btn-sm"
-                        onClick={() => deleteContact(contact)}
+                        onClick={makeDeleteContactClickHandler(deleteContact, contact)}
                         type="button"
                       >
                         <Trash />
@@ -213,5 +239,3 @@ function BsContactsEditor(props: BsContactsEditorProps) {
     </>
   )
 }
-
-export default BsContactsEditor

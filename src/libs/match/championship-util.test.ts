@@ -5,8 +5,8 @@ import Match from './match'
 function makeMatch(championship: string | null, date?: string): Match {
   return new Match({
     championship,
-    opponent: 'Test',
     date: date ?? '2025-01-01',
+    opponent: 'Test',
   })
 }
 

@@ -3,7 +3,9 @@ import type { StatMatchActionItemName, StatMatchActionItemType } from '../../sta
 import { STAT_ACTION_DEFAULTS } from '../../stats/stats-action-values'
 
 // Build a type-safe lookup map from the canonical action defaults
-const STAT_DEFAULTS = new Map(STAT_ACTION_DEFAULTS.map((e) => [`${e.name}:${e.type}`, e.value] as const))
+const STAT_DEFAULTS = new Map<string, number>(
+  STAT_ACTION_DEFAULTS.map((e) => [`${e.name}:${e.type}`, e.value] as const)
+)
 
 export const MOCK_BASE_TIMESTAMP = 1_700_000_000_000
 
@@ -23,9 +25,9 @@ export function makeStatEntry(
   const value = (overrides.value ?? fallback) as number
   return {
     name,
-    type,
-    value,
     playerId: overrides.playerId ?? null,
     timestamp: overrides.timestamp ?? MOCK_BASE_TIMESTAMP,
+    type,
+    value,
   }
 }

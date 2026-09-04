@@ -25,9 +25,9 @@ describe('photo-compressor', () => {
 
     expect(mockImageCompression).toHaveBeenCalledOnce()
     expect(mockImageCompression).toHaveBeenCalledWith(file, {
+      fileType: 'image/webp',
       maxSizeMB: 0.1,
       maxWidthOrHeight: 400,
-      fileType: 'image/webp',
       useWebWorker: true,
     })
     expect(result).toBe(MOCK_WEBP_BLOB)

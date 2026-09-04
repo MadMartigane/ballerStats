@@ -1,6 +1,6 @@
-import type Contact from '../contact'
-import type Player from '../player'
-import type Team from '../team'
+import type Contact from '../contact/contact'
+import type Player from '../player/player'
+import type Team from '../team/team'
 
 /**
  * Slugify a team name for safe use in a filename.
@@ -39,6 +39,12 @@ export function collectTeamEmails(team: Team, players: Player[], contacts: Conta
 
   const contactsByPlayerId = new Map<string, Contact[]>()
   for (const contact of contacts) {
+    // Contacts without a playerId cannot be linked to a team player, so they
+    // never contribute to the exported email list (same as before: they were
+    // grouped under an unreachable `undefined` key).
+    if (!contact.playerId) {
+      continue
+    }
     const list = contactsByPlayerId.get(contact.playerId)
     if (list) {
       list.push(contact)

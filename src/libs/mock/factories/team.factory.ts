@@ -1,4 +1,4 @@
-import Team from '../../team'
+import Team from '../../team/team'
 import type { TeamRawData } from '../../team/team.d'
 import { nextId } from '../mock-counter'
 

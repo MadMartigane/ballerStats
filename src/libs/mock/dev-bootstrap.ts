@@ -1,5 +1,5 @@
 import orchestrator from '../orchestrator/orchestrator'
-import { confirmAction, toast } from '../utils'
+import { confirmAction, toast } from '../utils/utils'
 import { seedDemoDataset } from './scenarios/demo-dataset.scenario'
 
 /** DEV-only side effect: seed localStorage via orchestrator. Confirms before overwriting. */

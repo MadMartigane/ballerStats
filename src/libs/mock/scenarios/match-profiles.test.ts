@@ -14,7 +14,7 @@ describe('match-profiles arithmetic', () => {
   it('points decrease from star to weak within each game', () => {
     for (const profiles of [CLOSE_WIN_PROFILES, BLOWOUT_WIN_PROFILES, BLOWOUT_LOSS_PROFILES]) {
       const pts = profiles.map(profilePoints)
-      for (let i = 0; i < pts.length - 1; i++) {
+      for (let i = 0; i < pts.length - 1; i += 1) {
         expect(pts[i]).toBeGreaterThan(pts[i + 1])
       }
     }
