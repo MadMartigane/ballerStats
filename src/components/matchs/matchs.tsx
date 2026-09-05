@@ -7,6 +7,8 @@ import { getUniqueChampionships, groupMatchesByChampionship } from '../../libs/m
 import Match from '../../libs/match/match'
 import type { MatchRawData, MatchType } from '../../libs/match/match.d'
 import orchestrator from '../../libs/orchestrator/orchestrator'
+import { getRawTeams } from '../../libs/stores/teams-store'
+import Team from '../../libs/team/team'
 import { goTo, scrollBottom, scrollTop } from '../../libs/utils/utils'
 import BsCard from '../card/card'
 import BsCombobox from '../combobox/combobox'
@@ -21,7 +23,7 @@ const isAddingMatch: MadSignal<boolean> = new MadSignal(false)
 const canAddMatch: MadSignal<boolean> = new MadSignal(false)
 const matchLength: MadSignal<number> = new MadSignal(orchestrator.Matchs.length)
 const [matchs, setMatchs] = createStore(orchestrator.Matchs.matchs)
-const [teams, setTeams] = createStore(orchestrator.Teams.teams)
+const teams = createMemo(() => getRawTeams().map((raw) => new Team(raw)))
 const championshipOptions = createMemo(() => getUniqueChampionships(matchs))
 const grouped = createMemo(() => groupMatchesByChampionship(matchs))
 
@@ -30,10 +32,6 @@ let currentMatch: Match | null = null
 bsEventBus.addEventListener('BS::MATCHS::CHANGE', () => {
   matchLength.set(orchestrator.Matchs.length)
   setMatchs(orchestrator.Matchs.matchs)
-})
-
-bsEventBus.addEventListener('BS::TEAMS::CHANGE', () => {
-  setTeams(orchestrator.Teams.teams)
 })
 
 function setNewMatchData(data: MatchRawData) {
@@ -165,7 +163,7 @@ function renderAddingMatchCard() {
       // biome-ignore lint/a11y/noNoninteractiveElementInteractions: form-level Enter submission is a legacy behavior preserved during audit fixes
       <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
         <BsSelect
-          datas={teams.map((team) => ({ label: team.name, value: team.id }))}
+          datas={teams().map((team) => ({ label: team.name, value: team.id }))}
           label="Mon Équipe"
           onValueChange={onTeamChange}
           placeholder="Sélectionnez l’équipe"

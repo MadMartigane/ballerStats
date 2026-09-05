@@ -45,9 +45,9 @@ import {
   replaceAllPlayers,
   updatePlayer,
 } from '../stores/players-store'
+import { addTeam, getRawTeams, getTeamById, hydrateTeams, replaceAllTeams } from '../stores/teams-store'
 import Team from '../team/team'
 import type { TeamRawData } from '../team/team.d'
-import Teams from '../teams/teams'
 import type { TrombiTitles } from '../trombi-titles'
 import { DEFAULT_TITLES, persistTitles, titles } from '../trombi-titles-store'
 import { confirmAction, downloadBlob, toast } from '../utils/utils'
@@ -95,7 +95,6 @@ export function isGlobalDB(value: unknown): value is GlobalDB {
 }
 
 export class Orchestrator {
-  #teams = new Teams()
   #matchs = new Matchs()
   #clubs = new Clubs()
   #lastPlayersRecord: number | null = null
@@ -114,10 +113,6 @@ export class Orchestrator {
   }
 
   private installEventHandlers() {
-    bsEventBus.addEventListener('BS::TEAMS::CHANGE', () => {
-      this.storeTeams()
-    })
-
     bsEventBus.addEventListener('BS::MATCHS::CHANGE', () => {
       this.storeMatchs()
     })
@@ -151,7 +146,7 @@ export class Orchestrator {
 
     this.#clubs = new Clubs(migration.clubs)
     hydratePlayers(migration.players)
-    this.#teams = new Teams(migration.teams)
+    hydrateTeams(migration.teams)
 
     if (migration.players.length > 0) {
       this.#lastPlayersRecord = Date.now()
@@ -170,24 +165,12 @@ export class Orchestrator {
     persistTitles(migration.trombiTitles)
   }
 
-  private updateLastTeamsRecord() {
-    this.#lastTeamsRecord = Date.now()
-  }
-
   private updateLastMatchsRecord() {
     this.#lastMatchsRecord = Date.now()
   }
 
   private updateLastClubsRecord() {
     this.#lastClubsRecord = Date.now()
-  }
-
-  private storeTeams() {
-    this.updateLastTeamsRecord()
-
-    storeTeams(this.#teams.getRawData(), this.#lastTeamsRecord).catch((error: unknown) => {
-      console.error('storeTeams failed:', error)
-    })
   }
 
   private storeMatchs() {
@@ -232,8 +215,7 @@ export class Orchestrator {
 
     // TODO: add lastRecord (timestamp) in the team and compare each records
     if (!this.#lastTeamsRecord || stored.lastRecord > this.#lastTeamsRecord) {
-      this.#teams = new Teams(stored.data)
-      this.throwTeamsUpdatedEvent()
+      hydrateTeams(stored.data)
     }
   }
 
@@ -280,12 +262,6 @@ export class Orchestrator {
     }
   }
 
-  private removeAllTeams() {
-    for (const team of this.Teams.teams) {
-      this.Teams.remove(team)
-    }
-  }
-
   private removeAllMatchs() {
     for (const match of this.Matchs.matchs) {
       this.Matchs.remove(match)
@@ -293,13 +269,12 @@ export class Orchestrator {
   }
 
   private clearCollectionsOnly(): void {
-    this.removeAllTeams()
     this.removeAllMatchs()
   }
 
   private addAll(dataset: DomainDataset): void {
     for (const team of dataset.teams ?? []) {
-      this.Teams.add(team)
+      addTeam(team.getRawData())
     }
     for (const match of dataset.matchs ?? []) {
       this.Matchs.add(match)
@@ -311,6 +286,7 @@ export class Orchestrator {
     batch(() => {
       replaceAllPlayers([])
       replaceAllContacts([])
+      replaceAllTeams([])
     })
     await persistTitles({ ...DEFAULT_TITLES })
     await clearAllPhotos()
@@ -338,20 +314,12 @@ export class Orchestrator {
     this.throwClubsUpdatedEvent()
   }
 
-  get Teams() {
-    return this.#teams
-  }
-
   get Matchs() {
     return this.#matchs
   }
 
   get Clubs() {
     return this.#clubs
-  }
-
-  throwTeamsUpdatedEvent(mute = false) {
-    bsEventBus.dispatchEvent('BS::TEAMS::CHANGE', mute)
   }
 
   throwMatchsUpdatedEvent(mute = false) {
@@ -460,7 +428,8 @@ export class Orchestrator {
       return null
     }
 
-    return this.#teams.teams.find((candidate) => candidate.id === id) || null
+    const raw = getTeamById(id)
+    return raw ? new Team(raw) : null
   }
 
   getMatch(id?: string | null) {
@@ -476,6 +445,7 @@ export class Orchestrator {
     batch(() => {
       replaceAllPlayers((dataset.players ?? []).map((player) => player.getRawData()))
       replaceAllContacts((dataset.contacts ?? []).map((contact) => contact.getRawData()))
+      replaceAllTeams((dataset.teams ?? []).map((team) => team.getRawData()))
       this.clearCollectionsOnly()
       this.addAll(dataset)
     })
@@ -488,7 +458,7 @@ export class Orchestrator {
   get hasAnyData(): boolean {
     return (
       getRawPlayers().length > 0 ||
-      this.#teams.teams.length > 0 ||
+      getRawTeams().length > 0 ||
       this.#matchs.matchs.length > 0 ||
       getRawContacts().length > 0
     )
@@ -496,18 +466,18 @@ export class Orchestrator {
 
   bigClean() {
     let cleaned = false
-    for (const team of this.Teams.teams) {
-      const cleanPlayerIds = team.playerIds.filter((playerId) => Boolean(this.getPlayer(playerId)))
+    const cleanedTeams = getRawTeams().map((team) => {
+      const cleanPlayerIds = (team.playerIds ?? []).filter((playerId) => Boolean(this.getPlayer(playerId)))
 
-      if (team.playerIds.length > cleanPlayerIds.length) {
-        team.update({ playerIds: cleanPlayerIds })
-        this.Teams.updateTeam(team)
+      if ((team.playerIds?.length ?? 0) > cleanPlayerIds.length) {
         cleaned = true
+        return { ...team, playerIds: cleanPlayerIds }
       }
-    }
+      return team
+    })
 
     if (cleaned) {
-      this.throwTeamsUpdatedEvent()
+      replaceAllTeams(cleanedTeams)
     }
 
     const currentContacts = getRawContacts()
@@ -535,7 +505,7 @@ export class Orchestrator {
       contacts: getRawContacts(),
       matchs: this.Matchs.matchs.map((match) => match.getRawData()),
       players: getRawPlayers(),
-      teams: this.Teams.teams.map((team) => team.getRawData()),
+      teams: getRawTeams(),
       timestamp: date.getTime(),
       trombiTitles: titles,
     }

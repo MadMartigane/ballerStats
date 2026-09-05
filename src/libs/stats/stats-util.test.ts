@@ -3,8 +3,8 @@ import type Match from '../match/match'
 import { makeMatch } from '../mock/factories/match.factory'
 import { makeStatEntry } from '../mock/factories/stat-entry.factory'
 import { makeTeam } from '../mock/factories/team.factory'
-import type Team from '../team/team'
 import { TEAM_OPPONENT_ID } from '../team/team'
+import type { TeamRawData } from '../team/team.d'
 import type { StatMatchSummaryPlayer } from './stats.d'
 import {
   computeDerivedStats,
@@ -16,15 +16,21 @@ import {
   TEAM_TOTAL_ID,
 } from './stats-util'
 
-const { mockOrchestrator } = vi.hoisted(() => ({
+const { mockOrchestrator, mockTeamsStore } = vi.hoisted(() => ({
   mockOrchestrator: {
     Matchs: { matchs: [] as Match[] },
-    Teams: { teams: [] as Team[] },
+  },
+  mockTeamsStore: {
+    raws: [] as TeamRawData[],
   },
 }))
 
 vi.mock('../orchestrator/orchestrator', () => ({
   default: mockOrchestrator,
+}))
+
+vi.mock('../stores/teams-store', () => ({
+  getRawTeams: () => mockTeamsStore.raws,
 }))
 
 describe('safeDivide', () => {
@@ -115,7 +121,7 @@ describe('getStatSummary', () => {
 describe('getFullStats', () => {
   it('returns a zeroed summary with no NaN when there are no matches', () => {
     mockOrchestrator.Matchs.matchs = []
-    mockOrchestrator.Teams.teams = []
+    mockTeamsStore.raws = []
 
     const summary = getFullStats()
 
@@ -143,7 +149,7 @@ describe('getFullStats', () => {
     })
 
     mockOrchestrator.Matchs.matchs = [match]
-    mockOrchestrator.Teams.teams = [team]
+    mockTeamsStore.raws = [team.getRawData()]
 
     const summary = getFullStats()
 
@@ -165,7 +171,7 @@ describe('getFullStats championship filter', () => {
     })
 
   beforeEach(() => {
-    mockOrchestrator.Teams.teams = [team]
+    mockTeamsStore.raws = [team.getRawData()]
   })
 
   it('includes all matches when called without a filter', () => {
@@ -260,7 +266,7 @@ describe('getFullStats - teamScoresTotal (cumulative vs per-game)', () => {
   // state explicitly to assert the zeroed-totals branch.
   beforeEach(() => {
     mockOrchestrator.Matchs.matchs = [matchA, matchB]
-    mockOrchestrator.Teams.teams = [team]
+    mockTeamsStore.raws = [team.getRawData()]
   })
 
   it('populates teamScoresTotal and uses the exported sentinel playerId constants', () => {
@@ -344,7 +350,7 @@ describe('getFullStats - teamScoresTotal (cumulative vs per-game)', () => {
 
     // Override shared fixture: this case registers its own divergent-rounding orchestrator state.
     mockOrchestrator.Matchs.matchs = [divergentMatchA, divergentMatchB]
-    mockOrchestrator.Teams.teams = [teamDiv]
+    mockTeamsStore.raws = [teamDiv.getRawData()]
 
     const summary = getFullStats()
 
@@ -395,7 +401,7 @@ describe('getFullStats - teamScoresTotal (cumulative vs per-game)', () => {
   it('empty matchs array → teamScoresTotal is defined-but-zeroed and teamScores.scores.total === 0', () => {
     // Override the shared fixture: this case sets its own orchestrator state.
     mockOrchestrator.Matchs.matchs = []
-    mockOrchestrator.Teams.teams = []
+    mockTeamsStore.raws = []
 
     const summary = getFullStats()
 
@@ -440,7 +446,7 @@ describe('getFullStats - teamScoresTotal (cumulative vs per-game)', () => {
 
     // Override shared fixture: this case registers its own rebond-heavy orchestrator state.
     mockOrchestrator.Matchs.matchs = [reboundsMatchA, reboundsMatchB]
-    mockOrchestrator.Teams.teams = [teamReb]
+    mockTeamsStore.raws = [teamReb.getRawData()]
 
     const summary = getFullStats()
     const nbMatch = 2

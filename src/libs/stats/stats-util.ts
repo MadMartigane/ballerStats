@@ -1,5 +1,6 @@
 import type Match from '../match/match'
 import orchestrator from '../orchestrator/orchestrator'
+import { getRawTeams } from '../stores/teams-store'
 import { TEAM_OPPONENT_ID } from '../team/team'
 import { clone } from '../utils/utils'
 import type {
@@ -591,7 +592,7 @@ export function getFullStats(championshipFilter?: string): FullStatSummary {
   }
 
   // TODO: get team by argv
-  const [team] = orchestrator.Teams.teams
+  const [team] = getRawTeams()
 
   const stats = matchs.map((match: Match) => getStatSummary(match))
 
@@ -619,7 +620,7 @@ export function getFullStats(championshipFilter?: string): FullStatSummary {
     sumPlayerStats(summed.teamScores, statCurrentMatch.teamScores)
   }
 
-  summed.players = team.playerIds.map((playerId: string): StatMatchSummaryPlayer => {
+  summed.players = (team.playerIds ?? []).map((playerId: string): StatMatchSummaryPlayer => {
     const currentPlayerStats = clone(RAW_STAT_MATCH_SUMMARY.teamScores) as StatMatchSummaryPlayer
 
     currentPlayerStats.playerId = playerId

@@ -1,11 +1,9 @@
 import { MessageCircleWarning, Save, Users, X } from 'lucide-solid'
-import { For, Show } from 'solid-js'
-import { createStore } from 'solid-js/store'
-import bsEventBus from '../../libs/event-bus/event-bus'
+import { createMemo, For, Show } from 'solid-js'
 import MadSignal from '../../libs/mad-signal'
-import orchestrator from '../../libs/orchestrator/orchestrator'
 import type { PlayerRawData } from '../../libs/player/player.d'
 import { players } from '../../libs/stores/players-store'
+import { addTeam, teams, updateTeam } from '../../libs/stores/teams-store'
 import Team from '../../libs/team/team'
 import type { TeamRawData } from '../../libs/team/team.d'
 import { scrollBottom, scrollTop } from '../../libs/utils/utils'
@@ -17,15 +15,8 @@ import BsTeam from '../team/team'
 let isEditingNewTeam = false
 const isAddingTeam: MadSignal<boolean> = new MadSignal(false)
 const canAddTeam: MadSignal<boolean> = new MadSignal(false)
-const teamLength: MadSignal<number> = new MadSignal(orchestrator.Teams.length)
-const [teams, setTeams] = createStore(orchestrator.Teams.teams)
 
 let currentTeam: Team | null = null
-
-bsEventBus.addEventListener('BS::TEAMS::CHANGE', () => {
-  teamLength.set(orchestrator.Teams.length)
-  setTeams(orchestrator.Teams.teams)
-})
 
 function setNewTeamData(data: TeamRawData) {
   if (currentTeam) {
@@ -47,9 +38,9 @@ function registerTeam() {
   }
 
   if (isEditingNewTeam) {
-    orchestrator.Teams.add(currentTeam)
+    addTeam(currentTeam.getRawData())
   } else {
-    orchestrator.Teams.updateTeam(currentTeam)
+    updateTeam(currentTeam.id, currentTeam.getRawData())
   }
 
   toggleAddTeam(false)
@@ -187,12 +178,15 @@ function renderAddingTeamCard() {
 }
 
 export default function BsTeams() {
+  const teamLength = createMemo(() => teams.length)
+  const visibleTeams = createMemo(() => teams.map((raw) => new Team(raw)))
+
   return (
     <div>
       <Show when={!isAddingTeam.get()}>
-        <Show fallback={renderTeamFallback()} when={(teamLength.get() || 0) > 0}>
+        <Show fallback={renderTeamFallback()} when={(teamLength() || 0) > 0}>
           <div class="flex w-full flex-wrap justify-around gap-4">
-            <For each={teams}>
+            <For each={visibleTeams()}>
               {(team) => (
                 <div class="mx-auto w-fit md:mx-0">
                   <BsTeam onEdit={editTeam} team={team} />
