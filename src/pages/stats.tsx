@@ -2,22 +2,16 @@ import { ChartScatter } from 'lucide-solid'
 import { createMemo, createSignal } from 'solid-js'
 import BsSelect from '../components/select/select'
 import { BsFullStatTable } from '../components/stats/full-stat-table'
-import { createMatchVersionTracker, getUniqueChampionships } from '../libs/match/championship-util'
-import orchestrator from '../libs/orchestrator/orchestrator'
+import { getUniqueChampionships } from '../libs/match/championship-util'
+import Match from '../libs/match/match'
 import { getFullStats } from '../libs/stats/stats-util'
+import { getRawMatchs } from '../libs/stores/matchs-store'
 
 export default function Stats() {
   const [championshipFilter, setChampionshipFilter] = createSignal('')
-  const matchVersion = createMatchVersionTracker()
 
-  const championshipOptions = createMemo(() => {
-    matchVersion() // triggers recomputation on match changes
-    return getUniqueChampionships(orchestrator.Matchs.matchs)
-  })
-  const fullStats = createMemo(() => {
-    matchVersion() // triggers recomputation on match changes
-    return getFullStats(championshipFilter())
-  })
+  const championshipOptions = createMemo(() => getUniqueChampionships(getRawMatchs().map((raw) => new Match(raw))))
+  const fullStats = createMemo(() => getFullStats(championshipFilter()))
 
   return (
     <div>

@@ -7,7 +7,6 @@ import Clubs from '../clubs/clubs'
 import type { ContactRawData } from '../contact/contact.d'
 import bsEventBus from '../event-bus/event-bus'
 import Match from '../match/match'
-import Matchs from '../matchs/matchs'
 import {
   clearAllPhotos,
   deletePhoto,
@@ -32,11 +31,11 @@ import {
   STORAGE_TEAMS_KEY,
   STORAGE_TROMBI_TITLES_KEY,
   storeClubs,
-  storeMatchs,
   storePlayers,
   storeTeams,
 } from '../store/store'
 import { getRawContacts, hydrateContacts, replaceAllContacts, replacePlayerContacts } from '../stores/contacts-store'
+import { addMatch, getMatchById, getRawMatchs, hydrateMatchs, replaceAllMatchs } from '../stores/matchs-store'
 import {
   addPlayer,
   getPlayerById,
@@ -95,28 +94,22 @@ export function isGlobalDB(value: unknown): value is GlobalDB {
 }
 
 export class Orchestrator {
-  #matchs = new Matchs()
   #clubs = new Clubs()
   #lastPlayersRecord: number | null = null
   #lastTeamsRecord: number | null = null
-  #lastMatchsRecord: number | null = null
   #lastClubsRecord: number | null = null
 
   constructor() {
     this.runStartupMigration()
     this.getStoredPlayers()
     this.getStoredTeams()
-    this.getStoredMatchs()
+    this.hydrateStoredMatchs()
     this.getStoredContacts()
     this.getStoredClubs()
     this.installEventHandlers()
   }
 
   private installEventHandlers() {
-    bsEventBus.addEventListener('BS::MATCHS::CHANGE', () => {
-      this.storeMatchs()
-    })
-
     bsEventBus.addEventListener('BS::CLUBS::CHANGE', () => {
       this.storeClubs()
     })
@@ -165,20 +158,8 @@ export class Orchestrator {
     persistTitles(migration.trombiTitles)
   }
 
-  private updateLastMatchsRecord() {
-    this.#lastMatchsRecord = Date.now()
-  }
-
   private updateLastClubsRecord() {
     this.#lastClubsRecord = Date.now()
-  }
-
-  private storeMatchs() {
-    this.updateLastMatchsRecord()
-
-    storeMatchs(this.#matchs.getRawData(), this.#lastMatchsRecord).catch((error: unknown) => {
-      console.error('storeMatchs failed:', error)
-    })
   }
 
   private storeClubs() {
@@ -219,7 +200,7 @@ export class Orchestrator {
     }
   }
 
-  private async getStoredMatchs() {
+  private async hydrateStoredMatchs() {
     const stored = await getStoredMatchs().catch((error: unknown) => {
       console.error('getStoredMatchs failed:', error)
     })
@@ -228,11 +209,7 @@ export class Orchestrator {
       return
     }
 
-    // TODO: add lastRecord (timestamp) in the match and compare each records
-    if (!this.#lastMatchsRecord || stored.lastRecord > this.#lastMatchsRecord) {
-      this.#matchs = new Matchs(stored.data)
-      this.throwMatchsUpdatedEvent()
-    }
+    hydrateMatchs(stored.data)
   }
 
   private async getStoredContacts() {
@@ -262,31 +239,21 @@ export class Orchestrator {
     }
   }
 
-  private removeAllMatchs() {
-    for (const match of this.Matchs.matchs) {
-      this.Matchs.remove(match)
-    }
-  }
-
-  private clearCollectionsOnly(): void {
-    this.removeAllMatchs()
-  }
-
   private addAll(dataset: DomainDataset): void {
     for (const team of dataset.teams ?? []) {
       addTeam(team.getRawData())
     }
     for (const match of dataset.matchs ?? []) {
-      this.Matchs.add(match)
+      addMatch(match.getRawData())
     }
   }
 
   private async doClearDB() {
-    this.clearCollectionsOnly()
     batch(() => {
       replaceAllPlayers([])
       replaceAllContacts([])
       replaceAllTeams([])
+      replaceAllMatchs([])
     })
     await persistTitles({ ...DEFAULT_TITLES })
     await clearAllPhotos()
@@ -314,16 +281,8 @@ export class Orchestrator {
     this.throwClubsUpdatedEvent()
   }
 
-  get Matchs() {
-    return this.#matchs
-  }
-
   get Clubs() {
     return this.#clubs
-  }
-
-  throwMatchsUpdatedEvent(mute = false) {
-    bsEventBus.dispatchEvent('BS::MATCHS::CHANGE', mute)
   }
 
   throwClubsUpdatedEvent(mute = false) {
@@ -437,7 +396,8 @@ export class Orchestrator {
       return null
     }
 
-    return this.#matchs.matchs.find((candidate) => candidate.id === id) || null
+    const raw = getMatchById(id)
+    return raw ? new Match(raw) : null
   }
 
   /** Atomically replace all domain data with the given dataset. */
@@ -446,8 +406,7 @@ export class Orchestrator {
       replaceAllPlayers((dataset.players ?? []).map((player) => player.getRawData()))
       replaceAllContacts((dataset.contacts ?? []).map((contact) => contact.getRawData()))
       replaceAllTeams((dataset.teams ?? []).map((team) => team.getRawData()))
-      this.clearCollectionsOnly()
-      this.addAll(dataset)
+      replaceAllMatchs((dataset.matchs ?? []).map((match) => match.getRawData()))
     })
     if (dataset.clubs !== undefined) {
       this.#clubs = new Clubs(dataset.clubs.map((club: Club) => club.getRawData()))
@@ -457,10 +416,7 @@ export class Orchestrator {
 
   get hasAnyData(): boolean {
     return (
-      getRawPlayers().length > 0 ||
-      getRawTeams().length > 0 ||
-      this.#matchs.matchs.length > 0 ||
-      getRawContacts().length > 0
+      getRawPlayers().length > 0 || getRawTeams().length > 0 || getRawMatchs().length > 0 || getRawContacts().length > 0
     )
   }
 
@@ -503,7 +459,7 @@ export class Orchestrator {
     const globalDB: GlobalDB = {
       clubs: this.Clubs.clubs.map((club) => club.getRawData()),
       contacts: getRawContacts(),
-      matchs: this.Matchs.matchs.map((match) => match.getRawData()),
+      matchs: getRawMatchs(),
       players: getRawPlayers(),
       teams: getRawTeams(),
       timestamp: date.getTime(),

@@ -1,5 +1,5 @@
-import type Match from '../match/match'
-import orchestrator from '../orchestrator/orchestrator'
+import Match from '../match/match'
+import { getRawMatchs } from '../stores/matchs-store'
 import { getRawTeams } from '../stores/teams-store'
 import { TEAM_OPPONENT_ID } from '../team/team'
 import { clone } from '../utils/utils'
@@ -582,8 +582,9 @@ export function getStatSummary(match: Match | null): StatMatchSummary {
 }
 
 export function getFullStats(championshipFilter?: string): FullStatSummary {
-  const allMatchs = orchestrator.Matchs.matchs
-  const matchs = championshipFilter ? allMatchs.filter((m) => m.championship === championshipFilter) : allMatchs
+  const matchs = getRawMatchs()
+    .map((raw) => new Match(raw))
+    .filter((match) => !championshipFilter || match.championship === championshipFilter)
 
   if (matchs.length === 0) {
     const base = clone(RAW_STAT_MATCH_SUMMARY) as StatMatchSummary

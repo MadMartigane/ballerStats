@@ -1,14 +1,13 @@
 import { Dot } from 'lucide-solid'
 import { createMemo } from 'solid-js'
-import MadSignal from '../../libs/mad-signal'
-import orchestrator from '../../libs/orchestrator/orchestrator'
+import { matchs } from '../../libs/stores/matchs-store'
 import { players } from '../../libs/stores/players-store'
 import { teams } from '../../libs/stores/teams-store'
 
 export default function GlobalStats() {
   const nbPlayers = createMemo(() => players.length)
   const nbTeams = createMemo(() => teams.length)
-  const nbMatchs = new MadSignal(orchestrator.Matchs.length)
+  const nbMatchs = createMemo(() => matchs.length)
 
   return (
     <div>
@@ -37,7 +36,7 @@ export default function GlobalStats() {
                 <Dot class="h-8 w-8 text-purple-600 dark:text-purple-300" />
               </td>
               <td>Nombre de matchs</td>
-              <td>{nbMatchs.get()}</td>
+              <td>{nbMatchs()}</td>
             </tr>
           </tbody>
         </table>
