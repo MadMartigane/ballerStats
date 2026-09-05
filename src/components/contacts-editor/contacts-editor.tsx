@@ -1,10 +1,9 @@
 import { Mail, Pencil, Phone, Plus, Save, Trash, X } from 'lucide-solid'
-import { createMemo, For, Show } from 'solid-js'
+import { For, Show } from 'solid-js'
 import Contact, { getRelationshipLabel, isContactRelationship, RELATIONSHIP_LABELS } from '../../libs/contact/contact'
 import type { ContactRawData } from '../../libs/contact/contact.d'
-import { contacts as allContacts } from '../../libs/contacts-store'
+import { createBusList } from '../../libs/event-bus/bus-hooks'
 import MadSignal from '../../libs/mad-signal'
-import orchestrator from '../../libs/orchestrator/orchestrator'
 import { toast } from '../../libs/utils/utils'
 import BsInput from '../input/input'
 import BsSelect from '../select/select'
@@ -35,13 +34,20 @@ export default function BsContactsEditor(props: BsContactsEditorProps) {
   let isEditingNewContact = false
   let currentContact: Contact | null = null
 
-  const playerContacts = createMemo(() => allContacts.filter((c) => c.playerId === props.playerId))
+  /**
+   * The domain `Contacts` collection is framework-free: it only fires
+   * `BS::CONTACTS::CHANGE` events on mutation. `createBusList` re-reads the
+   * source list on every such event, on the source's local draft notifier, and
+   * whenever the source's reactive dependencies change (staged draft signal,
+   * player identity, source switch).
+   */
+  const visibleContacts = createBusList('BS::CONTACTS::CHANGE', () => props.source.list(), props.source.subscribe)
   const editContactLabel = 'Modifier le contact'
   const deleteContactLabel = 'Supprimer le contact'
 
   function startNewContact() {
     isEditingNewContact = true
-    currentContact = new Contact({ playerId: props.playerId, relationship: 'mother' })
+    currentContact = props.source.createEmpty()
     isAddingContact.set(true)
   }
 
@@ -69,9 +75,9 @@ export default function BsContactsEditor(props: BsContactsEditorProps) {
     }
     try {
       if (isEditingNewContact) {
-        orchestrator.Contacts.add(currentContact)
+        props.source.add(currentContact)
       } else {
-        orchestrator.Contacts.updateContact(currentContact)
+        props.source.update(currentContact)
       }
       currentContact = null
       isAddingContact.set(false)
@@ -82,7 +88,7 @@ export default function BsContactsEditor(props: BsContactsEditorProps) {
 
   function deleteContact(contact: Contact) {
     try {
-      orchestrator.Contacts.remove(contact)
+      props.source.remove(contact.id)
     } catch {
       toast('Erreur lors de la suppression du contact.', 'error')
     }
@@ -185,10 +191,10 @@ export default function BsContactsEditor(props: BsContactsEditorProps) {
         <Show when={!isAddingContact.get()}>
           <Show
             fallback={<p class="italic opacity-70">Aucun contact enregistré pour ce joueur.</p>}
-            when={playerContacts().length > 0}
+            when={visibleContacts().length > 0}
           >
             <div class="flex flex-col gap-2">
-              <For each={playerContacts()}>
+              <For each={visibleContacts()}>
                 {(contact) => (
                   <div class="flex items-center gap-2 rounded-lg bg-base-200 p-3">
                     <div class="flex flex-1 flex-col gap-1">

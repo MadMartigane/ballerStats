@@ -2,6 +2,25 @@ import Contact from '../contact/contact'
 import type { ContactRawData } from '../contact/contact.d'
 import bsEventBus from '../event-bus/event-bus'
 
+export function assertContactAddable(contacts: Contact[], newContact: Contact) {
+  if (!newContact.isRegisterable) {
+    throw new Error('[Contacts.add()] Contact is not registerable (missing playerId).')
+  }
+  const alreadyRegistered = contacts.some((current) => current.id === newContact.id)
+  if (alreadyRegistered) {
+    throw new Error(`[Contacts.add()] The contact id ${newContact.id} already exists.`)
+  }
+}
+
+export function assertContactExists(contacts: Contact[], contactOrId: Contact | string): Contact {
+  const id = typeof contactOrId === 'string' ? contactOrId : contactOrId.id
+  const contact = contacts.find((candidate) => candidate.id === id)
+  if (!contact) {
+    throw new Error(`[Contacts] The contact id ${id} doesn't exist.`)
+  }
+  return contact
+}
+
 export default class Contacts {
   #contacts: Contact[] = []
 
@@ -15,10 +34,6 @@ export default class Contacts {
     bsEventBus.dispatchEvent('BS::CONTACTS::CHANGE')
   }
 
-  private getContact(newContact: Contact) {
-    return this.#contacts.find((current) => current.id === newContact.id)
-  }
-
   get contacts(): Contact[] {
     return this.#contacts.map((contact: Contact): Contact => new Contact(contact.getRawData()))
   }
@@ -27,7 +42,7 @@ export default class Contacts {
     return this.#contacts.length
   }
 
-  setFromRawData(data: ContactRawData[]) {
+  setFromRawDataSilent(data: ContactRawData[]) {
     // biome-ignore lint/suspicious/noUnnecessaryConditions: legacy callers/tests pass null to empty the collection, which the array parameter type does not reflect.
     if (!data) {
       this.#contacts = []
@@ -35,6 +50,10 @@ export default class Contacts {
     }
 
     this.#contacts = data.map((contactData) => new Contact(contactData))
+  }
+
+  setFromRawData(data: ContactRawData[]) {
+    this.setFromRawDataSilent(data)
     this.throwUpdatedContactEvent()
   }
 
@@ -44,15 +63,13 @@ export default class Contacts {
       .map((contact) => new Contact(contact.getRawData()))
   }
 
-  updateContact(newContact: Contact) {
-    const oldContact = this.getContact(newContact)
-    if (!oldContact) {
-      throw new Error(
-        `[Contacts.updateContact()] The contact id ${newContact.id} doesn't exist. Please use .add() instead.`
-      )
-    }
-
+  updateContactSilent(newContact: Contact) {
+    const oldContact = assertContactExists(this.#contacts, newContact)
     oldContact.setFromRawData(newContact.getRawData())
+  }
+
+  updateContact(newContact: Contact) {
+    this.updateContactSilent(newContact)
     this.throwUpdatedContactEvent()
   }
 
@@ -61,33 +78,23 @@ export default class Contacts {
   }
 
   add(newContact: Contact) {
-    if (!newContact.isRegisterable) {
-      throw new Error('[Contacts.add()] Contact is not registerable (missing playerId).')
-    }
-    const alreadyRegistered = this.getContact(newContact)
-    if (alreadyRegistered) {
-      throw new Error(`[Contacts.add()] The contact id ${newContact.id} already exists.`)
-    }
+    this.addSilent(newContact)
+    this.throwUpdatedContactEvent()
+  }
 
+  addSilent(newContact: Contact) {
+    assertContactAddable(this.#contacts, newContact)
     this.#contacts.push(newContact)
+  }
+
+  remove(contactOrId: Contact | string) {
+    this.removeSilent(contactOrId)
     this.throwUpdatedContactEvent()
   }
 
-  remove(contact: Contact) {
-    const idx = this.#contacts.findIndex((candidate) => candidate.id === contact.id)
-    if (idx === -1) {
-      throw new Error(`[Contacts.remove()] The contact id ${contact.id} not found.`)
-    }
-
-    this.#contacts.splice(idx, 1)
-    this.throwUpdatedContactEvent()
-  }
-
-  removeSilent(contact: Contact) {
-    const idx = this.#contacts.findIndex((candidate) => candidate.id === contact.id)
-    if (idx === -1) {
-      throw new Error(`[Contacts.removeSilent()] The contact id ${contact.id} not found.`)
-    }
+  removeSilent(contactOrId: Contact | string) {
+    const existing = assertContactExists(this.#contacts, contactOrId)
+    const idx = this.#contacts.indexOf(existing)
     this.#contacts.splice(idx, 1)
   }
 }

@@ -2,6 +2,16 @@ import bsEventBus from '../event-bus/event-bus'
 import Player from '../player/player'
 import type { PlayerRawData } from '../player/player.d'
 
+export function assertPlayerAddable(players: Player[], newPlayer: Player) {
+  if (!newPlayer.isRegisterable) {
+    throw new Error('[Players.add()] Player is not registerable (missing required data).')
+  }
+  const alreadyRegistered = players.some((current) => current.id === newPlayer.id)
+  if (alreadyRegistered) {
+    throw new Error(`[Players.add()] The player id ${newPlayer.id} already exists.`)
+  }
+}
+
 export default class Players {
   #players: Player[] = []
 
@@ -15,16 +25,21 @@ export default class Players {
     bsEventBus.dispatchEvent('BS::PLAYERS::CHANGE')
   }
 
-  private getPlayer(newPlayer: Player) {
-    return this.#players.find((currentPlayer) => currentPlayer.id === newPlayer.id)
-  }
-
   get players(): Player[] {
     return this.#players.map((player: Player): Player => new Player(player.getRawData()))
   }
 
   get length() {
     return this.#players.length
+  }
+
+  /**
+   * Returns a defensive clone of the player with the given id. Mutating the
+   * returned instance does not affect the collection — use `updatePlayer`.
+   */
+  getById(id: string): Player | undefined {
+    const player = this.#players.find((candidate) => candidate.id === id)
+    return player ? new Player(player.getRawData()) : undefined
   }
 
   setFromRawData(data: PlayerRawData[]) {
@@ -38,7 +53,7 @@ export default class Players {
     this.throwUpdatedPlayerEvent()
   }
 
-  updatePlayer(newPlayer: Player) {
+  updatePlayerSilent(newPlayer: Player) {
     const oldPlayer = this.#players.find((currentPlayer) => currentPlayer.id === newPlayer.id)
     if (!oldPlayer) {
       throw new Error(
@@ -47,6 +62,10 @@ export default class Players {
     }
 
     oldPlayer.setFromRawData(newPlayer.getRawData())
+  }
+
+  updatePlayer(newPlayer: Player) {
+    this.updatePlayerSilent(newPlayer)
     this.throwUpdatedPlayerEvent()
   }
 
@@ -55,22 +74,21 @@ export default class Players {
   }
 
   add(newPlayer: Player) {
-    if (!newPlayer.isRegisterable) {
-      throw new Error(`[BsPlayers.add()] The player id ${newPlayer.id} is not registerable, Please complete the data.`)
-    }
-
-    const alreadyRegisteredPlayer = this.getPlayer(newPlayer)
-    if (alreadyRegisteredPlayer) {
-      throw new Error(
-        `[BsPlayers.add()] The player id ${newPlayer.id} already exist, Please use .updatePlayer() method instead.`
-      )
-    }
-
-    this.#players.push(newPlayer)
+    this.addSilent(newPlayer)
     this.throwUpdatedPlayerEvent()
   }
 
+  addSilent(newPlayer: Player) {
+    assertPlayerAddable(this.#players, newPlayer)
+    this.#players.push(newPlayer)
+  }
+
   remove(player: Player) {
+    this.removeSilent(player)
+    this.throwUpdatedPlayerEvent()
+  }
+
+  removeSilent(player: Player) {
     const idx = this.#players.findIndex((candidate: Player) => candidate.id === player.id)
 
     if (idx === -1) {
@@ -78,6 +96,5 @@ export default class Players {
     }
 
     this.#players.splice(idx, 1)
-    this.throwUpdatedPlayerEvent()
   }
 }

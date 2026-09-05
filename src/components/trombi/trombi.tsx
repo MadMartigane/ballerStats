@@ -50,7 +50,7 @@ export default function BsTrombi(props: BsTrombiProps) {
       </div>
 
       <Show fallback={<BsEmptyPlayerFallback />} when={props.players.length}>
-        <div class="flex flex-col gap-3">
+        <div class="flex flex-col gap-3 print:mx-0 print:w-full print:max-w-none print:gap-4 print:px-0">
           <For each={props.players}>{(player) => <BsTrombiPlayerItem player={player} />}</For>
         </div>
       </Show>

@@ -8,7 +8,6 @@ const ALREADY_EXISTS_PATTERN = /already exists/
 const MISSING_PLAYER_ID_PATTERN = /playerId/
 const NOT_REGISTERABLE_PATTERN = /not registerable/
 const DOES_NOT_EXIST_PATTERN = /doesn't exist/
-const NOT_FOUND_PATTERN = /not found/
 
 function makeContactData(overrides: Partial<ContactRawData> = {}): ContactRawData {
   return {
@@ -86,7 +85,7 @@ describe('Contacts', () => {
     const contacts = new Contacts()
     const ghost = new Contact(makeContactData({ id: 'ghost' }))
 
-    expect(() => contacts.remove(ghost)).toThrow(NOT_FOUND_PATTERN)
+    expect(() => contacts.remove(ghost)).toThrow(DOES_NOT_EXIST_PATTERN)
   })
 
   it('removeSilent() removes the contact from the collection', () => {
@@ -104,7 +103,7 @@ describe('Contacts', () => {
     const contacts = new Contacts()
     const ghost = new Contact(makeContactData({ id: 'ghost' }))
 
-    expect(() => contacts.removeSilent(ghost)).toThrow(NOT_FOUND_PATTERN)
+    expect(() => contacts.removeSilent(ghost)).toThrow(DOES_NOT_EXIST_PATTERN)
   })
 
   it('removeSilent() does not fire a change event', () => {

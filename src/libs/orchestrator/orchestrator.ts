@@ -47,6 +47,12 @@ import { confirmAction, downloadBlob, toast } from '../utils/utils'
 import { vibrate } from '../vibrator/vibrator'
 import type { ThemeVibration } from '../vibrator/vibrator.d'
 import type { DomainDataset, GlobalDB } from './orchestrator.d'
+import {
+  applyPhoto,
+  replacePlayerContactsSilent,
+  validateContactReplacementBatch,
+  validateNewPlayerBatch,
+} from './player-batch'
 
 export const DB_FILE_EXTENSION = '.bstat' as const
 
@@ -458,6 +464,79 @@ export class Orchestrator {
     }
 
     return this.#players.players.find((candidate) => candidate.id === id) || null
+  }
+
+  /**
+   * Register a brand-new player together with its contacts and optional photo.
+   *
+   * Ordering rationale (photo first, in-memory commit last):
+   * - All validation is pure and synchronous (no I/O) and runs before any await,
+   *   so the in-memory commit below cannot fail once reached: the player and its
+   *   contacts are committed back-to-back via silent variants (no await between
+   *   them), so the commit is atomic — either both land or neither does. A single
+   *   PLAYERS::CHANGE and a single CONTACTS::CHANGE are fired only after the full
+   *   batch lands, so persistence subscribers and the UI never observe the
+   *   intermediate prefix (player without its contacts).
+   * - The photo I/O is the only fallible step, so it runs FIRST. If it fails,
+   *   nothing has been committed in-memory yet and the error is rethrown with
+   *   nothing to undo — no rollback path is needed. If it succeeds, the
+   *   in-memory commit (which cannot fail after validation) follows immediately.
+   */
+  async registerNewPlayerWithContacts(player: Player, contacts: Contact[], photo?: Blob): Promise<void> {
+    validateNewPlayerBatch(this.#players.players, this.#contacts.contacts, player, contacts)
+
+    await applyPhoto(player, photo)
+
+    this.#players.addSilent(player)
+    for (const contact of contacts) {
+      this.#contacts.addSilent(contact)
+    }
+    this.throwPlayersUpdatedEvent()
+    this.throwContactsUpdatedEvent()
+  }
+
+  /**
+   * Update an existing player's data, contacts and optional photo as one atomic
+   * batch. This is the canonical edit path: `BsPlayers.registerPlayer` calls
+   * only this method for edits.
+   *
+   * Ordering rationale (photo first, in-memory commit last):
+   * - All validation is pure and synchronous (no I/O) and runs before any await:
+   *   the player existence check plus the full draft-contacts validation
+   *   (registerability, belong-to-player, intra-batch duplicates and the global
+   *   addable check against the other players' contacts).
+   * - The photo I/O is the only fallible step, so it runs FIRST. If it fails,
+   *   nothing has been committed in-memory yet and the error is rethrown with
+   *   nothing to undo.
+   * - The player and its contacts are then committed back-to-back via silent
+   *   variants (no await between them), so the commit is atomic — either both
+   *   land or neither does. A single PLAYERS::CHANGE and a single CONTACTS::CHANGE
+   *   are fired only after the full batch lands, so persistence subscribers and
+   *   the UI never observe an intermediate prefix.
+   *
+   * @throws {Error} When the player id doesn't exist or the draft is invalid.
+   * Photo I/O failures are rethrown with nothing to undo.
+   */
+  async updatePlayerWithPhotoAndContacts(
+    player: Player,
+    draftContacts: Contacts,
+    photo?: Blob,
+    deletePhotoFlag = false
+  ): Promise<void> {
+    const existingPlayer = this.#players.getById(player.id)
+    if (!existingPlayer) {
+      throw new Error(`[Orchestrator.updatePlayerWithPhotoAndContacts()] The player id ${player.id} doesn't exist.`)
+    }
+
+    validateContactReplacementBatch(this.#contacts.contacts, player, draftContacts.getByPlayerId(player.id))
+
+    await applyPhoto(player, photo, deletePhotoFlag)
+
+    this.#players.updatePlayerSilent(player)
+    replacePlayerContactsSilent(this.#contacts, player.id, draftContacts)
+
+    this.throwPlayersUpdatedEvent()
+    this.throwContactsUpdatedEvent()
   }
 
   getTeam(id?: string | null) {

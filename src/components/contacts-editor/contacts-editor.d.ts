@@ -1,3 +1,5 @@
+import type { ContactsSource } from '../../libs/contacts/contacts-source'
+
 export interface BsContactsEditorProps {
-  playerId: string
+  source: ContactsSource
 }
