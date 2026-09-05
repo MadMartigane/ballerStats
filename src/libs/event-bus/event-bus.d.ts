@@ -1,1 +1,1 @@
-export type BsEventBusType = 'BS::PLAYERS::CHANGE' | 'BS::CONTACTS::CHANGE' | 'BS::CLUBS::CHANGE'
+export type BsEventBusType = 'BS::PLAYERS::CHANGE' | 'BS::CONTACTS::CHANGE'

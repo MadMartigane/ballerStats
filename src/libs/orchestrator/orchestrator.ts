@@ -1,11 +1,8 @@
 import { strToU8, unzip, zip } from 'fflate'
 import { batch } from 'solid-js'
-import type Club from '../club/club'
 import type { ClubRawData } from '../club/club.d'
 import { createDefaultClubData, migrateClubData } from '../club/club-migration'
-import Clubs from '../clubs/clubs'
 import type { ContactRawData } from '../contact/contact.d'
-import bsEventBus from '../event-bus/event-bus'
 import Match from '../match/match'
 import {
   clearAllPhotos,
@@ -34,6 +31,7 @@ import {
   storePlayers,
   storeTeams,
 } from '../store/store'
+import { getRawClubs, hydrateClubs, replaceAllClubs } from '../stores/clubs-store'
 import { getRawContacts, hydrateContacts, replaceAllContacts, replacePlayerContacts } from '../stores/contacts-store'
 import { addMatch, getMatchById, getRawMatchs, hydrateMatchs, replaceAllMatchs } from '../stores/matchs-store'
 import {
@@ -94,7 +92,6 @@ export function isGlobalDB(value: unknown): value is GlobalDB {
 }
 
 export class Orchestrator {
-  #clubs = new Clubs()
   #lastPlayersRecord: number | null = null
   #lastTeamsRecord: number | null = null
   #lastClubsRecord: number | null = null
@@ -106,13 +103,6 @@ export class Orchestrator {
     this.hydrateStoredMatchs()
     this.getStoredContacts()
     this.getStoredClubs()
-    this.installEventHandlers()
-  }
-
-  private installEventHandlers() {
-    bsEventBus.addEventListener('BS::CLUBS::CHANGE', () => {
-      this.storeClubs()
-    })
   }
 
   /**
@@ -137,7 +127,7 @@ export class Orchestrator {
       return
     }
 
-    this.#clubs = new Clubs(migration.clubs)
+    hydrateClubs(migration.clubs)
     hydratePlayers(migration.players)
     hydrateTeams(migration.teams)
 
@@ -156,18 +146,6 @@ export class Orchestrator {
       console.error('storeClubs failed:', error)
     })
     persistTitles(migration.trombiTitles)
-  }
-
-  private updateLastClubsRecord() {
-    this.#lastClubsRecord = Date.now()
-  }
-
-  private storeClubs() {
-    this.updateLastClubsRecord()
-
-    storeClubs(this.#clubs.getRawData(), this.#lastClubsRecord).catch((error: unknown) => {
-      console.error('storeClubs failed:', error)
-    })
   }
 
   private async getStoredPlayers() {
@@ -234,8 +212,7 @@ export class Orchestrator {
     }
 
     if (!this.#lastClubsRecord || stored.lastRecord > this.#lastClubsRecord) {
-      this.#clubs = new Clubs(stored.data)
-      this.throwClubsUpdatedEvent()
+      hydrateClubs(stored.data)
     }
   }
 
@@ -254,11 +231,10 @@ export class Orchestrator {
       replaceAllContacts([])
       replaceAllTeams([])
       replaceAllMatchs([])
+      replaceAllClubs([createDefaultClubData()])
     })
     await persistTitles({ ...DEFAULT_TITLES })
     await clearAllPhotos()
-    this.#clubs = new Clubs([createDefaultClubData()])
-    this.throwClubsUpdatedEvent()
   }
 
   private async doOverwriteDB(json: GlobalDB) {
@@ -268,25 +244,16 @@ export class Orchestrator {
       teams: json.teams,
       trombiTitles: json.trombiTitles,
     })
-    this.#clubs = new Clubs(migration.clubs)
     batch(() => {
       replaceAllPlayers(migration.players)
       replaceAllContacts(json.contacts ?? [])
+      replaceAllClubs(migration.clubs)
     })
     this.addAll({
       matchs: json.matchs.map((m) => new Match(m)),
       teams: json.teams.map((t) => new Team(t)),
     })
     await persistTitles(migration.trombiTitles)
-    this.throwClubsUpdatedEvent()
-  }
-
-  get Clubs() {
-    return this.#clubs
-  }
-
-  throwClubsUpdatedEvent(mute = false) {
-    bsEventBus.dispatchEvent('BS::CLUBS::CHANGE', mute)
   }
 
   getPlayer(id?: string | null) {
@@ -409,8 +376,7 @@ export class Orchestrator {
       replaceAllMatchs((dataset.matchs ?? []).map((match) => match.getRawData()))
     })
     if (dataset.clubs !== undefined) {
-      this.#clubs = new Clubs(dataset.clubs.map((club: Club) => club.getRawData()))
-      this.throwClubsUpdatedEvent()
+      replaceAllClubs(dataset.clubs.map((club) => club.getRawData()))
     }
   }
 
@@ -457,7 +423,7 @@ export class Orchestrator {
     const date = new Date()
 
     const globalDB: GlobalDB = {
-      clubs: this.Clubs.clubs.map((club) => club.getRawData()),
+      clubs: getRawClubs(),
       contacts: getRawContacts(),
       matchs: getRawMatchs(),
       players: getRawPlayers(),
