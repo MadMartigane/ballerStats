@@ -1,24 +1,22 @@
 import { Dot } from 'lucide-solid'
+import { createMemo } from 'solid-js'
 import bsEventBus from '../../libs/event-bus/event-bus'
 import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
+import { players } from '../../libs/stores/players-store'
 
-function installEventHandlers(nbPlayers: MadSignal<number>, nbTeams: MadSignal<number>) {
-  bsEventBus.addEventListener('BS::PLAYERS::CHANGE', () => {
-    nbPlayers.set(orchestrator.Players.length)
-  })
-
+function installEventHandlers(nbTeams: MadSignal<number>) {
   bsEventBus.addEventListener('BS::TEAMS::CHANGE', () => {
     nbTeams.set(orchestrator.Teams.length)
   })
 }
 
 export default function GlobalStats() {
-  const nbPlayers = new MadSignal(orchestrator.Players.length)
+  const nbPlayers = createMemo(() => players.length)
   const nbTeams = new MadSignal(orchestrator.Teams.length)
   const nbMatchs = new MadSignal(orchestrator.Matchs.length)
 
-  installEventHandlers(nbPlayers, nbTeams)
+  installEventHandlers(nbTeams)
 
   return (
     <div>
@@ -31,7 +29,7 @@ export default function GlobalStats() {
                 <Dot class="h-8 w-8 text-purple-600 dark:text-purple-300" />
               </td>
               <td>Nombre de joueurs</td>
-              <td>{nbPlayers.get()}</td>
+              <td>{nbPlayers()}</td>
             </tr>
 
             <tr>

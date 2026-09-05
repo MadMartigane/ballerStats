@@ -1,12 +1,12 @@
+import { createStore } from 'solid-js/store'
 import { render } from 'solid-js/web'
 import { afterEach, describe, expect, it } from 'vitest'
-import Contact from '../../libs/contact/contact'
 import type { ContactRawData } from '../../libs/contact/contact.d'
-import { createContactsSource } from '../../libs/contacts/contacts-source'
-import { Orchestrator } from '../../libs/orchestrator/orchestrator'
 import BsContactsEditor from './contacts-editor'
 
 const PLAYER_ID = 'p1'
+
+const noop = (): void => undefined
 
 function makeContactData(overrides: Partial<ContactRawData> = {}): ContactRawData {
   return {
@@ -27,16 +27,19 @@ describe('BsContactsEditor', () => {
   })
 
   it('shows a newly added contact row without remounting', () => {
-    const orchestrator = new Orchestrator()
-    const source = createContactsSource(orchestrator.Contacts, () => PLAYER_ID)
+    const [contacts, setContacts] = createStore<ContactRawData[]>([])
+    const onAdd = (contact: ContactRawData) => setContacts((prev) => [...prev, contact])
 
-    dispose = render(() => <BsContactsEditor source={source} />, document.body)
+    dispose = render(
+      () => <BsContactsEditor contacts={contacts} onAdd={onAdd} onRemove={noop} onUpdate={noop} />,
+      document.body
+    )
 
     expect(document.body.textContent).toContain('Aucun contact enregistré pour ce joueur.')
 
     const addButton = document.querySelector('button')
 
-    orchestrator.Contacts.add(new Contact(makeContactData({ firstName: 'Marie', id: 'c1', lastName: 'Dupont' })))
+    onAdd(makeContactData({ firstName: 'Marie', id: 'c1', lastName: 'Dupont' }))
 
     expect(document.body.textContent).toContain('Marie Dupont')
     expect(document.body.textContent).not.toContain('Aucun contact enregistré pour ce joueur.')

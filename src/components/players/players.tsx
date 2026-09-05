@@ -1,14 +1,14 @@
 import { useNavigate } from '@solidjs/router'
 import { Contact as ContactIcon, LayoutGrid, Save, UserPlus, X } from 'lucide-solid'
-import { createSignal, For, onCleanup, Show } from 'solid-js'
-import Contacts from '../../libs/contacts/contacts'
-import { createContactsSource } from '../../libs/contacts/contacts-source'
-import bsEventBus from '../../libs/event-bus/event-bus'
+import { createMemo, createSignal, For, Show } from 'solid-js'
+import { createStore } from 'solid-js/store'
+import type { ContactRawData } from '../../libs/contact/contact.d'
 import { ROUTE_TROMBI } from '../../libs/menu/routes'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import Player, { LICENSE_NUMBER_MAX_LENGTH } from '../../libs/player/player'
 import type { PlayerRawData } from '../../libs/player/player.d'
-import { players } from '../../libs/players-store'
+import { getContactsByPlayerId } from '../../libs/stores/contacts-store'
+import { players } from '../../libs/stores/players-store'
 import { scrollBottom, scrollTop, toast } from '../../libs/utils/utils'
 import BsCard from '../card/card'
 import BsContactsEditor from '../contacts-editor/contacts-editor'
@@ -23,7 +23,6 @@ export default function BsPlayers() {
   const [isEditingNewPlayer, setIsEditingNewPlayer] = createSignal(false)
   const [isAddingPlayer, setIsAddingPlayer] = createSignal(false)
   const [canAddPlayer, setCanAddPlayer] = createSignal(false)
-  const [playerLength, setPlayerLength] = createSignal(orchestrator.Players.length)
   const [currentPlayer, setCurrentPlayer] = createSignal<Player | null>(null)
   const [pendingPhotoBlob, setPendingPhotoBlob] = createSignal<Blob | undefined>(undefined)
   const [pendingPhotoDelete, setPendingPhotoDelete] = createSignal(false)
@@ -31,23 +30,13 @@ export default function BsPlayers() {
   /**
    * Transient draft of the player's contacts, owned by this form instance. Both
    * the new-player form and the edit-mode form stage their contacts here instead
-   * of mutating the persisted orchestrator collection, so cancel discards them.
-   * It is seeded from `getByPlayerId` on edit start and left empty for a new
-   * player. The editor reads it through a single `ContactsSource` adapter whose
-   * mutations are silent (no global `BS::CONTACTS::CHANGE`), so staging the
-   * draft never triggers an orchestrator persist — the global event is fired
-   * only by the orchestrator commit methods.
+   * of mutating any persisted store, so cancel discards them. It is seeded from
+   * the contacts store on edit start and left empty for a new player.
    */
-  const pendingContacts = new Contacts()
-  const pendingContactsSource = createContactsSource(pendingContacts, () => currentPlayer()?.id ?? '')
+  const [pendingContacts, setPendingContacts] = createStore<ContactRawData[]>([])
 
-  const handlePlayersChange = () => {
-    setPlayerLength(orchestrator.Players.length)
-  }
-  bsEventBus.addEventListener('BS::PLAYERS::CHANGE', handlePlayersChange)
-  onCleanup(() => {
-    bsEventBus.removeEventListener('BS::PLAYERS::CHANGE', handlePlayersChange)
-  })
+  const playerLength = createMemo(() => players.length)
+  const visiblePlayers = createMemo(() => players.map((raw) => new Player(raw)))
 
   function setNewPlayerData(data: PlayerRawData) {
     const player = currentPlayer()
@@ -68,7 +57,7 @@ export default function BsPlayers() {
    */
   function resetDraft() {
     setCurrentPlayer(null)
-    pendingContacts.setFromRawDataSilent([])
+    setPendingContacts([])
     setPendingPhotoBlob(undefined)
     setPendingPhotoDelete(false)
     setCanAddPlayer(false)
@@ -109,6 +98,24 @@ export default function BsPlayers() {
     scrollTop()
   }
 
+  function addStagedContact(contact: ContactRawData) {
+    const playerId = currentPlayer()?.id
+    setPendingContacts((prev) => [...prev, { ...contact, playerId: playerId ?? contact.playerId }])
+  }
+
+  function updateStagedContact(contact: ContactRawData) {
+    const index = pendingContacts.findIndex((candidate) => candidate.id === contact.id)
+    if (index === -1) {
+      return
+    }
+    const playerId = currentPlayer()?.id
+    setPendingContacts(index, { ...contact, playerId: playerId ?? contact.playerId })
+  }
+
+  function removeStagedContact(id: string) {
+    setPendingContacts((prev) => prev.filter((contact) => contact.id !== id))
+  }
+
   async function registerPlayer() {
     const playerToRegister = currentPlayer()
     if (!playerToRegister?.isRegisterable) {
@@ -117,11 +124,14 @@ export default function BsPlayers() {
 
     const blob = pendingPhotoBlob()
     const isDelete = pendingPhotoDelete()
+    // Snapshot the staged draft before any await: the commit inside the
+    // orchestrator uses exactly these raws, never a re-read of the live draft.
+    const draftContacts = pendingContacts.map((contact) => ({ ...contact }))
 
     if (isEditingNewPlayer()) {
-      await orchestrator.registerNewPlayerWithContacts(playerToRegister, pendingContacts.contacts, blob)
+      await orchestrator.registerNewPlayerWithContacts(playerToRegister, draftContacts, blob)
     } else {
-      await orchestrator.updatePlayerWithPhotoAndContacts(playerToRegister, pendingContacts, blob, isDelete)
+      await orchestrator.updatePlayerWithPhotoAndContacts(playerToRegister, draftContacts, blob, isDelete)
     }
 
     setIsAddingPlayer(false)
@@ -134,9 +144,7 @@ export default function BsPlayers() {
     const draftPlayer = new Player(player.getRawData())
     setCurrentPlayer(draftPlayer)
     setCanAddPlayer(draftPlayer.isRegisterable)
-    pendingContacts.setFromRawDataSilent(
-      orchestrator.Contacts.getByPlayerId(player.id).map((contact) => contact.getRawData())
-    )
+    setPendingContacts(getContactsByPlayerId(player.id))
     setIsAddingPlayer(true)
   }
 
@@ -246,7 +254,12 @@ export default function BsPlayers() {
           </form>
           <Show when={currentPlayer()?.id}>
             {/* The Show condition above guarantees a non-null player with a truthy id when rendered. */}
-            <BsContactsEditor source={pendingContactsSource} />
+            <BsContactsEditor
+              contacts={pendingContacts}
+              onAdd={addStagedContact}
+              onRemove={removeStagedContact}
+              onUpdate={updateStagedContact}
+            />
           </Show>
         </>
       ),
@@ -278,7 +291,7 @@ export default function BsPlayers() {
       <Show when={!isAddingPlayer()}>
         <Show fallback={<BsEmptyPlayerFallback />} when={(playerLength() || 0) > 0}>
           <div class="flex w-full flex-wrap justify-around gap-4">
-            <For each={players}>
+            <For each={visiblePlayers()}>
               {(player) => (
                 <div class="mx-auto w-fit md:mx-0">
                   <BsPlayer onEdit={editPlayerFromTile} player={player} />

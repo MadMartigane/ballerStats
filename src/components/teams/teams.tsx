@@ -4,7 +4,8 @@ import { createStore } from 'solid-js/store'
 import bsEventBus from '../../libs/event-bus/event-bus'
 import MadSignal from '../../libs/mad-signal'
 import orchestrator from '../../libs/orchestrator/orchestrator'
-import type Player from '../../libs/player/player'
+import type { PlayerRawData } from '../../libs/player/player.d'
+import { players } from '../../libs/stores/players-store'
 import Team from '../../libs/team/team'
 import type { TeamRawData } from '../../libs/team/team.d'
 import { scrollBottom, scrollTop } from '../../libs/utils/utils'
@@ -97,10 +98,10 @@ function saveTeam() {
 }
 
 function getSelectDataFromPlayer() {
-  return orchestrator.Players.players.map((player) => ({
+  return players.map((player) => ({
     badge: renderPlayerBadge(player),
     label: player.nicName ? player.nicName : `${player.firstName} ${player.lastName}`,
-    value: player.id,
+    value: player.id ?? '',
   }))
 }
 
@@ -129,7 +130,7 @@ function renderAddTeamButton() {
   )
 }
 
-function renderPlayerBadge(player: Player) {
+function renderPlayerBadge(player: PlayerRawData) {
   return (
     <>
       <span class="text-warning">{player.jerseyNumber}</span>

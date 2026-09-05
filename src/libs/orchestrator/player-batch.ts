@@ -1,9 +1,9 @@
-import type Contact from '../contact/contact'
-import type Contacts from '../contacts/contacts'
-import { assertContactAddable } from '../contacts/contacts'
+import type { ContactRawData } from '../contact/contact.d'
 import { deletePhotoAndFlag, setPhotoAndFlag } from '../photo-store/photo-store'
 import type Player from '../player/player'
-import { assertPlayerAddable } from '../players/players'
+import type { PlayerRawData } from '../player/player.d'
+import { assertContactAddable } from '../stores/contacts-store'
+import { assertPlayerAddable } from '../stores/players-store'
 
 /**
  * Pure, side-effect-free validation for a batch of contacts that must all
@@ -14,9 +14,9 @@ import { assertPlayerAddable } from '../players/players'
  * intra-batch duplicate checks are local to the batch.
  */
 export function validateContactBatch(
-  contacts: Contact[],
-  player: Player,
-  addableCollection: Contact[],
+  contacts: ContactRawData[],
+  player: PlayerRawData,
+  addableCollection: ContactRawData[],
   context: string
 ): void {
   const contactIds = new Set<string>()
@@ -24,10 +24,12 @@ export function validateContactBatch(
     if (contact.playerId !== player.id) {
       throw new Error(`[${context}] The contact id ${contact.id} doesn't belong to player ${player.id}.`)
     }
-    if (contactIds.has(contact.id)) {
-      throw new Error(`[${context}] Duplicate contact id ${contact.id} in batch.`)
+    if (contact.id !== undefined) {
+      if (contactIds.has(contact.id)) {
+        throw new Error(`[${context}] Duplicate contact id ${contact.id} in batch.`)
+      }
+      contactIds.add(contact.id)
     }
-    contactIds.add(contact.id)
     assertContactAddable(addableCollection, contact)
   }
 }
@@ -44,10 +46,10 @@ export function validateContactBatch(
  * duplicate checks are local to the batch.
  */
 export function validateNewPlayerBatch(
-  existingPlayers: Player[],
-  existingContacts: Contact[],
-  player: Player,
-  contacts: Contact[]
+  existingPlayers: PlayerRawData[],
+  existingContacts: ContactRawData[],
+  player: PlayerRawData,
+  contacts: ContactRawData[]
 ): void {
   assertPlayerAddable(existingPlayers, player)
   validateContactBatch(contacts, player, existingContacts, 'Orchestrator.registerNewPlayerWithContacts()')
@@ -60,9 +62,9 @@ export function validateNewPlayerBatch(
  * contact reusing one of the player's own contact ids is not a duplicate.
  */
 export function validateContactReplacementBatch(
-  allContacts: Contact[],
-  player: Player,
-  draftContacts: Contact[]
+  allContacts: ContactRawData[],
+  player: PlayerRawData,
+  draftContacts: ContactRawData[]
 ): void {
   const otherContacts = allContacts.filter((contact) => contact.playerId !== player.id)
   validateContactBatch(draftContacts, player, otherContacts, 'Orchestrator.updatePlayerWithPhotoAndContacts()')
@@ -79,20 +81,4 @@ export async function applyPhoto(player: Player, photo?: Blob, deletePhotoFlag =
   } else if (deletePhotoFlag && player.hasPhoto) {
     await deletePhotoAndFlag(player)
   }
-}
-
-/**
- * Atomically replace an existing player's contacts with the draft's, using
- * only silent variants so the caller controls when the single CONTACTS::CHANGE
- * is fired. The new collection is built first (other players' contacts plus
- * the draft's) and swapped in via a single assignment, so no partial state can
- * be observed even if a draft contact were invalid.
- */
-export function replacePlayerContactsSilent(contacts: Contacts, playerId: string, draftContacts: Contacts): void {
-  const otherContacts = contacts.contacts.filter((contact) => contact.playerId !== playerId)
-  const draftContactsList = draftContacts.getByPlayerId(playerId)
-  contacts.setFromRawDataSilent([
-    ...otherContacts.map((contact) => contact.getRawData()),
-    ...draftContactsList.map((contact) => contact.getRawData()),
-  ])
 }
