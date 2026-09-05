@@ -198,70 +198,49 @@ export class Orchestrator {
   private storePlayers() {
     this.updateLastPlayersRecord()
 
-    storePlayers(this.#players.getRawData(), this.#lastPlayersRecord)
-      .then(() => {
-        this.throwSynchroSuccessEvent()
-      })
-      .catch(() => {
-        this.throwSynchroFailEvent()
-      })
+    storePlayers(this.#players.getRawData(), this.#lastPlayersRecord).catch((error: unknown) => {
+      console.error('storePlayers failed:', error)
+    })
   }
 
   private storeTeams() {
     this.updateLastTeamsRecord()
 
-    storeTeams(this.#teams.getRawData(), this.#lastTeamsRecord)
-      .then(() => {
-        this.throwSynchroSuccessEvent()
-      })
-      .catch(() => {
-        this.throwSynchroFailEvent()
-      })
+    storeTeams(this.#teams.getRawData(), this.#lastTeamsRecord).catch((error: unknown) => {
+      console.error('storeTeams failed:', error)
+    })
   }
 
   private storeMatchs() {
     this.updateLastMatchsRecord()
 
-    storeMatchs(this.#matchs.getRawData(), this.#lastMatchsRecord)
-      .then(() => {
-        this.throwSynchroSuccessEvent()
-      })
-      .catch(() => {
-        this.throwSynchroFailEvent()
-      })
+    storeMatchs(this.#matchs.getRawData(), this.#lastMatchsRecord).catch((error: unknown) => {
+      console.error('storeMatchs failed:', error)
+    })
   }
 
   private storeContacts() {
     this.updateLastContactsRecord()
 
-    storeContacts(this.#contacts.getRawData(), this.#lastContactsRecord)
-      .then(() => {
-        this.throwSynchroSuccessEvent()
-      })
-      .catch(() => {
-        this.throwSynchroFailEvent()
-      })
+    storeContacts(this.#contacts.getRawData(), this.#lastContactsRecord).catch((error: unknown) => {
+      console.error('storeContacts failed:', error)
+    })
   }
 
   private storeClubs() {
     this.updateLastClubsRecord()
 
-    storeClubs(this.#clubs.getRawData(), this.#lastClubsRecord)
-      .then(() => {
-        this.throwSynchroSuccessEvent()
-      })
-      .catch(() => {
-        this.throwSynchroFailEvent()
-      })
+    storeClubs(this.#clubs.getRawData(), this.#lastClubsRecord).catch((error: unknown) => {
+      console.error('storeClubs failed:', error)
+    })
   }
 
   private async getStoredPlayers() {
-    const stored = await getStoredPlayers().catch(() => {
-      this.throwSynchroFailEvent()
+    const stored = await getStoredPlayers().catch((error: unknown) => {
+      console.error('getStoredPlayers failed:', error)
     })
 
     if (!stored) {
-      this.throwSynchroSuccessEvent()
       return
     }
 
@@ -273,12 +252,11 @@ export class Orchestrator {
   }
 
   private async getStoredTeams() {
-    const stored = await getStoredTeams().catch(() => {
-      this.throwSynchroFailEvent()
+    const stored = await getStoredTeams().catch((error: unknown) => {
+      console.error('getStoredTeams failed:', error)
     })
 
     if (!stored) {
-      this.throwSynchroSuccessEvent()
       return
     }
 
@@ -290,12 +268,11 @@ export class Orchestrator {
   }
 
   private async getStoredMatchs() {
-    const stored = await getStoredMatchs().catch(() => {
-      this.throwSynchroFailEvent()
+    const stored = await getStoredMatchs().catch((error: unknown) => {
+      console.error('getStoredMatchs failed:', error)
     })
 
     if (!stored) {
-      this.throwSynchroSuccessEvent()
       return
     }
 
@@ -307,12 +284,11 @@ export class Orchestrator {
   }
 
   private async getStoredContacts() {
-    const stored = await getStoredContacts().catch(() => {
-      this.throwSynchroFailEvent()
+    const stored = await getStoredContacts().catch((error: unknown) => {
+      console.error('getStoredContacts failed:', error)
     })
 
     if (!stored) {
-      this.throwSynchroSuccessEvent()
       return
     }
 
@@ -323,12 +299,11 @@ export class Orchestrator {
   }
 
   private async getStoredClubs() {
-    const stored = await getStoredClubs().catch(() => {
-      this.throwSynchroFailEvent()
+    const stored = await getStoredClubs().catch((error: unknown) => {
+      console.error('getStoredClubs failed:', error)
     })
 
     if (!stored) {
-      this.throwSynchroSuccessEvent()
       return
     }
 
@@ -448,14 +423,6 @@ export class Orchestrator {
 
   throwClubsUpdatedEvent(mute = false) {
     bsEventBus.dispatchEvent('BS::CLUBS::CHANGE', mute)
-  }
-
-  throwSynchroSuccessEvent(mute = false) {
-    bsEventBus.dispatchEvent('BS::SYNCHRO::SUCCESS', mute)
-  }
-
-  throwSynchroFailEvent(mute = false) {
-    bsEventBus.dispatchEvent('BS::SYNCHRO::FAIL', mute)
   }
 
   getPlayer(id?: string | null) {
