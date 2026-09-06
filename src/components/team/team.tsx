@@ -1,9 +1,14 @@
 import { A } from '@solidjs/router'
 import { LayoutGrid, Mail, Trash, UserPen } from 'lucide-solid'
 import { For, Show } from 'solid-js'
+import Contact from '../../libs/contact/contact'
 import { collectTeamEmails, slugifyTeamName } from '../../libs/email-export/email-export'
 import { buildTeamTrombiPath } from '../../libs/menu/routes'
 import orchestrator from '../../libs/orchestrator/orchestrator'
+import Player from '../../libs/player/player'
+import { getRawContacts } from '../../libs/stores/contacts-store'
+import { getRawPlayers } from '../../libs/stores/players-store'
+import { removeTeam as removeTeamFromStore } from '../../libs/stores/teams-store'
 import type Team from '../../libs/team/team'
 import { confirmAction, downloadBlob, scrollTop, toast } from '../../libs/utils/utils'
 import BsTile from '../tile/tile'
@@ -13,7 +18,7 @@ async function removeTeam(team: Team) {
   const yes = await confirmAction()
 
   if (yes) {
-    orchestrator.Teams.remove(team)
+    removeTeamFromStore(team.id)
   }
 }
 
@@ -26,7 +31,11 @@ function teamLabel(team: Team): string {
 }
 
 function handleExportEmails(team: Team, label: string) {
-  const emails = collectTeamEmails(team, orchestrator.Players.players, orchestrator.Contacts.contacts)
+  const emails = collectTeamEmails(
+    team,
+    getRawPlayers().map((raw) => new Player(raw)),
+    getRawContacts().map((raw) => new Contact(raw))
+  )
   if (emails.length === 0) {
     toast(`Aucun email à exporter pour l'équipe ${label}.`, 'warning')
     return

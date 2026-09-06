@@ -1,13 +1,9 @@
 import { strToU8, unzip, zip } from 'fflate'
-import type Club from '../club/club'
+import { batch } from 'solid-js'
 import type { ClubRawData } from '../club/club.d'
 import { createDefaultClubData, migrateClubData } from '../club/club-migration'
-import Clubs from '../clubs/clubs'
-import Contact from '../contact/contact'
-import Contacts from '../contacts/contacts'
-import bsEventBus from '../event-bus/event-bus'
+import type { ContactRawData } from '../contact/contact.d'
 import Match from '../match/match'
-import Matchs from '../matchs/matchs'
 import {
   clearAllPhotos,
   deletePhoto,
@@ -19,7 +15,6 @@ import {
 } from '../photo-store/photo-store'
 import Player, { sortPlayersByJersey } from '../player/player'
 import type { PlayerRawData } from '../player/player.d'
-import Players from '../players/players'
 import { soundTab } from '../sounds/tab'
 import {
   getStoredClubs,
@@ -33,26 +28,30 @@ import {
   STORAGE_TEAMS_KEY,
   STORAGE_TROMBI_TITLES_KEY,
   storeClubs,
-  storeContacts,
-  storeMatchs,
   storePlayers,
   storeTeams,
 } from '../store/store'
+import { getRawClubs, hydrateClubs, replaceAllClubs } from '../stores/clubs-store'
+import { getRawContacts, hydrateContacts, replaceAllContacts, replacePlayerContacts } from '../stores/contacts-store'
+import { addMatch, getMatchById, getRawMatchs, hydrateMatchs, replaceAllMatchs } from '../stores/matchs-store'
+import {
+  addPlayer,
+  getPlayerById,
+  getRawPlayers,
+  hydratePlayers,
+  replaceAllPlayers,
+  updatePlayer,
+} from '../stores/players-store'
+import { addTeam, getRawTeams, getTeamById, hydrateTeams, replaceAllTeams } from '../stores/teams-store'
 import Team from '../team/team'
 import type { TeamRawData } from '../team/team.d'
-import Teams from '../teams/teams'
 import type { TrombiTitles } from '../trombi-titles'
 import { DEFAULT_TITLES, persistTitles, titles } from '../trombi-titles-store'
 import { confirmAction, downloadBlob, toast } from '../utils/utils'
 import { vibrate } from '../vibrator/vibrator'
 import type { ThemeVibration } from '../vibrator/vibrator.d'
 import type { DomainDataset, GlobalDB } from './orchestrator.d'
-import {
-  applyPhoto,
-  replacePlayerContactsSilent,
-  validateContactReplacementBatch,
-  validateNewPlayerBatch,
-} from './player-batch'
+import { applyPhoto, validateContactReplacementBatch, validateNewPlayerBatch } from './player-batch'
 
 export const DB_FILE_EXTENSION = '.bstat' as const
 
@@ -93,47 +92,17 @@ export function isGlobalDB(value: unknown): value is GlobalDB {
 }
 
 export class Orchestrator {
-  #players: Players = new Players()
-  #teams = new Teams()
-  #matchs = new Matchs()
-  #contacts = new Contacts()
-  #clubs = new Clubs()
   #lastPlayersRecord: number | null = null
   #lastTeamsRecord: number | null = null
-  #lastMatchsRecord: number | null = null
-  #lastContactsRecord: number | null = null
   #lastClubsRecord: number | null = null
 
   constructor() {
     this.runStartupMigration()
     this.getStoredPlayers()
     this.getStoredTeams()
-    this.getStoredMatchs()
+    this.hydrateStoredMatchs()
     this.getStoredContacts()
     this.getStoredClubs()
-    this.installEventHandlers()
-  }
-
-  private installEventHandlers() {
-    bsEventBus.addEventListener('BS::PLAYERS::CHANGE', () => {
-      this.storePlayers()
-    })
-
-    bsEventBus.addEventListener('BS::TEAMS::CHANGE', () => {
-      this.storeTeams()
-    })
-
-    bsEventBus.addEventListener('BS::MATCHS::CHANGE', () => {
-      this.storeMatchs()
-    })
-
-    bsEventBus.addEventListener('BS::CONTACTS::CHANGE', () => {
-      this.storeContacts()
-    })
-
-    bsEventBus.addEventListener('BS::CLUBS::CHANGE', () => {
-      this.storeClubs()
-    })
   }
 
   /**
@@ -158,9 +127,9 @@ export class Orchestrator {
       return
     }
 
-    this.#clubs = new Clubs(migration.clubs)
-    this.#players = new Players(migration.players)
-    this.#teams = new Teams(migration.teams)
+    hydrateClubs(migration.clubs)
+    hydratePlayers(migration.players)
+    hydrateTeams(migration.teams)
 
     if (migration.players.length > 0) {
       this.#lastPlayersRecord = Date.now()
@@ -168,228 +137,104 @@ export class Orchestrator {
     }
     if (migration.teams.length > 0) {
       this.#lastTeamsRecord = Date.now()
-      storeTeams(migration.teams, this.#lastTeamsRecord)
+      storeTeams(migration.teams, this.#lastTeamsRecord).catch((error: unknown) => {
+        console.error('storeTeams failed:', error)
+      })
     }
     this.#lastClubsRecord = Date.now()
-    storeClubs(migration.clubs, this.#lastClubsRecord)
+    storeClubs(migration.clubs, this.#lastClubsRecord).catch((error: unknown) => {
+      console.error('storeClubs failed:', error)
+    })
     persistTitles(migration.trombiTitles)
   }
 
-  private updateLastPlayersRecord() {
-    this.#lastPlayersRecord = Date.now()
-  }
-
-  private updateLastTeamsRecord() {
-    this.#lastTeamsRecord = Date.now()
-  }
-
-  private updateLastMatchsRecord() {
-    this.#lastMatchsRecord = Date.now()
-  }
-
-  private updateLastContactsRecord() {
-    this.#lastContactsRecord = Date.now()
-  }
-
-  private updateLastClubsRecord() {
-    this.#lastClubsRecord = Date.now()
-  }
-
-  private storePlayers() {
-    this.updateLastPlayersRecord()
-
-    storePlayers(this.#players.getRawData(), this.#lastPlayersRecord)
-      .then(() => {
-        this.throwSynchroSuccessEvent()
-      })
-      .catch(() => {
-        this.throwSynchroFailEvent()
-      })
-  }
-
-  private storeTeams() {
-    this.updateLastTeamsRecord()
-
-    storeTeams(this.#teams.getRawData(), this.#lastTeamsRecord)
-      .then(() => {
-        this.throwSynchroSuccessEvent()
-      })
-      .catch(() => {
-        this.throwSynchroFailEvent()
-      })
-  }
-
-  private storeMatchs() {
-    this.updateLastMatchsRecord()
-
-    storeMatchs(this.#matchs.getRawData(), this.#lastMatchsRecord)
-      .then(() => {
-        this.throwSynchroSuccessEvent()
-      })
-      .catch(() => {
-        this.throwSynchroFailEvent()
-      })
-  }
-
-  private storeContacts() {
-    this.updateLastContactsRecord()
-
-    storeContacts(this.#contacts.getRawData(), this.#lastContactsRecord)
-      .then(() => {
-        this.throwSynchroSuccessEvent()
-      })
-      .catch(() => {
-        this.throwSynchroFailEvent()
-      })
-  }
-
-  private storeClubs() {
-    this.updateLastClubsRecord()
-
-    storeClubs(this.#clubs.getRawData(), this.#lastClubsRecord)
-      .then(() => {
-        this.throwSynchroSuccessEvent()
-      })
-      .catch(() => {
-        this.throwSynchroFailEvent()
-      })
-  }
-
   private async getStoredPlayers() {
-    const stored = await getStoredPlayers().catch(() => {
-      this.throwSynchroFailEvent()
+    const stored = await getStoredPlayers().catch((error: unknown) => {
+      console.error('getStoredPlayers failed:', error)
     })
 
     if (!stored) {
-      this.throwSynchroSuccessEvent()
       return
     }
 
     // TODO: add lastRecord (timestamp) in the player and compare each records
     if (!this.#lastPlayersRecord || stored.lastRecord > this.#lastPlayersRecord) {
-      this.#players = new Players(stored.data)
-      this.throwPlayersUpdatedEvent()
+      hydratePlayers(stored.data)
     }
   }
 
   private async getStoredTeams() {
-    const stored = await getStoredTeams().catch(() => {
-      this.throwSynchroFailEvent()
+    const stored = await getStoredTeams().catch((error: unknown) => {
+      console.error('getStoredTeams failed:', error)
     })
 
     if (!stored) {
-      this.throwSynchroSuccessEvent()
       return
     }
 
     // TODO: add lastRecord (timestamp) in the team and compare each records
     if (!this.#lastTeamsRecord || stored.lastRecord > this.#lastTeamsRecord) {
-      this.#teams = new Teams(stored.data)
-      this.throwTeamsUpdatedEvent()
+      hydrateTeams(stored.data)
     }
   }
 
-  private async getStoredMatchs() {
-    const stored = await getStoredMatchs().catch(() => {
-      this.throwSynchroFailEvent()
+  private async hydrateStoredMatchs() {
+    const stored = await getStoredMatchs().catch((error: unknown) => {
+      console.error('getStoredMatchs failed:', error)
     })
 
     if (!stored) {
-      this.throwSynchroSuccessEvent()
       return
     }
 
-    // TODO: add lastRecord (timestamp) in the match and compare each records
-    if (!this.#lastMatchsRecord || stored.lastRecord > this.#lastMatchsRecord) {
-      this.#matchs = new Matchs(stored.data)
-      this.throwTeamsUpdatedEvent()
-    }
+    hydrateMatchs(stored.data)
   }
 
   private async getStoredContacts() {
-    const stored = await getStoredContacts().catch(() => {
-      this.throwSynchroFailEvent()
+    const stored = await getStoredContacts().catch((error: unknown) => {
+      console.error('getStoredContacts failed:', error)
     })
 
     if (!stored) {
-      this.throwSynchroSuccessEvent()
       return
     }
 
-    if (!this.#lastContactsRecord || stored.lastRecord > this.#lastContactsRecord) {
-      this.#contacts = new Contacts(stored.data)
-      this.throwContactsUpdatedEvent()
-    }
+    hydrateContacts(stored.data)
   }
 
   private async getStoredClubs() {
-    const stored = await getStoredClubs().catch(() => {
-      this.throwSynchroFailEvent()
+    const stored = await getStoredClubs().catch((error: unknown) => {
+      console.error('getStoredClubs failed:', error)
     })
 
     if (!stored) {
-      this.throwSynchroSuccessEvent()
       return
     }
 
     if (!this.#lastClubsRecord || stored.lastRecord > this.#lastClubsRecord) {
-      this.#clubs = new Clubs(stored.data)
-      this.throwClubsUpdatedEvent()
+      hydrateClubs(stored.data)
     }
-  }
-
-  private removeAllPlayers() {
-    for (const player of this.Players.players) {
-      this.Players.remove(player)
-    }
-  }
-
-  private removeAllTeams() {
-    for (const team of this.Teams.teams) {
-      this.Teams.remove(team)
-    }
-  }
-
-  private removeAllMatchs() {
-    for (const match of this.Matchs.matchs) {
-      this.Matchs.remove(match)
-    }
-  }
-
-  private removeAllContacts() {
-    for (const contact of this.Contacts.contacts) {
-      this.Contacts.remove(contact)
-    }
-  }
-
-  private clearCollectionsOnly(): void {
-    this.removeAllPlayers()
-    this.removeAllTeams()
-    this.removeAllMatchs()
-    this.removeAllContacts()
   }
 
   private addAll(dataset: DomainDataset): void {
-    for (const player of dataset.players ?? []) {
-      this.Players.add(player)
-    }
     for (const team of dataset.teams ?? []) {
-      this.Teams.add(team)
+      addTeam(team.getRawData())
     }
     for (const match of dataset.matchs ?? []) {
-      this.Matchs.add(match)
-    }
-    for (const contact of dataset.contacts ?? []) {
-      this.Contacts.add(contact)
+      addMatch(match.getRawData())
     }
   }
 
   private async doClearDB() {
-    this.clearCollectionsOnly()
+    batch(() => {
+      replaceAllPlayers([])
+      replaceAllContacts([])
+      replaceAllTeams([])
+      replaceAllMatchs([])
+      replaceAllClubs([createDefaultClubData()])
+    })
     await persistTitles({ ...DEFAULT_TITLES })
     await clearAllPhotos()
-    this.#clubs = new Clubs([createDefaultClubData()])
-    this.throwClubsUpdatedEvent()
   }
 
   private async doOverwriteDB(json: GlobalDB) {
@@ -399,63 +244,16 @@ export class Orchestrator {
       teams: json.teams,
       trombiTitles: json.trombiTitles,
     })
-    this.#clubs = new Clubs(migration.clubs)
+    batch(() => {
+      replaceAllPlayers(migration.players)
+      replaceAllContacts(json.contacts ?? [])
+      replaceAllClubs(migration.clubs)
+    })
     this.addAll({
-      contacts: (json.contacts ?? []).map((c) => new Contact(c)),
       matchs: json.matchs.map((m) => new Match(m)),
-      players: migration.players.map((p) => new Player(p)),
-      teams: migration.teams.map((t) => new Team(t)),
+      teams: json.teams.map((t) => new Team(t)),
     })
     await persistTitles(migration.trombiTitles)
-    this.throwClubsUpdatedEvent()
-  }
-
-  get Players() {
-    return this.#players
-  }
-
-  get Teams() {
-    return this.#teams
-  }
-
-  get Matchs() {
-    return this.#matchs
-  }
-
-  get Contacts() {
-    return this.#contacts
-  }
-
-  get Clubs() {
-    return this.#clubs
-  }
-
-  throwPlayersUpdatedEvent(mute = false) {
-    bsEventBus.dispatchEvent('BS::PLAYERS::CHANGE', mute)
-  }
-
-  throwTeamsUpdatedEvent(mute = false) {
-    bsEventBus.dispatchEvent('BS::TEAMS::CHANGE', mute)
-  }
-
-  throwMatchsUpdatedEvent(mute = false) {
-    bsEventBus.dispatchEvent('BS::MATCHS::CHANGE', mute)
-  }
-
-  throwContactsUpdatedEvent(mute = false) {
-    bsEventBus.dispatchEvent('BS::CONTACTS::CHANGE', mute)
-  }
-
-  throwClubsUpdatedEvent(mute = false) {
-    bsEventBus.dispatchEvent('BS::CLUBS::CHANGE', mute)
-  }
-
-  throwSynchroSuccessEvent(mute = false) {
-    bsEventBus.dispatchEvent('BS::SYNCHRO::SUCCESS', mute)
-  }
-
-  throwSynchroFailEvent(mute = false) {
-    bsEventBus.dispatchEvent('BS::SYNCHRO::FAIL', mute)
   }
 
   getPlayer(id?: string | null) {
@@ -463,7 +261,8 @@ export class Orchestrator {
       return null
     }
 
-    return this.#players.players.find((candidate) => candidate.id === id) || null
+    const raw = getPlayerById(id)
+    return raw ? new Player(raw) : null
   }
 
   /**
@@ -472,27 +271,31 @@ export class Orchestrator {
    * Ordering rationale (photo first, in-memory commit last):
    * - All validation is pure and synchronous (no I/O) and runs before any await,
    *   so the in-memory commit below cannot fail once reached: the player and its
-   *   contacts are committed back-to-back via silent variants (no await between
-   *   them), so the commit is atomic — either both land or neither does. A single
-   *   PLAYERS::CHANGE and a single CONTACTS::CHANGE are fired only after the full
-   *   batch lands, so persistence subscribers and the UI never observe the
-   *   intermediate prefix (player without its contacts).
+   *   contacts are committed back-to-back inside a single Solid `batch` (no
+   *   await between them), so the commit is atomic — either both land or neither
+   *   does. Each collection is persisted exactly once, and the reactive stores
+   *   only expose the full batch.
    * - The photo I/O is the only fallible step, so it runs FIRST. If it fails,
    *   nothing has been committed in-memory yet and the error is rethrown with
    *   nothing to undo — no rollback path is needed. If it succeeds, the
    *   in-memory commit (which cannot fail after validation) follows immediately.
+   * - The committed raws are the snapshot validated above, so the draft cannot
+   *   drift between validation and commit; only `hasPhoto` is derived from the
+   *   photo I/O outcome.
    */
-  async registerNewPlayerWithContacts(player: Player, contacts: Contact[], photo?: Blob): Promise<void> {
-    validateNewPlayerBatch(this.#players.players, this.#contacts.contacts, player, contacts)
+  async registerNewPlayerWithContacts(player: Player, contacts: ContactRawData[], photo?: Blob): Promise<void> {
+    const playerRaw = player.getRawData()
+    const contactRaws = contacts.map((contact) => ({ ...contact }))
+
+    validateNewPlayerBatch(getRawPlayers(), getRawContacts(), playerRaw, contactRaws)
 
     await applyPhoto(player, photo)
 
-    this.#players.addSilent(player)
-    for (const contact of contacts) {
-      this.#contacts.addSilent(contact)
-    }
-    this.throwPlayersUpdatedEvent()
-    this.throwContactsUpdatedEvent()
+    const finalHasPhoto = photo ? true : (playerRaw.hasPhoto ?? false)
+    batch(() => {
+      addPlayer({ ...playerRaw, hasPhoto: finalHasPhoto })
+      replacePlayerContacts(player.id, contactRaws)
+    })
   }
 
   /**
@@ -508,35 +311,42 @@ export class Orchestrator {
    * - The photo I/O is the only fallible step, so it runs FIRST. If it fails,
    *   nothing has been committed in-memory yet and the error is rethrown with
    *   nothing to undo.
-   * - The player and its contacts are then committed back-to-back via silent
-   *   variants (no await between them), so the commit is atomic — either both
-   *   land or neither does. A single PLAYERS::CHANGE and a single CONTACTS::CHANGE
-   *   are fired only after the full batch lands, so persistence subscribers and
-   *   the UI never observe an intermediate prefix.
+   * - The player and its contacts are then committed back-to-back inside a
+   *   single Solid `batch` (no await between them), so the commit is atomic —
+   *   either both land or neither does. Each collection is persisted exactly
+   *   once and the reactive stores only expose the full batch. The committed
+   *   raws are the snapshot validated above.
    *
    * @throws {Error} When the player id doesn't exist or the draft is invalid.
    * Photo I/O failures are rethrown with nothing to undo.
    */
   async updatePlayerWithPhotoAndContacts(
     player: Player,
-    draftContacts: Contacts,
+    draftContacts: ContactRawData[],
     photo?: Blob,
     deletePhotoFlag = false
   ): Promise<void> {
-    const existingPlayer = this.#players.getById(player.id)
-    if (!existingPlayer) {
+    const playerRaw = player.getRawData()
+    const contactRaws = draftContacts.map((contact) => ({ ...contact }))
+
+    if (!getPlayerById(player.id)) {
       throw new Error(`[Orchestrator.updatePlayerWithPhotoAndContacts()] The player id ${player.id} doesn't exist.`)
     }
 
-    validateContactReplacementBatch(this.#contacts.contacts, player, draftContacts.getByPlayerId(player.id))
+    validateContactReplacementBatch(getRawContacts(), playerRaw, contactRaws)
 
     await applyPhoto(player, photo, deletePhotoFlag)
 
-    this.#players.updatePlayerSilent(player)
-    replacePlayerContactsSilent(this.#contacts, player.id, draftContacts)
-
-    this.throwPlayersUpdatedEvent()
-    this.throwContactsUpdatedEvent()
+    let finalHasPhoto = playerRaw.hasPhoto ?? false
+    if (photo) {
+      finalHasPhoto = true
+    } else if (deletePhotoFlag) {
+      finalHasPhoto = false
+    }
+    batch(() => {
+      updatePlayer(player.id, { ...playerRaw, hasPhoto: finalHasPhoto })
+      replacePlayerContacts(player.id, contactRaws)
+    })
   }
 
   getTeam(id?: string | null) {
@@ -544,7 +354,8 @@ export class Orchestrator {
       return null
     }
 
-    return this.#teams.teams.find((candidate) => candidate.id === id) || null
+    const raw = getTeamById(id)
+    return raw ? new Team(raw) : null
   }
 
   getMatch(id?: string | null) {
@@ -552,68 +363,50 @@ export class Orchestrator {
       return null
     }
 
-    return this.#matchs.matchs.find((candidate) => candidate.id === id) || null
+    const raw = getMatchById(id)
+    return raw ? new Match(raw) : null
   }
 
   /** Atomically replace all domain data with the given dataset. */
   replaceDataset(dataset: DomainDataset): void {
-    this.clearCollectionsOnly()
-    this.addAll(dataset)
+    batch(() => {
+      replaceAllPlayers((dataset.players ?? []).map((player) => player.getRawData()))
+      replaceAllContacts((dataset.contacts ?? []).map((contact) => contact.getRawData()))
+      replaceAllTeams((dataset.teams ?? []).map((team) => team.getRawData()))
+      replaceAllMatchs((dataset.matchs ?? []).map((match) => match.getRawData()))
+    })
     if (dataset.clubs !== undefined) {
-      this.#clubs = new Clubs(dataset.clubs.map((club: Club) => club.getRawData()))
-      this.throwClubsUpdatedEvent()
+      replaceAllClubs(dataset.clubs.map((club) => club.getRawData()))
     }
   }
 
   get hasAnyData(): boolean {
     return (
-      this.#players.players.length > 0 ||
-      this.#teams.teams.length > 0 ||
-      this.#matchs.matchs.length > 0 ||
-      this.#contacts.contacts.length > 0
+      getRawPlayers().length > 0 || getRawTeams().length > 0 || getRawMatchs().length > 0 || getRawContacts().length > 0
     )
-  }
-
-  private cleanOrphans<T extends { id: string }>(
-    items: T[],
-    isOrphan: (item: T) => boolean,
-    remove: (item: T) => void,
-    notify: () => void
-  ) {
-    let cleaned = false
-    for (const item of items) {
-      if (isOrphan(item)) {
-        remove(item)
-        cleaned = true
-      }
-    }
-    if (cleaned) {
-      notify()
-    }
   }
 
   bigClean() {
     let cleaned = false
-    for (const team of this.Teams.teams) {
-      const cleanPlayerIds = team.playerIds.filter((playerId) => Boolean(this.getPlayer(playerId)))
+    const cleanedTeams = getRawTeams().map((team) => {
+      const cleanPlayerIds = (team.playerIds ?? []).filter((playerId) => Boolean(this.getPlayer(playerId)))
 
-      if (team.playerIds.length > cleanPlayerIds.length) {
-        team.update({ playerIds: cleanPlayerIds })
-        this.Teams.updateTeam(team)
+      if ((team.playerIds?.length ?? 0) > cleanPlayerIds.length) {
         cleaned = true
+        return { ...team, playerIds: cleanPlayerIds }
       }
-    }
+      return team
+    })
 
     if (cleaned) {
-      this.throwTeamsUpdatedEvent()
+      replaceAllTeams(cleanedTeams)
     }
 
-    this.cleanOrphans(
-      this.Contacts.contacts,
-      (contact) => !this.getPlayer(contact.playerId),
-      (contact) => this.Contacts.removeSilent(contact),
-      () => this.throwContactsUpdatedEvent()
-    )
+    const currentContacts = getRawContacts()
+    const keptContacts = currentContacts.filter((contact) => Boolean(this.getPlayer(contact.playerId)))
+    if (keptContacts.length < currentContacts.length) {
+      replaceAllContacts(keptContacts)
+    }
   }
 
   getJerseySortedPlayers(playerIds?: string[]): Player[] {
@@ -630,11 +423,11 @@ export class Orchestrator {
     const date = new Date()
 
     const globalDB: GlobalDB = {
-      clubs: this.Clubs.clubs.map((club) => club.getRawData()),
-      contacts: this.Contacts.contacts.map((contact) => contact.getRawData()),
-      matchs: this.Matchs.matchs.map((match) => match.getRawData()),
-      players: this.Players.players.map((player) => player.getRawData()),
-      teams: this.Teams.teams.map((team) => team.getRawData()),
+      clubs: getRawClubs(),
+      contacts: getRawContacts(),
+      matchs: getRawMatchs(),
+      players: getRawPlayers(),
+      teams: getRawTeams(),
       timestamp: date.getTime(),
       trombiTitles: titles,
     }

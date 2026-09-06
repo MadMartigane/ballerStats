@@ -2,6 +2,7 @@ import { Shirt, Trash, UserPen } from 'lucide-solid'
 import { Show } from 'solid-js'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import type Player from '../../libs/player/player'
+import { removePlayer as removePlayerFromStore } from '../../libs/stores/players-store'
 import { confirmAction, toast } from '../../libs/utils/utils'
 import BsAvatar from '../avatar/avatar'
 import BsTile from '../tile/tile'
@@ -12,7 +13,7 @@ async function removePlayer(player: Player) {
 
   if (yes) {
     await orchestrator.Photos.delete(player.id)
-    orchestrator.Players.remove(player)
+    removePlayerFromStore(player.id)
   }
 }
 
