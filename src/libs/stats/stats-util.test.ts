@@ -335,11 +335,11 @@ describe('getFullStats championship filter', () => {
     })
 
   beforeEach(() => {
-    mockOrchestrator.Teams.teams = [team]
+    mockTeamsStore.raws = [team.getRawData()]
   })
 
   it('includes all matches when called without a filter', () => {
-    mockOrchestrator.Matchs.matchs = [makeChampionshipMatch('Saison régulière'), makeChampionshipMatch('Coupe Hiver')]
+    mockMatchsStore.raws = [makeChampionshipMatch('Saison régulière'), makeChampionshipMatch('Coupe Hiver')]
 
     const summary = getFullStats()
 
@@ -349,7 +349,7 @@ describe('getFullStats championship filter', () => {
   })
 
   it('only includes matches matching the specified championship filter', () => {
-    mockOrchestrator.Matchs.matchs = [
+    mockMatchsStore.raws = [
       makeChampionshipMatch('Saison régulière'),
       makeChampionshipMatch('Coupe Hiver'),
       makeChampionshipMatch('Saison régulière'),
@@ -361,7 +361,7 @@ describe('getFullStats championship filter', () => {
   })
 
   it('includes all matches when the filter is an empty string', () => {
-    mockOrchestrator.Matchs.matchs = [makeChampionshipMatch('Saison régulière'), makeChampionshipMatch('Coupe Hiver')]
+    mockMatchsStore.raws = [makeChampionshipMatch('Saison régulière'), makeChampionshipMatch('Coupe Hiver')]
 
     const summary = getFullStats('')
 
