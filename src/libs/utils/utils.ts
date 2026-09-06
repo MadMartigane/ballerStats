@@ -87,22 +87,24 @@ export function confirmAction(
   const dialogId = `dialog-confirm-${getShortId()}`
   const dialogEl: HTMLDialogElement = document.createElement('dialog')
   dialogEl.id = dialogId
-  dialogEl.classList.add('modal', 'modal-bottom', 'sm:modal-middle')
+  dialogEl.className = 'modal modal-middle'
 
   const modalBox: HTMLDivElement = document.createElement('div')
-  modalBox.classList.add('modal-box', 'w-full')
+  modalBox.className =
+    'modal-box w-[calc(100%-2rem)] max-w-lg max-h-[calc(100dvh-4rem)] overflow-y-auto mx-auto my-auto px-5 pt-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]'
   dialogEl.append(modalBox)
 
   //    <h3 class="text-lg font-bold">Hello!</h3>
   const titleEl: HTMLDivElement = document.createElement('h3')
   titleEl.innerText = title
   titleEl.innerText = `🚨 ${title}`
+  titleEl.classList.add('font-bold', 'text-lg', 'break-words')
   modalBox.append(titleEl)
 
   //    <p class="py-4">Press ESC key or click the button below to close</p>
   const questionEl: HTMLParagraphElement = document.createElement('p')
   questionEl.innerText = message
-  questionEl.classList.add('py-4', 'alert', 'my-4', 'alert-info', 'w-full')
+  questionEl.classList.add('py-4', 'text-sm', 'sm:text-base', 'break-words')
   questionEl.role = 'alert'
   modalBox.append(questionEl)
 
@@ -121,25 +123,51 @@ export function confirmAction(
   const confirmButton: HTMLButtonElement = document.createElement('button')
 
   cancelButton.innerText = cancel
-  cancelButton.classList.add('btn', 'btn-warning', 'basis-1/2')
+  cancelButton.classList.add('btn', 'btn-warning', 'basis-1/2', 'min-h-[3rem]')
 
   confirmButton.innerText = confirm
-  confirmButton.classList.add('btn', 'btn-success', 'basis-1/2')
+  confirmButton.classList.add('btn', 'btn-success', 'basis-1/2', 'min-h-[3rem]')
 
   modalForm.append(cancelButton)
   modalForm.append(confirmButton)
 
+  // Backdrop click closes the dialog (DaisyUI pattern)
+  const backdropForm: HTMLFormElement = document.createElement('form')
+  backdropForm.method = 'dialog'
+  backdropForm.className = 'modal-backdrop'
+  const backdropButton: HTMLButtonElement = document.createElement('button')
+  backdropButton.innerText = 'close'
+  backdropForm.append(backdropButton)
+  dialogEl.append(backdropForm)
+
+  let settled = false
+
+  function settleDialog(value: boolean) {
+    if (settled) {
+      return
+    }
+    settled = true
+    resolve(value)
+    unmount(dialogEl)
+  }
+
   document.body.appendChild(dialogEl)
   dialogEl.showModal()
 
+  dialogEl.addEventListener('close', () => {
+    settleDialog(false)
+  })
+
+  dialogEl.addEventListener('cancel', () => {
+    settleDialog(false)
+  })
+
   cancelButton.addEventListener('click', () => {
-    unmount(dialogEl)
-    resolve(false)
+    settleDialog(false)
   })
 
   confirmButton.addEventListener('click', () => {
-    unmount(dialogEl)
-    resolve(true)
+    settleDialog(true)
   })
 
   return promise

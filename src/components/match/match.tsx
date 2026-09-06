@@ -23,6 +23,7 @@ import type Player from '../../libs/player/player'
 import { STATS_MATCH_ACTIONS } from '../../libs/stats/stats'
 import type { StatMatchActionItem, StatMatchSummary } from '../../libs/stats/stats.d'
 import { getStatSummary } from '../../libs/stats/stats-util'
+import { updateMatch } from '../../libs/stores/matchs-store'
 import { TEAM_OPPONENT_ID } from '../../libs/team/team'
 import { confirmAction, goTo, toast } from '../../libs/utils/utils'
 import { vibrate } from '../../libs/vibrator/vibrator'
@@ -61,7 +62,7 @@ function registerStat(options: {
 
   options.disableClearLastAction.set(options.match.stats.length === 0)
   options.setStatSummary(getStatSummary(options.match))
-  orchestrator.Matchs.updateMatch(options.match)
+  updateMatch(options.match.id, options.match.getRawData())
 }
 
 async function removeAction(
@@ -89,7 +90,7 @@ async function removeAction(
 
   disableClearLastAction.set(match.stats.length === 0)
   setStatSummary(getStatSummary(match))
-  orchestrator.Matchs.updateMatch(match)
+  updateMatch(match.id, match.getRawData())
 }
 
 function removeLastAction(

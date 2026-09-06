@@ -3,8 +3,7 @@ import { createEffect, createMemo, createSignal } from 'solid-js'
 import BsCard from '../components/card/card'
 import BsInput from '../components/input/input'
 import { CLUB_LICENSE_MAX_LENGTH } from '../libs/club/club'
-import { clubs } from '../libs/clubs-store'
-import orchestrator from '../libs/orchestrator/orchestrator'
+import { clubs, updateClub } from '../libs/stores/clubs-store'
 import { toast } from '../libs/utils/utils'
 
 const CLUB_NAME_MAX_LENGTH = 50
@@ -24,11 +23,10 @@ export default function ClubSettingsPage() {
 
   function saveClub() {
     const club = currentClub()
-    if (!club) {
+    if (!club?.id) {
       return
     }
-    club.update({ licenseNumber: licenseNumber().trim(), name: clubName().trim() })
-    orchestrator.Clubs.updateClub(club)
+    updateClub(club.id, { id: club.id, licenseNumber: licenseNumber().trim(), name: clubName().trim() })
     toast('Club enregistré.', 'success')
   }
 

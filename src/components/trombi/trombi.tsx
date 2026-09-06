@@ -1,8 +1,8 @@
 import { useNavigate } from '@solidjs/router'
 import { ArrowLeft } from 'lucide-solid'
 import { createMemo, For, Show } from 'solid-js'
-import { clubs } from '../../libs/clubs-store'
 import { ROUTE_PLAYERS } from '../../libs/menu/routes'
+import { clubs } from '../../libs/stores/clubs-store'
 import { titles, updateTitle } from '../../libs/trombi-titles-store'
 import BsEmptyPlayerFallback from '../empty-player-fallback/empty-player-fallback'
 import BsInlineEditableTitle from '../inline-editable-title/inline-editable-title'
@@ -50,7 +50,7 @@ export default function BsTrombi(props: BsTrombiProps) {
       </div>
 
       <Show fallback={<BsEmptyPlayerFallback />} when={props.players.length}>
-        <div class="flex flex-col gap-3">
+        <div class="flex flex-col gap-3 print:mx-0 print:w-full print:max-w-none print:gap-4 print:px-0">
           <For each={props.players}>{(player) => <BsTrombiPlayerItem player={player} />}</For>
         </div>
       </Show>

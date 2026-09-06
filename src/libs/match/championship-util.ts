@@ -1,18 +1,7 @@
-import { createSignal, onCleanup } from 'solid-js'
-import bsEventBus from '../event-bus/event-bus'
 import type Match from './match'
 
 /** Display label for matches with no championship (null/undefined/empty). */
 export const NO_CHAMPIONSHIP_LABEL = 'Sans championnat'
-
-/** SolidJS hook: returns a version signal that bumps on every BS::MATCHS::CHANGE event. */
-export function createMatchVersionTracker(): () => number {
-  const [version, setVersion] = createSignal(0)
-  const bump = () => setVersion((v) => v + 1)
-  bsEventBus.addEventListener('BS::MATCHS::CHANGE', bump)
-  onCleanup(() => bsEventBus.removeEventListener('BS::MATCHS::CHANGE', bump))
-  return version
-}
 
 /**
  * Unique, alphabetically-sorted championship labels present in the given matches.
