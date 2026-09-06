@@ -37,16 +37,17 @@
 - **Components**: Functional component pattern with adaptor pattern. Keep presentational logic separate from business logic
 - **Naming**: `Bs` prefix for component names (e.g., `BsButton`). camelCase for variables, PascalCase for types/interfaces
 - **Error handling**: Descriptive error messages, proper TypeScript null checks
+- **Language**: Documentation, code comments, and commit messages are all written in English
 
 ## Project Structure
 
 ```
-docs/          # Architecture references (state-architecture.md, pattern cible)
+docs/          # Architecture references (state-architecture.md, target pattern)
 src/
 ├── components/   # Reusable UI components (Bs* prefix)
 ├── global/       # Global state, theme, fonts
 ├── libs/         # Business logic, utilities, stores
-│   └── stores/   # Collection stores (createStore singletons — pattern cible)
+│   └── stores/   # Collection stores (createStore singletons — target pattern)
 ├── pages/        # Page-level route components
 ├── index.css     # Global CSS (Tailwind)
 └── index.tsx     # App entry point
@@ -59,20 +60,20 @@ src/
 - **Icons**: All imported from `lucide-solid` — check lucide.dev for available icons
 - **Deployment**: `pre-prod` and `prod` scripts copy to `/var/www/` paths — Linux-only
 
-## Architecture d'état (pattern cible)
+## State Architecture (Target Pattern)
 
-> Référence complète : [`docs/state-architecture.md`](docs/state-architecture.md). Documente le code réel de la branche `fix/grok-glm` (commits `626d9ba` → `88f9828`).
+> Full reference: [`docs/state-architecture.md`](docs/state-architecture.md). Documents the real code of the `fix/grok-glm` branch (commits `626d9ba` → `88f9828`).
 
-Règles dures pour tout code touchant l'état :
+Hard rules for any code touching state:
 
-- **Chaque collection vit dans un store** de `src/libs/stores/*.ts` : singleton `createStore<XxxRawData[]>([])`, objets **plats** (`RawData`), jamais de classes ni de champs privés dans le store.
-- **`hydrate*` ne persiste JAMAIS** ; `replaceAll*` remplace + persiste une fois ; `add/update/remove` calculent le `next[]` de façon pure puis persistent une fois (fire-and-forget, `.catch` → `console.error`).
-- **Persistance jamais dans un `createEffect`** (eager, boucles, écriture d'un état vide au chargement) : toujours explicite dans la mutation.
-- **Remplacement massif via `reconcile(raws, { key: 'id' })`** pour préserver l'identité des items d'un `<For>` (flicker) ; lectures à froid enveloppées en `createMemo` ; getters `getRaw*`/`getXxxById` clonants pour les lecteurs non-réactifs.
-- **Commits multi-collections dans un seul `batch()`** (orchestrator) : validation pure synchrone d'abord, I/O (photo) ensuite, commit en dernier — un échec photo = rien commité.
-- **Tests stores** : `beforeEach(() => { vi.clearAllMocks(); hydrateXxx([]) })` + mock de `storeXxx` ; filet de caractérisation dans `src/libs/orchestrator/player-batch.test.ts`.
+- **Each collection lives in a store** in `src/libs/stores/*.ts`: a `createStore<XxxRawData[]>([])` singleton, **flat** objects (`RawData`), never classes or private fields in the store.
+- **`hydrate*` NEVER persists**; `replaceAll*` replaces + persists once; `add/update/remove` compute the `next[]` purely, then persist once (fire-and-forget, `.catch` → `console.error`).
+- **Never persist in a `createEffect`** (eager, loops, writing an empty state at load): always explicit in the mutation.
+- **Bulk replacement via `reconcile(raws, { key: 'id' })`** to preserve item identity in a `<For>` (flicker); cold reads wrapped in `createMemo`; cloning `getRaw*`/`getXxxById` getters for non-reactive readers.
+- **Multi-collection commits in a single `batch()`** (orchestrator): pure synchronous validation first, I/O (photo) next, commit last — a photo failure = nothing committed.
+- **Store tests**: `beforeEach(() => { vi.clearAllMocks(); hydrateXxx([]) })` + `storeXxx` mock; characterization net in `src/libs/orchestrator/player-batch.test.ts`.
 
-**Anti-patterns supprimés à ne PAS réintroduire :** le bus d'événements custom (`event-bus`, `BS::*::CHANGE`), les variants `*Silent`, les adapters de source (`ContactsSource`) et les classes dans les stores.
+**Removed anti-patterns that must NOT be reintroduced:** the custom event bus (`event-bus`, `BS::*::CHANGE`), the `*Silent` variants, the source adapters (`ContactsSource`) and classes in stores.
 
 ## Ambient Tasks
 
