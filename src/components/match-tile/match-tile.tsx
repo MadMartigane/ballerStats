@@ -3,6 +3,7 @@ import { createMemo, Show } from 'solid-js'
 import type Match from '../../libs/match/match'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import { getMatchOutcome, type MatchOutcome } from '../../libs/stats/stats-util'
+import { removeMatch as removeStoredMatch } from '../../libs/stores/matchs-store'
 import { confirmAction, toDateTime } from '../../libs/utils/utils'
 import BsTile from '../tile/tile'
 import type { BsMatchTileProps, BsMatchTypeProps } from './match-tile.d'
@@ -16,7 +17,7 @@ async function removeMatch(match: Match) {
   const yes = await confirmAction()
 
   if (yes) {
-    orchestrator.Matchs.remove(match)
+    removeStoredMatch(match.id)
   }
 }
 

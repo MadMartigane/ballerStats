@@ -76,7 +76,7 @@ export function BsStatsLegend() {
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: <dialog> handles Escape natively and the click only dismisses on backdrop */}
       <dialog
         aria-labelledby={titleId}
-        class="modal modal-bottom sm:modal-middle"
+        class="modal modal-middle"
         onClick={makeBackdropClickHandler(() => dialogEl)}
         onClose={makeClearSelectedEntryHandler(setSelectedEntry)}
         ref={dialogEl}
