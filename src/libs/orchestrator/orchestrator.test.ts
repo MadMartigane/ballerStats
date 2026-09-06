@@ -7,6 +7,15 @@ import type { GlobalDB } from './orchestrator.d'
 
 vi.mock('../utils/utils')
 
+vi.mock('../photo-store/photo-store', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../photo-store/photo-store')>()
+  return {
+    ...actual,
+    deletePhotoAndFlag: vi.fn(),
+    setPhotoAndFlag: vi.fn(),
+  }
+})
+
 /**
  * The private parse methods live on the prototype (TypeScript `private` is a
  * compile-time concept). Building an instance via `Object.create` lets the test

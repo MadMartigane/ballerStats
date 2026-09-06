@@ -230,7 +230,9 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
       </nav>
 
       <main>
-        <div class="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8">{props.children}</div>
+        <div class="mx-auto max-w-7xl px-4 py-2 sm:px-6 lg:px-8 print:mx-0 print:max-w-none print:px-2">
+          {props.children}
+        </div>
       </main>
     </div>
   )

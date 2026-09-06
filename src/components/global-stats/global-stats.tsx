@@ -1,24 +1,13 @@
 import { Dot } from 'lucide-solid'
-import bsEventBus from '../../libs/event-bus/event-bus'
-import MadSignal from '../../libs/mad-signal'
-import orchestrator from '../../libs/orchestrator/orchestrator'
-
-function installEventHandlers(nbPlayers: MadSignal<number>, nbTeams: MadSignal<number>) {
-  bsEventBus.addEventListener('BS::PLAYERS::CHANGE', () => {
-    nbPlayers.set(orchestrator.Players.length)
-  })
-
-  bsEventBus.addEventListener('BS::TEAMS::CHANGE', () => {
-    nbTeams.set(orchestrator.Teams.length)
-  })
-}
+import { createMemo } from 'solid-js'
+import { matchs } from '../../libs/stores/matchs-store'
+import { players } from '../../libs/stores/players-store'
+import { teams } from '../../libs/stores/teams-store'
 
 export default function GlobalStats() {
-  const nbPlayers = new MadSignal(orchestrator.Players.length)
-  const nbTeams = new MadSignal(orchestrator.Teams.length)
-  const nbMatchs = new MadSignal(orchestrator.Matchs.length)
-
-  installEventHandlers(nbPlayers, nbTeams)
+  const nbPlayers = createMemo(() => players.length)
+  const nbTeams = createMemo(() => teams.length)
+  const nbMatchs = createMemo(() => matchs.length)
 
   return (
     <div>
@@ -31,7 +20,7 @@ export default function GlobalStats() {
                 <Dot class="h-8 w-8 text-purple-600 dark:text-purple-300" />
               </td>
               <td>Nombre de joueurs</td>
-              <td>{nbPlayers.get()}</td>
+              <td>{nbPlayers()}</td>
             </tr>
 
             <tr>
@@ -39,7 +28,7 @@ export default function GlobalStats() {
                 <Dot class="h-8 w-8 text-orange-600 dark:text-orange-300" />
               </td>
               <td>Nombre d’équipes</td>
-              <td>{nbTeams.get()}</td>
+              <td>{nbTeams()}</td>
             </tr>
 
             <tr>
@@ -47,7 +36,7 @@ export default function GlobalStats() {
                 <Dot class="h-8 w-8 text-purple-600 dark:text-purple-300" />
               </td>
               <td>Nombre de matchs</td>
-              <td>{nbMatchs.get()}</td>
+              <td>{nbMatchs()}</td>
             </tr>
           </tbody>
         </table>
