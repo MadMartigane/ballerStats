@@ -41,10 +41,12 @@
 ## Project Structure
 
 ```
+docs/          # Architecture references (state-architecture.md, pattern cible)
 src/
 ├── components/   # Reusable UI components (Bs* prefix)
 ├── global/       # Global state, theme, fonts
 ├── libs/         # Business logic, utilities, stores
+│   └── stores/   # Collection stores (createStore singletons — pattern cible)
 ├── pages/        # Page-level route components
 ├── index.css     # Global CSS (Tailwind)
 └── index.tsx     # App entry point
@@ -56,6 +58,21 @@ src/
 - **State**: SolidJS stores (`createStore`) + custom signal wrappers (`MadSignal`)
 - **Icons**: All imported from `lucide-solid` — check lucide.dev for available icons
 - **Deployment**: `pre-prod` and `prod` scripts copy to `/var/www/` paths — Linux-only
+
+## Architecture d'état (pattern cible)
+
+> Référence complète : [`docs/state-architecture.md`](docs/state-architecture.md). Documente le code réel de la branche `fix/grok-glm` (commits `626d9ba` → `88f9828`).
+
+Règles dures pour tout code touchant l'état :
+
+- **Chaque collection vit dans un store** de `src/libs/stores/*.ts` : singleton `createStore<XxxRawData[]>([])`, objets **plats** (`RawData`), jamais de classes ni de champs privés dans le store.
+- **`hydrate*` ne persiste JAMAIS** ; `replaceAll*` remplace + persiste une fois ; `add/update/remove` calculent le `next[]` de façon pure puis persistent une fois (fire-and-forget, `.catch` → `console.error`).
+- **Persistance jamais dans un `createEffect`** (eager, boucles, écriture d'un état vide au chargement) : toujours explicite dans la mutation.
+- **Remplacement massif via `reconcile(raws, { key: 'id' })`** pour préserver l'identité des items d'un `<For>` (flicker) ; lectures à froid enveloppées en `createMemo` ; getters `getRaw*`/`getXxxById` clonants pour les lecteurs non-réactifs.
+- **Commits multi-collections dans un seul `batch()`** (orchestrator) : validation pure synchrone d'abord, I/O (photo) ensuite, commit en dernier — un échec photo = rien commité.
+- **Tests stores** : `beforeEach(() => { vi.clearAllMocks(); hydrateXxx([]) })` + mock de `storeXxx` ; filet de caractérisation dans `src/libs/orchestrator/player-batch.test.ts`.
+
+**Anti-patterns supprimés à ne PAS réintroduire :** le bus d'événements custom (`event-bus`, `BS::*::CHANGE`), les variants `*Silent`, les adapters de source (`ContactsSource`) et les classes dans les stores.
 
 ## Ambient Tasks
 
