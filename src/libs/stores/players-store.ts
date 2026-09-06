@@ -1,7 +1,7 @@
 /**
- * Pattern de référence des stores de collection (players, contacts, teams,
- * matchs, clubs). Conventions détaillées dans docs/state-architecture.md :
- * hydrate ne persiste jamais, mutations = next[] pur + persist unique.
+ * Reference pattern for collection stores (players, contacts, teams, matchs,
+ * clubs). Detailed conventions in docs/state-architecture.md: hydrate never
+ * persists, mutations = pure next[] + a single persist.
  */
 import { createStore, reconcile } from 'solid-js/store'
 import Player from '../player/player'
