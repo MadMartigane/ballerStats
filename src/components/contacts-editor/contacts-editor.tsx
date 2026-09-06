@@ -36,10 +36,11 @@ export default function BsContactsEditor(props: BsContactsEditorProps) {
 
   /**
    * The domain `Contacts` collection is framework-free: it only fires
-   * `BS::CONTACTS::CHANGE` events on mutation. `createBusList` re-reads the
-   * source list on every such event, on the source's local draft notifier, and
-   * whenever the source's reactive dependencies change (staged draft signal,
-   * player identity, source switch).
+   * `BS::CONTACTS::CHANGE` events on mutation. `createBusList` reads the source
+   * list once at mount and re-reads it on every such event plus on the source's
+   * local draft notifier (silent draft mutations). The owner must be recreated
+   * when the player identity changes: `BsPlayers` keys the editor's `Show` on
+   * the player id so a switch provably remounts this component.
    */
   const visibleContacts = createBusList('BS::CONTACTS::CHANGE', () => props.source.list(), props.source.subscribe)
   const editContactLabel = 'Modifier le contact'

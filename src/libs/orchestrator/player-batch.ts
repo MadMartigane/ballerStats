@@ -69,14 +69,24 @@ export function validateContactReplacementBatch(
 }
 
 /**
- * Apply the optional photo I/O for a player. Runs the fallible photo write or
- * delete first and mutates the player's `hasPhoto` flag to match, so the
- * caller can commit the player data (with the final flag) right after.
+ * Discriminated union describing the photo change requested at the policy-owner
+ * boundary. `set` writes a new blob, `delete` removes the photo, `keep` leaves
+ * the photo untouched. Encoding the intent explicitly removes the implicit
+ * precedence rule of the previous `(photo?, deletePhotoFlag)` pair, which could
+ * express contradictory states.
  */
-export async function applyPhoto(player: Player, photo?: Blob, deletePhotoFlag = false): Promise<void> {
-  if (photo) {
-    await setPhotoAndFlag(player, photo)
-  } else if (deletePhotoFlag && player.hasPhoto) {
+export type PhotoChange = { kind: 'set'; blob: Blob } | { kind: 'delete' } | { kind: 'keep' }
+
+/**
+ * Best-effort photo write/delete for a player, invoked AFTER the in-memory
+ * batch commit so a photo I/O failure can never abort the committed batch.
+ * Dispatches on the change kind: `set` writes the blob and sets `hasPhoto`,
+ * `delete` removes the photo and clears `hasPhoto`, `keep` is a no-op.
+ */
+export async function applyPhoto(player: Player, change: PhotoChange): Promise<void> {
+  if (change.kind === 'set') {
+    await setPhotoAndFlag(player, change.blob)
+  } else if (change.kind === 'delete') {
     await deletePhotoAndFlag(player)
   }
 }
@@ -88,11 +98,10 @@ export async function applyPhoto(player: Player, photo?: Blob, deletePhotoFlag =
  * the draft's) and swapped in via a single assignment, so no partial state can
  * be observed even if a draft contact were invalid.
  */
-export function replacePlayerContactsSilent(contacts: Contacts, playerId: string, draftContacts: Contacts): void {
+export function replacePlayerContactsSilent(contacts: Contacts, playerId: string, draftContacts: Contact[]): void {
   const otherContacts = contacts.contacts.filter((contact) => contact.playerId !== playerId)
-  const draftContactsList = draftContacts.getByPlayerId(playerId)
   contacts.setFromRawDataSilent([
     ...otherContacts.map((contact) => contact.getRawData()),
-    ...draftContactsList.map((contact) => contact.getRawData()),
+    ...draftContacts.map((contact) => contact.getRawData()),
   ])
 }

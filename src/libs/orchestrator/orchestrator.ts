@@ -47,6 +47,7 @@ import { confirmAction, downloadBlob, toast } from '../utils/utils'
 import { vibrate } from '../vibrator/vibrator'
 import type { ThemeVibration } from '../vibrator/vibrator.d'
 import type { DomainDataset, GlobalDB } from './orchestrator.d'
+import type { PhotoChange } from './player-batch'
 import {
   applyPhoto,
   replacePlayerContactsSilent,
@@ -467,76 +468,102 @@ export class Orchestrator {
   }
 
   /**
-   * Register a brand-new player together with its contacts and optional photo.
+   * Finalize a player batch: best-effort photo write/delete, run AFTER the
+   * in-memory batch commit, then fire the change events. Photo I/O is the only
+   * fallible step and runs last, so a failure never aborts the batch: data stays
+   * committed with its previous `hasPhoto` flag and the user is warned — same
+   * policy as the import flow's photo restore.
    *
-   * Ordering rationale (photo first, in-memory commit last):
-   * - All validation is pure and synchronous (no I/O) and runs before any await,
-   *   so the in-memory commit below cannot fail once reached: the player and its
-   *   contacts are committed back-to-back via silent variants (no await between
-   *   them), so the commit is atomic — either both land or neither does. A single
-   *   PLAYERS::CHANGE and a single CONTACTS::CHANGE are fired only after the full
-   *   batch lands, so persistence subscribers and the UI never observe the
-   *   intermediate prefix (player without its contacts).
-   * - The photo I/O is the only fallible step, so it runs FIRST. If it fails,
-   *   nothing has been committed in-memory yet and the error is rethrown with
-   *   nothing to undo — no rollback path is needed. If it succeeds, the
-   *   in-memory commit (which cannot fail after validation) follows immediately.
+   * Ordering policy (owned by this helper, shared by both batch methods):
+   * synchronous commit first, photo I/O last, events last of all. All validation
+   * is pure and synchronous (no I/O), then the player and its contacts are
+   * committed back-to-back via silent variants with no `await` between
+   * validation and the last mutation, so the in-memory commit cannot fail or
+   * interleave (JS single-threading): it is atomic by construction — either both
+   * land or neither does. No rollback path is needed. The photo I/O runs LAST
+   * and is best-effort, so no abort path in this flow orphans a photo: nothing
+   * aborts after it. A failure leaves the data committed with its previous
+   * `hasPhoto` flag and warns the user. A single CONTACTS::CHANGE and a single
+   * PLAYERS::CHANGE are fired only after everything, contacts FIRST so a
+   * mid-persist quota failure degrades to bigClean-cleanable orphan contacts
+   * instead of a player silently missing its contacts.
+   *
+   * The flag propagation is internal: after a successful write/delete, the final
+   * `player.hasPhoto` flag is pushed through the non-throwing
+   * `Players.setHasPhotoSilent` seam, which reports whether the player was still
+   * present. When the player was removed concurrently during the I/O window, the
+   * just-written blob is undone via a best-effort photo-store delete (its own
+   * failure is swallowed) so the blob is not orphaned. When the I/O failed, the
+   * catch skips the flag propagation. Both batch methods call this helper
+   * identically.
    */
-  async registerNewPlayerWithContacts(player: Player, contacts: Contact[], photo?: Blob): Promise<void> {
-    validateNewPlayerBatch(this.#players.players, this.#contacts.contacts, player, contacts)
+  private async finalizePlayerBatch(player: Player, change: PhotoChange): Promise<void> {
+    try {
+      await applyPhoto(player, change)
+      const playerStillPresent = this.#players.setHasPhotoSilent(player.id, player.hasPhoto)
+      if (change.kind === 'set' && !playerStillPresent) {
+        await deletePhoto(player.id).catch(() => {
+          // Swallow the cleanup failure: the blob is already orphaned, nothing to do.
+        })
+      }
+    } catch (error) {
+      console.error('[Orchestrator] Photo storage failed (batch committed without the photo change):', error)
+      if (change.kind === 'set') {
+        toast("Le joueur a été enregistré mais sa photo n'a pas pu être sauvegardée.", 'error')
+      } else if (change.kind === 'delete') {
+        toast("Le joueur a été enregistré mais sa photo n'a pas pu être supprimée.", 'error')
+      }
+    }
 
-    await applyPhoto(player, photo)
+    this.throwContactsUpdatedEvent()
+    this.throwPlayersUpdatedEvent()
+  }
+
+  /**
+   * Register a brand-new player together with its contacts and the requested
+   * photo change.
+   *
+   * Validation is pure and synchronous: the new player must not collide with an
+   * existing player or contact, and the draft contacts must be registerable.
+   *
+   * Shared commit/photo/event policy: see {@link finalizePlayerBatch}.
+   */
+  async registerNewPlayerWithContacts(player: Player, contacts: Contact[], change: PhotoChange): Promise<void> {
+    validateNewPlayerBatch(this.#players.players, this.#contacts.contacts, player, contacts)
 
     this.#players.addSilent(player)
     for (const contact of contacts) {
       this.#contacts.addSilent(contact)
     }
-    this.throwPlayersUpdatedEvent()
-    this.throwContactsUpdatedEvent()
+    await this.finalizePlayerBatch(player, change)
   }
 
   /**
-   * Update an existing player's data, contacts and optional photo as one atomic
-   * batch. This is the canonical edit path: `BsPlayers.registerPlayer` calls
-   * only this method for edits.
+   * Update an existing player's data, contacts and requested photo change as one
+   * atomic batch. This is the canonical edit path: `BsPlayers.registerPlayer`
+   * calls only this method for edits.
    *
-   * Ordering rationale (photo first, in-memory commit last):
-   * - All validation is pure and synchronous (no I/O) and runs before any await:
-   *   the player existence check plus the full draft-contacts validation
-   *   (registerability, belong-to-player, intra-batch duplicates and the global
-   *   addable check against the other players' contacts).
-   * - The photo I/O is the only fallible step, so it runs FIRST. If it fails,
-   *   nothing has been committed in-memory yet and the error is rethrown with
-   *   nothing to undo.
-   * - The player and its contacts are then committed back-to-back via silent
-   *   variants (no await between them), so the commit is atomic — either both
-   *   land or neither does. A single PLAYERS::CHANGE and a single CONTACTS::CHANGE
-   *   are fired only after the full batch lands, so persistence subscribers and
-   *   the UI never observe an intermediate prefix.
+   * Validation is pure and synchronous and runs before the commit: the player
+   * existence check plus the full draft-contacts validation (registerability,
+   * belong-to-player, intra-batch duplicates and the global addable check
+   * against the other players' contacts).
+   *
+   * Shared commit/photo/event policy: see {@link finalizePlayerBatch}.
    *
    * @throws {Error} When the player id doesn't exist or the draft is invalid.
-   * Photo I/O failures are rethrown with nothing to undo.
+   * Photo I/O failures are caught and reported, never rethrown.
    */
-  async updatePlayerWithPhotoAndContacts(
-    player: Player,
-    draftContacts: Contacts,
-    photo?: Blob,
-    deletePhotoFlag = false
-  ): Promise<void> {
+  async updatePlayerWithPhotoAndContacts(player: Player, draftContacts: Contact[], change: PhotoChange): Promise<void> {
     const existingPlayer = this.#players.getById(player.id)
     if (!existingPlayer) {
       throw new Error(`[Orchestrator.updatePlayerWithPhotoAndContacts()] The player id ${player.id} doesn't exist.`)
     }
 
-    validateContactReplacementBatch(this.#contacts.contacts, player, draftContacts.getByPlayerId(player.id))
-
-    await applyPhoto(player, photo, deletePhotoFlag)
+    validateContactReplacementBatch(this.#contacts.contacts, player, draftContacts)
 
     this.#players.updatePlayerSilent(player)
     replacePlayerContactsSilent(this.#contacts, player.id, draftContacts)
-
-    this.throwPlayersUpdatedEvent()
-    this.throwContactsUpdatedEvent()
+    await this.finalizePlayerBatch(player, change)
   }
 
   getTeam(id?: string | null) {

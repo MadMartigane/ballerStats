@@ -6,6 +6,7 @@ import { createContactsSource } from '../../libs/contacts/contacts-source'
 import bsEventBus from '../../libs/event-bus/event-bus'
 import { ROUTE_TROMBI } from '../../libs/menu/routes'
 import orchestrator from '../../libs/orchestrator/orchestrator'
+import type { PhotoChange } from '../../libs/orchestrator/player-batch'
 import Player, { LICENSE_NUMBER_MAX_LENGTH } from '../../libs/player/player'
 import type { PlayerRawData } from '../../libs/player/player.d'
 import { players } from '../../libs/players-store'
@@ -117,11 +118,21 @@ export default function BsPlayers() {
 
     const blob = pendingPhotoBlob()
     const isDelete = pendingPhotoDelete()
+    const pendingContactsSlice = pendingContacts.getByPlayerId(playerToRegister.id)
+
+    let change: PhotoChange
+    if (blob) {
+      change = { blob, kind: 'set' }
+    } else if (isDelete) {
+      change = { kind: 'delete' }
+    } else {
+      change = { kind: 'keep' }
+    }
 
     if (isEditingNewPlayer()) {
-      await orchestrator.registerNewPlayerWithContacts(playerToRegister, pendingContacts.contacts, blob)
+      await orchestrator.registerNewPlayerWithContacts(playerToRegister, pendingContactsSlice, change)
     } else {
-      await orchestrator.updatePlayerWithPhotoAndContacts(playerToRegister, pendingContacts, blob, isDelete)
+      await orchestrator.updatePlayerWithPhotoAndContacts(playerToRegister, pendingContactsSlice, change)
     }
 
     setIsAddingPlayer(false)
@@ -244,8 +255,8 @@ export default function BsPlayers() {
               value: currentPlayer()?.email,
             })}
           </form>
-          <Show when={currentPlayer()?.id}>
-            {/* The Show condition above guarantees a non-null player with a truthy id when rendered. */}
+          <Show keyed when={currentPlayer()?.id}>
+            {/* Keyed on the player id so a player switch provably recreates the editor owner: `createBusList` captures the source at mount and must not outlive the player it was created for. */}
             <BsContactsEditor source={pendingContactsSource} />
           </Show>
         </>

@@ -64,6 +64,22 @@ export default class Players {
     oldPlayer.setFromRawData(newPlayer.getRawData())
   }
 
+  /**
+   * Sets the `hasPhoto` flag on the collection-owned player with the given id.
+   * Returns `true` when the player was found and updated, `false` when the id is
+   * gone (e.g. a concurrent removal during photo I/O). Callers can use the
+   * return value to detect the no-op case and trigger best-effort cleanup.
+   */
+  setHasPhotoSilent(id: string, hasPhoto: boolean): boolean {
+    const player = this.#players.find((candidate) => candidate.id === id)
+    if (!player) {
+      return false
+    }
+
+    player.hasPhoto = hasPhoto
+    return true
+  }
+
   updatePlayer(newPlayer: Player) {
     this.updatePlayerSilent(newPlayer)
     this.throwUpdatedPlayerEvent()
