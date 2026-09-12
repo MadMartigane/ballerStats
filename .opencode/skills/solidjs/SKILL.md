@@ -43,6 +43,7 @@
 - NEVER compute derived values directly in the body if they depend on reactive sources — use `createMemo`
 - Event handlers and callbacks are stable references — no need for `useCallback`
 - Variables declared in the component body (non-signal) are **static** after first run
+- A component is rendered as a JSX tag, never called as a function — see Rule 13
 
 ```tsx
 import { createSignal, createMemo } from "solid-js";
@@ -106,6 +107,7 @@ function Price() {
 - `<Index each={list}>` — for lists with no stable key
 - `<Switch>/<Match>` — multi-way conditionals, NOT nested ternaries
 - `<Suspense>` — wrap components using `createResource`
+- `<Show>` children are a **getter**: they replay when `when` changes — never call a component or helper inside (Rule 13)
 
 ```tsx
 import { Show, For, Switch, Match } from "solid-js";
@@ -179,6 +181,7 @@ function Button(props: { variant?: string; onClick?: () => void; children: any }
 - NEVER define a component function inside another component function
 - Extract to module scope
 - Helper render functions at module scope are fine if they don't use signals/effects
+- A module-scope helper that reads signals is a component: render it as a tag, never call it — see Rule 13
 
 ```tsx
 import { createSignal } from "solid-js";
@@ -344,6 +347,7 @@ const toggle = (id: number) => {
 - `mergeProps(a, b)` — reactive merge, NOT `{...a, ...b}`
 - `splitProps(props, ["a", "b"])` — returns `[extracted, rest]`
 - Defaults pattern: `const merged = mergeProps({ variant: "primary" }, props)`
+- The eager-copy trap also applies to adaptors: never snapshot `options.value` or props at call time — keep reading them reactively via `mergeProps` + `props.value` inside JSX
 
 ```tsx
 import { mergeProps, splitProps } from "solid-js";
@@ -397,6 +401,41 @@ function TextInput() {
 
 ---
 
+## Rule 13 — Components Are JSX Tags, Never Function Calls
+
+**Why this rule**: A component function is not a factory you call to obtain JSX. Calling it manually re-executes its whole body — including JSX — on every evaluation of the enclosing reactive scope, so each update creates new DOM nodes instead of updating the existing ones (focus, caret position, and local state are lost). A JSX tag compiles to `createComponent`, which runs the body once per mount; that once-execution guarantee comes from the compiler, not from the function itself.
+
+**Rules**:
+- Always render components as tags: `<BsInput value={clubName()} />`
+- NEVER call a component inside a reactive insert: `{BsInput({ value: clubName() })}` re-runs on each signal update
+- A helper that reads signals is a component: extract it to module scope and render `<ContactEditForm />`, never `{renderContactEditForm()}`
+- `<Show>` children compile to a getter replayed whenever `when` changes — a call inside the getter re-executes on every replay, producing new inputs
+- Pass reactive data down as accessors, not as eagerly-read values (Rule 11)
+
+```tsx
+import { createSignal, Show } from "solid-js";
+
+// ❌ Wrong - the call re-runs on every update, replacing the input
+function ClubForm() {
+  const [clubName, setClubName] = createSignal("");
+  return <div>{BsInput({ value: clubName() })}</div>;
+}
+
+// ✅ Correct - the tag mounts once; the compiler guarantees it
+function ClubForm() {
+  const [clubName, setClubName] = createSignal("");
+  return <div><BsInput value={clubName()} /></div>;
+}
+
+// ❌ Wrong - Show replays its getter, calling the helper again (fresh inputs)
+<Show when={editing()}>{renderContactEditForm()}</Show>
+
+// ✅ Correct - module-scope component; accessors passed as props
+<Show when={editing()}><ContactEditForm contactId={contactId} /></Show>
+```
+
+---
+
 ## Anti-Pattern Quick Reference
 
 | ❌ React Pattern | ✅ SolidJS Correct |
@@ -418,6 +457,8 @@ function TextInput() {
 | `setTodos({...todos})` | `setTodos("path", "to", value)` |
 | `onChange` on input | `onInput` |
 | `e.target.value` | `e.currentTarget.value` |
+| `Comp({ ... })` in an insert | `<Comp ... />` |
+| `{helper()}` as insert / `<Show>` children | `<Helper />` |
 
 ---
 
@@ -425,35 +466,41 @@ function TextInput() {
 
 Conventions specific to this project that an agent would not know from training data:
 
-- **Component naming**: `Bs` prefix (e.g., `BsButton`, `BsPlayer`)
-- **Props types**: Separate `.d.ts` files alongside `.tsx` (e.g., `bs-button.d.ts` + `bs-button.tsx`)
+- **Component naming**: `Bs` prefix for real components (e.g., `BsCard`, `BsInput`)
+- **Props types**: Separate `.d.ts` files alongside `.tsx` (e.g., `bs-card.d.ts` + `bs-card.tsx`)
 - **Adaptor pattern**: Business logic in `adaptor()` function, presentational logic in component
 - **`MadSignal` class**: Custom signal wrapper at `src/libs/mad-signal.ts` — exposes `.get()` and `.set()` methods
 - **State**: `createStore` for collections, `MadSignal` for simple values
-- **Event bus**: `bsEventBus` for cross-component communication at `src/libs/event-bus.ts`
+- **Instance-scoped state**: debounce timers live per component instance — never a module-level shared timer; input ids come from `createUniqueId()`
 - **Icons**: Always from `lucide-solid`
 - **Routing**: `@solidjs/router` with `HashRouter`
 - **Formatting**: Biome via Ultracite preset — line width 120, indent 2 spaces, single quotes
 
 ```tsx
-// bs-button.d.ts
-export interface BsButtonProps {
-  variant?: "primary" | "secondary" | "ghost";
-  disabled?: boolean;
-  onClick?: (event: MouseEvent) => void;
+// Native DaisyUI button — no wrapper component (see AGENTS.md)
+<button class="btn btn-primary" type="button" onClick={props.onSave}>
+  <Save />
+  Enregistrer
+</button>
+
+// bs-card.d.ts
+export interface BsCardProps {
+  title: string;
+  class?: string;
   children: JSX.Element;
 }
 
-// bs-button.tsx
+// bs-card.tsx
 import { mergeProps, type JSX } from "solid-js";
-import type { BsButtonProps } from "./bs-button.d";
+import type { BsCardProps } from "./bs-card.d";
 
-export function BsButton(rawProps: BsButtonProps): JSX.Element {
-  const props = mergeProps({ variant: "primary" as const, disabled: false }, rawProps);
+export function BsCard(rawProps: BsCardProps): JSX.Element {
+  const props = mergeProps({ class: "" }, rawProps);
   return (
-    <button type="button" class={`btn btn-${props.variant}`} disabled={props.disabled} onClick={props.onClick}>
+    <div class={`card ${props.class}`}>
+      <h3>{props.title}</h3>
       {props.children}
-    </button>
+    </div>
   );
 }
 ```

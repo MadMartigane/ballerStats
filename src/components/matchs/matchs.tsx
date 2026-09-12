@@ -135,7 +135,7 @@ function renderMatchFallback() {
   )
 }
 
-function renderAddMatchButton() {
+function AddMatchButton() {
   return (
     <div class="w-full">
       <hr />
@@ -149,76 +149,78 @@ function renderAddMatchButton() {
   )
 }
 
-function renderAddingMatchCard() {
-  return BsCard({
-    body: (
-      // biome-ignore lint/a11y/noNoninteractiveElementInteractions: form-level Enter submission is a legacy behavior preserved during audit fixes
-      <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
-        <BsSelect
-          datas={teams().map((team) => ({ label: team.name, value: team.id }))}
-          label="Mon Équipe"
-          onValueChange={onTeamChange}
-          placeholder="Sélectionnez l’équipe"
-          value={currentMatch?.teamId}
-        />
+function AddingMatchCard() {
+  return (
+    <BsCard
+      body={
+        // biome-ignore lint/a11y/noNoninteractiveElementInteractions: form-level Enter submission is a legacy behavior preserved during audit fixes
+        <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
+          <BsSelect
+            datas={teams().map((team) => ({ label: team.name, value: team.id }))}
+            label="Mon Équipe"
+            onValueChange={onTeamChange}
+            placeholder="Sélectionnez l’équipe"
+            value={currentMatch?.teamId}
+          />
 
-        <BsInput
-          label="Nom de l’adversaire"
-          onChange={updateMatchOpponent}
-          placeholder="…"
-          type="text"
-          value={currentMatch?.opponent || ''}
-        />
+          <BsInput
+            label="Nom de l’adversaire"
+            onChange={updateMatchOpponent}
+            placeholder="…"
+            type="text"
+            value={currentMatch?.opponent || ''}
+          />
 
-        <BsSelect
-          datas={[
-            { label: <BsMatchTypeText type="home" />, value: 'home' },
-            { label: <BsMatchTypeText type="outside" />, value: 'outside' },
-          ]}
-          default={currentMatch && (currentMatch.type as string)}
-          label="Localité"
-          onValueChange={onMatchTypeInput}
-        />
+          <BsSelect
+            datas={[
+              { label: <BsMatchTypeText type="home" />, value: 'home' },
+              { label: <BsMatchTypeText type="outside" />, value: 'outside' },
+            ]}
+            default={currentMatch && (currentMatch.type as string)}
+            label="Localité"
+            onValueChange={onMatchTypeInput}
+          />
 
-        <BsDatePicker label="Date du match" onChange={updateMatchDate} value={currentMatch?.date} withTime={true} />
+          <BsDatePicker label="Date du match" onChange={updateMatchDate} value={currentMatch?.date} withTime={true} />
 
-        <BsToggle
-          label="Match ouvert"
-          onChange={onStatusChange}
-          size="lg"
-          value={currentMatch?.status === 'unlocked'}
-        />
+          <BsToggle
+            label="Match ouvert"
+            onChange={onStatusChange}
+            size="lg"
+            value={currentMatch?.status === 'unlocked'}
+          />
 
-        <BsCombobox
-          label="Championnat"
-          onChange={updateMatchChampionship}
-          options={championshipOptions()}
-          placeholder="Saisir un championnat…"
-          value={currentMatch?.championship || ''}
-        />
-      </form>
-    ),
-    footer: (
-      <div class="footer-buttons-container">
-        <button class="btn btn-primary btn-wide" onClick={cancelAddingMatch} type="button">
-          <X />
-          Annuler
-        </button>
+          <BsCombobox
+            label="Championnat"
+            onChange={updateMatchChampionship}
+            options={championshipOptions()}
+            placeholder="Saisir un championnat…"
+            value={currentMatch?.championship || ''}
+          />
+        </form>
+      }
+      footer={
+        <div class="footer-buttons-container">
+          <button class="btn btn-primary btn-wide" onClick={cancelAddingMatch} type="button">
+            <X />
+            Annuler
+          </button>
 
-        <button class="btn btn-primary btn-wide" disabled={!canAddMatch.get()} onClick={saveMatch} type="button">
-          {isEditingNewMatch ? <UserPlus /> : <Save />}
-          {isEditingNewMatch ? 'Ajouter' : 'Enregistrer'}
-        </button>
-      </div>
-    ),
-    info: 'Saisissez les info nécessaires pour identifier le match.',
-    title: (
-      <p class="flex flex-row gap-1">
-        <Users />
-        {isEditingNewMatch ? 'Nouveau match' : 'Édition du match'}
-      </p>
-    ),
-  })
+          <button class="btn btn-primary btn-wide" disabled={!canAddMatch.get()} onClick={saveMatch} type="button">
+            {isEditingNewMatch ? <UserPlus /> : <Save />}
+            {isEditingNewMatch ? 'Ajouter' : 'Enregistrer'}
+          </button>
+        </div>
+      }
+      info="Saisissez les info nécessaires pour identifier le match."
+      title={
+        <p class="flex flex-row gap-1">
+          <Users />
+          {isEditingNewMatch ? 'Nouveau match' : 'Édition du match'}
+        </p>
+      }
+    />
+  )
 }
 
 export default function BsMatchs() {
@@ -244,8 +246,8 @@ export default function BsMatchs() {
           </For>
         </Show>
       </Show>
-      <Show fallback={renderAddMatchButton()} when={isAddingMatch.get()}>
-        {renderAddingMatchCard()}
+      <Show fallback={<AddMatchButton />} when={isAddingMatch.get()}>
+        <AddingMatchCard />
       </Show>
     </div>
   )
