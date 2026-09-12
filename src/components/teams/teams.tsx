@@ -28,6 +28,10 @@ function setNewTeamData(data: TeamRawData) {
   canAddTeam.set(currentTeam.isRegisterable)
 }
 
+function onTeamNameChange(value: string) {
+  setNewTeamData({ name: value })
+}
+
 function toggleAddTeam(value: boolean) {
   isAddingTeam.set(value)
 }
@@ -107,7 +111,7 @@ function renderTeamFallback() {
   )
 }
 
-function renderAddTeamButton() {
+function AddTeamButton() {
   return (
     <div class="w-full">
       <hr />
@@ -132,49 +136,49 @@ function renderPlayerBadge(player: PlayerRawData) {
   )
 }
 
-function renderAddingTeamCard() {
-  return BsCard({
-    body: (
-      // biome-ignore lint/a11y/noNoninteractiveElementInteractions: form-level Enter submission is a legacy behavior preserved during audit fixes
-      <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
-        {BsInput({
-          label: 'Nom',
-          onChange: (value: string) => {
-            setNewTeamData({ name: value })
-          },
-          placeholder: 'BCC U09',
-          type: 'text',
-          value: currentTeam?.name || '',
-        })}
-        <BsSelectMultiple
-          data={getSelectDataFromPlayer()}
-          onChange={updateCurrentTeamPlayerIds}
-          placeholder="Sélection des joueurs"
-          selectedIds={currentTeam?.playerIds}
-        />
-      </form>
-    ),
-    footer: (
-      <div class="footer-buttons-container">
-        <button class="btn btn-primary btn-wide" onClick={cancelAddingTeam} type="button">
-          <X />
-          Annuler
-        </button>
+function TeamAddForm() {
+  return (
+    <BsCard
+      body={
+        // biome-ignore lint/a11y/noNoninteractiveElementInteractions: form-level Enter submission is a legacy behavior preserved during audit fixes
+        <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
+          <BsInput
+            label="Nom"
+            onChange={onTeamNameChange}
+            placeholder="BCC U09"
+            type="text"
+            value={currentTeam?.name || ''}
+          />
+          <BsSelectMultiple
+            data={getSelectDataFromPlayer()}
+            onChange={updateCurrentTeamPlayerIds}
+            placeholder="Sélection des joueurs"
+            selectedIds={currentTeam?.playerIds}
+          />
+        </form>
+      }
+      footer={
+        <div class="footer-buttons-container">
+          <button class="btn btn-primary btn-wide" onClick={cancelAddingTeam} type="button">
+            <X />
+            Annuler
+          </button>
 
-        <button class="btn btn-primary btn-wide" disabled={!canAddTeam.get()} onClick={saveTeam} type="button">
-          {isEditingNewTeam ? <Users /> : <Save />}
-          {isEditingNewTeam ? 'Ajouter' : 'Enregistrer'}
-        </button>
-      </div>
-    ),
-    info: 'Seul le nom de l’équipe est obligatoire',
-    title: (
-      <p class="flex flex-row gap-1">
-        <Users />
-        {isEditingNewTeam ? 'Nouvelle équipe' : 'Édition de l’équipe'}
-      </p>
-    ),
-  })
+          <button class="btn btn-primary btn-wide" disabled={!canAddTeam.get()} onClick={saveTeam} type="button">
+            {isEditingNewTeam ? <Users /> : <Save />}
+            {isEditingNewTeam ? 'Ajouter' : 'Enregistrer'}
+          </button>
+        </div>
+      }
+      info="Seul le nom de l’équipe est obligatoire"
+      title={
+        <p class="flex flex-row gap-1">
+          <Users />
+          {isEditingNewTeam ? 'Nouvelle équipe' : 'Édition de l’équipe'}
+        </p>
+      }
+    />
+  )
 }
 
 export default function BsTeams() {
@@ -196,8 +200,8 @@ export default function BsTeams() {
           </div>
         </Show>
       </Show>
-      <Show fallback={renderAddTeamButton()} when={isAddingTeam.get()}>
-        {renderAddingTeamCard()}
+      <Show fallback={<AddTeamButton />} when={isAddingTeam.get()}>
+        <TeamAddForm />
       </Show>
     </div>
   )

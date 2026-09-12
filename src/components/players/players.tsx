@@ -1,6 +1,6 @@
 import { useNavigate } from '@solidjs/router'
 import { Contact as ContactIcon, LayoutGrid, Save, UserPlus, X } from 'lucide-solid'
-import { createMemo, createSignal, For, Show } from 'solid-js'
+import { type Accessor, createMemo, createSignal, For, Show } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import type { ContactRawData } from '../../libs/contact/contact.d'
 import { ROUTE_TROMBI } from '../../libs/menu/routes'
@@ -16,6 +16,160 @@ import BsEmptyPlayerFallback from '../empty-player-fallback/empty-player-fallbac
 import BsInput from '../input/input'
 import BsPhotoUpload from '../photo-upload/photo-upload'
 import BsPlayer from '../player/player'
+
+interface PlayerAddFormProps {
+  canAddPlayer: Accessor<boolean>
+  contacts: ContactRawData[]
+  currentPlayer: Accessor<Player | null>
+  isEditingNewPlayer: Accessor<boolean>
+  onAddContact: (contact: ContactRawData) => void
+  onCancel: () => void
+  onPhotoChange: (hasPhoto: boolean, blob?: Blob) => void
+  onPlayerChange: (data: PlayerRawData) => void
+  onRemoveContact: (id: string) => void
+  onSave: () => void
+  onSubmit: (event: KeyboardEvent) => void
+  onUpdateContact: (contact: ContactRawData) => void
+}
+
+function makePlayerFieldChangeHandler(
+  props: PlayerAddFormProps,
+  field: 'email' | 'firstName' | 'jerseyNumber' | 'lastName' | 'licenseNumber' | 'nicName' | 'phone'
+) {
+  return (value: string) => {
+    props.onPlayerChange({ [field]: value })
+  }
+}
+
+function AddPlayerButtons(props: { onAddPlayer: () => void; onTrombiClick: () => void }) {
+  return (
+    <div class="w-full">
+      <hr />
+      <div class="footer-buttons-container">
+        <button class="btn btn-primary" onClick={props.onAddPlayer} type="button">
+          <UserPlus />
+          Ajouter un joueur
+        </button>
+        <button class="btn btn-secondary" onClick={props.onTrombiClick} type="button">
+          <LayoutGrid />
+          Trombinoscope
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function PlayerAddForm(props: PlayerAddFormProps) {
+  const onLastNameChange = makePlayerFieldChangeHandler(props, 'lastName')
+  const onFirstNameChange = makePlayerFieldChangeHandler(props, 'firstName')
+  const onJerseyNumberChange = makePlayerFieldChangeHandler(props, 'jerseyNumber')
+  const onNicNameChange = makePlayerFieldChangeHandler(props, 'nicName')
+  const onLicenseNumberChange = makePlayerFieldChangeHandler(props, 'licenseNumber')
+  const onPhoneChange = makePlayerFieldChangeHandler(props, 'phone')
+  const onEmailChange = makePlayerFieldChangeHandler(props, 'email')
+
+  return (
+    <BsCard
+      body={
+        <>
+          {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: form-level Enter submission is a legacy behavior preserved during audit fixes */}
+          <form class="flex flex-col gap-2" onKeyDown={props.onSubmit}>
+            <Show when={props.currentPlayer()?.id}>
+              <BsPhotoUpload
+                hasPhoto={props.currentPlayer()?.hasPhoto ?? false}
+                onChange={props.onPhotoChange}
+                playerId={props.currentPlayer()?.id ?? ''}
+              />
+            </Show>
+            <BsInput
+              label="Nom"
+              onChange={onLastNameChange}
+              placeholder="Dupont"
+              type="text"
+              value={props.currentPlayer()?.lastName}
+            />
+            <BsInput
+              label="Prénom"
+              onChange={onFirstNameChange}
+              placeholder="Charlie"
+              type="text"
+              value={props.currentPlayer()?.firstName}
+            />
+            <BsInput
+              label="Numéro de maillot"
+              onChange={onJerseyNumberChange}
+              placeholder="01"
+              type="text"
+              value={props.currentPlayer()?.jerseyNumber}
+            />
+            <BsInput
+              label="Surnom"
+              onChange={onNicNameChange}
+              placeholder="The B"
+              type="text"
+              value={props.currentPlayer()?.nicName}
+            />
+            <BsInput
+              label="Numéro de licence"
+              maxLength={LICENSE_NUMBER_MAX_LENGTH}
+              onChange={onLicenseNumberChange}
+              placeholder="AB123456789"
+              type="text"
+              value={props.currentPlayer()?.licenseNumber}
+            />
+            <BsInput
+              label="Téléphone"
+              onChange={onPhoneChange}
+              placeholder="06 12 34 56 78"
+              type="text"
+              value={props.currentPlayer()?.phone}
+            />
+            <BsInput
+              label="Email"
+              onChange={onEmailChange}
+              placeholder="joueur@example.com"
+              type="email"
+              value={props.currentPlayer()?.email}
+            />
+          </form>
+          <Show when={props.currentPlayer()?.id}>
+            <BsContactsEditor
+              contacts={props.contacts}
+              onAdd={props.onAddContact}
+              onRemove={props.onRemoveContact}
+              onUpdate={props.onUpdateContact}
+            />
+          </Show>
+        </>
+      }
+      footer={
+        <div class="footer-buttons-container">
+          <button class="btn btn-primary btn-wide" onClick={props.onCancel} type="button">
+            <X />
+            Annuler
+          </button>
+
+          <button
+            class="btn btn-primary btn-wide"
+            disabled={!props.canAddPlayer()}
+            onClick={props.onSave}
+            type="button"
+          >
+            {props.isEditingNewPlayer() ? <UserPlus /> : <Save />}
+            {props.isEditingNewPlayer() ? 'Ajouter' : 'Enregistrer'}
+          </button>
+        </div>
+      }
+      info="Les nom, prénom et numéro de maillot sont obligatoires"
+      title={
+        <p class="flex flex-row gap-1">
+          <ContactIcon />
+          {props.isEditingNewPlayer() ? 'Nouveau joueur' : 'Édition du joueur'}
+        </p>
+      }
+    />
+  )
+}
 
 export default function BsPlayers() {
   const navigate = useNavigate()
@@ -156,134 +310,8 @@ export default function BsPlayers() {
     savePlayer()
   }
 
-  function renderAddPlayerButton(onTrombiClick: () => void) {
-    return (
-      <div class="w-full">
-        <hr />
-        <div class="footer-buttons-container">
-          <button class="btn btn-primary" onClick={startAddingNewPlayer} type="button">
-            <UserPlus />
-            Ajouter un joueur
-          </button>
-          <button class="btn btn-secondary" onClick={onTrombiClick} type="button">
-            <LayoutGrid />
-            Trombinoscope
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  function renderAddingPlayerCard() {
-    return BsCard({
-      body: (
-        <>
-          {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: form-level Enter submission is a legacy behavior preserved during audit fixes */}
-          <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
-            <Show when={currentPlayer()?.id}>
-              <BsPhotoUpload
-                hasPhoto={currentPlayer()?.hasPhoto ?? false}
-                onChange={onPhotoChange}
-                playerId={currentPlayer()?.id ?? ''}
-              />
-            </Show>
-            {BsInput({
-              label: 'Nom',
-              onChange: (value: string) => {
-                setNewPlayerData({ lastName: value })
-              },
-              placeholder: 'Dupont',
-              type: 'text',
-              value: currentPlayer()?.lastName,
-            })}
-            {BsInput({
-              label: 'Prénom',
-              onChange: (value: string) => {
-                setNewPlayerData({ firstName: value })
-              },
-              placeholder: 'Charlie',
-              type: 'text',
-              value: currentPlayer()?.firstName,
-            })}
-            {BsInput({
-              label: 'Numéro de maillot',
-              onChange: (value: string) => {
-                setNewPlayerData({ jerseyNumber: value })
-              },
-              placeholder: '01',
-              type: 'text',
-              value: currentPlayer()?.jerseyNumber,
-            })}
-            {BsInput({
-              label: 'Surnom',
-              onChange: (value: string) => {
-                setNewPlayerData({ nicName: value })
-              },
-              placeholder: 'The B',
-              type: 'text',
-              value: currentPlayer()?.nicName,
-            })}
-            {BsInput({
-              label: 'Numéro de licence',
-              maxLength: LICENSE_NUMBER_MAX_LENGTH,
-              onChange: (value: string) => {
-                setNewPlayerData({ licenseNumber: value })
-              },
-              placeholder: 'AB123456789',
-              type: 'text',
-              value: currentPlayer()?.licenseNumber,
-            })}
-            {BsInput({
-              label: 'Téléphone',
-              onChange: (value: string) => {
-                setNewPlayerData({ phone: value })
-              },
-              placeholder: '06 12 34 56 78',
-              type: 'text',
-              value: currentPlayer()?.phone,
-            })}
-            {BsInput({
-              label: 'Email',
-              onChange: (value: string) => {
-                setNewPlayerData({ email: value })
-              },
-              placeholder: 'joueur@example.com',
-              type: 'email',
-              value: currentPlayer()?.email,
-            })}
-          </form>
-          <Show when={currentPlayer()?.id}>
-            {/* The Show condition above guarantees a non-null player with a truthy id when rendered. */}
-            <BsContactsEditor
-              contacts={pendingContacts}
-              onAdd={addStagedContact}
-              onRemove={removeStagedContact}
-              onUpdate={updateStagedContact}
-            />
-          </Show>
-        </>
-      ),
-      footer: (
-        <div class="footer-buttons-container">
-          <button class="btn btn-primary btn-wide" onClick={cancelAddingPlayer} type="button">
-            <X />
-            Annuler
-          </button>
-
-          <button class="btn btn-primary btn-wide" disabled={!canAddPlayer()} onClick={savePlayer} type="button">
-            {isEditingNewPlayer() ? <UserPlus /> : <Save />}
-            {isEditingNewPlayer() ? 'Ajouter' : 'Enregistrer'}
-          </button>
-        </div>
-      ),
-      info: 'Les nom, prénom et numéro de maillot sont obligatoires',
-      title: (
-        <p class="flex flex-row gap-1">
-          <ContactIcon />
-          {isEditingNewPlayer() ? 'Nouveau joueur' : 'Édition du joueur'}
-        </p>
-      ),
-    })
+  const goToTrombi = () => {
+    navigate(ROUTE_TROMBI)
   }
 
   return (
@@ -301,8 +329,24 @@ export default function BsPlayers() {
           </div>
         </Show>
       </Show>
-      <Show fallback={renderAddPlayerButton(() => navigate(ROUTE_TROMBI))} when={isAddingPlayer()}>
-        {renderAddingPlayerCard()}
+      <Show
+        fallback={<AddPlayerButtons onAddPlayer={startAddingNewPlayer} onTrombiClick={goToTrombi} />}
+        when={isAddingPlayer()}
+      >
+        <PlayerAddForm
+          canAddPlayer={canAddPlayer}
+          contacts={pendingContacts}
+          currentPlayer={currentPlayer}
+          isEditingNewPlayer={isEditingNewPlayer}
+          onAddContact={addStagedContact}
+          onCancel={cancelAddingPlayer}
+          onPhotoChange={onPhotoChange}
+          onPlayerChange={setNewPlayerData}
+          onRemoveContact={removeStagedContact}
+          onSave={savePlayer}
+          onSubmit={onSubmit}
+          onUpdateContact={updateStagedContact}
+        />
       </Show>
     </div>
   )

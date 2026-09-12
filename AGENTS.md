@@ -37,14 +37,17 @@
 - **Components**: Functional component pattern with adaptor pattern. Keep presentational logic separate from business logic
 - **Naming**: `Bs` prefix for component names (e.g., `BsButton`). camelCase for variables, PascalCase for types/interfaces
 - **Error handling**: Descriptive error messages, proper TypeScript null checks
+- **Language**: Documentation, code comments, and commit messages are all written in English
 
 ## Project Structure
 
 ```
+docs/          # Architecture references (state-architecture.md, target pattern)
 src/
 ├── components/   # Reusable UI components (Bs* prefix)
 ├── global/       # Global state, theme, fonts
 ├── libs/         # Business logic, utilities, stores
+│   └── stores/   # Collection stores (createStore singletons — target pattern)
 ├── pages/        # Page-level route components
 ├── index.css     # Global CSS (Tailwind)
 └── index.tsx     # App entry point
@@ -56,6 +59,21 @@ src/
 - **State**: SolidJS stores (`createStore`) + custom signal wrappers (`MadSignal`)
 - **Icons**: All imported from `lucide-solid` — check lucide.dev for available icons
 - **Deployment**: `pre-prod` and `prod` scripts copy to `/var/www/` paths — Linux-only
+
+## State Architecture (Target Pattern)
+
+> Full reference: [`docs/state-architecture.md`](docs/state-architecture.md). Documents the real code of the `fix/grok-glm` branch (commits `626d9ba` → `88f9828`).
+
+Hard rules for any code touching state:
+
+- **Each collection lives in a store** in `src/libs/stores/*.ts`: a `createStore<XxxRawData[]>([])` singleton, **flat** objects (`RawData`), never classes or private fields in the store.
+- **`hydrate*` NEVER persists**; `replaceAll*` replaces + persists once; `add/update/remove` compute the `next[]` purely, then persist once (fire-and-forget, `.catch` → `console.error`).
+- **Never persist in a `createEffect`** (eager, loops, writing an empty state at load): always explicit in the mutation.
+- **Bulk replacement via `reconcile(raws, { key: 'id' })`** to preserve item identity in a `<For>` (flicker); cold reads wrapped in `createMemo`; cloning `getRaw*`/`getXxxById` getters for non-reactive readers.
+- **Multi-collection commits in a single `batch()`** (orchestrator): pure synchronous validation first, I/O (photo) next, commit last — a photo failure = nothing committed.
+- **Store tests**: `beforeEach(() => { vi.clearAllMocks(); hydrateXxx([]) })` + `storeXxx` mock; characterization net in `src/libs/orchestrator/player-batch.test.ts`.
+
+**Removed anti-patterns that must NOT be reintroduced:** the custom event bus (`event-bus`, `BS::*::CHANGE`), the `*Silent` variants, the source adapters (`ContactsSource`) and classes in stores.
 
 ## Ambient Tasks
 

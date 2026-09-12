@@ -10,8 +10,8 @@ const CLUB_NAME_MAX_LENGTH = 50
 
 export default function ClubSettingsPage() {
   const currentClub = createMemo(() => clubs[0])
-  const [clubName, setClubName] = createSignal('')
-  const [licenseNumber, setLicenseNumber] = createSignal('')
+  const [clubName, setClubName] = createSignal(currentClub()?.name ?? '')
+  const [licenseNumber, setLicenseNumber] = createSignal(currentClub()?.licenseNumber ?? '')
 
   createEffect(() => {
     const club = currentClub()
@@ -32,43 +32,43 @@ export default function ClubSettingsPage() {
 
   return (
     <div>
-      {BsCard({
-        body: (
+      <BsCard
+        body={
           <form class="flex flex-col gap-2">
-            {BsInput({
-              label: 'Nom du club',
-              maxLength: CLUB_NAME_MAX_LENGTH,
-              onChange: (value: string) => setClubName(value),
-              placeholder: 'BCC Marseille',
-              type: 'text',
-              value: clubName(),
-            })}
-            {BsInput({
-              label: 'Numéro de licence',
-              maxLength: CLUB_LICENSE_MAX_LENGTH,
-              onChange: (value: string) => setLicenseNumber(value),
-              placeholder: '1310000000',
-              type: 'text',
-              value: licenseNumber(),
-            })}
+            <BsInput
+              label="Nom du club"
+              maxLength={CLUB_NAME_MAX_LENGTH}
+              onChange={setClubName}
+              placeholder="BCC Marseille"
+              type="text"
+              value={clubName()}
+            />
+            <BsInput
+              label="Numéro de licence"
+              maxLength={CLUB_LICENSE_MAX_LENGTH}
+              onChange={setLicenseNumber}
+              placeholder="1310000000"
+              type="text"
+              value={licenseNumber()}
+            />
           </form>
-        ),
-        footer: (
+        }
+        footer={
           <div class="footer-buttons-container">
             <button class="btn btn-primary btn-wide" onClick={saveClub} type="button">
               <Save />
               Enregistrer
             </button>
           </div>
-        ),
-        info: 'Le nom du club s\u2019affiche sur le trombinoscope.',
-        title: (
+        }
+        info="Le nom du club s\u2019affiche sur le trombinoscope."
+        title={
           <p class="flex flex-row gap-1">
             <Building2 />
             Réglages du club
           </p>
-        ),
-      })}
+        }
+      />
     </div>
   )
 }
