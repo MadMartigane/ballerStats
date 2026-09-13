@@ -1,80 +1,110 @@
-import { Show } from 'solid-js'
-import { getShortId } from '../../libs/utils/utils'
+import { createUniqueId, mergeProps, onCleanup, Show } from 'solid-js'
 import type { BsInputOnChangeEvent, BsInputProps } from './input.d'
 
-let debounceOnInput: number | null
+const INPUT_DEBOUNCE_MS = 300
 
-const defaultOptions: BsInputProps = {
-  type: 'text',
-}
-
-function onInput(event: BsInputOnChangeEvent, callback?: (value: string) => void) {
-  if (debounceOnInput) {
-    clearTimeout(debounceOnInput)
-  }
-
-  debounceOnInput = setTimeout(() => {
-    onChange(event, callback)
-    debounceOnInput = null
-  }, 300)
-}
-
-function onChange(event: BsInputOnChangeEvent, callback?: (value: string) => void) {
-  if (!callback) {
-    return
-  }
-
-  event.stopPropagation()
-  const target = event.target || event.currentTarget || { value: '' }
-  callback(target.value)
-}
-
-function makeInputChangeHandler(callback: BsInputProps['onChange']) {
-  return (event: BsInputOnChangeEvent) => {
-    onChange(event, callback)
-  }
-}
-
-function makeInputInputHandler(callback: BsInputProps['onChange']) {
-  return (event: BsInputOnChangeEvent) => {
-    onInput(event, callback)
-  }
+const defaultOptions = {
+  type: 'text' as const,
 }
 
 function adapter(options: BsInputProps): BsInputProps {
-  const random = getShortId()
-  const id = `hs-floating-gray-input-${options.type}-${random}`
-
-  return {
-    ...defaultOptions,
-    id,
-    ...options,
-  }
+  return mergeProps(defaultOptions, { id: createUniqueId() }, options)
 }
 
-function renderDaisy(options: BsInputProps) {
+function readInputValue(event: Event & { currentTarget: HTMLInputElement; target?: EventTarget | null }): string {
+  if (event.target && 'value' in event.target && typeof event.target.value === 'string') {
+    return event.target.value
+  }
+  return event.currentTarget.value
+}
+
+export default function BsInput(options: BsInputProps) {
+  const props = adapter(options)
+  let debounceTimer: ReturnType<typeof setTimeout> | undefined
+  // biome-ignore lint/suspicious/noUnassignedVariables: SolidJS assigns refs directly via the ref prop
+  let inputEl: HTMLInputElement | undefined
+
+  const commit = (value: string) => {
+    const callback = props.onChange
+    if (!callback) {
+      return
+    }
+    callback(value)
+  }
+
+  const flush = (value: string) => {
+    if (debounceTimer === undefined) {
+      return
+    }
+    clearTimeout(debounceTimer)
+    debounceTimer = undefined
+    commit(value)
+  }
+
+  onCleanup(() => {
+    if (debounceTimer !== undefined) {
+      clearTimeout(debounceTimer)
+    }
+  })
+
+  const handleChange = (event: BsInputOnChangeEvent) => {
+    event.stopPropagation()
+    const value = readInputValue(event)
+    if (debounceTimer !== undefined) {
+      clearTimeout(debounceTimer)
+      debounceTimer = undefined
+    }
+    commit(value)
+  }
+
+  const handleInput = (event: BsInputOnChangeEvent) => {
+    event.stopPropagation()
+    if (debounceTimer !== undefined) {
+      clearTimeout(debounceTimer)
+    }
+
+    debounceTimer = setTimeout(() => {
+      debounceTimer = undefined
+      commit(inputEl?.value ?? readInputValue(event))
+    }, INPUT_DEBOUNCE_MS)
+  }
+
+  const handleBlur = (event: FocusEvent & { currentTarget: HTMLInputElement }) => {
+    flush(event.currentTarget.value)
+    const { onBlur } = props
+    if (onBlur) {
+      onBlur()
+    }
+  }
+
+  const handleKeyDown = (event: KeyboardEvent & { currentTarget: HTMLInputElement }) => {
+    if (event.key !== 'Enter') {
+      return
+    }
+    flush(event.currentTarget.value)
+  }
+
   return (
-    <label class="flex w-full">
-      <Show when={options.label}>
-        <div class="label w-1/3">{options.label}</div>
+    <label class="flex w-full" for={props.id}>
+      <Show when={props.label}>
+        <div class="label w-1/3">{props.label}</div>
       </Show>
-      <div class={options.label ? 'w-2/3' : 'w-full'}>
+      <div class={props.label ? 'w-2/3' : 'w-full'}>
         <input
           class="input w-full"
-          maxLength={options.maxLength}
-          onChange={makeInputChangeHandler(options.onChange)}
-          onInput={makeInputInputHandler(options.onChange)}
-          placeholder={options.placeholder}
-          type={options.type}
-          value={options.value || ''}
+          id={props.id}
+          maxLength={props.maxLength}
+          onBlur={handleBlur}
+          onChange={handleChange}
+          onFocus={props.onFocus}
+          onInput={handleInput}
+          onKeyDown={handleKeyDown}
+          placeholder={props.placeholder}
+          ref={inputEl}
+          type={props.type}
+          value={props.value || ''}
         />
       </div>
     </label>
   )
-}
-
-export default function BsInput(options: BsInputProps) {
-  const newOpions = adapter(options)
-
-  return renderDaisy(newOpions)
 }

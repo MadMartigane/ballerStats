@@ -1,10 +1,9 @@
 import { MessageCircleWarning, Save, Users, X } from 'lucide-solid'
-import { For, Show } from 'solid-js'
-import { createStore } from 'solid-js/store'
-import bsEventBus from '../../libs/event-bus/event-bus'
+import { createMemo, For, Show } from 'solid-js'
 import MadSignal from '../../libs/mad-signal'
-import orchestrator from '../../libs/orchestrator/orchestrator'
-import type Player from '../../libs/player/player'
+import type { PlayerRawData } from '../../libs/player/player.d'
+import { players } from '../../libs/stores/players-store'
+import { addTeam, teams, updateTeam } from '../../libs/stores/teams-store'
 import Team from '../../libs/team/team'
 import type { TeamRawData } from '../../libs/team/team.d'
 import { scrollBottom, scrollTop } from '../../libs/utils/utils'
@@ -16,15 +15,8 @@ import BsTeam from '../team/team'
 let isEditingNewTeam = false
 const isAddingTeam: MadSignal<boolean> = new MadSignal(false)
 const canAddTeam: MadSignal<boolean> = new MadSignal(false)
-const teamLength: MadSignal<number> = new MadSignal(orchestrator.Teams.length)
-const [teams, setTeams] = createStore(orchestrator.Teams.teams)
 
 let currentTeam: Team | null = null
-
-bsEventBus.addEventListener('BS::TEAMS::CHANGE', () => {
-  teamLength.set(orchestrator.Teams.length)
-  setTeams(orchestrator.Teams.teams)
-})
 
 function setNewTeamData(data: TeamRawData) {
   if (currentTeam) {
@@ -34,6 +26,10 @@ function setNewTeamData(data: TeamRawData) {
   }
 
   canAddTeam.set(currentTeam.isRegisterable)
+}
+
+function onTeamNameChange(value: string) {
+  setNewTeamData({ name: value })
 }
 
 function toggleAddTeam(value: boolean) {
@@ -46,9 +42,9 @@ function registerTeam() {
   }
 
   if (isEditingNewTeam) {
-    orchestrator.Teams.add(currentTeam)
+    addTeam(currentTeam.getRawData())
   } else {
-    orchestrator.Teams.updateTeam(currentTeam)
+    updateTeam(currentTeam.id, currentTeam.getRawData())
   }
 
   toggleAddTeam(false)
@@ -97,10 +93,10 @@ function saveTeam() {
 }
 
 function getSelectDataFromPlayer() {
-  return orchestrator.Players.players.map((player) => ({
+  return players.map((player) => ({
     badge: renderPlayerBadge(player),
     label: player.nicName ? player.nicName : `${player.firstName} ${player.lastName}`,
-    value: player.id,
+    value: player.id ?? '',
   }))
 }
 
@@ -115,7 +111,7 @@ function renderTeamFallback() {
   )
 }
 
-function renderAddTeamButton() {
+function AddTeamButton() {
   return (
     <div class="w-full">
       <hr />
@@ -129,7 +125,7 @@ function renderAddTeamButton() {
   )
 }
 
-function renderPlayerBadge(player: Player) {
+function renderPlayerBadge(player: PlayerRawData) {
   return (
     <>
       <span class="text-warning">{player.jerseyNumber}</span>
@@ -140,58 +136,61 @@ function renderPlayerBadge(player: Player) {
   )
 }
 
-function renderAddingTeamCard() {
-  return BsCard({
-    body: (
-      // biome-ignore lint/a11y/noNoninteractiveElementInteractions: form-level Enter submission is a legacy behavior preserved during audit fixes
-      <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
-        {BsInput({
-          label: 'Nom',
-          onChange: (value: string) => {
-            setNewTeamData({ name: value })
-          },
-          placeholder: 'BCC U09',
-          type: 'text',
-          value: currentTeam?.name || '',
-        })}
-        <BsSelectMultiple
-          data={getSelectDataFromPlayer()}
-          onChange={updateCurrentTeamPlayerIds}
-          placeholder="Sélection des joueurs"
-          selectedIds={currentTeam?.playerIds}
-        />
-      </form>
-    ),
-    footer: (
-      <div class="footer-buttons-container">
-        <button class="btn btn-primary btn-wide" onClick={cancelAddingTeam} type="button">
-          <X />
-          Annuler
-        </button>
+function TeamAddForm() {
+  return (
+    <BsCard
+      body={
+        // biome-ignore lint/a11y/noNoninteractiveElementInteractions: form-level Enter submission is a legacy behavior preserved during audit fixes
+        <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
+          <BsInput
+            label="Nom"
+            onChange={onTeamNameChange}
+            placeholder="BCC U09"
+            type="text"
+            value={currentTeam?.name || ''}
+          />
+          <BsSelectMultiple
+            data={getSelectDataFromPlayer()}
+            onChange={updateCurrentTeamPlayerIds}
+            placeholder="Sélection des joueurs"
+            selectedIds={currentTeam?.playerIds}
+          />
+        </form>
+      }
+      footer={
+        <div class="footer-buttons-container">
+          <button class="btn btn-primary btn-wide" onClick={cancelAddingTeam} type="button">
+            <X />
+            Annuler
+          </button>
 
-        <button class="btn btn-primary btn-wide" disabled={!canAddTeam.get()} onClick={saveTeam} type="button">
-          {isEditingNewTeam ? <Users /> : <Save />}
-          {isEditingNewTeam ? 'Ajouter' : 'Enregistrer'}
-        </button>
-      </div>
-    ),
-    info: 'Seul le nom de l’équipe est obligatoire',
-    title: (
-      <p class="flex flex-row gap-1">
-        <Users />
-        {isEditingNewTeam ? 'Nouvelle équipe' : 'Édition de l’équipe'}
-      </p>
-    ),
-  })
+          <button class="btn btn-primary btn-wide" disabled={!canAddTeam.get()} onClick={saveTeam} type="button">
+            {isEditingNewTeam ? <Users /> : <Save />}
+            {isEditingNewTeam ? 'Ajouter' : 'Enregistrer'}
+          </button>
+        </div>
+      }
+      info="Seul le nom de l’équipe est obligatoire"
+      title={
+        <p class="flex flex-row gap-1">
+          <Users />
+          {isEditingNewTeam ? 'Nouvelle équipe' : 'Édition de l’équipe'}
+        </p>
+      }
+    />
+  )
 }
 
 export default function BsTeams() {
+  const teamLength = createMemo(() => teams.length)
+  const visibleTeams = createMemo(() => teams.map((raw) => new Team(raw)))
+
   return (
     <div>
       <Show when={!isAddingTeam.get()}>
-        <Show fallback={renderTeamFallback()} when={(teamLength.get() || 0) > 0}>
+        <Show fallback={renderTeamFallback()} when={(teamLength() || 0) > 0}>
           <div class="flex w-full flex-wrap justify-around gap-4">
-            <For each={teams}>
+            <For each={visibleTeams()}>
               {(team) => (
                 <div class="mx-auto w-fit md:mx-0">
                   <BsTeam onEdit={editTeam} team={team} />
@@ -201,8 +200,8 @@ export default function BsTeams() {
           </div>
         </Show>
       </Show>
-      <Show fallback={renderAddTeamButton()} when={isAddingTeam.get()}>
-        {renderAddingTeamCard()}
+      <Show fallback={<AddTeamButton />} when={isAddingTeam.get()}>
+        <TeamAddForm />
       </Show>
     </div>
   )

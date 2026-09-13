@@ -36,21 +36,33 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 function renderTemplateStore() {
   return (
     <div class="hidden" id="bs-template-store">
-      <div class="alert alert-info" id="bs-template-store-alert-info">
+      <div
+        class="alert alert-info w-full max-w-[calc(100vw-2rem)] shadow-lg sm:w-auto sm:min-w-64 sm:max-w-md"
+        id="bs-template-store-alert-info"
+      >
         <CircleAlert />
-        <span class="inline-block min-w-64 text-center" id="message" />
+        <span class="min-w-0 max-w-full break-words text-sm sm:text-base" id="message" />
       </div>
-      <div class="alert alert-success" id="bs-template-store-alert-success">
+      <div
+        class="alert alert-success w-full max-w-[calc(100vw-2rem)] shadow-lg sm:w-auto sm:min-w-64 sm:max-w-md"
+        id="bs-template-store-alert-success"
+      >
         <CircleCheckBig />
-        <span class="inline-block min-w-64 text-center" id="message" />
+        <span class="min-w-0 max-w-full break-words text-sm sm:text-base" id="message" />
       </div>
-      <div class="alert alert-warning" id="bs-template-store-alert-warning">
+      <div
+        class="alert alert-warning w-full max-w-[calc(100vw-2rem)] shadow-lg sm:w-auto sm:min-w-64 sm:max-w-md"
+        id="bs-template-store-alert-warning"
+      >
         <TriangleAlert />
-        <span class="inline-block min-w-64 text-center" id="message" />
+        <span class="min-w-0 max-w-full break-words text-sm sm:text-base" id="message" />
       </div>
-      <div class="alert alert-error" id="bs-template-store-alert-error">
+      <div
+        class="alert alert-error w-full max-w-[calc(100vw-2rem)] shadow-lg sm:w-auto sm:min-w-64 sm:max-w-md"
+        id="bs-template-store-alert-error"
+      >
         <Skull />
-        <span class="inline-block min-w-64 text-center" id="message" />
+        <span class="min-w-0 max-w-full break-words text-sm sm:text-base" id="message" />
       </div>
     </div>
   )
@@ -64,7 +76,10 @@ render(
           {(menuItem) => <Route component={menuItem.component} path={menuItem.path} />}
         </For>
       </HashRouter>
-      <div class="toast toast-end toast-bottom" id="bs-global-toast" />
+      <div
+        class="toast toast-center toast-bottom z-[9999] w-full max-w-[100vw] px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:w-auto sm:max-w-md sm:px-0 print:hidden"
+        id="bs-global-toast"
+      />
       {renderTemplateStore()}
       <Suspense>{DemoSeedInit && <DemoSeedInit />}</Suspense>
     </>

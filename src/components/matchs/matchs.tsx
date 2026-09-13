@@ -1,12 +1,12 @@
 import { MessageCircleWarning, Save, UserPlus, Users, X } from 'lucide-solid'
 import { createMemo, For, Show } from 'solid-js'
-import { createStore } from 'solid-js/store'
-import bsEventBus from '../../libs/event-bus/event-bus'
 import MadSignal from '../../libs/mad-signal'
 import { getUniqueChampionships, groupMatchesByChampionship } from '../../libs/match/championship-util'
 import Match from '../../libs/match/match'
 import type { MatchRawData, MatchType } from '../../libs/match/match.d'
-import orchestrator from '../../libs/orchestrator/orchestrator'
+import { addMatch, getRawMatchs, updateMatch } from '../../libs/stores/matchs-store'
+import { getRawTeams } from '../../libs/stores/teams-store'
+import Team from '../../libs/team/team'
 import { goTo, scrollBottom, scrollTop } from '../../libs/utils/utils'
 import BsCard from '../card/card'
 import BsCombobox from '../combobox/combobox'
@@ -19,22 +19,12 @@ import BsToggle from '../toggle/toggle'
 let isEditingNewMatch = false
 const isAddingMatch: MadSignal<boolean> = new MadSignal(false)
 const canAddMatch: MadSignal<boolean> = new MadSignal(false)
-const matchLength: MadSignal<number> = new MadSignal(orchestrator.Matchs.length)
-const [matchs, setMatchs] = createStore(orchestrator.Matchs.matchs)
-const [teams, setTeams] = createStore(orchestrator.Teams.teams)
-const championshipOptions = createMemo(() => getUniqueChampionships(matchs))
-const grouped = createMemo(() => groupMatchesByChampionship(matchs))
+const matchs = createMemo(() => getRawMatchs().map((raw) => new Match(raw)))
+const teams = createMemo(() => getRawTeams().map((raw) => new Team(raw)))
+const championshipOptions = createMemo(() => getUniqueChampionships(matchs()))
+const grouped = createMemo(() => groupMatchesByChampionship(matchs()))
 
 let currentMatch: Match | null = null
-
-bsEventBus.addEventListener('BS::MATCHS::CHANGE', () => {
-  matchLength.set(orchestrator.Matchs.length)
-  setMatchs(orchestrator.Matchs.matchs)
-})
-
-bsEventBus.addEventListener('BS::TEAMS::CHANGE', () => {
-  setTeams(orchestrator.Teams.teams)
-})
 
 function setNewMatchData(data: MatchRawData) {
   if (currentMatch) {
@@ -56,9 +46,9 @@ function registerMatch() {
   }
 
   if (isEditingNewMatch) {
-    orchestrator.Matchs.add(currentMatch)
+    addMatch(currentMatch.getRawData())
   } else {
-    orchestrator.Matchs.updateMatch(currentMatch)
+    updateMatch(currentMatch.id, currentMatch.getRawData())
   }
 
   toggleAddMatch(false)
@@ -145,7 +135,7 @@ function renderMatchFallback() {
   )
 }
 
-function renderAddMatchButton() {
+function AddMatchButton() {
   return (
     <div class="w-full">
       <hr />
@@ -159,83 +149,85 @@ function renderAddMatchButton() {
   )
 }
 
-function renderAddingMatchCard() {
-  return BsCard({
-    body: (
-      // biome-ignore lint/a11y/noNoninteractiveElementInteractions: form-level Enter submission is a legacy behavior preserved during audit fixes
-      <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
-        <BsSelect
-          datas={teams.map((team) => ({ label: team.name, value: team.id }))}
-          label="Mon Équipe"
-          onValueChange={onTeamChange}
-          placeholder="Sélectionnez l’équipe"
-          value={currentMatch?.teamId}
-        />
+function AddingMatchCard() {
+  return (
+    <BsCard
+      body={
+        // biome-ignore lint/a11y/noNoninteractiveElementInteractions: form-level Enter submission is a legacy behavior preserved during audit fixes
+        <form class="flex flex-col gap-2" onKeyDown={onSubmit}>
+          <BsSelect
+            datas={teams().map((team) => ({ label: team.name, value: team.id }))}
+            label="Mon Équipe"
+            onValueChange={onTeamChange}
+            placeholder="Sélectionnez l’équipe"
+            value={currentMatch?.teamId}
+          />
 
-        <BsInput
-          label="Nom de l’adversaire"
-          onChange={updateMatchOpponent}
-          placeholder="…"
-          type="text"
-          value={currentMatch?.opponent || ''}
-        />
+          <BsInput
+            label="Nom de l’adversaire"
+            onChange={updateMatchOpponent}
+            placeholder="…"
+            type="text"
+            value={currentMatch?.opponent || ''}
+          />
 
-        <BsSelect
-          datas={[
-            { label: <BsMatchTypeText type="home" />, value: 'home' },
-            { label: <BsMatchTypeText type="outside" />, value: 'outside' },
-          ]}
-          default={currentMatch && (currentMatch.type as string)}
-          label="Localité"
-          onValueChange={onMatchTypeInput}
-        />
+          <BsSelect
+            datas={[
+              { label: <BsMatchTypeText type="home" />, value: 'home' },
+              { label: <BsMatchTypeText type="outside" />, value: 'outside' },
+            ]}
+            default={currentMatch && (currentMatch.type as string)}
+            label="Localité"
+            onValueChange={onMatchTypeInput}
+          />
 
-        <BsDatePicker label="Date du match" onChange={updateMatchDate} value={currentMatch?.date} withTime={true} />
+          <BsDatePicker label="Date du match" onChange={updateMatchDate} value={currentMatch?.date} withTime={true} />
 
-        <BsToggle
-          label="Match ouvert"
-          onChange={onStatusChange}
-          size="lg"
-          value={currentMatch?.status === 'unlocked'}
-        />
+          <BsToggle
+            label="Match ouvert"
+            onChange={onStatusChange}
+            size="lg"
+            value={currentMatch?.status === 'unlocked'}
+          />
 
-        <BsCombobox
-          label="Championnat"
-          onChange={updateMatchChampionship}
-          options={championshipOptions()}
-          placeholder="Saisir un championnat…"
-          value={currentMatch?.championship || ''}
-        />
-      </form>
-    ),
-    footer: (
-      <div class="footer-buttons-container">
-        <button class="btn btn-primary btn-wide" onClick={cancelAddingMatch} type="button">
-          <X />
-          Annuler
-        </button>
+          <BsCombobox
+            label="Championnat"
+            onChange={updateMatchChampionship}
+            options={championshipOptions()}
+            placeholder="Saisir un championnat…"
+            value={currentMatch?.championship || ''}
+          />
+        </form>
+      }
+      footer={
+        <div class="footer-buttons-container">
+          <button class="btn btn-primary btn-wide" onClick={cancelAddingMatch} type="button">
+            <X />
+            Annuler
+          </button>
 
-        <button class="btn btn-primary btn-wide" disabled={!canAddMatch.get()} onClick={saveMatch} type="button">
-          {isEditingNewMatch ? <UserPlus /> : <Save />}
-          {isEditingNewMatch ? 'Ajouter' : 'Enregistrer'}
-        </button>
-      </div>
-    ),
-    info: 'Saisissez les info nécessaires pour identifier le match.',
-    title: (
-      <p class="flex flex-row gap-1">
-        <Users />
-        {isEditingNewMatch ? 'Nouveau match' : 'Édition du match'}
-      </p>
-    ),
-  })
+          <button class="btn btn-primary btn-wide" disabled={!canAddMatch.get()} onClick={saveMatch} type="button">
+            {isEditingNewMatch ? <UserPlus /> : <Save />}
+            {isEditingNewMatch ? 'Ajouter' : 'Enregistrer'}
+          </button>
+        </div>
+      }
+      info="Saisissez les info nécessaires pour identifier le match."
+      title={
+        <p class="flex flex-row gap-1">
+          <Users />
+          {isEditingNewMatch ? 'Nouveau match' : 'Édition du match'}
+        </p>
+      }
+    />
+  )
 }
 
 export default function BsMatchs() {
   return (
     <div>
       <Show when={!isAddingMatch.get()}>
-        <Show fallback={renderMatchFallback()} when={(matchLength.get() || 0) > 0}>
+        <Show fallback={renderMatchFallback()} when={matchs().length > 0}>
           <For each={grouped()}>
             {(group) => (
               <section class="w-full">
@@ -254,8 +246,8 @@ export default function BsMatchs() {
           </For>
         </Show>
       </Show>
-      <Show fallback={renderAddMatchButton()} when={isAddingMatch.get()}>
-        {renderAddingMatchCard()}
+      <Show fallback={<AddMatchButton />} when={isAddingMatch.get()}>
+        <AddingMatchCard />
       </Show>
     </div>
   )
