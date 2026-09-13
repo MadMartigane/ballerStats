@@ -38,20 +38,25 @@ export default function BsTile(props: BsTileProps) {
         <div>{props.status}</div>
       </Show>
 
-      <div class="flex flex-row justify-between">
+      <div class="flex min-w-0 flex-row justify-between">
         <Show when={props.title}>
-          <h2 class="card-title">{props.title}</h2>
+          <h2
+            class="card-title line-clamp-2 min-w-0 break-words"
+            title={typeof props.title === 'string' ? props.title : undefined}
+          >
+            {props.title}
+          </h2>
         </Show>
 
         <Show when={props.badge}>
-          <div class="text-4xl">{props.badge}</div>
+          <div class="flex-none text-4xl">{props.badge}</div>
         </Show>
       </div>
 
       <Show when={props.info}>
         <p class="my-2 flex flex-row gap-1 italic">
           <Info />
-          <span class="mx-1 inline-block">{props.info}</span>
+          <span class="mx-1 inline-block min-w-0 break-words">{props.info}</span>
         </p>
       </Show>
 
@@ -60,7 +65,7 @@ export default function BsTile(props: BsTileProps) {
       </Show>
 
       <Show when={props.children}>
-        <div>{props.children}</div>
+        <div class="line-clamp-2 min-w-0 break-words">{props.children}</div>
       </Show>
 
       <Show when={props.footer}>
