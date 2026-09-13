@@ -9,7 +9,7 @@ import Player, { LICENSE_NUMBER_MAX_LENGTH } from '../../libs/player/player'
 import type { PlayerRawData } from '../../libs/player/player.d'
 import { getContactsByPlayerId } from '../../libs/stores/contacts-store'
 import { players } from '../../libs/stores/players-store'
-import { scrollBottom, scrollTop, toast } from '../../libs/utils/utils'
+import { scrollTop, toast } from '../../libs/utils/utils'
 import BsCard from '../card/card'
 import BsContactsEditor from '../contacts-editor/contacts-editor'
 import BsEmptyPlayerFallback from '../empty-player-fallback/empty-player-fallback'
@@ -238,13 +238,10 @@ export default function BsPlayers() {
   function cancelAddingPlayer() {
     setIsAddingPlayer(false)
     resetDraft()
-    scrollBottom()
   }
 
   function savePlayer() {
-    registerPlayer()
-      .then(() => scrollBottom())
-      .catch(() => toast("Erreur lors de l'enregistrement du joueur.", 'error'))
+    registerPlayer().catch(() => toast("Erreur lors de l'enregistrement du joueur.", 'error'))
   }
 
   function editPlayerFromTile(player: Player) {
