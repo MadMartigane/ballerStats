@@ -24,7 +24,7 @@ function getSelectDataSetFromAvailableDataSets(
   const data = placeholder
     ? [
         {
-          badge: <span>Error</span>,
+          badge: <span>Erreur</span>,
           label: availableBsSelectDataSets.length ? placeholder : 'Aucun joueur disponible.',
           value: '',
         },
@@ -151,7 +151,7 @@ export default function BsSelectMultiple(props: BsSelectMultipleProps) {
         </label>
       </Show>
       <label class="label" for={selectProps.selectId}>
-        Joueur(s) selectionné(s):
+        Joueur(s) sélectionné(s) :
       </label>
       <div class="mx-auto w-11/12 rounded-xs border border-base-100 bg-base-200 py-4 text-base-content">
         <Show fallback={'Aucun joueur sélectionné.'} when={selectProps.selectedIds?.length}>

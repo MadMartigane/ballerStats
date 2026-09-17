@@ -3,7 +3,7 @@ import type { BsIconProps } from './icon-base.d'
 
 export default function BsIconBasketballPanel(props: BsIconProps) {
   return (
-    <BsIconBase {...props} aria-label="Basketball panel" viewBox="0 0 512 512">
+    <BsIconBase {...props} aria-label="Panneau de basket" viewBox="0 0 512 512">
       <g>
         <polygon
           points="386.685,265.591 386.685,122.374 125.315,122.374 125.315,265.591 146.797,265.591 146.797,143.857 

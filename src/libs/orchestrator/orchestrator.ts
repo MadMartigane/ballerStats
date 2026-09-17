@@ -592,14 +592,14 @@ export class Orchestrator {
     const { rawData, photos } = parseResult
 
     const proced = await confirmAction(
-      'Import DB',
+      'Importer les données',
       `Vous êtes sur le point d\u2019importer ${rawData.players.length || 0} joueurs, ${rawData.teams.length || 0} équipes, ${rawData.matchs.length || 0} matchs et ${rawData.contacts?.length || 0} contacts.`
     )
     if (!proced) {
       return
     }
 
-    const cleanUpBefore = await confirmAction('Import DB', 'Voulez-vous écraser toutes les données ?')
+    const cleanUpBefore = await confirmAction('Écraser les données', 'Voulez-vous écraser toutes les données ?')
     if (cleanUpBefore) {
       await this.doClearDB()
     }

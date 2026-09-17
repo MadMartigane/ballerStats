@@ -1,4 +1,4 @@
-import { BadgeAlert, Building2, ChartScatter, FileSliders, LayoutGrid, MonitorDot, User, Users } from 'lucide-solid'
+import { BadgeAlert, Building2, ChartScatter, FileSliders, LayoutGrid, MonitorDot, Users } from 'lucide-solid'
 import { lazy } from 'solid-js'
 import BsIconBasketballBall from '../../components/icons/basketball-ball'
 import BsIconBasketballPlayer from '../../components/icons/basketball-player'
@@ -14,7 +14,7 @@ export const NAVIGATION_MENU_ENTRIES: MenuEntry[] = [
     component: Home,
     icon: () => <MonitorDot />,
     isMenuEntry: false,
-    label: 'Dashbord',
+    label: 'Tableau de bord',
     path: '/',
   },
   {
@@ -23,20 +23,6 @@ export const NAVIGATION_MENU_ENTRIES: MenuEntry[] = [
     isMenuEntry: true,
     label: 'Club',
     path: ROUTE_CLUB,
-  },
-  {
-    component: lazy(() => import('../../pages/users')),
-    icon: () => <Users />,
-    isMenuEntry: false,
-    label: 'Utilisateurs',
-    path: '/users',
-  },
-  {
-    component: lazy(() => import('../../pages/user')),
-    icon: () => <User />,
-    isMenuEntry: false,
-    label: 'Profile',
-    path: '/user',
   },
   {
     component: lazy(() => import('../../pages/players')),
@@ -91,7 +77,7 @@ export const NAVIGATION_MENU_ENTRIES: MenuEntry[] = [
     component: lazy(() => import('../../pages/404')),
     icon: () => <BadgeAlert />,
     isMenuEntry: false,
-    label: '404 Not Found',
+    label: '404 Page introuvable',
     path: '/*',
   },
 ]

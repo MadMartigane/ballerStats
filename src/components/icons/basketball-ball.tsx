@@ -3,7 +3,7 @@ import type { BsIconProps } from './icon-base.d'
 
 export default function BsIconBasketballBall(props: BsIconProps) {
   return (
-    <BsIconBase {...props} aria-label="Basketball ball" viewBox="0 0 77.832 77.832">
+    <BsIconBase {...props} aria-label="Ballon de basket" viewBox="0 0 77.832 77.832">
       <g>
         <path
           d="M38.916,0C17.458,0,0,17.458,0,38.916c0,2.489,0.245,4.923,0.693,7.284l-0.146,0.175c0.07,0.059,0.138,0.109,0.208,0.167

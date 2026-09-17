@@ -1,3 +1,13 @@
 node_modules
 dist
 .playwright-mcp
+
+# Local secrets and env overrides; .env.example is the tracked template.
+.env
+.env.*
+!.env.example
+
+*.local
+.DS_Store
+*.log
+coverage/

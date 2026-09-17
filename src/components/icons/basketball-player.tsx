@@ -3,7 +3,7 @@ import type { BsIconProps } from './icon-base.d'
 
 export default function BsIconBasketballPlayer(props: BsIconProps) {
   return (
-    <BsIconBase {...props} aria-label="Basketball player" viewBox="0 0 563.366 563.365">
+    <BsIconBase {...props} aria-label="Joueur de basket" viewBox="0 0 563.366 563.365">
       <g>
         <g>
           <circle cx="319.933" cy="52.594" r="52.594" />
