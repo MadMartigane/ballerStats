@@ -4,6 +4,7 @@
  * persists, mutations = pure next[] + a single persist.
  */
 import { createStore, reconcile } from 'solid-js/store'
+import { markCollectionDirty } from '../nostromo/dirty-marks'
 import Player from '../player/player'
 import type { PlayerRawData } from '../player/player.d'
 import { storePlayers } from '../store/store'
@@ -39,6 +40,7 @@ function persistPlayers(): void {
   storePlayers(getRawPlayers()).catch((error: unknown) => {
     console.error('storePlayers failed:', error)
   })
+  markCollectionDirty('players')
 }
 
 /**

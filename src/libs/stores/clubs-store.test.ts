@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ClubRawData } from '../club/club.d'
+import { markCollectionDirty } from '../nostromo/dirty-marks'
 import { storeClubs } from '../store/store'
 import {
   addClub,
@@ -22,6 +23,18 @@ vi.mock('../store/store', async (importOriginal) => {
   return {
     ...actual,
     storeClubs: vi.fn(() => Promise.resolve()),
+  }
+})
+
+/**
+ * The sync side effect of the persist funnel is asserted here through a mock:
+ * the mark itself has its own suite (`src/libs/nostromo/push-engine.test.ts`).
+ */
+vi.mock('../nostromo/dirty-marks', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../nostromo/dirty-marks')>()
+  return {
+    ...actual,
+    markCollectionDirty: vi.fn(),
   }
 })
 
@@ -166,5 +179,14 @@ describe('clubs-store', () => {
 
     expect(assertClubExists(getRawClubs(), 'c1').id).toBe('c1')
     expect(() => assertClubExists(getRawClubs(), 'ghost')).toThrow(DOES_NOT_EXIST_PATTERN)
+  })
+})
+
+describe('clubs-store dirty marks', () => {
+  it('marks the clubs unit dirty after a mutation persisted', () => {
+    addClub(makeClubData())
+
+    expect(markCollectionDirty).toHaveBeenCalledTimes(1)
+    expect(markCollectionDirty).toHaveBeenCalledWith('clubs')
   })
 })

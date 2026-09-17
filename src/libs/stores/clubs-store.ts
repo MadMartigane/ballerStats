@@ -1,5 +1,6 @@
 import { createStore, reconcile } from 'solid-js/store'
 import type { ClubRawData } from '../club/club.d'
+import { markCollectionDirty } from '../nostromo/dirty-marks'
 import { storeClubs } from '../store/store'
 
 export function assertClubAddable(existingClubs: ClubRawData[], newClub: ClubRawData): void {
@@ -42,6 +43,7 @@ function persistClubs(): void {
   storeClubs(getRawClubs()).catch((error: unknown) => {
     console.error('storeClubs failed:', error)
   })
+  markCollectionDirty('clubs')
 }
 
 /** Load or import a full collection: reconciles the reactive contents without ever persisting. */

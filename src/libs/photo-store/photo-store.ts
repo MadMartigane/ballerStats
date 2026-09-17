@@ -1,4 +1,5 @@
-import { clear, createStore, del, entries, get, set } from 'idb-keyval'
+import { clear, createStore, del, entries, get, keys, set } from 'idb-keyval'
+import { markPhotoDirty } from '../nostromo/dirty-marks'
 import type Player from '../player/player'
 import type { PhotoEntry } from './photo-store.d'
 
@@ -9,6 +10,7 @@ const photoStore = createStore('baller-stats-db', 'photos')
 
 export async function storePhoto(playerId: string, blob: Blob): Promise<void> {
   await set(playerId, blob, photoStore)
+  markPhotoDirty(playerId)
 }
 
 export function getPhoto(playerId: string): Promise<Blob | undefined> {
@@ -17,6 +19,7 @@ export function getPhoto(playerId: string): Promise<Blob | undefined> {
 
 export async function deletePhoto(playerId: string): Promise<void> {
   await del(playerId, photoStore)
+  markPhotoDirty(playerId)
 }
 
 export async function hasPhoto(playerId: string): Promise<boolean> {
@@ -24,7 +27,11 @@ export async function hasPhoto(playerId: string): Promise<boolean> {
 }
 
 export async function clearAllPhotos(): Promise<void> {
+  const storedPlayerIds = await keys<string>(photoStore)
   await clear(photoStore)
+  for (const playerId of storedPlayerIds) {
+    markPhotoDirty(playerId)
+  }
 }
 
 export async function getAllPhotoEntries(): Promise<PhotoEntry[]> {

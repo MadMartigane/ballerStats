@@ -1,6 +1,7 @@
 import { createStore, reconcile } from 'solid-js/store'
 import { isClockData } from '../match/clock'
 import type { MatchRawData } from '../match/match.d'
+import { markCollectionDirty } from '../nostromo/dirty-marks'
 import { storeMatchs } from '../store/store'
 
 export function assertMatchAddable(existingMatchs: MatchRawData[], newMatch: MatchRawData): void {
@@ -57,6 +58,7 @@ function persistMatchs(): void {
   storeMatchs(getRawMatchs()).catch((error: unknown) => {
     console.error('storeMatchs failed:', error)
   })
+  markCollectionDirty('matchs')
 }
 
 /** Load or import a full collection: reconciles the reactive contents without ever persisting. */
