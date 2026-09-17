@@ -1,5 +1,6 @@
 import { BellRing, DatabaseZap, Loader, Medal, Megaphone, Share, Trash2, Vibrate } from 'lucide-solid'
 import { Show } from 'solid-js'
+import BsNostromoSyncCard from '../components/bs-nostromo-sync/bs-nostromo-sync-card'
 import DarkThemeSwitch from '../components/dark-theme-switch/dark-theme-switch'
 import GlobalStats from '../components/global-stats/global-stats'
 import BsIconBasketballBall from '../components/icons/basketball-ball'
@@ -62,10 +63,10 @@ function throwUserFeedback() {
 }
 
 function showDemoToasts() {
-  toast('Info test', 'info')
-  toast('Success test', 'success')
-  toast('Warning test', 'warning')
-  toast('Error test', 'error')
+  toast('Test info', 'info')
+  toast('Test succès', 'success')
+  toast('Test avertissement', 'warning')
+  toast('Test erreur', 'error')
 }
 
 function seedDemoData() {
@@ -83,18 +84,18 @@ export default function Home() {
         </div>
 
         <div class="border border-box border-primary p-1">
-          <h2>Thème:</h2>
+          <h2>Thème :</h2>
           <DarkThemeSwitch />
         </div>
       </div>
 
       <hr />
 
-      <h2>Administration:</h2>
+      <h2>Administration :</h2>
 
       <div class="grid grid-cols-2 content-start gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         <button class="btn btn-accent" disabled={bigCleanInProgress.get()} onClick={runBigClean} type="button">
-          {bigCleanInProgress.get() ? <Loader class="animate-spin" /> : <Trash2 />} BIG CLEAN
+          {bigCleanInProgress.get() ? <Loader class="animate-spin" /> : <Trash2 />} Grand nettoyage
         </button>
 
         <button class="btn btn-neutral" onClick={exportDatabase} type="button">
@@ -115,57 +116,61 @@ export default function Home() {
         <div class="col-span-2">
           <BsToggle label="Afficher la démo" onChange={setDisplayDemo} value={displayDemo.get()} />
         </div>
+
+        <div class="col-span-2 sm:col-span-3 md:col-span-4 lg:col-span-5">
+          <BsNostromoSyncCard />
+        </div>
       </div>
 
       <Show when={displayDemo.get()}>
         <div class="py-4">
           <button class="btn" type="button">
-            Default
+            Défaut
           </button>
           <button class="btn btn-neutral" type="button">
-            Neutral
+            Neutre
           </button>
           <button class="btn btn-primary" type="button">
-            Primary
+            Primaire
           </button>
           <button class="btn btn-secondary" type="button">
-            Secondary
+            Secondaire
           </button>
           <button class="btn btn-accent" type="button">
             Accent
           </button>
           <button class="btn btn-success" type="button">
-            Success
+            Succès
           </button>
           <button class="btn btn-warning" type="button">
-            Warning
+            Avertissement
           </button>
           <button class="btn btn-error" type="button">
-            Error
+            Erreur
           </button>
           <button class="btn btn-outline" type="button">
-            Default
+            Défaut
           </button>
           <button class="btn btn-outline btn-neutral" type="button">
-            Neutral
+            Neutre
           </button>
           <button class="btn btn-outline btn-primary" type="button">
-            Primary
+            Primaire
           </button>
           <button class="btn btn-outline btn-secondary" type="button">
-            Secondary
+            Secondaire
           </button>
           <button class="btn btn-outline btn-accent" type="button">
             Accent
           </button>
           <button class="btn btn-outline btn-success" type="button">
-            Success
+            Succès
           </button>
           <button class="btn btn-outline btn-warning" type="button">
-            Warning
+            Avertissement
           </button>
           <button class="btn btn-outline btn-error" type="button">
-            Error
+            Erreur
           </button>
 
           <div class="flex flex-row gap-4 py-4">
@@ -193,7 +198,7 @@ export default function Home() {
             </button>
             <button class="btn btn-outline col-span-2" onClick={throwUserFeedback} type="button">
               <BellRing />
-              Throw user feedback
+              Déclencher le retour utilisateur
             </button>
             <button class="btn btn-outline" onClick={showDemoToasts} type="button">
               <Megaphone />
