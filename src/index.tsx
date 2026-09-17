@@ -11,6 +11,7 @@ import relAppleTouchIconUrl from '/img/apple-touch-icon.png'
 import relIconUrl from '/img/favicon.ico'
 import BsAppBar from './components/app-bar/app-bar'
 import { NAVIGATION_MENU_ENTRIES } from './libs/menu/menu'
+import { startNostromoSyncBoot } from './libs/nostromo/sync-boot'
 
 // DEV-only: lazy-load the demo seed initializer. The dynamic import expression
 // is dead-code-eliminated when import.meta.env.DEV is statically false.
@@ -32,6 +33,10 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
     'Root element not found. Did you forget to add it to your index.html? Or maybe the id attribute got misspelled?'
   )
 }
+
+// Boot the Nostromo sync layer once, before the first render: the status chip of
+// the app bar then displays an already hydrated state instead of a stale `off`.
+startNostromoSyncBoot()
 
 function renderTemplateStore() {
   return (
