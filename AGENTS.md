@@ -16,7 +16,8 @@
 
 ## Commands
 
-- `pnpm run dev` — Start dev server (port 3000)
+- `pnpm run dev` — One-command dev setup: installs dependencies, creates/fixes `.env`, checks (and optionally starts) the Nostromo backend, then starts Vite on port 3000
+- `pnpm run dev:vite` — Escape hatch: Vite alone, no dev setup
 - `pnpm run build` — Build for production
 - `pnpm run serve` — Preview production build
 - `pnpm run check` — Run Biome lint + format check
@@ -29,6 +30,13 @@
 - `pnpm run typecheck` — Run TypeScript type checking (`tsc --noEmit`)
 - **Pre-commit hook**: husky runs `pnpm run check` + `pnpm run typecheck` on commit (no tests)
 
+Developer-facing setup, scripts and commit conventions: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## Dev Setup & Repository Hygiene
+
+- **Dev setup must stay one command.** `pnpm run dev` must work from a clean clone and do everything for the developer: dependencies, `.env`, backend. Add every new manual step to the helper's menu in `scripts/dev.mjs` instead — never document a manual sequence as the way to start the app.
+- **Boy scout rule.** Leave the repository at least as clean as you found it: delete what you orphan (dead routes, pages, files, exports), keep `.gitignore` current (`.env`, build output, tool caches), and never commit commented-out blocks or leftover scratch files.
+
 ## Code Style
 
 - **Formatting**: Biome via Ultracite preset — line width 120, indent 2 spaces, semicolons as needed, single quotes
@@ -37,7 +45,7 @@
 - **Components**: Functional component pattern with adaptor pattern. Keep presentational logic separate from business logic
 - **Naming**: `Bs` prefix for component names (e.g., `BsButton`). camelCase for variables, PascalCase for types/interfaces
 - **Error handling**: Descriptive error messages, proper TypeScript null checks
-- **Language**: Documentation, code comments, and commit messages are all written in English
+- **Language**: Code identifiers, code comments and commit messages in English; user-facing app copy and human-facing docs (`README.md`, `CONTRIBUTING.md`, `TODO.md`) in French; `AGENTS.md` stays English (agent-facing)
 
 ## Project Structure
 
