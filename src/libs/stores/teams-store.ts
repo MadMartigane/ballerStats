@@ -1,4 +1,5 @@
 import { createStore, reconcile } from 'solid-js/store'
+import { markCollectionDirty } from '../nostromo/dirty-marks'
 import { storeTeams } from '../store/store'
 import type { TeamRawData } from '../team/team.d'
 
@@ -42,6 +43,7 @@ function persistTeams(): void {
   storeTeams(getRawTeams()).catch((error: unknown) => {
     console.error('storeTeams failed:', error)
   })
+  markCollectionDirty('teams')
 }
 
 /**

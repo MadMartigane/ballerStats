@@ -1,5 +1,6 @@
 import { createStore, reconcile } from 'solid-js/store'
 import type { ContactRawData } from '../contact/contact.d'
+import { markCollectionDirty } from '../nostromo/dirty-marks'
 import { storeContacts } from '../store/store'
 
 export function assertContactAddable(existingContacts: ContactRawData[], newContact: ContactRawData): void {
@@ -44,6 +45,7 @@ function persistContacts(): void {
   storeContacts(getRawContacts()).catch((error: unknown) => {
     console.error('storeContacts failed:', error)
   })
+  markCollectionDirty('contacts')
 }
 
 /**
