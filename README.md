@@ -1,95 +1,90 @@
 # BallerStats
 
 [![Formatted with Biome](https://img.shields.io/badge/Formatted_with-Biome-60a5fa?style=flat&logo=biome)](https://biomejs.dev/)
-[![Linted with Ultracite](https://img.shields.io/badge/Linted_with-Ultracite-8b5cf6?style=flat)](https://github.com/nicolo-ribaudo/ultracite)
+[![Linted with Ultracite](https://img.shields.io/badge/Linted_with-Ultracite-8b5cf6?style=flat)](https://github.com/haydenbleasel/ultracite)
 [![Tested with Vitest](https://img.shields.io/badge/Tested_with-Vitest-6da13f?style=flat&logo=vitest)](https://vitest.dev/)
 
-Web app to collect and visualize your basketball player statistics.
+Application web pour collecter et visualiser les statistiques de vos joueurs de basket.
 
-## Getting Started
+## Démarrage rapide
 
-### Prerequisites
+Prérequis : [Node.js](https://nodejs.org/) 20 ou plus récent et [pnpm](https://pnpm.io/).
 
-- [Node.js](https://nodejs.org/) (v20 or newer)
-- [pnpm](https://pnpm.io/) (v9 or newer)
+```bash
+git clone https://github.com/MadMartigane/ballerStats.git
+cd ballerStats
+pnpm run dev
+```
 
-### Installation
+`pnpm run dev` prépare l'environnement tout seul (dépendances, fichier `.env`, backend Nostromo) puis
+démarre Vite sur <http://localhost:3000>. Rien à installer à la main. Sans backend joignable,
+l'application démarre en mode local seul.
 
-1. Clone the repository
-   ```bash
-   git clone https://github.com/yourusername/ballerStats.git
-   cd ballerStats
-   ```
+Menus du démarrage, backend local et variables d'environnement : [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-2. Install dependencies
-   ```bash
-   pnpm install
-   ```
+## Scripts
 
-3. Start the development server
-   ```bash
-   pnpm run dev
-   ```
-   The dev server starts at http://localhost:3000
-
-### Available Scripts
-
-| Command | Description |
+| Commande | Rôle |
 |---|---|
-| `pnpm run dev` | Start development server |
-| `pnpm run build` | Build for production |
-| `pnpm run serve` | Preview production build |
-| `pnpm run check` | Run Biome lint + format check |
-| `pnpm run fix` | Auto-fix lint and format issues |
-| `pnpm run format` | Format code with Biome (safe) |
-| `pnpm run format-force` | Format code with Biome (unsafe) |
-| `pnpm run test` | Run tests |
-| `pnpm run test:watch` | Run tests in watch mode |
-| `pnpm run test:coverage` | Run tests with coverage |
-| `pnpm run typecheck` | Run TypeScript type checking |
+| `pnpm run dev` | Préparation complète puis Vite (port 3000) |
+| `pnpm run dev:vite` | Vite seul, sans préparation (dépannage) |
+| `pnpm run build` | Build de production dans `dist/` |
+| `pnpm run serve` | Prévisualise le build de production |
+| `pnpm run start` | Alias de Vite seul |
+| `pnpm run check` | Vérifie le lint et le format (Biome + Ultracite) |
+| `pnpm run fix` | Corrige le lint et le format (`format` est un alias) |
+| `pnpm run format-force` | Corrige aussi les corrections « unsafe » |
+| `pnpm run test` | Tests Vitest (une passe) |
+| `pnpm run test:watch` | Tests en mode watch |
+| `pnpm run test:coverage` | Tests avec rapport de couverture |
+| `pnpm run typecheck` | Vérification TypeScript (`tsc --noEmit`) |
+| `pnpm run prod` / `pre-prod` | Build puis déploiement `/var/www/...` (Linux uniquement) |
+| `pnpm run prod-only` / `pre-prod-only` | Copie sans rebuild (variantes `-clean` et `-push`) |
+| `pnpm run prepare` | Installe les hooks husky (lancé automatiquement à l'installation) |
 
-> A husky pre-commit hook runs `pnpm run check` + `pnpm run typecheck` (no tests) on every commit.
+Le détail de chaque script est dans [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-### Project Structure
+## Stack technique
+
+| Techno | Rôle |
+|---|---|
+| [SolidJS](https://docs.solidjs.com/) 1.x | Framework UI |
+| [TypeScript](https://www.typescriptlang.org/) 7.x | Typage statique |
+| [Vite](https://vite.dev/) 8.x | Serveur de développement et build |
+| [Tailwind CSS](https://tailwindcss.com/) 4.x + [DaisyUI](https://daisyui.com/) 5.x | Styles et composants |
+| [@solidjs/router](https://github.com/solidjs/solid-router) (HashRouter) | Routage |
+| [Lucide](https://lucide.dev/) | Icônes |
+| [Vitest](https://vitest.dev/) | Tests |
+| [Biome](https://biomejs.dev/) + [Ultracite](https://github.com/haydenbleasel/ultracite) | Lint et format |
+
+## Structure du projet
 
 ```
 ballerStats/
-├── public/            # Static assets
+├── docs/              # Références d'architecture
+├── scripts/           # Outillage de développement (démarrage)
+├── public/            # Assets statiques
 ├── src/
-│   ├── components/    # Reusable UI components (Bs* prefix)
-│   ├── global/        # Global state and configurations
-│   ├── libs/          # Business logic and utilities
-│   ├── pages/         # Page components (routes)
-│   ├── index.css      # Global CSS
-│   └── index.tsx      # Application entry point
-├── biome.json         # Biome + Ultracite config (generated)
-├── vitest.config.ts   # Vitest configuration
-├── tsconfig.json      # TypeScript configuration
-├── vite.config.ts     # Vite configuration
-└── package.json       # Dependencies and scripts
+│   ├── components/    # Composants UI réutilisables (préfixe Bs*)
+│   ├── global/        # État global, thème, polices
+│   ├── libs/          # Logique métier, utilitaires, stores
+│   ├── pages/         # Composants de route
+│   ├── index.css      # CSS global (Tailwind)
+│   └── index.tsx      # Point d'entrée de l'application
+├── biome.json         # Configuration Biome + Ultracite
+├── vite.config.ts     # Configuration Vite
+├── vitest.config.ts   # Configuration Vitest
+└── package.json       # Dépendances et scripts
 ```
 
-### Code Style
+## Conventions
 
-- SolidJS functional components with TypeScript
-- `Bs` prefix for component names (e.g., `BsButton`)
-- Separate `.d.ts` files for component props
-- Line width: 120 characters, 2-space indent, single quotes, semicolons as needed
-- Linted and formatted by Biome via Ultracite
+- Avant de committer : `pnpm run check`, `pnpm run typecheck` et `pnpm run test` (le hook husky de
+  pré-commit exécute déjà les deux premiers).
+- Conventions de code, d'architecture et d'état : [`AGENTS.md`](AGENTS.md) et
+  [`docs/state-architecture.md`](docs/state-architecture.md).
+- Messages de commit en [Conventional Commits](https://www.conventionalcommits.org/), en anglais.
 
-## Tech Stack
-
-| Library | Purpose | Docs |
-|---|---|---|
-| SolidJS | UI framework | <https://docs.solidjs.com/> |
-| TypeScript 7 | Type system | <https://www.typescriptlang.org/> |
-| Vite 8 | Build tool | <https://vite.dev/> |
-| Tailwind CSS 4 | Utility CSS | <https://tailwindcss.com/> |
-| DaisyUI 5 | Component library | <https://daisyui.com/> |
-| Lucide | Icons | <https://lucide.dev/> |
-| Biome + Ultracite | Linting & formatting | <https://biomejs.dev/> |
-| Vitest | Testing | <https://vitest.dev/> |
-
-## License
+## Licence
 
 MIT
