@@ -23,7 +23,7 @@ export function BsStatSumUpRebonds(props: BsStatSumUpRebondsProps) {
         </div>
 
         <div class="stat place-items-center">
-          <div class="stat-title">Defensifs</div>
+          <div class="stat-title">Défensifs</div>
           <div
             class={`stat-value ${statSummary.rebonds.teamDefensivePercentage > 49 ? 'text-success' : 'text-warning'}`}
           >{`${statSummary.rebonds.teamDefensivePercentage} %`}</div>

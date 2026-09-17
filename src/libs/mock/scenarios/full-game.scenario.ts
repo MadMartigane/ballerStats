@@ -91,7 +91,7 @@ export function makeScenarioMatch(
 export function makeEmptyMatch(teamId: string, overrides?: Partial<MatchRawData>): Match {
   return makeMatch({
     date: null,
-    opponent: 'Empty Opponent',
+    opponent: 'Adversaire inconnu',
     stats: [],
     status: 'unlocked',
     teamId,
