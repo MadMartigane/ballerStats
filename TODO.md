@@ -2,6 +2,8 @@
 
 Ce fichier regroupe le travail volontairement mis de côté : ce ne sont pas des bugs à oublier, mais des **décisions à prendre**. Chaque item décrit le contexte, la décision attendue et les emplacements de code exacts concernés. Un item se supprime quand la décision est prise et appliquée, pas quand on l'a relu.
 
+Le détail de chaque sujet (symptômes, reproduction, preuves vérifiées) est dans `HANDOFF.md` ; ce fichier-ci reste la liste courte des décisions à prendre.
+
 ## 1. Écrasement serveur silencieux (décision produit)
 
 Les flux « tout écraser », import et seed de démo passent par les funnels de persistance des stores, qui appellent chacun `markCollectionDirty`. Le sync Nostromo arme donc un push et propage un écrasement complet au serveur **sans confirmation explicite** : l'utilisateur croit vider sa machine, il vide aussi le serveur.
