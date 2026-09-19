@@ -1,5 +1,7 @@
+import { del, keys, set } from 'idb-keyval'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { markPhotoDirty } from '../nostromo/dirty-marks'
+import { toast } from '../utils/utils'
 import { clearAllPhotos, deletePhoto, getAllPhotoEntries, getPhoto, hasPhoto, storePhoto } from './photo-store'
 
 /**
@@ -11,6 +13,25 @@ vi.mock('../nostromo/dirty-marks', async (importOriginal) => {
   return {
     ...actual,
     markPhotoDirty: vi.fn(),
+  }
+})
+
+vi.mock('idb-keyval', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('idb-keyval')>()
+  return {
+    ...actual,
+    clear: vi.fn(actual.clear),
+    del: vi.fn(actual.del),
+    keys: vi.fn(actual.keys),
+    set: vi.fn(actual.set),
+  }
+})
+
+vi.mock('../utils/utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../utils/utils')>()
+  return {
+    ...actual,
+    toast: vi.fn(),
   }
 })
 
@@ -109,5 +130,42 @@ describe('photo-store dirty marks', () => {
     await clearAllPhotos()
 
     expect(mark).not.toHaveBeenCalled()
+  })
+
+  it('marks the photo unit dirty before the local write settles, even when it rejects', async () => {
+    const mark = vi.mocked(markPhotoDirty)
+    mark.mockClear()
+    vi.mocked(set).mockRejectedValueOnce(new Error('QuotaExceededError'))
+
+    const write = storePhoto('player-12', new Blob(['data'], { type: 'image/webp' }))
+
+    expect(mark).toHaveBeenCalledWith('player-12')
+    await expect(write).rejects.toThrow('QuotaExceededError')
+  })
+
+  it('does not mark the photo unit dirty when the local delete fails', async () => {
+    const mark = vi.mocked(markPhotoDirty)
+    mark.mockClear()
+    vi.mocked(del).mockRejectedValueOnce(new Error('DeleteFailed'))
+
+    await expect(deletePhoto('player-13')).rejects.toThrow('DeleteFailed')
+
+    expect(mark).not.toHaveBeenCalled()
+  })
+
+  it('marks only the photos whose local deletion succeeded, never the survivors', async () => {
+    const mark = vi.mocked(markPhotoDirty)
+    vi.mocked(keys).mockResolvedValueOnce(['player-14', 'player-15'])
+    vi.mocked(del).mockRejectedValueOnce(new Error('DeleteFailed'))
+    mark.mockClear()
+
+    await expect(clearAllPhotos()).rejects.toThrow('Suppression locale impossible')
+
+    // The survivor must stay unmarked: a dirty unit would push a remote deletion
+    // while its local blob survives, the divergence the old mark-before-clear had.
+    expect(mark).toHaveBeenCalledTimes(1)
+    expect(mark).toHaveBeenCalledWith('player-15')
+    expect(mark).not.toHaveBeenCalledWith('player-14')
+    expect(toast).toHaveBeenCalledWith(expect.stringContaining('Sauvegarde locale'), 'error')
   })
 })

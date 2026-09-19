@@ -12,8 +12,11 @@ import {
 } from '../../libs/nostromo/nostromo-sync-store'
 import type { NostromoStatus } from '../../libs/nostromo/nostromo-sync-store.d'
 import { flushNostromoPush, getConflictedUnits } from '../../libs/nostromo/push-engine'
+import { describeRemoteSnapshot, restoreRemoteSnapshot } from '../../libs/nostromo/remote-snapshot'
 import { confirmNostromoRestore, planNostromoRestore } from '../../libs/nostromo/restore'
 import type { NostromoRestorePlan } from '../../libs/nostromo/restore.d'
+import { confirmAction } from '../../libs/utils/utils'
+import BsNostromoRestoreModal from './bs-nostromo-restore-modal'
 import {
   describeNostromoAuthError,
   describeNostromoConflict,
@@ -35,11 +38,19 @@ vi.mock('../../libs/nostromo/env', () => ({
   getNostromoBaseUrl: () => 'https://nostromo.test',
 }))
 
-vi.mock('../../libs/nostromo/nostromo-config-store', () => ({
-  clearConfig: vi.fn(),
-  getConfig: vi.fn(),
-  setConfig: vi.fn(),
-}))
+vi.mock('../../libs/nostromo/nostromo-config-store', () => {
+  const getConfigMock = vi.fn()
+  return {
+    clearConfig: vi.fn(),
+    getConfig: getConfigMock,
+    // Mirrors the real helper: the card names the host of the configured server.
+    getNostromoHostName: vi.fn(() => {
+      const baseUrl: string | undefined = getConfigMock()?.baseUrl
+      return baseUrl ? new URL(baseUrl).host : null
+    }),
+    setConfig: vi.fn(),
+  }
+})
 
 vi.mock('../../libs/nostromo/push-engine', () => ({
   flushNostromoPush: vi.fn(() => Promise.resolve()),
@@ -51,7 +62,12 @@ vi.mock('../../libs/nostromo/restore', () => ({
   planNostromoRestore: vi.fn(),
 }))
 
-vi.mock('../../libs/utils/utils', () => ({ toast: vi.fn() }))
+vi.mock('../../libs/nostromo/remote-snapshot', () => ({
+  describeRemoteSnapshot: vi.fn(),
+  restoreRemoteSnapshot: vi.fn(),
+}))
+
+vi.mock('../../libs/utils/utils', () => ({ confirmAction: vi.fn(), toast: vi.fn() }))
 
 // Hoisted to module scope: the lint rule forbids a regex literal inside a test body.
 const LOCAL_DATE_TIME_PATTERN = /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/
@@ -122,7 +138,6 @@ describe('nostromo status view mapping', () => {
       pending: 'En attente',
       saved: 'Synchronisé',
       saving: 'Sauvegarde…',
-      unconfigured: 'Non configuré',
     }
 
     for (const [status, label] of Object.entries(required)) {
@@ -131,16 +146,7 @@ describe('nostromo status view mapping', () => {
   })
 
   it('gives every status a label and a colour variant', () => {
-    const statuses: NostromoStatus[] = [
-      'auth-required',
-      'conflict',
-      'error',
-      'off',
-      'pending',
-      'saved',
-      'saving',
-      'unconfigured',
-    ]
+    const statuses: NostromoStatus[] = ['auth-required', 'conflict', 'error', 'off', 'pending', 'saved', 'saving']
 
     for (const status of statuses) {
       expect(NOSTROMO_STATUS_LABELS[status].length).toBeGreaterThan(0)
@@ -156,7 +162,6 @@ describe('nostromo status view mapping', () => {
     expect(NOSTROMO_STATUS_VARIANTS.conflict).toBe('error')
     expect(NOSTROMO_STATUS_VARIANTS['auth-required']).toBe('warning')
     expect(NOSTROMO_STATUS_VARIANTS.off).toBe('neutral')
-    expect(NOSTROMO_STATUS_VARIANTS.unconfigured).toBe('neutral')
   })
 
   it('formats log timestamps in French, relative while recent', () => {
@@ -184,10 +189,10 @@ describe('nostromo status view mapping', () => {
   })
 
   it('names the conflicted units in the conflict banner text', () => {
-    expect(describeNostromoConflict([])).toBe('Des données locales sont en conflit avec le serveur.')
-    expect(describeNostromoConflict(['players', 'matchs'])).toBe(
-      'Des données locales sont en conflit avec le serveur. Éléments concernés : players, matchs.'
-    )
+    const explanation =
+      'Des données locales sont en conflit avec le serveur. Garder la copie locale conservera aussi une suppression récente ; un autre appareil peut rétablir ses données en les renvoyant.'
+    expect(describeNostromoConflict([])).toBe(explanation)
+    expect(describeNostromoConflict(['players', 'matchs'])).toBe(`${explanation} Éléments concernés : players, matchs.`)
   })
 })
 
@@ -234,6 +239,7 @@ describe('BsNostromoSyncCard', () => {
     hydrateNostromoSync()
     vi.mocked(getConfig).mockReturnValue(undefined)
     vi.mocked(planNostromoRestore).mockResolvedValue(makePlan())
+    vi.mocked(describeRemoteSnapshot).mockResolvedValue(undefined)
   })
 
   afterEach(() => {
@@ -308,6 +314,8 @@ describe('BsNostromoSyncCard', () => {
       expect(document.body.textContent).toContain(PLAN_WARNING)
     })
     expect(document.body.textContent).toContain('Vous allez écraser des données plus récentes.')
+    // The card names the configured server as the source of the plan it shows.
+    expect(document.body.textContent).toContain('Source : nostromo.test.')
 
     const modalLabels = ['Annuler', 'Restaurer le serveur', 'Écraser le serveur']
     for (const label of modalLabels) {
@@ -320,6 +328,41 @@ describe('BsNostromoSyncCard', () => {
       expect(confirmNostromoRestore).toHaveBeenCalledWith(plan, 'overwrite')
     })
     expect(planNostromoRestore).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows a neutral counted title when the plan overwrites nothing', () => {
+    const plan = makePlan({
+      collectionUnits: [
+        {
+          kind: 'collection',
+          localCount: 0,
+          localDirty: false,
+          remote: { docId: 'pl0000000000001', itemCount: 2, updated: '2026-09-15 10:00:00.000Z', version: 3 },
+          remotePayloadValid: true,
+          requiresConfirmation: false,
+          unit: 'players',
+          warnings: [],
+        },
+      ],
+      requiresConfirmation: false,
+      warnings: [],
+    })
+
+    dispose = render(() => <BsNostromoRestoreModal busy={false} onDecision={vi.fn()} plan={plan} />, document.body)
+
+    expect(document.body.textContent).toContain('Vous allez appliquer 1 changement depuis le serveur.')
+    expect(document.body.textContent).not.toContain('Vous allez écraser des données plus récentes.')
+    // Without a host prop the source line is not rendered at all.
+    expect(document.body.textContent).not.toContain('Source :')
+  })
+
+  it('names the server the plan will read from', () => {
+    dispose = render(
+      () => <BsNostromoRestoreModal busy={false} host="nostromo.test" onDecision={vi.fn()} plan={makePlan()} />,
+      document.body
+    )
+
+    expect(document.body.textContent).toContain('Source : nostromo.test.')
   })
 
   it('forwards the cancel decision without touching the data', async () => {
@@ -403,5 +446,69 @@ describe('BsNostromoSyncCard', () => {
     expect(nostromoSync.status).toBe('off')
     // Document ids are account-independent: a second sign-in must not inherit them.
     expect(getAllBaselines()).toEqual({})
+  })
+
+  it('hides the server snapshot entry when none was captured', async () => {
+    dispose = render(() => <BsNostromoSyncCard />, document.body)
+
+    await vi.waitFor(() => {
+      expect(describeRemoteSnapshot).toHaveBeenCalledTimes(1)
+    })
+    expect(document.body.textContent).not.toContain('Instantané serveur du')
+  })
+
+  it('restores the server snapshot after a confirmation', async () => {
+    const description = {
+      collectionCount: 2,
+      createdAt: 1_700_000_000_000,
+      id: 'snapshot-1',
+      photoCount: 3,
+      reason: 'vidage',
+    }
+    vi.mocked(getConfig).mockReturnValue(CONNECTED_CONFIG)
+    vi.mocked(describeRemoteSnapshot).mockResolvedValue(description)
+    vi.mocked(confirmAction).mockResolvedValue(true)
+    vi.mocked(restoreRemoteSnapshot).mockResolvedValue({ collections: 2, failedUnits: [], photos: 3 })
+
+    dispose = render(() => <BsNostromoSyncCard />, document.body)
+
+    await vi.waitFor(() => {
+      expect(document.body.textContent).toContain('Instantané serveur du')
+    })
+    expect(document.body.textContent).toContain('(vidage)')
+
+    requireButton("Restaurer l'instantané serveur").click()
+
+    await vi.waitFor(() => {
+      expect(restoreRemoteSnapshot).toHaveBeenCalledTimes(1)
+    })
+    expect(confirmAction).toHaveBeenCalledWith(
+      "Restaurer l'instantané serveur",
+      expect.stringContaining('seront remplacées par le contenu du serveur capturé le')
+    )
+  })
+
+  it('keeps the server snapshot when the user declines the restore', async () => {
+    vi.mocked(getConfig).mockReturnValue(CONNECTED_CONFIG)
+    vi.mocked(describeRemoteSnapshot).mockResolvedValue({
+      collectionCount: 1,
+      createdAt: 1_700_000_000_000,
+      id: 'snapshot-1',
+      photoCount: 0,
+      reason: 'vidage',
+    })
+    vi.mocked(confirmAction).mockResolvedValue(false)
+
+    dispose = render(() => <BsNostromoSyncCard />, document.body)
+
+    await vi.waitFor(() => {
+      expect(document.body.textContent).toContain('Instantané serveur du')
+    })
+    requireButton("Restaurer l'instantané serveur").click()
+
+    await vi.waitFor(() => {
+      expect(confirmAction).toHaveBeenCalledTimes(1)
+    })
+    expect(restoreRemoteSnapshot).not.toHaveBeenCalled()
   })
 })

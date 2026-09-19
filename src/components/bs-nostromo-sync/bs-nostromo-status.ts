@@ -10,6 +10,7 @@
 import type { DaisyAlert } from '../../libs/daisy/daisy.d'
 import { NostromoClientError } from '../../libs/nostromo/client'
 import type { NostromoStatus } from '../../libs/nostromo/nostromo-sync-store.d'
+import type { RemoteSnapshotDescription } from '../../libs/nostromo/remote-snapshot.d'
 import type { NostromoRestoreDecision, NostromoRestorePlan, NostromoRestoreResult } from '../../libs/nostromo/restore.d'
 
 /** Colour family of a status. The chip maps it to the DaisyUI classes. */
@@ -24,7 +25,6 @@ export const NOSTROMO_CARD_TITLE = 'Synchronisation Nostromo'
 const MILLISECOND_MINUTE = 60_000
 const MILLISECOND_HOUR = 3_600_000
 const MILLISECOND_DAY = 86_400_000
-
 // Hoisted to module scope: used by formatNostromoLogTime on every call.
 const TIME_WITHOUT_SECONDS_PATTERN = /:\d{2}$/
 // Hoisted to module scope: used by normalizeNostromoBaseUrl on every call.
@@ -39,7 +39,6 @@ export const NOSTROMO_STATUS_LABELS: Record<NostromoStatus, string> = {
   pending: 'En attente',
   saved: 'Synchronisé',
   saving: 'Sauvegarde…',
-  unconfigured: 'Non configuré',
 }
 
 /** Colour of each status: green only when everything is pushed, red when the user must act. */
@@ -51,7 +50,6 @@ export const NOSTROMO_STATUS_VARIANTS: Record<NostromoStatus, NostromoStatusVari
   pending: 'warning',
   saved: 'success',
   saving: 'info',
-  unconfigured: 'neutral',
 }
 
 /**
@@ -66,7 +64,6 @@ export const NOSTROMO_FLUSH_MESSAGES: Record<NostromoStatus, string> = {
   pending: 'Synchronisation partielle : des données restent en attente.',
   saved: 'Synchronisation terminée.',
   saving: 'Synchronisation en cours…',
-  unconfigured: "Nostromo n'est pas configuré.",
 }
 
 /** True while a push or a restore is in flight: the chip spins and the card disables its actions. */
@@ -82,6 +79,18 @@ export function toDaisyAlert(variant: NostromoStatusVariant): DaisyAlert {
 /** `1 unité appliquée` / `3 unités appliquées`: singular and plural are passed whole. */
 function count(value: number, singular: string, plural: string): string {
   return `${value} ${value > 1 ? plural : singular}`
+}
+
+/** French local date and time of a capture: minutes precision, seconds omitted. */
+export function formatNostromoSnapshotDate(at: number): string {
+  const date = new Date(at)
+  const time = date.toLocaleTimeString('fr-FR').replace(TIME_WITHOUT_SECONDS_PATTERN, '')
+  return `${date.toLocaleDateString('fr-FR')} ${time}`
+}
+
+/** French one-line description of the stored snapshot, shown by the card entry. */
+export function describeNostromoSnapshot(description: RemoteSnapshotDescription): string {
+  return `Instantané serveur du ${formatNostromoSnapshotDate(description.createdAt)} (${description.reason})`
 }
 
 /**
@@ -118,9 +127,14 @@ export function isNostromoAuthError(error: unknown): boolean {
 /**
  * French banner text of the conflict status: the units the engine parked are
  * named, since resolving them is the only action the user has.
+ *
+ * The message stays truthful for every conflict, wipe or not: keeping the local
+ * copy also keeps a recent deletion, and a second device can always bring its
+ * own data back by pushing it again.
  */
 export function describeNostromoConflict(units: readonly string[]): string {
-  const base = 'Des données locales sont en conflit avec le serveur.'
+  const base =
+    'Des données locales sont en conflit avec le serveur. Garder la copie locale conservera aussi une suppression récente ; un autre appareil peut rétablir ses données en les renvoyant.'
   return units.length === 0 ? base : `${base} Éléments concernés : ${units.join(', ')}.`
 }
 
@@ -157,11 +171,28 @@ export function describeNostromoRestoreError(error: unknown): string {
   return 'La restauration a échoué.'
 }
 
+/** What a pull would write, broken down by kind: the modal title and the plan summary share it. */
+function nostromoPlanChangeCounts(plan: NostromoRestorePlan): {
+  collections: number
+  deletions: number
+  photos: number
+} {
+  return {
+    collections: plan.collectionUnits.filter((unit) => unit.remotePayloadValid && unit.remote).length,
+    deletions: plan.photoUnits.filter((unit) => unit.deletionRequired).length,
+    photos: plan.photoUnits.filter((unit) => Boolean(unit.remote) && !unit.upToDate).length,
+  }
+}
+
+/** Number of changes a pull would apply: the neutral title of the restore modal. */
+export function countNostromoPlanChanges(plan: NostromoRestorePlan): number {
+  const { collections, deletions, photos } = nostromoPlanChangeCounts(plan)
+  return collections + photos + deletions
+}
+
 /** French summary of what a plan would write, shown above the warnings of the modal. */
 export function describeNostromoPlan(plan: NostromoRestorePlan): string {
-  const collections = plan.collectionUnits.filter((unit) => unit.remotePayloadValid && unit.remote).length
-  const photos = plan.photoUnits.filter((unit) => Boolean(unit.remote) && !unit.upToDate).length
-  const deletions = plan.photoUnits.filter((unit) => unit.deletionRequired).length
+  const { collections, deletions, photos } = nostromoPlanChangeCounts(plan)
   const parts = [
     `${count(plan.remoteDocumentCount, 'document', 'documents')} sur le serveur`,
     `${count(collections, 'collection', 'collections')} et ${count(photos, 'photo', 'photos')} à reprendre`,

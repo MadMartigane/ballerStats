@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { markCollectionDirty } from './nostromo/dirty-marks'
+import { storeData } from './store/store'
 import { getTitles, persistTitles, titles, updateTitle } from './trombi-titles-store'
+import { toast } from './utils/utils'
 
 /**
  * The titles store had no suite of its own: this one covers the single thing it
@@ -13,6 +15,22 @@ vi.mock('./nostromo/dirty-marks', async (importOriginal) => {
   return {
     ...actual,
     markCollectionDirty: vi.fn(),
+  }
+})
+
+vi.mock('./store/store', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./store/store')>()
+  return {
+    ...actual,
+    storeData: vi.fn(actual.storeData),
+  }
+})
+
+vi.mock('./utils/utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./utils/utils')>()
+  return {
+    ...actual,
+    toast: vi.fn(),
   }
 })
 
@@ -32,6 +50,21 @@ describe('trombi-titles-store dirty marks', () => {
 
     expect(markCollectionDirty).toHaveBeenCalledTimes(2)
     expect(markCollectionDirty).toHaveBeenCalledWith('trombiTitles')
+  })
+
+  it('marks the unit dirty before the local write settles, even when it rejects', async () => {
+    vi.mocked(storeData).mockRejectedValueOnce(new Error('QuotaExceededError'))
+
+    persistTitles({ teamName: 'Les Lions' })
+
+    expect(markCollectionDirty).toHaveBeenCalledTimes(1)
+    expect(markCollectionDirty).toHaveBeenCalledWith('trombiTitles')
+
+    await vi.waitFor(() => expect(toast).toHaveBeenCalledTimes(1))
+    expect(toast).toHaveBeenCalledWith(
+      'Sauvegarde locale impossible : vos données ne seront pas synchronisées.',
+      'error'
+    )
   })
 })
 

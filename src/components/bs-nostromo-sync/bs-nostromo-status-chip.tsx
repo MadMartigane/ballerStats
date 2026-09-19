@@ -3,7 +3,6 @@ import {
   CircleAlert,
   CircleCheckBig,
   Clock,
-  CloudOff,
   KeyRound,
   LoaderCircle,
   PowerOff,
@@ -30,7 +29,6 @@ const STATUS_ICONS: Record<NostromoStatus, () => JSX.Element> = {
   pending: () => <Clock size={16} />,
   saved: () => <CircleCheckBig size={16} />,
   saving: () => <LoaderCircle class="animate-spin" size={16} />,
-  unconfigured: () => <CloudOff size={16} />,
 }
 
 /** DaisyUI colour of each variant. */
