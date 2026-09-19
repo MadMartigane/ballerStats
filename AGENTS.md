@@ -45,7 +45,7 @@ Developer-facing setup, scripts and commit conventions: [`CONTRIBUTING.md`](CONT
 - **Components**: Functional component pattern with adaptor pattern. Keep presentational logic separate from business logic
 - **Naming**: `Bs` prefix for component names (e.g., `BsButton`). camelCase for variables, PascalCase for types/interfaces
 - **Error handling**: Descriptive error messages, proper TypeScript null checks
-- **Language**: Code identifiers, code comments and commit messages in English; user-facing app copy and human-facing docs (`README.md`, `CONTRIBUTING.md`, `TODO.md`) in French; `AGENTS.md` stays English (agent-facing)
+- **Language**: Code identifiers, code comments and commit messages in English; user-facing app copy and human-facing docs (`README.md`, `CONTRIBUTING.md`) in French; `AGENTS.md` stays English (agent-facing)
 
 ## Project Structure
 
