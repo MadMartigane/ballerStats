@@ -14,9 +14,10 @@
  */
 import { getAllPhotoEntries } from '../photo-store/photo-store'
 import type { PhotoEntry } from '../photo-store/photo-store.d'
-import { listDocuments, NostromoClientError } from './client'
+import { NostromoClientError } from './client'
 import type { NostromoDocument } from './client.d'
 import { photoUnitName } from './dirty-marks'
+import { listAllRemoteDocuments } from './listing'
 import { getConfig } from './nostromo-config-store'
 import type { NostromoConfig } from './nostromo-config-store.d'
 import { getAllBaselines, isUnitDirty, pushNostromoLog, setNostromoSyncStatus } from './nostromo-sync-store'
@@ -29,12 +30,6 @@ import type {
   NostromoRestorePlan,
 } from './restore.d'
 import { countCollectionItems, isCollectionUnitName, NOSTROMO_PLAN_ORDER } from './units'
-
-/** Page size of the restore listing: the server maximum, one round trip per 500 documents. */
-const RESTORE_PAGE_SIZE = 500
-
-/** Safety bound of the listing loop: 100 pages, 50 000 documents, far above any real account. */
-const RESTORE_MAX_PAGES = 100
 
 /**
  * Bound of the local photo enumeration. IndexedDB can stop answering without ever
@@ -69,7 +64,7 @@ export async function planNostromoRestore(): Promise<NostromoRestorePlan> {
   let documents: NostromoDocument[]
 
   try {
-    documents = await listRemoteDocuments(config)
+    documents = await listAllRemoteDocuments(config)
   } catch (error) {
     const failure = toClientError(error, 'Le listage des documents distants a échoué.')
     pushNostromoLog('error', `Restauration Nostromo : ${failure.message}`)
@@ -111,37 +106,6 @@ export async function planNostromoRestore(): Promise<NostromoRestorePlan> {
     `Restauration Nostromo : plan lu (${collectionUnits.length} collections, ${photoUnits.length} photos, ${plan.warnings.length} avertissements).`
   )
   return plan
-}
-
-/**
- * Lists every document the caller may read, one page at a time. No filter is
- * used: a listing only ever returns what the account may read, and a document
- * this app does not recognize is ignored by the grouping, which is the only
- * discovery mechanism the contract offers.
- */
-async function listRemoteDocuments(config: NostromoConfig): Promise<NostromoDocument[]> {
-  const documents: NostromoDocument[] = []
-  let lastPageReached = false
-
-  for (let page = 1; page <= RESTORE_MAX_PAGES; page += 1) {
-    // biome-ignore lint/performance/noAwaitInLoops: a page is only requested once the previous page told how many pages the listing holds.
-    const result = await listDocuments(config.baseUrl, config.token, { page, perPage: RESTORE_PAGE_SIZE })
-    documents.push(...result.items)
-
-    const pageCount = Math.ceil(result.totalItems / RESTORE_PAGE_SIZE)
-    if (result.items.length === 0 || page >= pageCount || result.items.length < RESTORE_PAGE_SIZE) {
-      lastPageReached = true
-      break
-    }
-  }
-
-  if (!lastPageReached) {
-    pushNostromoLog(
-      'warn',
-      `Restauration Nostromo : le listage s'est arrêté après ${RESTORE_MAX_PAGES} pages ; les documents suivants sont ignorés.`
-    )
-  }
-  return documents
 }
 
 /** Sorts the listed documents into collection and photo units, ignoring the rest. */
@@ -409,7 +373,7 @@ export function isAuthError(error: unknown): error is NostromoClientError {
 }
 
 /** Returns the failure as a `NostromoClientError`, wrapping anything the client did not raise. */
-export function toClientError(error: unknown, message: string): NostromoClientError {
+function toClientError(error: unknown, message: string): NostromoClientError {
   if (error instanceof NostromoClientError) {
     return error
   }

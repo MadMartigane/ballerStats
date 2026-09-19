@@ -50,7 +50,7 @@ import {
   clearBaseline,
   getDirtyUnits,
   pushNostromoLog,
-  setBaseline,
+  setBaselines,
   setDirtyUnits,
   setNostromoSyncStatus,
 } from './nostromo-sync-store'
@@ -381,9 +381,10 @@ function settleRestoredUnits(report: ApplyReport): void {
   const settled = new Set([...report.applied, ...report.deletedPhotos])
   cancelDirtyDebounce()
 
-  for (const entry of report.baselines) {
-    setBaseline(entry.unit, { docId: entry.docId, savedAt: Date.now(), version: entry.version })
-  }
+  // One grouped write for the whole run: every baseline is persisted in a single
+  // storage write, once the last local write of the run is behind us.
+  const savedAt = Date.now()
+  setBaselines(report.baselines.map(({ docId, unit, version }) => ({ baseline: { docId, savedAt, version }, unit })))
   for (const unit of settled) {
     resolveNostromoConflict(unit)
   }
@@ -453,13 +454,18 @@ async function pullPhotoUnit(config: NostromoConfig, photoUnit: NostromoPhotoPla
     return 'skipped'
   }
 
+  // The baseline must carry the version the server holds at apply time, not the
+  // one the plan froze: re-read it BEFORE the download, exactly like the
+  // collection path does, so the baseline never ends up ahead of the blob.
+  const fresh = await getDocument(config.baseUrl, config.token, remote.docId)
+
   // A file token lives about 180 seconds: mint a fresh one per download and
   // never reuse it across files.
   const fileToken = await getFileToken(config.baseUrl, config.token)
   const blob = await downloadFile(config.baseUrl, fileToken, remote.docId, remote.file)
   await storePulledPhoto(playerId, blob)
   pushNostromoLog('info', `Restauration Nostromo : photo du joueur ${playerId} reprise.`)
-  return { docId: remote.docId, version: remote.version }
+  return { docId: fresh.id, version: fresh.version }
 }
 
 /**

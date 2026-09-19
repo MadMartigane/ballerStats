@@ -20,8 +20,12 @@ import type { TrombiTitles } from '../trombi-titles'
 import { getTitles, persistTitles } from '../trombi-titles-store'
 import { photoDocId } from './client'
 import type { NostromoListUnitName, NostromoUnitName } from './nostromo-sync-store.d'
-import { buildCollectionPayload, type NostromoCollectionItem, type ValidCollectionRead } from './payload'
-import type { NostromoCollectionPayload } from './push-engine.d'
+import {
+  buildCollectionPayload,
+  type NostromoCollectionItem,
+  type NostromoCollectionPayload,
+  type ValidCollectionRead,
+} from './payload'
 
 /** One list unit: a store funnelling a whole array of id-carrying items. */
 export interface NostromoListUnit {

@@ -41,6 +41,11 @@ export interface BsNostromoLogMenuProps {
 export interface BsNostromoRestoreModalProps {
   /** True while an apply run is in flight: every action is disabled and a spinner is shown. */
   busy: boolean
+  /**
+   * Host of the configured server (`localhost:8090`), shown as the plan source.
+   * Absent when the app is unconfigured: the line is then not rendered.
+   */
+  host?: string
   /** Receives the user's choice; the parent runs the confirmation. */
   onDecision: (decision: NostromoRestoreDecision) => void
   /** Plan being confirmed: its warnings and counts are displayed. */

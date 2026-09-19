@@ -18,10 +18,27 @@
  */
 import type { TrombiTitles } from '../trombi-titles'
 import type { NostromoListUnitName, NostromoUnitName } from './nostromo-sync-store.d'
-import type { NostromoCollectionPayload, NostromoPhotoPayload } from './push-engine.d'
 
 /** Schema of every payload this app writes. Readers must refuse anything else. */
 export const NOSTROMO_PAYLOAD_SCHEMA = 1
+
+/**
+ * Envelope of a collection document payload: `items` holds the full cloned
+ * collection at push time (one entry for the single-object `trombiTitles`).
+ */
+export interface NostromoCollectionPayload {
+  items: unknown[]
+  name: NostromoUnitName
+  schema: number
+  type: 'collection'
+}
+
+/** Envelope of a photo document payload: the file itself travels as document file. */
+export interface NostromoPhotoPayload {
+  playerId: string
+  schema: number
+  type: 'photo'
+}
 
 /**
  * One entry of a list payload, as proven by the guard: a plain object carrying a
