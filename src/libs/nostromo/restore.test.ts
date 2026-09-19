@@ -85,6 +85,11 @@ vi.mock('./nostromo-sync-store', () => ({
   setBaseline: vi.fn((unit: string, baseline: { docId: string; savedAt: number; version: number }) => {
     syncState.baselines[unit] = { ...baseline }
   }),
+  setBaselines: vi.fn((updates: { baseline: { docId: string; savedAt: number; version: number }; unit: string }[]) => {
+    for (const { baseline, unit } of updates) {
+      syncState.baselines[unit] = { ...baseline }
+    }
+  }),
   setDirtyUnits: vi.fn((units: string[]) => {
     syncState.outbox = units.filter((unit, index) => unit !== '' && units.indexOf(unit) === index)
   }),
@@ -501,7 +506,7 @@ describe('applyNostromoRestore', () => {
     expect(replaceAllPlayers).toHaveBeenCalledWith([{ id: 'p1' }])
     expect(replaceAllTeams).toHaveBeenCalledWith([{ id: 't1' }])
     expect(replaceAllClubs).not.toHaveBeenCalled()
-    expect(getDocument).toHaveBeenCalledTimes(2)
+    expect(getDocument).toHaveBeenCalledTimes(3)
 
     expect(storePhoto).toHaveBeenCalledWith(PLAYER_ID, expect.any(Blob))
     expect(getFileToken).toHaveBeenCalledTimes(1)
@@ -518,6 +523,43 @@ describe('applyNostromoRestore', () => {
     expect(result.failedUnits).toEqual([])
     expect(syncState.status).toBe('saved')
     expect(logMessages().join(' | ')).toContain(`photo du joueur ${PLAYER_ID} reprise`)
+  })
+
+  it('re-baselines a pulled photo with the version re-read at apply time', async () => {
+    const listed = photoDocument(4)
+    serveListing([listed])
+    serveLocalPhotos([PLAYER_ID])
+    // The plan froze version 4; the document moved on before the user
+    // confirmed. The apply must re-read the document and keep the fresh version
+    // as the baseline, exactly like the collection path does.
+    vi.mocked(getDocument).mockResolvedValue({ ...listed, version: 5 })
+
+    const plan = await planNostromoRestore()
+    expect(photoUnit(plan).remote?.version).toBe(4)
+
+    const result = await applyNostromoRestore(plan)
+
+    expect(getDocument).toHaveBeenCalledWith(BASE_URL, AUTH_TOKEN, photoDocId(PLAYER_ID))
+    expect(downloadFile).toHaveBeenCalledTimes(1)
+    expect(syncState.baselines[PHOTO_UNIT]).toMatchObject({ docId: photoDocId(PLAYER_ID), version: 5 })
+    expect(result.appliedUnits).toEqual([PHOTO_UNIT])
+    expect(result.failedUnits).toEqual([])
+  })
+
+  it('fails a photo unit without writing a baseline when the document vanished after the plan', async () => {
+    const listed = photoDocument(4)
+    serveListing([listed])
+    serveLocalPhotos([PLAYER_ID])
+    vi.mocked(getDocument).mockRejectedValue(notFound(photoDocId(PLAYER_ID)))
+
+    const plan = await planNostromoRestore()
+    const result = await applyNostromoRestore(plan)
+
+    expect(downloadFile).not.toHaveBeenCalled()
+    expect(syncState.baselines[PHOTO_UNIT]).toBeUndefined()
+    expect(result.failedUnits).toEqual([PHOTO_UNIT])
+    expect(syncState.status).toBe('error')
+    expect(logMessages().join(' ')).toContain('a échoué')
   })
 
   it('mints one file token per downloaded photo', async () => {

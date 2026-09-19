@@ -1,8 +1,14 @@
 import { CloudDownload, CloudUpload, LoaderCircle, X } from 'lucide-solid'
 import { createUniqueId, For, onMount, Show } from 'solid-js'
-import type { NostromoRestoreDecision } from '../../libs/nostromo/restore.d'
-import { describeNostromoPlan } from './bs-nostromo-status'
+import type { NostromoRestoreDecision, NostromoRestorePlan } from '../../libs/nostromo/restore.d'
+import { countNostromoPlanChanges, describeNostromoPlan } from './bs-nostromo-status'
 import type { BsNostromoRestoreModalProps } from './bs-nostromo-sync.d'
+
+/** Neutral title of the modal, for a plan that overwrites and deletes nothing: correct French plural. */
+function neutralPlanTitle(plan: NostromoRestorePlan): string {
+  const changes = countNostromoPlanChanges(plan)
+  return `Vous allez appliquer ${changes} changement${changes > 1 ? 's' : ''} depuis le serveur.`
+}
 
 /**
  * Confirmation modal of a restore plan: the user reads what a pull would
@@ -52,8 +58,16 @@ export default function BsNostromoRestoreModal(props: BsNostromoRestoreModalProp
           </button>
         </div>
 
-        <p class="mt-4 font-medium text-warning">Vous allez écraser des données plus récentes.</p>
+        {/* `requiresConfirmation` is the plan's destructive signal: it is only set
+            when a pull overwrites local data or deletes a local photo. */}
+        <Show
+          fallback={<p class="mt-4 font-medium">{neutralPlanTitle(props.plan)}</p>}
+          when={props.plan.requiresConfirmation}
+        >
+          <p class="mt-4 font-medium text-warning">Vous allez écraser des données plus récentes.</p>
+        </Show>
         <p class="mt-1 text-base-content/70 text-sm">{describeNostromoPlan(props.plan)}</p>
+        <Show when={props.host}>{(host) => <p class="mt-1 text-base-content/70 text-sm">Source : {host()}.</p>}</Show>
 
         <Show when={props.plan.warnings.length > 0}>
           <ul class="mt-2 max-h-64 list-disc space-y-1 overflow-y-auto pl-4 text-sm">

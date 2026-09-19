@@ -4,6 +4,7 @@ import { getStoredDataSync, storeData } from '../store/store'
 import type {
   NostromoBaseline,
   NostromoBaselines,
+  NostromoBaselineUpdate,
   NostromoLogEntry,
   NostromoLogLevel,
   NostromoStatus,
@@ -167,6 +168,20 @@ export function setBaseline(unit: string, baseline: NostromoBaseline): void {
   ensureHydrated()
   const next = getAllBaselines()
   next[unit] = cloneBaseline(baseline)
+  replaceBaselines(next)
+}
+
+/**
+ * Stores several unit baselines in ONE grouped write: the `next` map is computed
+ * purely, then persisted exactly once. Used by a restore run, which settles every
+ * unit it applied at the end and must not write the storage once per unit.
+ */
+export function setBaselines(updates: readonly NostromoBaselineUpdate[]): void {
+  ensureHydrated()
+  const next = getAllBaselines()
+  for (const { baseline, unit } of updates) {
+    next[unit] = cloneBaseline(baseline)
+  }
   replaceBaselines(next)
 }
 
