@@ -247,6 +247,25 @@ describe('push-engine', () => {
     expect(hasLog('info', 'Envoi de clubs (version 4)')).toBe(true)
   })
 
+  it('recreates a baselined document the server no longer holds instead of looping on the 404', async () => {
+    // A full wipe pushed from another device deletes the remote documents: the
+    // stale baseline must not turn every later update into a 404 error.
+    setBaseline('clubs', { docId: collectionDocId('clubs'), savedAt: 1, version: 5 })
+    updateDocumentMock.mockRejectedValue(clientError('notfound', 404))
+    serveCreate(6)
+    setDirtyUnits(['clubs'])
+
+    await flushNostromoPush()
+
+    expect(updateDocumentMock).toHaveBeenCalledTimes(1)
+    expect(createDocumentMock).toHaveBeenCalledTimes(1)
+    expect(createDocumentMock.mock.calls[0][2].id).toBe(collectionDocId('clubs'))
+    expect(getBaseline('clubs')?.version).toBe(6)
+    expect(getDirtyUnits()).toEqual([])
+    expect(getNostromoSyncStatus()).toBe('saved')
+    expect(hasLog('warn', 'Document distant de clubs introuvable (404)')).toBe(true)
+  })
+
   it('adopts an existing document when the create is refused, then converges in the same run', async () => {
     createDocumentMock.mockRejectedValue(clientError('validation', 400))
     getDocumentMock.mockResolvedValue(makeDocument(7, { id: collectionDocId('clubs') }))
@@ -497,6 +516,29 @@ describe('push-engine photos', () => {
     })
     expect(getBaseline(unit)?.version).toBe(7)
     expect(getDirtyUnits()).toEqual([])
+  })
+
+  it('recreates the document of a photo whose remote document was deleted', async () => {
+    const playerId = 'p9'
+    const unit = photoUnitName(playerId)
+    setBaseline(unit, { docId: photoDocId(playerId), savedAt: 1, version: 5 })
+    updateDocumentMock.mockRejectedValue(clientError('notfound', 404))
+    serveCreate(6)
+    uploadDocumentFileMock.mockResolvedValue(makeDocument(7, { id: photoDocId(playerId) }))
+    getPhotoMock.mockResolvedValue(makeBlob())
+
+    await storePhoto(playerId, makeBlob())
+    await flushNostromoPush()
+
+    expect(createDocumentMock).toHaveBeenCalledTimes(1)
+    expect(uploadDocumentFileMock).toHaveBeenCalledWith(BASE_URL, TOKEN, photoDocId(playerId), {
+      expectedVersion: 6,
+      file: expect.any(Blob),
+      filename: 'p9.webp',
+    })
+    expect(getBaseline(unit)?.version).toBe(7)
+    expect(getDirtyUnits()).toEqual([])
+    expect(getNostromoSyncStatus()).toBe('saved')
   })
 
   it('adopts an existing photo document when the create is refused', async () => {

@@ -102,3 +102,34 @@ export function isConfigured(): boolean {
   const config = getConfig()
   return Boolean(config?.baseUrl && config.token && config.userId)
 }
+
+/**
+ * Host of the configured backend (`localhost:8090`), or null when the app is not
+ * configured (or the stored url is not a parseable http url).
+ *
+ * Every destructive confirmation names the server its change propagates to, so
+ * that the user knows a wipe reaches the backup too. That naming has one source:
+ * this function.
+ */
+export function getNostromoHostName(): string | null {
+  const baseUrl = getConfig()?.baseUrl
+  if (!baseUrl) {
+    return null
+  }
+  try {
+    return new URL(baseUrl).host
+  } catch {
+    return null
+  }
+}
+
+/**
+ * French ` (host)` reference to the configured server, or an empty string when
+ * unconfigured. The destructive confirmations embed it verbatim instead of each
+ * branching on the configuration: offline, the reference simply disappears from
+ * the sentence.
+ */
+export function nostromoServerReference(): string {
+  const host = getNostromoHostName()
+  return host ? ` (${host})` : ''
+}

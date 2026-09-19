@@ -23,17 +23,9 @@
  * stores (`./units`): it never hydrates, never persists and never subscribes.
  */
 import { getPhoto, PHOTO_FILE_EXTENSION } from '../photo-store/photo-store'
-import {
-  createDocument,
-  deleteDocument,
-  getDocument,
-  NostromoClientError,
-  photoDocId,
-  updateDocument,
-  uploadDocumentFile,
-} from './client'
-import type { NostromoDocument } from './client.d'
+import { deleteDocument, NostromoClientError, photoDocId, updateDocument, uploadDocumentFile } from './client'
 import { armDirtyDebounce, cancelDirtyDebounce, PHOTO_UNIT_PREFIX, setDirtyFlushRunner } from './dirty-marks'
+import { createOrAdoptDocument, type DocumentStart } from './document-write'
 import { getConfig, isConfigured } from './nostromo-config-store'
 import type { NostromoConfig } from './nostromo-config-store.d'
 import {
@@ -49,8 +41,8 @@ import {
   setNostromoSyncStatus,
 } from './nostromo-sync-store'
 import type { NostromoBaseline, NostromoStatus, NostromoUnitName } from './nostromo-sync-store.d'
-import { buildPhotoPayload, describeError } from './payload'
-import type { NostromoCollectionPayload, NostromoPhotoPayload, NostromoPushOutcome } from './push-engine.d'
+import { buildPhotoPayload, describeError, type NostromoCollectionPayload, type NostromoPhotoPayload } from './payload'
+import type { NostromoPushOutcome } from './push-engine.d'
 import {
   buildUnitPayload,
   collectionDocId,
@@ -193,8 +185,14 @@ async function pushUnit(config: NostromoConfig, unit: string, revision: number):
     if (unit.startsWith(PHOTO_UNIT_PREFIX)) {
       return await pushPhotoUnit(config, unit, revision)
     }
-    // `selectPushableUnits` only ever returns collection names and photo units.
-    return await pushCollectionUnit(config, unit as NostromoUnitName, revision)
+    if (!isCollectionUnitName(unit)) {
+      // `selectPushableUnits` only ever queues collection names and photo units:
+      // anything else is a corrupted outbox entry, refused like a failed push.
+      throw new NostromoClientError(`L'unité « ${unit} » n'est pas une collection synchronisable.`, {
+        kind: 'unknown',
+      })
+    }
+    return await pushCollectionUnit(config, unit, revision)
   } catch (error) {
     return reportUnitFailure(unit, error)
   }
@@ -213,7 +211,7 @@ function reportUnitFailure(unit: string, error: unknown): NostromoPushOutcome {
     case 'conflict':
       pushNostromoLog(
         'error',
-        `Conflit sur ${unit} : la copie du serveur a dépassé la dernière référence locale. Les changements locaux sont conservés ; l'élément reste en attente jusqu'à la résolution du conflit.`
+        `Conflit sur ${unit} : la copie du serveur a dépassé la dernière référence locale. Les changements locaux sont conservés, suppression récente comprise ; l'élément reste en attente jusqu'à la résolution du conflit.`
       )
       return 'conflict'
     default:
@@ -323,25 +321,22 @@ async function deleteRemoteDocument(config: NostromoConfig, docId: string): Prom
   try {
     await deleteDocument(config.baseUrl, config.token, docId)
   } catch (error) {
-    if (error instanceof NostromoClientError && error.kind === 'notfound') {
+    if (isNotFoundError(error)) {
       return
     }
     throw error
   }
 }
 
-/** What a push learned about the document of a unit before writing it. */
-interface DocumentStart {
-  /** True when the document already existed and only its version was adopted. */
-  adopted: boolean
-  /** Version the caller must send as `expectedVersion` for its next write. */
-  version: number
-}
-
 /**
  * Brings the unit document to a known version: the baselined one is reused, an
  * unknown one is created (or adopted when a create is refused because the id is
  * already taken).
+ *
+ * A baselined document the server no longer holds (404: it was deleted, e.g. by
+ * a full wipe pushed from another device) must not loop on the update error: the
+ * write falls back to the create path, so the document is recreated from the
+ * local data and the run converges.
  */
 async function startDocument(
   config: NostromoConfig,
@@ -353,53 +348,24 @@ async function startDocument(
   if (!baseline) {
     return await createOrAdoptDocument(config, docId, payload)
   }
-  const updated = await updateDocument(config.baseUrl, config.token, docId, {
-    expectedVersion: baseline.version,
-    payload,
-  })
-  return { adopted: false, version: updated.version }
-}
-
-/**
- * Creates the unit document, or learns the version of the one already stored
- * under that id.
- *
- * A 400 on a create is ambiguous by contract: the id may be taken (it always is
- * when two machines derive it from the same name) or the create rule refused the
- * body. Re-reading the id tells the two apart: a readable document is adopted (its
- * version only is learned here, the caller decides what to write with it), a 404
- * rethrows the original refusal so the run reports a real error.
- */
-async function createOrAdoptDocument(
-  config: NostromoConfig,
-  docId: string,
-  payload: NostromoCollectionPayload | NostromoPhotoPayload
-): Promise<DocumentStart> {
   try {
-    const created = await createDocument(config.baseUrl, config.token, { id: docId, owner: config.userId, payload })
-    return { adopted: false, version: created.version }
+    const updated = await updateDocument(config.baseUrl, config.token, docId, {
+      expectedVersion: baseline.version,
+      payload,
+    })
+    return { adopted: false, version: updated.version }
   } catch (error) {
-    if (!isIdRefusal(error)) {
+    if (!isNotFoundError(error)) {
       throw error
     }
-    const existing = await readAdoptedDocument(config, docId, error)
-    return { adopted: true, version: existing.version }
+    pushNostromoLog('warn', `Document distant de ${unit} introuvable (404) : recréation à partir des données locales.`)
+    return await createOrAdoptDocument(config, docId, payload)
   }
 }
 
-function isIdRefusal(error: unknown): boolean {
-  return error instanceof NostromoClientError && error.kind === 'validation' && error.status === 400
-}
-
-async function readAdoptedDocument(config: NostromoConfig, docId: string, refusal: unknown): Promise<NostromoDocument> {
-  try {
-    return await getDocument(config.baseUrl, config.token, docId)
-  } catch (error) {
-    if (error instanceof NostromoClientError && error.kind === 'notfound') {
-      throw refusal
-    }
-    throw error
-  }
+/** True when the server no longer holds the document being read, written or deleted (HTTP 404). */
+function isNotFoundError(error: unknown): boolean {
+  return error instanceof NostromoClientError && error.kind === 'notfound'
 }
 
 /**

@@ -11,8 +11,9 @@ import BsIconBasketballPlayer from '../components/icons/basketball-player'
 import BsIconPersonPlay from '../components/icons/person-play'
 import BsToggle from '../components/toggle/toggle'
 import MadSignal from '../libs/mad-signal'
+import { nostromoServerReference } from '../libs/nostromo/nostromo-config-store'
 import orchestrator, { DB_FILE_EXTENSION } from '../libs/orchestrator/orchestrator'
-import { toast } from '../libs/utils/utils'
+import { confirmAction, toast } from '../libs/utils/utils'
 import { vibrate } from '../libs/vibrator/vibrator'
 
 const displayDemo = new MadSignal(false)
@@ -21,7 +22,15 @@ const SHOWCASE_PERSON_PLAY_SIZE = 54
 const SHOWCASE_PANEL_SIZE = 84
 const SHOWCASE_MEDAL_SIZE = 96
 
-function runBigClean() {
+async function runBigClean() {
+  const confirmed = await confirmAction(
+    'Grand nettoyage',
+    `Supprimer les équipes et contacts orphelins ? La sauvegarde serveur${nostromoServerReference()} sera mise à jour lors de la prochaine synchronisation.`
+  )
+  if (!confirmed) {
+    return
+  }
+
   bigCleanInProgress.set(true)
   orchestrator.bigClean()
   setTimeout(() => {

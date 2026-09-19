@@ -33,10 +33,97 @@ vi.mock('../photo-store/photo-store', async (importOriginal) => {
   }
 })
 
+/**
+ * `batch` is the atomicity boundary under test: the probe lets a test assert
+ * that the collection replacements happened while a batch was open, without
+ * changing what `batch` does.
+ */
+const batchProbe = vi.hoisted(() => ({
+  depth: 0,
+  matchReplacementDepths: [] as number[],
+  teamReplacementDepths: [] as number[],
+}))
+
+vi.mock('solid-js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('solid-js')>()
+  return {
+    ...actual,
+    batch: (fn: () => void) => {
+      batchProbe.depth += 1
+      try {
+        return actual.batch(fn)
+      } finally {
+        batchProbe.depth -= 1
+      }
+    },
+  }
+})
+
+/** Persistence funnels are mocked so an overwrite never touches storage. */
+vi.mock('../store/store', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../store/store')>()
+  return {
+    ...actual,
+    storeClubs: vi.fn(() => Promise.resolve()),
+    storeContacts: vi.fn(() => Promise.resolve()),
+    storeMatchs: vi.fn(() => Promise.resolve()),
+    storePlayers: vi.fn(() => Promise.resolve()),
+    storeTeams: vi.fn(() => Promise.resolve()),
+  }
+})
+
+/** Keeps the `.bstat` import flow independent from the sync layer. */
+vi.mock('../nostromo/dirty-marks', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../nostromo/dirty-marks')>()
+  return {
+    ...actual,
+    markCollectionDirty: vi.fn(),
+  }
+})
+
+/** The sync edges are mocked: the import flow is asserted, not the sync layer itself. */
+vi.mock('../nostromo/import-orphans', () => ({
+  deleteOrphanRemotePhotos: vi.fn(() => Promise.resolve({ deleted: [], failed: [] })),
+  listOrphanRemotePhotos: vi.fn(() => Promise.resolve([])),
+}))
+
+vi.mock('../nostromo/remote-snapshot', () => ({
+  captureRemoteSnapshot: vi.fn(() => Promise.resolve()),
+}))
+
+// The teams/matchs stores run for real; only the replacement funnel is spied on
+// (and the cumulative `add*` path is trapped so a regression is caught).
+vi.mock('../stores/teams-store', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../stores/teams-store')>()
+  return {
+    ...actual,
+    // Delegating mock: it still throws on a duplicate id like the real funnel,
+    // so the double-import test catches a regression back to cumulative adds.
+    addTeam: vi.fn(actual.addTeam),
+    replaceAllTeams: vi.fn((raws: TeamRawData[]) => {
+      batchProbe.teamReplacementDepths.push(batchProbe.depth)
+      actual.replaceAllTeams(raws)
+    }),
+  }
+})
+
+vi.mock('../stores/matchs-store', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../stores/matchs-store')>()
+  return {
+    ...actual,
+    addMatch: vi.fn(actual.addMatch),
+    replaceAllMatchs: vi.fn((raws: MatchRawData[]) => {
+      batchProbe.matchReplacementDepths.push(batchProbe.depth)
+      actual.replaceAllMatchs(raws)
+    }),
+  }
+})
+
 vi.mock('../photo-store/photo-store', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../photo-store/photo-store')>()
   return {
     ...actual,
+    clearAllPhotos: vi.fn(actual.clearAllPhotos),
     deletePhotoAndFlag: vi.fn(),
     setPhotoAndFlag: vi.fn(),
   }
@@ -49,8 +136,12 @@ vi.mock('../photo-store/photo-store', async (importOriginal) => {
  * effects. The typed interface only exposes what the test needs.
  */
 interface OrchestratorParseMethods {
+  doClearDB: () => Promise<void>
+  doOverwriteDB: (json: GlobalDB) => Promise<void>
+  executeImport: (rawData: GlobalDB, photos?: Map<string, Blob>) => Promise<unknown>
   importDB: (event: { currentTarget: HTMLInputElement; target: HTMLInputElement }) => Promise<void>
   parseImportData: (uint8: Uint8Array) => Promise<{ rawData: GlobalDB; photos?: Map<string, Blob> }>
+  replaceDataset: (dataset: DomainDataset) => Promise<void>
   tryParseZip: (uint8: Uint8Array) => Promise<{ rawData: GlobalDB; photos: Map<string, Blob> } | null>
 }
 
@@ -77,6 +168,18 @@ function archiveBytes(data: GlobalDB | Record<string, unknown>): Uint8Array {
 function zipArchiveBytes(data: GlobalDB | Record<string, unknown>): Uint8Array {
   const payload = archiveBytes(data)
   return zipSync({ 'data.json': payload }, {})
+}
+
+/** A zipped archive holding one player and its photo blob. */
+function zipArchiveWithPhoto(): Uint8Array {
+  const data = {
+    contacts: null,
+    matchs: [],
+    players: [{ clubId: 'c1', firstName: 'Nina', hasPhoto: true, id: 'p1', jerseyNumber: '10', lastName: 'Dupont' }],
+    teams: [],
+    timestamp: 1_700_000_000_000,
+  }
+  return zipSync({ 'data.json': strToU8(JSON.stringify(data)), 'photos/p1.webp': new Uint8Array([1, 2, 3]) }, {})
 }
 
 function fileUploadEvent(uint8: Uint8Array): { currentTarget: HTMLInputElement; target: HTMLInputElement } {
