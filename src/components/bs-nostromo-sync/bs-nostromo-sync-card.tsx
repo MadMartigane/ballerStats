@@ -1,8 +1,8 @@
-import { CloudDownload, LoaderCircle, LogIn, LogOut, RefreshCw, TriangleAlert } from 'lucide-solid'
-import { createMemo, createSignal, createUniqueId, Show } from 'solid-js'
+import { CloudDownload, History, LoaderCircle, LogIn, LogOut, RefreshCw, RotateCcw, TriangleAlert } from 'lucide-solid'
+import { createMemo, createSignal, createUniqueId, onMount, Show } from 'solid-js'
 import { authWithPassword } from '../../libs/nostromo/client'
 import { getNostromoBaseUrl } from '../../libs/nostromo/env'
-import { clearConfig, getConfig, setConfig } from '../../libs/nostromo/nostromo-config-store'
+import { clearConfig, getConfig, getNostromoHostName, setConfig } from '../../libs/nostromo/nostromo-config-store'
 import {
   getDirtyUnits,
   getNostromoLog,
@@ -12,9 +12,11 @@ import {
   setNostromoSyncStatus,
 } from '../../libs/nostromo/nostromo-sync-store'
 import { flushNostromoPush, getConflictedUnits } from '../../libs/nostromo/push-engine'
+import { describeRemoteSnapshot, restoreRemoteSnapshot } from '../../libs/nostromo/remote-snapshot'
+import type { RemoteSnapshotDescription } from '../../libs/nostromo/remote-snapshot.d'
 import { confirmNostromoRestore, planNostromoRestore } from '../../libs/nostromo/restore'
 import type { NostromoRestoreDecision, NostromoRestorePlan } from '../../libs/nostromo/restore.d'
-import { toast } from '../../libs/utils/utils'
+import { confirmAction, toast } from '../../libs/utils/utils'
 import BsNostromoRestoreModal from './bs-nostromo-restore-modal'
 import {
   describeNostromoAuthError,
@@ -22,7 +24,9 @@ import {
   describeNostromoPlan,
   describeNostromoRestoreError,
   describeNostromoRestoreResult,
+  describeNostromoSnapshot,
   formatNostromoLogTime,
+  formatNostromoSnapshotDate,
   isNostromoAuthError,
   isNostromoStatusBusy,
   NOSTROMO_CARD_TITLE,
@@ -56,6 +60,7 @@ export default function BsNostromoSyncCard(props: BsNostromoSyncCardProps) {
   const passwordId = createUniqueId()
 
   const config = createMemo(() => getConfig())
+  const serverHost = createMemo(() => getNostromoHostName() ?? undefined)
   const status = () => nostromoSync.status
   const lastEntry = createMemo(() => getNostromoLog().at(-1))
   const conflictedUnits = createMemo(() => getConflictedUnits())
@@ -68,8 +73,10 @@ export default function BsNostromoSyncCard(props: BsNostromoSyncCardProps) {
   const [flushBusy, setFlushBusy] = createSignal(false)
   const [restoreBusy, setRestoreBusy] = createSignal(false)
   const [plan, setPlan] = createSignal<NostromoRestorePlan | undefined>(undefined)
+  const [snapshot, setSnapshot] = createSignal<RemoteSnapshotDescription | undefined>(undefined)
+  const [snapshotBusy, setSnapshotBusy] = createSignal(false)
 
-  const busy = () => loginBusy() || flushBusy() || restoreBusy() || isNostromoStatusBusy(status())
+  const busy = () => loginBusy() || flushBusy() || restoreBusy() || snapshotBusy() || isNostromoStatusBusy(status())
   const configured = () => Boolean(config())
 
   const onBaseUrlChange = makeValueChangeHandler(setBaseUrl)
@@ -223,6 +230,53 @@ export default function BsNostromoSyncCard(props: BsNostromoSyncCardProps) {
     runDetached(runRestoreDecision(current, decision), reportRestoreFailure)
   }
 
+  /** Reads the stored snapshot, if any: the entry is hidden while none exists. */
+  async function refreshSnapshot(): Promise<void> {
+    setSnapshot(await describeRemoteSnapshot())
+  }
+
+  /** Restores the safety net after an explicit confirmation, then refreshes the entry. */
+  async function restoreSnapshot(): Promise<void> {
+    const current = snapshot()
+    if (!current) {
+      return
+    }
+    const confirmed = await confirmAction(
+      "Restaurer l'instantané serveur",
+      `Restaurer l'instantané serveur ? Les données locales actuelles seront remplacées par le contenu du serveur capturé le ${formatNostromoSnapshotDate(current.createdAt)}.`
+    )
+    if (!confirmed) {
+      return
+    }
+
+    setSnapshotBusy(true)
+    try {
+      const result = await restoreRemoteSnapshot()
+      const failed = result.failedUnits.length > 0
+      toast(
+        `Instantané serveur restauré : ${result.collections} collections, ${result.photos} photos.`,
+        failed ? 'warning' : 'success'
+      )
+    } catch (error) {
+      toast(describeNostromoRestoreError(error), 'error')
+    } finally {
+      setSnapshotBusy(false)
+      runDetached(refreshSnapshot(), reportSnapshotFailure)
+    }
+  }
+
+  function onRestoreSnapshot(): void {
+    runDetached(restoreSnapshot(), reportSnapshotFailure)
+  }
+
+  function reportSnapshotFailure(error: unknown): void {
+    console.error('snapshot restore failed:', error)
+  }
+
+  onMount(() => {
+    runDetached(refreshSnapshot(), reportSnapshotFailure)
+  })
+
   return (
     <div class="card bg-base-300 text-base-content">
       <div class="card-body">
@@ -344,8 +398,35 @@ export default function BsNostromoSyncCard(props: BsNostromoSyncCardProps) {
           </Show>
         </div>
 
+        <Show when={snapshot()}>
+          {(current) => (
+            <div class="mt-4 flex flex-wrap items-center gap-2 text-sm">
+              <History />
+              <span>{describeNostromoSnapshot(current())}</span>
+              <button
+                class="btn btn-sm btn-warning"
+                disabled={!configured() || busy()}
+                onClick={onRestoreSnapshot}
+                type="button"
+              >
+                <Show fallback={<RotateCcw />} when={snapshotBusy()}>
+                  <LoaderCircle class="animate-spin" />
+                </Show>
+                Restaurer l'instantané serveur
+              </button>
+            </div>
+          )}
+        </Show>
+
         <Show when={plan()}>
-          {(current) => <BsNostromoRestoreModal busy={restoreBusy()} onDecision={onRestoreDecision} plan={current()} />}
+          {(current) => (
+            <BsNostromoRestoreModal
+              busy={restoreBusy()}
+              host={serverHost()}
+              onDecision={onRestoreDecision}
+              plan={current()}
+            />
+          )}
         </Show>
       </div>
     </div>

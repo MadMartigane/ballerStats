@@ -4,6 +4,10 @@ import type { ClubRawData } from '../club/club.d'
 import { createDefaultClubData, migrateClubData } from '../club/club-migration'
 import type { ContactRawData } from '../contact/contact.d'
 import Match from '../match/match'
+import type { NostromoDocument } from '../nostromo/client.d'
+import { deleteOrphanRemotePhotos, listOrphanRemotePhotos } from '../nostromo/import-orphans'
+import { nostromoServerReference } from '../nostromo/nostromo-config-store'
+import { captureRemoteSnapshot } from '../nostromo/remote-snapshot'
 import {
   clearAllPhotos,
   deletePhoto,
@@ -33,7 +37,7 @@ import {
 } from '../store/store'
 import { getRawClubs, hydrateClubs, replaceAllClubs } from '../stores/clubs-store'
 import { getRawContacts, hydrateContacts, replaceAllContacts, replacePlayerContacts } from '../stores/contacts-store'
-import { addMatch, getMatchById, getRawMatchs, hydrateMatchs, replaceAllMatchs } from '../stores/matchs-store'
+import { getMatchById, getRawMatchs, hydrateMatchs, replaceAllMatchs } from '../stores/matchs-store'
 import {
   addPlayer,
   getPlayerById,
@@ -42,7 +46,7 @@ import {
   replaceAllPlayers,
   updatePlayer,
 } from '../stores/players-store'
-import { addTeam, getRawTeams, getTeamById, hydrateTeams, replaceAllTeams } from '../stores/teams-store'
+import { getRawTeams, getTeamById, hydrateTeams, replaceAllTeams } from '../stores/teams-store'
 import Team from '../team/team'
 import type { TeamRawData } from '../team/team.d'
 import type { TrombiTitles } from '../trombi-titles'
@@ -216,16 +220,8 @@ export class Orchestrator {
     }
   }
 
-  private addAll(dataset: DomainDataset): void {
-    for (const team of dataset.teams ?? []) {
-      addTeam(team.getRawData())
-    }
-    for (const match of dataset.matchs ?? []) {
-      addMatch(match.getRawData())
-    }
-  }
-
   private async doClearDB() {
+    await this.captureServerSnapshot('vidage')
     batch(() => {
       replaceAllPlayers([])
       replaceAllContacts([])
@@ -237,6 +233,78 @@ export class Orchestrator {
     await clearAllPhotos()
   }
 
+  /**
+   * Best-effort capture of the remote state before a destructive flow starts.
+   * Awaited so the snapshot is taken before anything is destroyed, but a failed
+   * capture never blocks the flow: an unreachable network is not a reason to
+   * stop the user (the tradeoff is a destructive run without a net). Returns the
+   * listing the capture read, so a later step of the same flow reuses it.
+   */
+  private async captureServerSnapshot(reason: string): Promise<NostromoDocument[] | undefined> {
+    try {
+      return await captureRemoteSnapshot(reason)
+    } catch (error) {
+      console.error('captureRemoteSnapshot failed:', error)
+      return undefined
+    }
+  }
+
+  /**
+   * Announces and deletes the remote photos the imported archive does not hold.
+   *
+   * Only called after the local wipe: the wipe removed every local photo (and
+   * queued the surviving-photo units for deletion), so an orphan is remote-only
+   * by construction. Without the wipe the previous photos stay on the device:
+   * deleting their remote documents would leave local blobs whose server copies
+   * are gone, so the caller skips this cleanup entirely.
+   *
+   * `listedDocuments` is the listing the pre-destructive capture already read, so
+   * this step does not list the remote state a second time. A photo the user
+   * declines to delete is kept on the server, and a later restore may bring it
+   * back. Never throws: the import stays functional and independent from the sync.
+   */
+  private async removeOrphanRemotePhotos(
+    photos: Map<string, Blob> | undefined,
+    listedDocuments: NostromoDocument[] | undefined
+  ): Promise<void> {
+    const importedPlayerIds = new Set(photos?.keys() ?? [])
+    const orphans = await listOrphanRemotePhotos(importedPlayerIds, listedDocuments).catch((error: unknown) => {
+      console.error('importDB: remote photo listing failed:', error)
+    })
+    if (!orphans || orphans.length === 0) {
+      return
+    }
+
+    const proceed = await confirmAction(
+      'Photos distantes orphelines',
+      `${orphans.length} photo(s) distante(s) absente(s) de l'archive seront supprimée(s) du serveur${nostromoServerReference()}.`
+    )
+    if (!proceed) {
+      toast(
+        'Photos distantes conservées : une prochaine restauration depuis le serveur pourra les réintroduire.',
+        'warning'
+      )
+      return
+    }
+
+    const deletion = await deleteOrphanRemotePhotos(orphans)
+    toast(
+      `${deletion.deleted.length} photo(s) distante(s) supprimée(s).`,
+      deletion.failed.length > 0 ? 'warning' : 'success'
+    )
+  }
+
+  /**
+   * Overwrite the whole database from an archive, atomically: the five domain
+   * collections are replaced back-to-back inside a single `batch` (no await in
+   * between), each persisted exactly once by its own store funnel. Teams and
+   * matchs go through `replaceAll*` (full replacement) and NOT through the
+   * cumulative `add*` path, so re-importing the same archive is a no-op instead
+   * of failing mid-loop on an already-registered id after a partial commit.
+   *
+   * `migration.teams` (clubId-stamped) is used rather than `json.teams`: teams
+   * must carry a clubId, exactly like the players/clubs path above.
+   */
   private async doOverwriteDB(json: GlobalDB) {
     const migration = migrateClubData({
       clubs: json.clubs,
@@ -247,11 +315,9 @@ export class Orchestrator {
     batch(() => {
       replaceAllPlayers(migration.players)
       replaceAllContacts(json.contacts ?? [])
+      replaceAllTeams(migration.teams)
+      replaceAllMatchs(json.matchs)
       replaceAllClubs(migration.clubs)
-    })
-    this.addAll({
-      matchs: json.matchs.map((m) => new Match(m)),
-      teams: json.teams.map((t) => new Team(t)),
     })
     await persistTitles(migration.trombiTitles)
   }
@@ -368,7 +434,8 @@ export class Orchestrator {
   }
 
   /** Atomically replace all domain data with the given dataset. */
-  replaceDataset(dataset: DomainDataset): void {
+  async replaceDataset(dataset: DomainDataset): Promise<void> {
+    await this.captureServerSnapshot('jeu de démonstration')
     batch(() => {
       replaceAllPlayers((dataset.players ?? []).map((player) => player.getRawData()))
       replaceAllContacts((dataset.contacts ?? []).map((contact) => contact.getRawData()))
@@ -544,11 +611,12 @@ export class Orchestrator {
     return new Uint8Array(buffer)
   }
 
-  private async executeImport(rawData: GlobalDB, photos?: Map<string, Blob>): Promise<void> {
+  private async executeImport(rawData: GlobalDB, photos?: Map<string, Blob>): Promise<NostromoDocument[] | undefined> {
+    const listedDocuments = await this.captureServerSnapshot('import de sauvegarde')
     await this.doOverwriteDB(rawData)
 
     if (!photos || photos.size === 0) {
-      return
+      return listedDocuments
     }
 
     let photosError: Error | undefined
@@ -563,6 +631,7 @@ export class Orchestrator {
     if (photosError) {
       toast("Données importées mais certaines photos n'ont pas pu être restaurées.", 'error')
     }
+    return listedDocuments
   }
 
   async importDB(
@@ -593,19 +662,39 @@ export class Orchestrator {
 
     const proced = await confirmAction(
       'Importer les données',
-      `Vous êtes sur le point d\u2019importer ${rawData.players.length || 0} joueurs, ${rawData.teams.length || 0} équipes, ${rawData.matchs.length || 0} matchs et ${rawData.contacts?.length || 0} contacts.`
+      `Vous êtes sur le point d\u2019importer ${rawData.players.length || 0} joueurs, ${rawData.teams.length || 0} équipes, ${rawData.matchs.length || 0} matchs et ${rawData.contacts?.length || 0} contacts. Ces données remplaceront aussi la sauvegarde serveur${nostromoServerReference()} lors de la prochaine synchronisation.`
     )
     if (!proced) {
       return
     }
 
-    const cleanUpBefore = await confirmAction('Écraser les données', 'Voulez-vous écraser toutes les données ?')
+    const cleanUpBefore = await confirmAction(
+      'Écraser les données',
+      `Voulez-vous écraser toutes les données ? Les données actuelles, photos incluses, seront supprimées localement et de la sauvegarde serveur${nostromoServerReference()}.`
+    )
     if (cleanUpBefore) {
-      await this.doClearDB()
+      try {
+        await this.doClearDB()
+      } catch (error) {
+        // A partial wipe (some local photos survived) must abort the import:
+        // importing on top of a half-cleared database would mix the old and the
+        // new dataset. The user is told, the technical trace is kept.
+        console.error('importDB: local wipe failed:', error)
+        toast("Échec du nettoyage local : l'import a été annulé.", 'error')
+        return
+      }
     }
 
     try {
-      await this.executeImport(rawData, photos)
+      const listedDocuments = await this.executeImport(rawData, photos)
+      // The orphan cleanup only makes sense after a full local wipe: it deletes
+      // remote photos with no local counterpart, and the wipe is what removes
+      // the counterpart. Declining the wipe keeps the previous photos locally,
+      // so deleting their remote documents would create exactly the divergence
+      // this guard prevents.
+      if (cleanUpBefore) {
+        await this.removeOrphanRemotePhotos(photos, listedDocuments)
+      }
       toast('Import des nouvelles données réussi !', 'success')
     } catch (error) {
       console.error('importDB: executeImport failed:', error)

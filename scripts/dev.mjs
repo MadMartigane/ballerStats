@@ -11,6 +11,8 @@
  *      (an existing non-empty value is never overwritten, only reported);
  *   4. backend: `GET <VITE_NOSTROMO_URL>/api/health` with a short timeout, plus the option to
  *      start the sibling Nostromo repository and bootstrap its dev users;
+ *   4b. garde-fou: refuses to start Vite when the configured backend host is not local
+ *      (localhost / 127.0.0.1 / ::1), unless `NOSTROMO_ALLOW_NON_LOCAL=1` forces it;
  *   5. Vite: `pnpm exec vite` with inherited stdio, signals forwarded to the child.
  *
  * Non-interactive safety: when stdin is not a TTY (CI, pipes), nothing is ever prompted —
@@ -57,7 +59,10 @@ const NEWLINE_PATTERN = /\r?\n/
 const EXPORT_PREFIX_PATTERN = /^export\s+/
 const INLINE_COMMENT_PATTERN = /\s+#.*$/
 const TRAILING_SLASH_PATTERN = /\/+$/
-const LOCAL_BACKEND_PATTERN = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i
+// `new URL('http://[::1]:8090').hostname` keeps the brackets around the IPv6 literal.
+const LOCAL_BACKEND_HOSTNAMES = new Set(['localhost', '127.0.0.1', '[::1]'])
+// Escape hatch for the deliberate case of running the front against a non-local backend.
+const ALLOW_NON_LOCAL_ENV = 'NOSTROMO_ALLOW_NON_LOCAL'
 
 // --- logging -------------------------------------------------------------------
 
@@ -194,7 +199,14 @@ const isHttpUrl = (value) => {
   }
 }
 
-const isLocalBackendUrl = (url) => LOCAL_BACKEND_PATTERN.test(url)
+/** True when the url points at this machine: only those are safe to sync a dev session against. */
+const isLocalBackendUrl = (url) => {
+  try {
+    return LOCAL_BACKEND_HOSTNAMES.has(new URL(url).hostname.toLowerCase())
+  } catch {
+    return false
+  }
+}
 
 const healthUrlOf = (backendUrl) => `${backendUrl}${HEALTH_PATH}`
 
@@ -456,6 +468,30 @@ const ensureBackend = async (backendUrl) => {
   warn('L’app démarre sans backend (mode local seul)')
 }
 
+/**
+ * Refuses to start Vite when `.env` points at a non-local backend: document ids are derived from
+ * unit names, so a dev session writing to a shared instance would collide with it (create refused,
+ * adopt read 404, unit looping on error). `NOSTROMO_ALLOW_NON_LOCAL=1` keeps deliberate remote work
+ * possible and warns loudly instead.
+ */
+const ensureLocalBackendForVite = (backendUrl) => {
+  if (!backendUrl || isLocalBackendUrl(backendUrl)) {
+    return
+  }
+  if (process.env[ALLOW_NON_LOCAL_ENV] === '1') {
+    warn(
+      `${ALLOW_NON_LOCAL_ENV}=1 : backend non local accepté (${backendUrl}) — les écritures partiront sur ce serveur`
+    )
+    return
+  }
+  const context = INTERACTIVE ? 'session interactive' : 'session non interactive (CI ou pipe)'
+  die(
+    `${ENV_KEY}=${backendUrl} ne pointe pas vers un backend local : la ${context} est refusée pour ne pas écrire sur un serveur distant. ` +
+      'Utilisez localhost, 127.0.0.1 ou ::1, ou forcez avec ' +
+      `${ALLOW_NON_LOCAL_ENV}=1.`
+  )
+}
+
 const startVite = () => {
   closeReader()
   heading('Démarrage de Vite')
@@ -485,6 +521,7 @@ const main = async () => {
   if (backendUrl) {
     await ensureBackend(backendUrl)
   }
+  ensureLocalBackendForVite(backendUrl)
   startVite()
 }
 
