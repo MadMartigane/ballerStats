@@ -3,10 +3,13 @@ import { createStore } from 'solid-js/store'
 import { markCollectionDirty } from './nostromo/dirty-marks'
 import { getStoredDataSync, STORAGE_TROMBI_TITLES_KEY, storeData } from './store/store'
 import type { TrombiTitles } from './trombi-titles'
+import { toast } from './utils/utils'
 
 export const DEFAULT_TITLES: TrombiTitles = {
   teamName: '',
 }
+
+const LOCAL_SAVE_FAILURE_MESSAGE = 'Sauvegarde locale impossible : vos données ne seront pas synchronisées.'
 
 function loadInitialTitles(): TrombiTitles {
   const stored = getStoredDataSync<TrombiTitles>(STORAGE_TROMBI_TITLES_KEY)
@@ -18,15 +21,17 @@ function loadInitialTitles(): TrombiTitles {
 
 const [titles, setTitles] = createStore<TrombiTitles>(loadInitialTitles())
 
-async function persistTitles(newTitles: TrombiTitles): Promise<void> {
+function persistTitles(newTitles: TrombiTitles): void {
   setTitles({ teamName: newTitles.teamName })
-  await storeData(STORAGE_TROMBI_TITLES_KEY, newTitles)
+  storeData(STORAGE_TROMBI_TITLES_KEY, newTitles).catch((error: unknown) => {
+    console.error('storeData failed:', error)
+    toast(LOCAL_SAVE_FAILURE_MESSAGE, 'error')
+  })
   markCollectionDirty('trombiTitles')
 }
 
-export async function updateTitle<K extends keyof TrombiTitles>(field: K, value: TrombiTitles[K]): Promise<void> {
-  const updated = { ...titles, [field]: value }
-  await persistTitles(updated)
+export function updateTitle<K extends keyof TrombiTitles>(field: K, value: TrombiTitles[K]): void {
+  persistTitles({ ...titles, [field]: value })
 }
 
 /**

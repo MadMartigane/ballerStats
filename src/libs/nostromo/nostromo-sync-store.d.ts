@@ -1,13 +1,5 @@
 /** Lifecycle of the Nostromo synchronization, displayed by the UI. */
-export type NostromoStatus =
-  | 'off'
-  | 'unconfigured'
-  | 'pending'
-  | 'saving'
-  | 'saved'
-  | 'error'
-  | 'conflict'
-  | 'auth-required'
+export type NostromoStatus = 'off' | 'pending' | 'saving' | 'saved' | 'error' | 'conflict' | 'auth-required'
 
 export type NostromoLogLevel = 'info' | 'warn' | 'error'
 
@@ -54,6 +46,12 @@ export interface NostromoBaseline {
 
 /** Unit key → baseline. Keys are `NostromoUnitName` values or `photo:<playerId>`. */
 export type NostromoBaselines = Record<string, NostromoBaseline | undefined>
+
+/** One entry of a grouped baseline write: the unit key and the baseline to store under it. */
+export interface NostromoBaselineUpdate {
+  baseline: NostromoBaseline
+  unit: string
+}
 
 /** Full reactive shape of the sync store. */
 export interface NostromoSyncState {

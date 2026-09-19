@@ -22,6 +22,7 @@ import {
   STORAGE_NOSTROMO_BASELINES_KEY,
   STORAGE_NOSTROMO_OUTBOX_KEY,
   setBaseline,
+  setBaselines,
   setDirtyUnits,
   setNostromoSyncStatus,
 } from './nostromo-sync-store'
@@ -134,16 +135,7 @@ describe('nostromo-sync-store hydration', () => {
 
 describe('nostromo-sync-store status and log', () => {
   it('transitions through every status without persisting', () => {
-    const statuses: NostromoStatus[] = [
-      'off',
-      'unconfigured',
-      'pending',
-      'saving',
-      'saved',
-      'error',
-      'conflict',
-      'auth-required',
-    ]
+    const statuses: NostromoStatus[] = ['off', 'pending', 'saving', 'saved', 'error', 'conflict', 'auth-required']
 
     expect(getNostromoSyncStatus()).toBe('off')
     for (const status of statuses) {
@@ -236,6 +228,31 @@ describe('nostromo-sync-store baselines', () => {
     const retrieved = requireBaseline('players')
     retrieved.version = 42
     expect(getBaseline('players')?.version).toBe(3)
+  })
+
+  it('setBaselines() writes every entry in one grouped persist', () => {
+    setBaselines([
+      { baseline: makeBaseline({ version: 2 }), unit: 'players' },
+      { baseline: makeBaseline({ docId: 'b1b2c3d4e5f6g7h', version: 5 }), unit: 'teams' },
+      { baseline: makeBaseline({ docId: 'zzzzzzzzzzzzzzz', version: 1 }), unit: 'photo:player-1' },
+    ])
+
+    expect(getBaseline('players')).toEqual(makeBaseline({ version: 2 }))
+    expect(getBaseline('teams')).toEqual(makeBaseline({ docId: 'b1b2c3d4e5f6g7h', version: 5 }))
+    expect(getBaseline('photo:player-1')).toEqual(makeBaseline({ docId: 'zzzzzzzzzzzzzzz', version: 1 }))
+    expect(storeData).toHaveBeenCalledTimes(1)
+  })
+
+  it('setBaselines() merges into the existing map and clones its inputs', () => {
+    setBaseline('clubs', makeBaseline({ docId: 'c1c2c3d4e5f6g7h', version: 7 }))
+    const baseline = makeBaseline({ version: 2 })
+
+    setBaselines([{ baseline, unit: 'players' }])
+    baseline.version = 99
+
+    expect(getBaseline('clubs')).toEqual(makeBaseline({ docId: 'c1c2c3d4e5f6g7h', version: 7 }))
+    expect(getBaseline('players')?.version).toBe(2)
+    expect(storeData).toHaveBeenCalledTimes(2)
   })
 
   it('clearBaseline() forgets a unit and persists once, and is a no-op for an unknown unit', () => {

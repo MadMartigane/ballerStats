@@ -10,8 +10,8 @@
  * A mark never plans or awaits any work: it records the unit in the sync store
  * outbox and (re)arms one sliding debounce timer. When that timer expires it
  * calls the single runner registered by `push-engine.ts`; without a registered
- * runner nothing is pushed, and nothing is pushed at all while the app is
- * unconfigured.
+ * runner nothing is pushed, and nothing is pushed at all while the app is not
+ * configured (that state maps to the `off` status).
  */
 import { isConfigured } from './nostromo-config-store'
 import { markUnitDirty, setNostromoSyncStatus } from './nostromo-sync-store'
