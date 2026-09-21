@@ -116,6 +116,63 @@ describe('getStatSummary', () => {
     expect(summary.opponentFouls).toBe(1)
     expect(summary.rebonds.opponentTotal).toBe(1)
   })
+
+  const highScoreLowEffStats = (playerId: string) => [
+    ...Array.from({ length: 8 }, () => makeStatEntry('2pts', { playerId, type: 'success' })),
+    ...Array.from({ length: 8 }, () => makeStatEntry('2pts', { playerId, type: 'error' })),
+    ...Array.from({ length: 4 }, () => makeStatEntry('turnover', { playerId, type: 'error' })),
+  ]
+
+  const lowScoreHighEffStats = (playerId: string) => [
+    makeStatEntry('2pts', { playerId, type: 'success' }),
+    makeStatEntry('offensive-rebond', { playerId, type: 'success' }),
+    ...Array.from({ length: 4 }, () => makeStatEntry('defensive-rebond', { playerId, type: 'secondary' })),
+    ...Array.from({ length: 3 }, () => makeStatEntry('assist', { playerId, type: 'success' })),
+    ...Array.from({ length: 2 }, () => makeStatEntry('steals', { playerId, type: 'success' })),
+    makeStatEntry('block', { playerId, type: 'success' }),
+  ]
+
+  it('orders players by EFF desc, overriding a higher score', () => {
+    const highScorePlayer = 'mv-high-score'
+    const highEffPlayer = 'mv-high-eff'
+    const match = makeMatch({
+      stats: [...lowScoreHighEffStats(highEffPlayer), ...highScoreLowEffStats(highScorePlayer)],
+      teamId: 'team-1',
+    })
+
+    const summary = getStatSummary(match)
+
+    expect(summary.players.map((player) => player.playerId)).toEqual([highEffPlayer, highScorePlayer])
+    // Sanity: the discriminators really discriminate.
+    expect(summary.players.find((player) => player.playerId === highScorePlayer)?.scores.total).toBe(16)
+    expect(summary.players.find((player) => player.playerId === highEffPlayer)?.scores.total).toBe(2)
+    expect(summary.players.find((player) => player.playerId === highScorePlayer)?.eff).toBeLessThan(
+      summary.players.find((player) => player.playerId === highEffPlayer)?.eff ?? 0
+    )
+  })
+
+  it('orders players by scores.total desc when EFF is tied', () => {
+    const highScorePlayer = 'mv-tie-high-score'
+    const lowScorePlayer = 'mv-tie-low-score'
+    const match = makeMatch({
+      stats: [
+        ...Array.from({ length: 5 }, () => makeStatEntry('2pts', { playerId: highScorePlayer, type: 'success' })),
+        ...Array.from({ length: 2 }, () => makeStatEntry('2pts', { playerId: lowScorePlayer, type: 'success' })),
+        ...Array.from({ length: 4 }, () =>
+          makeStatEntry('defensive-rebond', { playerId: lowScorePlayer, type: 'secondary' })
+        ),
+        ...Array.from({ length: 2 }, () => makeStatEntry('assist', { playerId: lowScorePlayer, type: 'success' })),
+      ],
+      teamId: 'team-1',
+    })
+
+    const summary = getStatSummary(match)
+
+    const highEff = summary.players.find((player) => player.playerId === highScorePlayer)?.eff
+    const lowEff = summary.players.find((player) => player.playerId === lowScorePlayer)?.eff
+    expect(highEff).toBe(lowEff)
+    expect(summary.players.map((player) => player.playerId)).toEqual([highScorePlayer, lowScorePlayer])
+  })
 })
 
 describe('getFullStats', () => {
@@ -156,6 +213,64 @@ describe('getFullStats', () => {
     expect(summary.players).toHaveLength(1)
     expect(summary.players[0].playerId).toBe(playerId)
     expect(summary.players[0].fouls).toBe(0)
+  })
+
+  const gvHighScoreLowEffStats = (playerId: string) => [
+    ...Array.from({ length: 8 }, () => makeStatEntry('2pts', { playerId, type: 'success' })),
+    ...Array.from({ length: 8 }, () => makeStatEntry('2pts', { playerId, type: 'error' })),
+    ...Array.from({ length: 4 }, () => makeStatEntry('turnover', { playerId, type: 'error' })),
+  ]
+
+  const gvLowScoreHighEffStats = (playerId: string) => [
+    makeStatEntry('2pts', { playerId, type: 'success' }),
+    makeStatEntry('offensive-rebond', { playerId, type: 'success' }),
+    ...Array.from({ length: 4 }, () => makeStatEntry('defensive-rebond', { playerId, type: 'secondary' })),
+    ...Array.from({ length: 3 }, () => makeStatEntry('assist', { playerId, type: 'success' })),
+    ...Array.from({ length: 2 }, () => makeStatEntry('steals', { playerId, type: 'success' })),
+    makeStatEntry('block', { playerId, type: 'success' }),
+  ]
+
+  it('orders global players by EFF desc, overriding a higher score', () => {
+    const highScorePlayer = 'gv-high-score'
+    const highEffPlayer = 'gv-high-eff'
+    const match = makeMatch({
+      stats: [...gvLowScoreHighEffStats(highEffPlayer), ...gvHighScoreLowEffStats(highScorePlayer)],
+      teamId: 'team-global',
+    })
+
+    mockMatchsStore.raws = [match]
+    mockTeamsStore.raws = [
+      makeTeam({ id: 'team-global', name: 'Global', playerIds: [highScorePlayer, highEffPlayer] }).getRawData(),
+    ]
+
+    const summary = getFullStats()
+
+    expect(summary.players.map((player) => player.playerId)).toEqual([highEffPlayer, highScorePlayer])
+  })
+
+  it('orders global players by scores.total desc when EFF is tied', () => {
+    const highScorePlayer = 'gv-tie-high-score'
+    const lowScorePlayer = 'gv-tie-low-score'
+    const match = makeMatch({
+      stats: [
+        ...Array.from({ length: 5 }, () => makeStatEntry('2pts', { playerId: highScorePlayer, type: 'success' })),
+        ...Array.from({ length: 2 }, () => makeStatEntry('2pts', { playerId: lowScorePlayer, type: 'success' })),
+        ...Array.from({ length: 4 }, () =>
+          makeStatEntry('defensive-rebond', { playerId: lowScorePlayer, type: 'secondary' })
+        ),
+        ...Array.from({ length: 2 }, () => makeStatEntry('assist', { playerId: lowScorePlayer, type: 'success' })),
+      ],
+      teamId: 'team-global',
+    })
+
+    mockMatchsStore.raws = [match]
+    mockTeamsStore.raws = [
+      makeTeam({ id: 'team-global', name: 'Global', playerIds: [highScorePlayer, lowScorePlayer] }).getRawData(),
+    ]
+
+    const summary = getFullStats()
+
+    expect(summary.players.map((player) => player.playerId)).toEqual([highScorePlayer, lowScorePlayer])
   })
 })
 

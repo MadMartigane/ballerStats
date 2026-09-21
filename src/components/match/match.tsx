@@ -595,13 +595,17 @@ function renderStatGrid(statSummary: StatMatchSummary) {
       <BsFullStatTable stats={statSummary} />
       <hr />
 
-      <h3>Totaux de l’équipe:</h3>
-      {renderTeamTotals(statSummary)}
+      <div class="print:break-inside-avoid">
+        <h3>Totaux de l’équipe:</h3>
+        {renderTeamTotals(statSummary)}
+      </div>
 
       <hr />
 
-      <h3>Synthèse rebonds</h3>
-      <BsStatSumUpRebonds stats={statSummary} />
+      <div class="print:break-inside-avoid">
+        <h3>Synthèse rebonds</h3>
+        <BsStatSumUpRebonds stats={statSummary} />
+      </div>
     </div>
   )
 }
