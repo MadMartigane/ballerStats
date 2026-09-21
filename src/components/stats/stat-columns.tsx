@@ -40,7 +40,7 @@ const FALLBACK_JERSEY_ICON_SIZE = 28
 
 function renderScoreCell(value: number | string) {
   return (
-    <td>
+    <td class="print:px-1">
       <span class="text-lg">{value}</span>
     </td>
   )
@@ -48,7 +48,7 @@ function renderScoreCell(value: number | string) {
 
 function renderRatioCell(key: ScoringKey, stats: StatMatchSummaryPlayer) {
   return (
-    <td>
+    <td class="print:whitespace-nowrap print:px-1">
       <span class="text-lg">{`${stats.scores[key]}`}</span>
       {` ${stats.ratio[key].success}/${stats.ratio[key].total}`}
       <div>{`(${stats.ratio[key].percentage}%)`}</div>
@@ -94,8 +94,10 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     id: 'jersey',
     label: 'Maillot',
     renderCell: (_stats, player) => (
-      <td>
-        <span class="text-2xl">{player?.jerseyNumber || <Users size={FALLBACK_JERSEY_ICON_SIZE} />}</span>
+      <td class="print:px-1">
+        <span class="text-2xl">
+          {player?.jerseyNumber || <Users class="print:size-4" size={FALLBACK_JERSEY_ICON_SIZE} />}
+        </span>
       </td>
     ),
     renderHeader: () => <Shirt />,
@@ -103,7 +105,9 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
   {
     id: 'name',
     label: 'Nom',
-    renderCell: (stats, player) => <td class="text-xl">{resolveNameLabel(stats, player)}</td>,
+    renderCell: (stats, player) => (
+      <td class="text-xl print:max-w-26 print:truncate print:px-1 print:text-sm">{resolveNameLabel(stats, player)}</td>
+    ),
   },
   {
     id: 'pts',
@@ -118,7 +122,7 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     id: 'rebounds',
     label: 'Rbs (O-D)',
     renderCell: (stats) => (
-      <td>
+      <td class="print:px-1">
         <div class="text-lg">{stats.rebonds.total}</div>
         <span>{`(${stats.rebonds.offensive} - ${stats.rebonds.defensive})`}</span>
       </td>

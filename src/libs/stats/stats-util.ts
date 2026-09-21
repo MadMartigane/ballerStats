@@ -483,6 +483,7 @@ function getPlayersStatsByMatch(match: Match) {
     })
     .sort((playerA, playerB) => playerB.rebonds.total - playerA.rebonds.total)
     .sort((playerA, playerB) => playerB.scores.total - playerA.scores.total)
+    .sort((playerA, playerB) => playerB.eff - playerA.eff)
 }
 
 function sumPlayerStats(
@@ -644,7 +645,7 @@ export function getFullStats(championshipFilter?: string): FullStatSummary {
     return currentPlayerStats
   })
 
-  summed.players.sort((up, down) => down.scores.total - up.scores.total)
+  summed.players.sort((up, down) => down.scores.total - up.scores.total).sort((up, down) => down.eff - up.eff)
 
   const nbMatch = matchs.length
 

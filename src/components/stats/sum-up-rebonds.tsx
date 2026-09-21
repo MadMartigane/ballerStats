@@ -4,7 +4,7 @@ export function BsStatSumUpRebonds(props: BsStatSumUpRebondsProps) {
   const statSummary = props.stats
 
   return (
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto print:overflow-visible">
       <div class="stats shadow-xs">
         <div class="stat place-items-center">
           <div class="stat-title">Total</div>
