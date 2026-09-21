@@ -545,7 +545,7 @@ function renderPlayerHeader(playerId: string | null) {
 
 function renderTeamTotals(statSummary: StatMatchSummary) {
   return (
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto print:overflow-visible">
       <div class="stats shadow-xs">
         <div class="stat place-items-center">
           <div class="stat-title">Score</div>

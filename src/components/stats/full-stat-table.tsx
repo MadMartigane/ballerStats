@@ -22,11 +22,13 @@ export function BsFullStatTable(props: BsFullStatTableProps) {
 
   return (
     <div>
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto print:overflow-visible">
         <table class="table-zebra table">
           <thead>
-            <tr class="bg-neutral text-neutral-content">
-              <For each={STAT_COLUMNS}>{(column) => <th>{column.renderHeader?.() ?? column.label}</th>}</For>
+            <tr class="bg-neutral text-neutral-content print:border-base-300 print:border-b print:bg-transparent print:text-base-content">
+              <For each={STAT_COLUMNS}>
+                {(column) => <th class="print:px-1">{column.renderHeader?.() ?? column.label}</th>}
+              </For>
             </tr>
           </thead>
           <tbody>
