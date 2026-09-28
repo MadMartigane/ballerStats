@@ -1,4 +1,5 @@
 import type { JSXElement } from 'solid-js'
+import type { PlayTimeSource } from './play-time'
 
 export type ScoringKey = '2pts' | '3pts' | 'free-throw'
 
@@ -49,6 +50,8 @@ export interface StatMatchSummaryPlayer {
   nbPlayedMatch: number
   playerId: string
   playTime: number | null
+  /** Origin of `playTime` on a per-match row; never carried into aggregates. */
+  playTimeSource?: PlayTimeSource
   ratio: Record<ScoringKey, StatMatchSummaryRatio>
   rebonds: {
     defensive: number

@@ -14,6 +14,7 @@ export default class Match {
   date: string | null = null
   championship: string | null = null
   playersInTheFive: string[] = []
+  tablePlayTimes?: Record<string, number>
 
   constructor(data?: MatchRawData) {
     if (data) {
@@ -34,6 +35,7 @@ export default class Match {
     this.date = data.date || null
     this.championship = data.championship ?? null
     this.playersInTheFive = data.playersInTheFive || this.playersInTheFive
+    this.tablePlayTimes = data.tablePlayTimes || undefined
   }
 
   get id() {
@@ -45,7 +47,7 @@ export default class Match {
   }
 
   getRawData(): MatchRawData {
-    return {
+    const data: MatchRawData = {
       championship: this.championship,
       date: this.date || null,
       id: this.#id,
@@ -56,6 +58,12 @@ export default class Match {
       teamId: this.teamId,
       type: this.type,
     }
+
+    if (this.tablePlayTimes) {
+      data.tablePlayTimes = { ...this.tablePlayTimes }
+    }
+
+    return data
   }
 
   update(data: MatchRawData) {

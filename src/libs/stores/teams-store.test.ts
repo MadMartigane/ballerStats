@@ -151,6 +151,72 @@ describe('teams-store', () => {
     expect(getRawTeams().find((candidate) => candidate.id === 't2')?.name).toBe('Added')
   })
 
+  it('round-trips the optional category and matchFormat fields through add() and update()', () => {
+    const matchFormat = { periodLengthMinutes: 7, periods: 4, playersOnCourt: 5 }
+    addTeam(makeTeamData({ category: 'U13', matchFormat }))
+
+    expect(getTeamById('t1')?.category).toBe('U13')
+    expect(getTeamById('t1')?.matchFormat).toEqual(matchFormat)
+
+    updateTeam(
+      't1',
+      makeTeamData({ category: 'U15', matchFormat: { periodLengthMinutes: 8, periods: 4, playersOnCourt: 5 } })
+    )
+
+    expect(getRawTeams()[0].category).toBe('U15')
+    expect(getRawTeams()[0].matchFormat).toEqual({ periodLengthMinutes: 8, periods: 4, playersOnCourt: 5 })
+  })
+
+  it('clones matchFormat on hydration: mutating the input nested object does not corrupt store state', () => {
+    const matchFormat = { periodLengthMinutes: 7, periods: 4, playersOnCourt: 5 }
+    hydrateTeams([makeTeamData({ matchFormat })])
+
+    matchFormat.periods = 99
+
+    expect(getRawTeams()[0].matchFormat).toEqual({ periodLengthMinutes: 7, periods: 4, playersOnCourt: 5 })
+  })
+
+  it('clones the nested matchFormat and playerIds on add and update: a later mutation cannot corrupt store state', () => {
+    const matchFormat = { periodLengthMinutes: 7, periods: 4, playersOnCourt: 5 }
+    const playerIds = ['p1', 'p2']
+    addTeam(makeTeamData({ matchFormat, playerIds }))
+
+    // The caller keeps his input objects: mutating them must not reach the store.
+    matchFormat.periods = 99
+    playerIds.push('p3')
+
+    expect(getRawTeams()[0].matchFormat).toEqual({ periodLengthMinutes: 7, periods: 4, playersOnCourt: 5 })
+    expect(getRawTeams()[0].playerIds).toEqual(['p1', 'p2'])
+
+    const updatedFormat = { periodLengthMinutes: 8, periods: 4, playersOnCourt: 4 }
+    updateTeam('t1', makeTeamData({ matchFormat: updatedFormat, playerIds: ['p1'] }))
+    updatedFormat.playersOnCourt = 99
+
+    expect(getRawTeams()[0].matchFormat).toEqual({ periodLengthMinutes: 8, periods: 4, playersOnCourt: 4 })
+  })
+
+  it('returns nested clones from getRawTeams and getTeamById: mutating a read-back does not corrupt store state', () => {
+    hydrateTeams([
+      makeTeamData({ matchFormat: { periodLengthMinutes: 7, periods: 4, playersOnCourt: 5 }, playerIds: ['p1'] }),
+    ])
+
+    // getRawTeams/getTeamById hand out plain clones, so mutating them is safe
+    // (and must not trigger Solid's "Cannot mutate a Store directly" guard).
+    const [fromList] = getRawTeams()
+    if (fromList.matchFormat) {
+      fromList.matchFormat.periods = 99
+    }
+
+    expect(getRawTeams()[0].matchFormat?.periods).toBe(4)
+  })
+
+  it('round-trips a team with neither category nor matchFormat, keeping both undefined', () => {
+    addTeam(makeTeamData())
+
+    expect(getTeamById('t1')?.category).toBeUndefined()
+    expect(getTeamById('t1')?.matchFormat).toBeUndefined()
+  })
+
   it('assertTeamExists() returns the matching team or throws', () => {
     hydrateTeams([makeTeamData({ id: 't1' })])
 

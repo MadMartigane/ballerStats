@@ -1,9 +1,15 @@
 import { strToU8, zipSync } from 'fflate'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ContactRawData } from '../contact/contact.d'
+import { getAllPhotoEntries, storePhoto } from '../photo-store/photo-store'
+import Player from '../player/player'
+import { STORAGE_PLAYERS_KEY } from '../store/store'
+import { getRawClubs } from '../stores/clubs-store'
+import { getRawPlayers } from '../stores/players-store'
+import Team from '../team/team'
 import { confirmAction, toast } from '../utils/utils'
 import { isGlobalDB, Orchestrator, ParseError } from './orchestrator'
-import type { GlobalDB } from './orchestrator.d'
+import type { DomainDataset, GlobalDB } from './orchestrator.d'
 
 vi.mock('../utils/utils')
 
@@ -186,5 +192,47 @@ describe('importDB flow', () => {
 
     expect(confirmAction).toHaveBeenCalledTimes(1)
     expect(toast).not.toHaveBeenCalled()
+  })
+})
+
+const datasetOrchestrator = Object.create(Orchestrator.prototype) as Orchestrator
+
+describe('replaceDataset', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('clears every stored photo before committing the dataset', async () => {
+    await storePhoto('stale-player', new Blob(['stale'], { type: 'image/webp' }))
+    expect(await getAllPhotoEntries()).toHaveLength(1)
+
+    const dataset: DomainDataset = {
+      players: [new Player({ firstName: 'A', id: 'player-a', jerseyNumber: '1', lastName: 'B' })],
+    }
+
+    await datasetOrchestrator.replaceDataset(dataset)
+
+    expect(await getAllPhotoEntries()).toHaveLength(0)
+  })
+
+  it('runs the club migration and persists the migrated outputs', async () => {
+    const dataset: DomainDataset = {
+      players: [new Player({ firstName: 'A', id: 'player-a', jerseyNumber: '1', lastName: 'B' })],
+      teams: [new Team({ id: 'team-a', name: 'Team A' })],
+    }
+
+    await datasetOrchestrator.replaceDataset(dataset)
+
+    const clubs = getRawClubs()
+    const players = getRawPlayers()
+    expect(clubs).toHaveLength(1)
+    expect(players).toHaveLength(1)
+    expect(players[0].clubId).toBe(clubs[0].id)
+
+    // The migrated player must be the one that reached localStorage, not the raw input.
+    const stored = JSON.parse(localStorage.getItem(STORAGE_PLAYERS_KEY) ?? 'null') as {
+      data?: { clubId?: string }[]
+    }
+    expect(stored.data?.[0]?.clubId).toBe(clubs[0].id)
   })
 })

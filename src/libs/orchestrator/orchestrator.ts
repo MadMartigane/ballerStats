@@ -367,17 +367,36 @@ export class Orchestrator {
     return raw ? new Match(raw) : null
   }
 
-  /** Atomically replace all domain data with the given dataset. */
-  replaceDataset(dataset: DomainDataset): void {
-    batch(() => {
-      replaceAllPlayers((dataset.players ?? []).map((player) => player.getRawData()))
-      replaceAllContacts((dataset.contacts ?? []).map((contact) => contact.getRawData()))
-      replaceAllTeams((dataset.teams ?? []).map((team) => team.getRawData()))
-      replaceAllMatchs((dataset.matchs ?? []).map((match) => match.getRawData()))
+  /**
+   * Atomically replace all domain data with the given dataset.
+   *
+   * Ordering rationale:
+   * - Photos are cleared FIRST because a dataset may declare `hasPhoto: false`
+   *   for every player: stale photos from a previous dataset would otherwise
+   *   desync from the player flags and resurrect as orphan entries.
+   * - The dataset then goes through the same Club bridge as an archive import
+   *   (`migrateClubData`), so a dataset without `clubId` still lands with a club.
+   * - The migrated outputs are committed in a single `batch()` (one persist per
+   *   collection) and the trombi titles are persisted once afterwards.
+   */
+  async replaceDataset(dataset: DomainDataset): Promise<void> {
+    await clearAllPhotos()
+
+    const migration = migrateClubData({
+      clubs: (dataset.clubs ?? []).map((club) => club.getRawData()),
+      players: (dataset.players ?? []).map((player) => player.getRawData()),
+      teams: (dataset.teams ?? []).map((team) => team.getRawData()),
     })
-    if (dataset.clubs !== undefined) {
-      replaceAllClubs(dataset.clubs.map((club) => club.getRawData()))
-    }
+
+    batch(() => {
+      replaceAllPlayers(migration.players)
+      replaceAllContacts((dataset.contacts ?? []).map((contact) => contact.getRawData()))
+      replaceAllTeams(migration.teams)
+      replaceAllMatchs((dataset.matchs ?? []).map((match) => match.getRawData()))
+      replaceAllClubs(migration.clubs)
+    })
+
+    await persistTitles(migration.trombiTitles)
   }
 
   get hasAnyData(): boolean {

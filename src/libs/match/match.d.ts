@@ -16,6 +16,8 @@ export interface MatchRawData {
   playersInTheFive?: string[]
   stats?: MatchStatLogEntry[]
   status?: MatchStatus
+  /** Optional table-recorded play times, in whole minutes, keyed by playerId. */
+  tablePlayTimes?: Record<string, number>
   teamId?: string | null
   type?: MatchType
 }

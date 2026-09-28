@@ -1,4 +1,5 @@
 import { clone, getUniqId } from '../utils/utils'
+import type { AgeCategory, MatchFormatConfig } from './match-format'
 import type { TeamRawData } from './team.d'
 
 export const TEAM_OPPONENT_ID = 'OPPONENT'
@@ -8,6 +9,8 @@ export default class Team {
   #playerIds: string[] = []
 
   clubId?: string
+  category?: AgeCategory | null
+  matchFormat?: MatchFormatConfig | null
   name: string | null = null
 
   constructor(data?: TeamRawData) {
@@ -35,6 +38,8 @@ export default class Team {
 
     this.name = data.name || null
     this.clubId = data.clubId
+    this.category = data.category || null
+    this.matchFormat = data.matchFormat || null
     this.#playerIds = data.playerIds || []
   }
 
@@ -47,6 +52,14 @@ export default class Team {
 
     if (this.clubId) {
       data.clubId = this.clubId
+    }
+
+    if (this.category) {
+      data.category = this.category
+    }
+
+    if (this.matchFormat) {
+      data.matchFormat = { ...this.matchFormat }
     }
 
     return data

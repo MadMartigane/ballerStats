@@ -118,7 +118,7 @@ export default function BsTeam(props: BsTeamProps) {
           </div>
         </>
       }
-      info={`Nombre de joueurs : ${team.playerIds.filter((id) => orchestrator.getPlayer(id)).length}`}
+      info={`${team.category ? `Catégorie : ${team.category} — ` : ''}Nombre de joueurs : ${team.playerIds.filter((id) => orchestrator.getPlayer(id)).length}`}
       title={team.name || ''}
     >
       <div class="mt-4">

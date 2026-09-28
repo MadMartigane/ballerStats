@@ -4,11 +4,21 @@ import MadSignal from '../../libs/mad-signal'
 import type { PlayerRawData } from '../../libs/player/player.d'
 import { players } from '../../libs/stores/players-store'
 import { addTeam, teams, updateTeam } from '../../libs/stores/teams-store'
+import {
+  AGE_CATEGORY_PRESETS,
+  type AgeCategory,
+  getTheoreticalPlayerMinutes,
+  isMatchFormatConfig,
+  type MatchFormatConfig,
+  type ResolvedMatchFormat,
+  resolveMatchFormat,
+} from '../../libs/team/match-format'
 import Team from '../../libs/team/team'
 import type { TeamRawData } from '../../libs/team/team.d'
 import { scrollBottom, scrollTop } from '../../libs/utils/utils'
 import BsCard from '../card/card'
 import BsInput from '../input/input'
+import BsSelect from '../select/select'
 import BsSelectMultiple from '../select-multiple/select-multiple'
 import BsTeam from '../team/team'
 
@@ -18,6 +28,105 @@ const canAddTeam: MadSignal<boolean> = new MadSignal(false)
 
 let currentTeam: Team | null = null
 
+// The form's inputs are uncontrolled, so the resolved-format preview needs its own
+// reactive source; it is refreshed every time the draft team changes.
+const formatPreview: MadSignal<ResolvedMatchFormat> = new MadSignal(resolveMatchFormat(null))
+const formatOverrideHint: MadSignal<string> = new MadSignal('')
+
+// Raw text of the three override inputs; all three must hold a positive integer to apply.
+let overridePeriodsText = ''
+let overridePeriodLengthText = ''
+let overridePlayersOnCourtText = ''
+
+const POSITIVE_INTEGER_PATTERN = /^\d+$/
+
+const CATEGORY_SELECT_DATAS = [
+  { label: '—', value: '' },
+  ...(Object.keys(AGE_CATEGORY_PRESETS) as AgeCategory[]).map((category) => {
+    const preset = AGE_CATEGORY_PRESETS[category]
+    return { label: `${category} — ${preset.periods} périodes de ${preset.periodLengthMinutes} min`, value: category }
+  }),
+]
+
+function formatPreviewText(format: ResolvedMatchFormat): string {
+  const total = getTheoreticalPlayerMinutes(format)
+  return `Format : ${format.periods} périodes × ${format.periodLengthMinutes} min, ${format.playersOnCourt} joueurs — total théorique ${total} min de jeu`
+}
+
+function refreshFormatPreview() {
+  formatPreview.set(resolveMatchFormat(currentTeam?.getRawData() ?? null))
+}
+
+function resetFormatOverrideInputs(format?: MatchFormatConfig | null) {
+  overridePeriodsText = format?.periods?.toString() ?? ''
+  overridePeriodLengthText = format?.periodLengthMinutes?.toString() ?? ''
+  overridePlayersOnCourtText = format?.playersOnCourt?.toString() ?? ''
+  formatOverrideHint.set('')
+}
+
+function parsePositiveInteger(text: string): number | null {
+  if (!POSITIVE_INTEGER_PATTERN.test(text)) {
+    return null
+  }
+
+  const value = Number(text)
+  return value > 0 ? value : null
+}
+
+function buildMatchFormatOverride(): MatchFormatConfig | null {
+  const periods = parsePositiveInteger(overridePeriodsText)
+  const periodLengthMinutes = parsePositiveInteger(overridePeriodLengthText)
+  const playersOnCourt = parsePositiveInteger(overridePlayersOnCourtText)
+
+  if (periods === null || periodLengthMinutes === null || playersOnCourt === null) {
+    return null
+  }
+
+  const candidate = { periodLengthMinutes, periods, playersOnCourt }
+  return isMatchFormatConfig(candidate) ? candidate : null
+}
+
+function isFormatOverrideBlank(): boolean {
+  return overridePeriodsText === '' && overridePeriodLengthText === '' && overridePlayersOnCourtText === ''
+}
+
+function applyFormatOverride() {
+  const override = buildMatchFormatOverride()
+
+  if (override) {
+    formatOverrideHint.set('')
+    setNewTeamData({ matchFormat: override })
+    return
+  }
+
+  if (isFormatOverrideBlank()) {
+    formatOverrideHint.set('')
+    setNewTeamData({ matchFormat: null })
+    return
+  }
+
+  formatOverrideHint.set('Surcharge invalide : saisir trois entiers positifs, ou laisser les trois champs vides.')
+}
+
+function onCategoryChange(value: string) {
+  setNewTeamData({ category: value ? (value as AgeCategory) : null })
+}
+
+function onOverridePeriodsChange(value: string) {
+  overridePeriodsText = value
+  applyFormatOverride()
+}
+
+function onOverridePeriodLengthChange(value: string) {
+  overridePeriodLengthText = value
+  applyFormatOverride()
+}
+
+function onOverridePlayersOnCourtChange(value: string) {
+  overridePlayersOnCourtText = value
+  applyFormatOverride()
+}
+
 function setNewTeamData(data: TeamRawData) {
   if (currentTeam) {
     currentTeam.update(data)
@@ -25,6 +134,7 @@ function setNewTeamData(data: TeamRawData) {
     currentTeam = new Team(data)
   }
 
+  refreshFormatPreview()
   canAddTeam.set(currentTeam.isRegisterable)
 }
 
@@ -50,12 +160,16 @@ function registerTeam() {
   toggleAddTeam(false)
   currentTeam = null
   canAddTeam.set(false)
+  resetFormatOverrideInputs(null)
+  refreshFormatPreview()
 }
 
 function editTeam(team: Team) {
   isEditingNewTeam = false
   currentTeam = new Team(team.getRawData())
   canAddTeam.set(currentTeam.isRegisterable)
+  resetFormatOverrideInputs(currentTeam.matchFormat)
+  refreshFormatPreview()
 
   toggleAddTeam(true)
 }
@@ -76,6 +190,8 @@ function updateCurrentTeamPlayerIds(playerIds: string[]) {
 
 function startAddingNewTeam() {
   isEditingNewTeam = true
+  resetFormatOverrideInputs(null)
+  refreshFormatPreview()
   toggleAddTeam(true)
   scrollTop()
 }
@@ -84,6 +200,8 @@ function cancelAddingTeam() {
   toggleAddTeam(false)
   currentTeam = null
   canAddTeam.set(false)
+  resetFormatOverrideInputs(null)
+  refreshFormatPreview()
   scrollBottom()
 }
 
@@ -149,6 +267,37 @@ function TeamAddForm() {
             type="text"
             value={currentTeam?.name || ''}
           />
+          <BsSelect
+            datas={CATEGORY_SELECT_DATAS}
+            label="Catégorie d’âge"
+            onValueChange={onCategoryChange}
+            value={currentTeam?.category || ''}
+          />
+          <BsInput
+            label="Périodes (surcharge)"
+            onChange={onOverridePeriodsChange}
+            placeholder="4"
+            type="text"
+            value={currentTeam?.matchFormat?.periods?.toString() || ''}
+          />
+          <BsInput
+            label="Durée d’une période en min (surcharge)"
+            onChange={onOverridePeriodLengthChange}
+            placeholder="8"
+            type="text"
+            value={currentTeam?.matchFormat?.periodLengthMinutes?.toString() || ''}
+          />
+          <BsInput
+            label="Joueurs sur le terrain (surcharge)"
+            onChange={onOverridePlayersOnCourtChange}
+            placeholder="5"
+            type="text"
+            value={currentTeam?.matchFormat?.playersOnCourt?.toString() || ''}
+          />
+          <Show when={formatOverrideHint.get()}>
+            <p class="text-error text-sm">{formatOverrideHint.get()}</p>
+          </Show>
+          <p class="text-sm opacity-70">{formatPreviewText(formatPreview.get())}</p>
           <BsSelectMultiple
             data={getSelectDataFromPlayer()}
             onChange={updateCurrentTeamPlayerIds}

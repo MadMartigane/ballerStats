@@ -1,17 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MatchRawData } from '../match/match.d'
 import { makeMatch } from '../mock/factories/match.factory'
-import { makeStatEntry } from '../mock/factories/stat-entry.factory'
+import { MOCK_BASE_TIMESTAMP, makeStatEntry } from '../mock/factories/stat-entry.factory'
 import { makeTeam } from '../mock/factories/team.factory'
 import { TEAM_OPPONENT_ID } from '../team/team'
 import type { TeamRawData } from '../team/team.d'
 import type { StatMatchSummaryPlayer } from './stats.d'
 import {
   computeDerivedStats,
+  dividePlayerStatsBy,
   getFullStats,
   getStatSummary,
   safeDivide,
+  safeDividePrecise,
   safePercentage,
+  sumPlayerStats,
   TEAM_PER_GAME_ID,
   TEAM_TOTAL_ID,
 } from './stats-util'
@@ -660,5 +663,292 @@ describe('computeDerivedStats', () => {
     const player = makePlayer({ assists: 7, turnover: 3 })
     const result = computeDerivedStats(player)
     expect(result.astToRatio).toBe(2.3)
+  })
+})
+
+describe('safeDividePrecise', () => {
+  it('returns 0 for a zero denominator (never NaN/Infinity)', () => {
+    expect(safeDividePrecise(10, 0)).toBe(0)
+    expect(safeDividePrecise(0, 0)).toBe(0)
+  })
+
+  it('preserves decimals instead of rounding to an integer', () => {
+    expect(safeDividePrecise(50, 3)).toBeCloseTo(16.6667, 3)
+    expect(Number.isInteger(safeDividePrecise(50, 3))).toBe(false)
+  })
+})
+
+const makeSummaryPlayer = (overrides: Partial<StatMatchSummaryPlayer> = {}): StatMatchSummaryPlayer => ({
+  assists: 0,
+  astToRatio: 0,
+  blocks: 0,
+  eff: 0,
+  fouls: 0,
+  nbPlayedMatch: 1,
+  playerId: 'summary-player',
+  playTime: null,
+  ratio: {
+    '2pts': { fail: 0, percentage: 0, success: 0, total: 0 },
+    '3pts': { fail: 0, percentage: 0, success: 0, total: 0 },
+    'free-throw': { fail: 0, percentage: 0, success: 0, total: 0 },
+  },
+  rebonds: { defensive: 0, offensive: 0, total: 0 },
+  scores: { '2pts': 0, '3pts': 0, 'free-throw': 0, total: 0 },
+  steals: 0,
+  trueShootingPercentage: 0,
+  turnover: 0,
+  ...overrides,
+})
+
+describe('sumPlayerStats playTime', () => {
+  it('sums two numeric values', () => {
+    const result = sumPlayerStats(makeSummaryPlayer({ playTime: 20 }), makeSummaryPlayer({ playTime: 30 }))
+
+    expect(result.playTime).toBe(50)
+  })
+
+  it('treats null as absent: null + number = number', () => {
+    const result = sumPlayerStats(makeSummaryPlayer({ playTime: null }), makeSummaryPlayer({ playTime: 20 }))
+
+    expect(result.playTime).toBe(20)
+  })
+
+  it('keeps a numeric value when the next match is null: number + null = number', () => {
+    const result = sumPlayerStats(makeSummaryPlayer({ playTime: 30 }), makeSummaryPlayer({ playTime: null }))
+
+    expect(result.playTime).toBe(30)
+  })
+
+  it('keeps null when no match ever measured it: null + null = null', () => {
+    const result = sumPlayerStats(makeSummaryPlayer({ playTime: null }), makeSummaryPlayer({ playTime: null }))
+
+    expect(result.playTime).toBeNull()
+  })
+
+  it('does not carry the per-match playTimeSource into aggregates', () => {
+    const result = sumPlayerStats(
+      makeSummaryPlayer({ playTime: 10 }),
+      makeSummaryPlayer({ playTime: 20, playTimeSource: 'computed' })
+    )
+
+    expect(result.playTimeSource).toBeUndefined()
+  })
+})
+
+describe('dividePlayerStatsBy playTime', () => {
+  it('preserves decimals through safeDividePrecise (50 / 3)', () => {
+    const row = makeSummaryPlayer({ playTime: 50 })
+
+    dividePlayerStatsBy(row, 3)
+
+    expect(row.playTime).toBeCloseTo(16.666_666_7, 6)
+    expect(Number.isInteger(row.playTime ?? 0)).toBe(false)
+  })
+
+  it('leaves a null play time untouched (stays unknown)', () => {
+    const row = makeSummaryPlayer({ playTime: null })
+
+    dividePlayerStatsBy(row, 3)
+
+    expect(row.playTime).toBeNull()
+  })
+
+  it('returns 0 (not NaN) when the divisor is zero', () => {
+    const row = makeSummaryPlayer({ playTime: 50 })
+
+    dividePlayerStatsBy(row, 0)
+
+    expect(row.playTime).toBe(0)
+  })
+})
+
+const MINUTE_MS = 60_000
+
+const fiveInAt = (playerId: string, offsetMinutes = 0) =>
+  makeStatEntry('fiveIn', { playerId, timestamp: MOCK_BASE_TIMESTAMP + offsetMinutes * MINUTE_MS })
+
+const fiveOutAt = (playerId: string, offsetMinutes: number) =>
+  makeStatEntry('fiveOut', {
+    playerId,
+    timestamp: MOCK_BASE_TIMESTAMP + offsetMinutes * MINUTE_MS,
+    type: 'secondary',
+  })
+
+describe('getStatSummary play time', () => {
+  // U13 preset (4 x 8, ceiling 32) rather than the senior default, so a resolved
+  // team format is observable through the clamp.
+  const team = makeTeam({ category: 'U13', id: 'team-playtime', name: 'PlayTime', playerIds: [] })
+
+  beforeEach(() => {
+    mockTeamsStore.raws = [team.getRawData()]
+  })
+
+  it('sets playTime from the engine using the mocked team resolved format', () => {
+    const match = makeMatch({
+      // 50 min exceeds the U13 ceiling (4 x 8 = 32): the clamp proves the format came from the team.
+      stats: [fiveInAt('p-table'), makeStatEntry('2pts', { playerId: 'p-table', type: 'success', value: 2 })],
+      tablePlayTimes: { 'p-table': 50 },
+      teamId: 'team-playtime',
+    })
+
+    const player = getStatSummary(match).players.find((row) => row.playerId === 'p-table')
+
+    expect(player?.playTime).toBe(32)
+    expect(player?.playTimeSource).toBe('table')
+  })
+
+  it('gives a fiveIn/fiveOut-only player a row with playTime > 0', () => {
+    const match = makeMatch({
+      stats: [fiveInAt('p-sub'), fiveOutAt('p-sub', 5)],
+      teamId: 'team-playtime',
+    })
+
+    const player = getStatSummary(match).players.find((row) => row.playerId === 'p-sub')
+
+    expect(player).toBeDefined()
+    expect(player?.playTime).toBeGreaterThan(0)
+    expect(player?.playTimeSource).toBe('computed')
+  })
+
+  it('treats a player with other stats but no fiveIn as unknown (playTime null, not 0)', () => {
+    const match = makeMatch({
+      stats: [makeStatEntry('2pts', { playerId: 'p-nosub', type: 'success', value: 2 })],
+      teamId: 'team-playtime',
+    })
+
+    const player = getStatSummary(match).players.find((row) => row.playerId === 'p-nosub')
+
+    expect(player?.playTime).toBeNull()
+    expect(player?.playTimeSource).toBeUndefined()
+  })
+
+  it('gives a table-time player with no stat event a summary row with his table minutes', () => {
+    const match = makeMatch({
+      stats: [fiveInAt('p-other'), fiveOutAt('p-other', 5)],
+      tablePlayTimes: { 'p-bench': 12 },
+      teamId: 'team-playtime',
+    })
+
+    const player = getStatSummary(match).players.find((row) => row.playerId === 'p-bench')
+
+    expect(player).toBeDefined()
+    expect(player?.playTime).toBe(12)
+    expect(player?.playTimeSource).toBe('table')
+  })
+
+  it('summarises a table-only match (zero stat events) from the table play times', () => {
+    const match = makeMatch({ stats: [], tablePlayTimes: { 'p-bench': 12 }, teamId: 'team-playtime' })
+
+    const player = getStatSummary(match).players.find((row) => row.playerId === 'p-bench')
+
+    expect(player).toBeDefined()
+    expect(player?.playTime).toBe(12)
+    expect(player?.playTimeSource).toBe('table')
+  })
+
+  it('never summarises the opponent sentinel even when the table holds its id', () => {
+    const match = makeMatch({
+      stats: [fiveInAt('p-other'), fiveOutAt('p-other', 5)],
+      tablePlayTimes: { [TEAM_OPPONENT_ID]: 12 },
+      teamId: 'team-playtime',
+    })
+
+    const summary = getStatSummary(match)
+
+    expect(summary.players.find((row) => row.playerId === TEAM_OPPONENT_ID)).toBeUndefined()
+  })
+})
+
+describe('getFullStats play time aggregation', () => {
+  const team = makeTeam({ category: 'U13', id: 'team-pt', name: 'PlayTimeAgg', playerIds: ['p1', 'p3'] })
+
+  // p1 is measured in all three matches (10 / 20 / 20); p3 is measured only in the
+  // first (30) and merely has stats in the other two, i.e. an absent (null) play time.
+  const matchA = makeMatch({
+    stats: [fiveInAt('p1'), makeStatEntry('2pts', { playerId: 'p3', type: 'success', value: 2 }), fiveInAt('p3')],
+    tablePlayTimes: { p1: 10, p3: 30 },
+    teamId: 'team-pt',
+  })
+  const matchB = makeMatch({
+    stats: [fiveInAt('p1'), makeStatEntry('2pts', { playerId: 'p3', type: 'success', value: 2 })],
+    tablePlayTimes: { p1: 20 },
+    teamId: 'team-pt',
+  })
+  const matchC = makeMatch({
+    stats: [fiveInAt('p1'), makeStatEntry('2pts', { playerId: 'p3', type: 'success', value: 2 })],
+    tablePlayTimes: { p1: 20 },
+    teamId: 'team-pt',
+  })
+
+  beforeEach(() => {
+    mockMatchsStore.raws = [matchA, matchB, matchC]
+    mockTeamsStore.raws = [team.getRawData()]
+  })
+
+  it('averages player play times with precise division and treats null as absent', () => {
+    const summary = getFullStats()
+    const p1 = summary.players.find((row) => row.playerId === 'p1')
+    const p3 = summary.players.find((row) => row.playerId === 'p3')
+
+    // p1 measured three times: (10 + 20 + 20) / 3, decimals survive (not rounded to 17).
+    expect(p1?.playTime).toBeCloseTo(50 / 3, 10)
+    expect(Number.isInteger(p1?.playTime ?? 0)).toBe(false)
+    // p3 numeric once then absent twice: null contributes nothing → 30 / 3 = 10.
+    expect(p3?.playTime).toBe(10)
+  })
+
+  it('divides the per-game team row while the totals row keeps the raw sum', () => {
+    const summary = getFullStats()
+
+    // Per-match team play times: (10 + 30) + 20 + 20 = 80.
+    expect(summary.teamScoresTotal.playTime).toBe(80)
+    expect(summary.teamScores.playTime).toBeCloseTo(80 / 3, 10)
+    expect(summary.teamScores.playTime).not.toBe(summary.teamScoresTotal.playTime)
+  })
+})
+
+describe('getFullStats play time null semantics', () => {
+  const measuredId = 'measured-player'
+  const unknownId = 'unknown-player'
+  const team = makeTeam({
+    category: 'U13',
+    id: 'team-unknown-time',
+    name: 'UnknownTime',
+    playerIds: [measuredId, unknownId],
+  })
+
+  // `unknownId` is on the roster and has stats, but is never measured in any match:
+  // his aggregate play time must stay null instead of collapsing to a fake 0.
+  const matchA = makeMatch({
+    stats: [makeStatEntry('2pts', { playerId: unknownId, type: 'success', value: 2 })],
+    tablePlayTimes: { [measuredId]: 20 },
+    teamId: 'team-unknown-time',
+  })
+  const matchB = makeMatch({
+    stats: [makeStatEntry('2pts', { playerId: unknownId, type: 'success', value: 2 })],
+    tablePlayTimes: { [measuredId]: 10 },
+    teamId: 'team-unknown-time',
+  })
+
+  beforeEach(() => {
+    mockMatchsStore.raws = [matchA, matchB]
+    mockTeamsStore.raws = [team.getRawData()]
+  })
+
+  it('keeps a roster player with no measured play time at null, not 0', () => {
+    const summary = getFullStats()
+    const unknown = summary.players.find((row) => row.playerId === unknownId)
+
+    expect(unknown).toBeDefined()
+    expect(unknown?.playTime).toBeNull()
+    // The team row still carries a meaningful numeric total.
+    expect(summary.teamScoresTotal.playTime).toBe(30)
+  })
+
+  it('still sums and averages a player with a measured value', () => {
+    const summary = getFullStats()
+    const measured = summary.players.find((row) => row.playerId === measuredId)
+
+    expect(measured?.playTime).toBeCloseTo((20 + 10) / 2, 10)
   })
 })

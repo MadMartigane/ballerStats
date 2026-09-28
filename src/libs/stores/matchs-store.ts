@@ -41,6 +41,7 @@ function cloneMatchRaw(raw: MatchRawData): MatchRawData {
     ...raw,
     playersInTheFive: [...(raw.playersInTheFive ?? [])],
     stats: (raw.stats ?? []).map((stat) => ({ ...stat })),
+    tablePlayTimes: raw.tablePlayTimes ? { ...raw.tablePlayTimes } : undefined,
   }
 }
 

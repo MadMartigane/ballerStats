@@ -25,17 +25,28 @@ const [teams, setTeams] = createStore<TeamRawData[]>([])
 
 export { teams }
 
+/** Single clone boundary for a team raw: shallow spread + deep-clone of the
+ *  nested `matchFormat` and `playerIds`. Every read and write path routes through
+ *  it so a caller can never keep a live reference to store-owned nested state. */
+function cloneTeamRaw(raw: TeamRawData): TeamRawData {
+  return {
+    ...raw,
+    matchFormat: raw.matchFormat ? { ...raw.matchFormat } : raw.matchFormat,
+    playerIds: raw.playerIds ? [...raw.playerIds] : raw.playerIds,
+  }
+}
+
 export function getRawTeams(): TeamRawData[] {
-  return teams.map((raw) => ({ ...raw }))
+  return teams.map((raw) => cloneTeamRaw(raw))
 }
 
 export function getTeamById(id: string): TeamRawData | null {
   const raw = teams.find((candidate) => candidate.id === id)
-  return raw ? { ...raw } : null
+  return raw ? cloneTeamRaw(raw) : null
 }
 
 function cloneRaws(raws: TeamRawData[]): TeamRawData[] {
-  return raws.map((raw) => ({ ...raw }))
+  return raws.map((raw) => cloneTeamRaw(raw))
 }
 
 function persistTeams(): void {
@@ -61,14 +72,14 @@ export function replaceAllTeams(raws: TeamRawData[]): void {
 export function addTeam(raw: TeamRawData): void {
   const next = getRawTeams()
   assertTeamAddable(next, raw)
-  setTeams([...next, { ...raw }])
+  setTeams([...next, cloneTeamRaw(raw)])
   persistTeams()
 }
 
 export function updateTeam(id: string, raw: TeamRawData): void {
   assertTeamExists(teams, id)
   const index = teams.findIndex((candidate) => candidate.id === id)
-  setTeams(index, { ...raw })
+  setTeams(index, cloneTeamRaw(raw))
   persistTeams()
 }
 

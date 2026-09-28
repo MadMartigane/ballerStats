@@ -168,6 +168,37 @@ describe('matchs-store', () => {
     expect(getRawMatchs().find((candidate) => candidate.id === 'm2')?.stats?.[0].value).toBe(3)
   })
 
+  it('round-trips the optional tablePlayTimes field through update() and getMatchById()', () => {
+    addMatch(makeMatchData())
+    const tablePlayTimes = { p1: 20, p2: 15 }
+
+    updateMatch('m1', makeMatchData({ tablePlayTimes }))
+
+    expect(getMatchById('m1')?.tablePlayTimes).toEqual(tablePlayTimes)
+  })
+
+  it('clones tablePlayTimes: neither the read nor the input shares a mutable nested reference', () => {
+    const tablePlayTimes = { p1: 20, p2: 15 }
+    addMatch(makeMatchData({ tablePlayTimes }))
+
+    // The caller mutating the object passed to add() must not reach the store.
+    tablePlayTimes.p1 = 99
+    expect(getRawMatchs()[0].tablePlayTimes?.p1).toBe(20)
+
+    // Mutating the object returned by the clone getter must not reach the store.
+    const retrieved = getMatchById('m1')
+    if (retrieved?.tablePlayTimes) {
+      retrieved.tablePlayTimes.p2 = 55
+    }
+    expect(getRawMatchs()[0].tablePlayTimes?.p2).toBe(15)
+  })
+
+  it('round-trips a match without tablePlayTimes, keeping the field undefined', () => {
+    addMatch(makeMatchData())
+
+    expect(getMatchById('m1')?.tablePlayTimes).toBeUndefined()
+  })
+
   it('assertMatchExists() returns the matching match or throws', () => {
     hydrateMatchs([makeMatchData({ id: 'm1' })])
 

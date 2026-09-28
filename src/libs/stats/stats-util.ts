@@ -1,8 +1,10 @@
 import Match from '../match/match'
 import { getRawMatchs } from '../stores/matchs-store'
 import { getRawTeams } from '../stores/teams-store'
+import { resolveMatchFormat } from '../team/match-format'
 import { TEAM_OPPONENT_ID } from '../team/team'
 import { clone } from '../utils/utils'
+import { computePlayTimes, type PlayTimeEntry } from './play-time'
 import type {
   FullStatSummary,
   StatMatchActionItemName,
@@ -55,6 +57,17 @@ export function safeDivide(numerator: number, denominator: number): number {
     return 0
   }
   return Math.round(numerator / denominator)
+}
+
+/**
+ * Precise division that never produces NaN or Infinity (0 denominator -> 0).
+ * Unlike `safeDivide`, it preserves decimals: minute values must not round to integers.
+ */
+export function safeDividePrecise(numerator: number, denominator: number): number {
+  if (denominator === 0) {
+    return 0
+  }
+  return numerator / denominator
 }
 
 /**
@@ -239,18 +252,27 @@ const RAW_STAT_MATCH_SUMMARY: StatMatchSummary = {
   teamTurnover: 0,
 }
 
-function getPlayerIdsInStats(match: Match) {
-  return match.stats
-    .filter((stats) => stats.playerId !== TEAM_OPPONENT_ID)
-    .map((stats) => stats.playerId)
-    .reduce((result, playerId) => {
-      if (!playerId || result.includes(playerId)) {
-        return result
-      }
+function isOwnPlayerId(playerId: string | null): playerId is string {
+  return playerId !== null && playerId !== TEAM_OPPONENT_ID
+}
 
-      result.push(playerId)
+function getPlayerIdsInStats(match: Match) {
+  const statPlayerIds = match.stats.map((stats) => stats.playerId)
+  // A bench player with a table-recorded time but no stat event still needs a
+  // summary row, otherwise his minutes would never be displayed anywhere.
+  const tablePlayerIds = Object.keys(match.tablePlayTimes ?? {})
+
+  // The opponent sentinel is not a real player and must never produce a summary
+  // row. Filtering both sources through the same predicate keeps the two halves
+  // of this union from drifting apart again.
+  return [...statPlayerIds, ...tablePlayerIds].filter(isOwnPlayerId).reduce((result, playerId) => {
+    if (result.includes(playerId)) {
       return result
-    }, [] as string[])
+    }
+
+    result.push(playerId)
+    return result
+  }, [] as string[])
 }
 
 function getPlayerScore(match: Match, playerId: string) {
@@ -425,15 +447,29 @@ function getFullRebondStats(match: Match, playerIds: string[]): StatMatchSummary
   }
 }
 
+/** Reconstruct playing time once per match for the team's resolved format. */
+function getMatchPlayTimes(match: Match): Map<string, PlayTimeEntry> {
+  const team = getRawTeams().find((candidate) => candidate.id === match.teamId) ?? null
+  const format = resolveMatchFormat(team)
+  const computation = computePlayTimes({ stats: match.stats, tablePlayTimes: match.tablePlayTimes }, format)
+  return new Map(computation.entries.map((entry) => [entry.playerId, entry]))
+}
+
 function getPlayersStatsByMatch(match: Match) {
+  const playTimes = getMatchPlayTimes(match)
   const playerIds = getPlayerIdsInStats(match)
   return playerIds
     .map((playerId) => {
+      const playTime = playTimes.get(playerId)
       const playerStats = {
         assists: getPlayerAssists(match, playerId),
         blocks: getPlayerBlocks(match, playerId),
         fouls: getPlayerFouls(match, playerId),
         playerId,
+        // Absent from the computation means "unknown" (stats but no fiveIn), not zero:
+        // null lets the UI render "—" instead of a fake 0 minutes.
+        playTime: playTime?.minutes ?? null,
+        playTimeSource: playTime?.source,
         ratio: {
           '2pts': {
             fail: getPlayerNumberByType(match, playerId, '2pts', 'error'),
@@ -486,7 +522,7 @@ function getPlayersStatsByMatch(match: Match) {
     .sort((playerA, playerB) => playerB.eff - playerA.eff)
 }
 
-function sumPlayerStats(
+export function sumPlayerStats(
   statResult: StatMatchSummaryPlayer,
   statCurrentMatch: StatMatchSummaryPlayer
 ): StatMatchSummaryPlayer {
@@ -517,13 +553,17 @@ function sumPlayerStats(
   statResult.assists += statCurrentMatch.assists
   statResult.blocks += statCurrentMatch.blocks
 
+  // A numeric play time wins over null; null only survives when no match ever measured it.
+  statResult.playTime =
+    statResult.playTime === null ? statCurrentMatch.playTime : statResult.playTime + (statCurrentMatch.playTime ?? 0)
+
   return statResult
 }
 
 /** Divide every per-game field of a player row by a divisor.
  *  rebonds.total is recomputed as the sum of the already-divided defensive + offensive
  *  components (rather than divided directly) to stay consistent with the per-match shape. */
-function dividePlayerStatsBy(playerSats: StatMatchSummaryPlayer, divisor: number): void {
+export function dividePlayerStatsBy(playerSats: StatMatchSummaryPlayer, divisor: number): void {
   playerSats.fouls = safeDivide(playerSats.fouls, divisor)
   playerSats.assists = safeDivide(playerSats.assists, divisor)
   playerSats.blocks = safeDivide(playerSats.blocks, divisor)
@@ -546,6 +586,11 @@ function dividePlayerStatsBy(playerSats: StatMatchSummaryPlayer, divisor: number
   playerSats.rebonds.defensive = safeDivide(playerSats.rebonds.defensive, divisor)
   playerSats.rebonds.offensive = safeDivide(playerSats.rebonds.offensive, divisor)
   playerSats.rebonds.total = playerSats.rebonds.offensive + playerSats.rebonds.defensive
+
+  // Volume statistic like EFF: averaged with full precision, and left null when never measured.
+  if (playerSats.playTime !== null) {
+    playerSats.playTime = safeDividePrecise(playerSats.playTime, divisor)
+  }
 }
 
 function dividePlayerStatsByNbMatch(playerSats: StatMatchSummaryPlayer) {
@@ -626,6 +671,10 @@ export function getFullStats(championshipFilter?: string): FullStatSummary {
     const currentPlayerStats = clone(RAW_STAT_MATCH_SUMMARY.teamScores) as StatMatchSummaryPlayer
 
     currentPlayerStats.playerId = playerId
+    // Seed the aggregate as "unknown": the teamScores seed carries 0, but a
+    // player total of 0 is only meaningful when the aggregate play time is 0.
+    // A player never measured must stay null through the whole aggregation.
+    currentPlayerStats.playTime = null
 
     for (const stat of stats) {
       for (const playerStats of stat.players) {
