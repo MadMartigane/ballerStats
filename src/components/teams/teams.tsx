@@ -7,8 +7,9 @@ import { addTeam, teams, updateTeam } from '../../libs/stores/teams-store'
 import {
   AGE_CATEGORY_PRESETS,
   type AgeCategory,
-  getTheoreticalPlayerMinutes,
-  isMatchFormatConfig,
+  buildMatchFormatConfig,
+  formatMatchFormat,
+  formatTheoreticalTotal,
   type MatchFormatConfig,
   type ResolvedMatchFormat,
   resolveMatchFormat,
@@ -33,12 +34,10 @@ let currentTeam: Team | null = null
 const formatPreview: MadSignal<ResolvedMatchFormat> = new MadSignal(resolveMatchFormat(null))
 const formatOverrideHint: MadSignal<string> = new MadSignal('')
 
-// Raw text of the three override inputs; all three must hold a positive integer to apply.
+// Raw text of the three default-format inputs; all three must hold a positive integer to apply.
 let overridePeriodsText = ''
 let overridePeriodLengthText = ''
 let overridePlayersOnCourtText = ''
-
-const POSITIVE_INTEGER_PATTERN = /^\d+$/
 
 const CATEGORY_SELECT_DATAS = [
   { label: '—', value: '' },
@@ -49,8 +48,7 @@ const CATEGORY_SELECT_DATAS = [
 ]
 
 function formatPreviewText(format: ResolvedMatchFormat): string {
-  const total = getTheoreticalPlayerMinutes(format)
-  return `Format : ${format.periods} périodes × ${format.periodLengthMinutes} min, ${format.playersOnCourt} joueurs — total théorique ${total} min de jeu`
+  return `Format par défaut : ${formatMatchFormat(format)} — ${formatTheoreticalTotal(format)}. Chaque match part de ce format et garde le sien.`
 }
 
 function refreshFormatPreview() {
@@ -64,34 +62,12 @@ function resetFormatOverrideInputs(format?: MatchFormatConfig | null) {
   formatOverrideHint.set('')
 }
 
-function parsePositiveInteger(text: string): number | null {
-  if (!POSITIVE_INTEGER_PATTERN.test(text)) {
-    return null
-  }
-
-  const value = Number(text)
-  return value > 0 ? value : null
-}
-
-function buildMatchFormatOverride(): MatchFormatConfig | null {
-  const periods = parsePositiveInteger(overridePeriodsText)
-  const periodLengthMinutes = parsePositiveInteger(overridePeriodLengthText)
-  const playersOnCourt = parsePositiveInteger(overridePlayersOnCourtText)
-
-  if (periods === null || periodLengthMinutes === null || playersOnCourt === null) {
-    return null
-  }
-
-  const candidate = { periodLengthMinutes, periods, playersOnCourt }
-  return isMatchFormatConfig(candidate) ? candidate : null
-}
-
 function isFormatOverrideBlank(): boolean {
   return overridePeriodsText === '' && overridePeriodLengthText === '' && overridePlayersOnCourtText === ''
 }
 
 function applyFormatOverride() {
-  const override = buildMatchFormatOverride()
+  const override = buildMatchFormatConfig(overridePeriodsText, overridePeriodLengthText, overridePlayersOnCourtText)
 
   if (override) {
     formatOverrideHint.set('')
@@ -105,7 +81,9 @@ function applyFormatOverride() {
     return
   }
 
-  formatOverrideHint.set('Surcharge invalide : saisir trois entiers positifs, ou laisser les trois champs vides.')
+  formatOverrideHint.set(
+    'Format par défaut invalide : saisir trois entiers positifs, ou laisser les trois champs vides.'
+  )
 }
 
 function onCategoryChange(value: string) {
@@ -274,21 +252,21 @@ function TeamAddForm() {
             value={currentTeam?.category || ''}
           />
           <BsInput
-            label="Périodes (surcharge)"
+            label="Périodes par défaut"
             onChange={onOverridePeriodsChange}
             placeholder="4"
             type="text"
             value={currentTeam?.matchFormat?.periods?.toString() || ''}
           />
           <BsInput
-            label="Durée d’une période en min (surcharge)"
+            label="Durée d’une période par défaut (min)"
             onChange={onOverridePeriodLengthChange}
             placeholder="8"
             type="text"
             value={currentTeam?.matchFormat?.periodLengthMinutes?.toString() || ''}
           />
           <BsInput
-            label="Joueurs sur le terrain (surcharge)"
+            label="Joueurs sur le terrain par défaut"
             onChange={onOverridePlayersOnCourtChange}
             placeholder="5"
             type="text"

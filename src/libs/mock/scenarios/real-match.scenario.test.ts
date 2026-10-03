@@ -65,6 +65,21 @@ describe('seedRealMatchDataset', () => {
     expect(raw.playerIds).toEqual([...U13_SAMPLE_MATCH.teamRosterIds])
   })
 
+  it('pins the format the match was played under as its own value', () => {
+    const dataset = seedRealMatchDataset()
+    const [match] = dataset.matchs
+    const [team] = dataset.teams
+    const raw = match.getRawData()
+
+    expect(raw.matchFormat).toEqual({ periodLengthMinutes: 8, periods: 4, playersOnCourt: 5 })
+    expect(resolveMatchFormat(team.getRawData(), raw)).toEqual({
+      periodLengthMinutes: 8,
+      periods: 4,
+      playersOnCourt: 5,
+      source: 'match-override',
+    })
+  })
+
   it('locks the match and wires the roster to the fixture ids', () => {
     const [match] = seedRealMatchDataset().matchs
     const raw = match.getRawData()
@@ -135,7 +150,7 @@ describe('computePlayTimes over the seeded real match', () => {
   const dataset = seedRealMatchDataset()
   const match = dataset.matchs[0].getRawData()
   const [team] = dataset.teams
-  const format = resolveMatchFormat(team.getRawData())
+  const format = resolveMatchFormat(team.getRawData(), match)
   const result = computePlayTimes(match, format)
 
   it('measures the live interval union, dead-ball time excluded, inside the 4x8 tolerance', () => {

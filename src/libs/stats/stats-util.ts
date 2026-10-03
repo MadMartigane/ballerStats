@@ -447,10 +447,10 @@ function getFullRebondStats(match: Match, playerIds: string[]): StatMatchSummary
   }
 }
 
-/** Reconstruct playing time once per match for the team's resolved format. */
+/** Reconstruct playing time once per match for the match's resolved format. */
 function getMatchPlayTimes(match: Match): PlayTimeComputation {
   const team = getRawTeams().find((candidate) => candidate.id === match.teamId) ?? null
-  const format = resolveMatchFormat(team)
+  const format = resolveMatchFormat(team, match.getRawData())
   return computePlayTimes({ stats: match.stats, tablePlayTimes: match.tablePlayTimes }, format)
 }
 

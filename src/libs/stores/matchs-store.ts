@@ -39,6 +39,7 @@ export function getMatchById(id: string): MatchRawData | null {
 function cloneMatchRaw(raw: MatchRawData): MatchRawData {
   return {
     ...raw,
+    matchFormat: raw.matchFormat ? { ...raw.matchFormat } : raw.matchFormat,
     playersInTheFive: [...(raw.playersInTheFive ?? [])],
     stats: (raw.stats ?? []).map((stat) => ({ ...stat })),
     tablePlayTimes: raw.tablePlayTimes ? { ...raw.tablePlayTimes } : undefined,

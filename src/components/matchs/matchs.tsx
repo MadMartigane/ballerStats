@@ -5,7 +5,8 @@ import { getUniqueChampionships, groupMatchesByChampionship } from '../../libs/m
 import Match from '../../libs/match/match'
 import type { MatchRawData, MatchType } from '../../libs/match/match.d'
 import { addMatch, getRawMatchs, updateMatch } from '../../libs/stores/matchs-store'
-import { getRawTeams } from '../../libs/stores/teams-store'
+import { getRawTeams, getTeamById } from '../../libs/stores/teams-store'
+import { toTeamFormatPatch } from '../../libs/team/match-format'
 import Team from '../../libs/team/team'
 import { goTo, scrollBottom, scrollTop } from '../../libs/utils/utils'
 import BsCard from '../card/card'
@@ -75,7 +76,12 @@ function onTypeChange(value: MatchType) {
 }
 
 function onTeamChange(value: string) {
-  setNewMatchData({ teamId: value })
+  const team = getTeamById(value)
+
+  // The match owns its format: only a new match adopts the selected team's
+  // default. An edit keeps the recorded format, so a team change cannot
+  // overwrite a format already played.
+  setNewMatchData(isEditingNewMatch ? { ...toTeamFormatPatch(team), teamId: value } : { teamId: value })
 }
 
 function onStatusChange(isOpen: boolean) {

@@ -6,6 +6,7 @@ export type BsInputOnChangeEvent = Event & {
 }
 
 export interface BsInputProps {
+  disabled?: boolean
   id?: string
   label?: string
   maxLength?: number

@@ -1,4 +1,5 @@
 import type { StatMatchActionItem } from '../stats/stats.d'
+import type { MatchFormatConfig } from '../team/match-format'
 
 export type MatchType = 'home' | 'outside'
 export type MatchStatus = 'locked' | 'unlocked'
@@ -12,6 +13,8 @@ export interface MatchRawData {
   championship?: string | null
   date?: string | null
   id?: string
+  /** Format this match was played under; owns the real value, falling back to the team default. */
+  matchFormat?: MatchFormatConfig | null
   opponent?: string | null
   playersInTheFive?: string[]
   stats?: MatchStatLogEntry[]

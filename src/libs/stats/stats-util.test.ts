@@ -913,6 +913,25 @@ describe('getStatSummary play time', () => {
       expect(player?.playTime).toBeCloseTo(25.6, 5)
     }
   })
+
+  it('uses the match own format over the team default when the two differ', () => {
+    // Team has no category and no default, so the fallback is the senior 4 x 10 (ceiling 40).
+    const noPresetTeam = makeTeam({ id: 'team-no-preset', name: 'NoPreset', playerIds: [] })
+    mockTeamsStore.raws = [noPresetTeam.getRawData()]
+
+    const match = makeMatch({
+      // Table-only match: 50 min exceeds both ceilings, so the clamp reveals which format won.
+      matchFormat: { periodLengthMinutes: 8, periods: 4, playersOnCourt: 5 },
+      stats: [makeStatEntry('2pts', { playerId: 'p-own-format', type: 'success', value: 2 })],
+      tablePlayTimes: { 'p-own-format': 50 },
+      teamId: 'team-no-preset',
+    })
+
+    const player = getStatSummary(match).players.find((row) => row.playerId === 'p-own-format')
+
+    // Match ceiling 4 x 8 = 32, not the 4 x 10 = 40 fallback.
+    expect(player?.playTime).toBe(32)
+  })
 })
 
 describe('getFullStats play time aggregation', () => {

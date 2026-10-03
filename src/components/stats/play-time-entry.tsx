@@ -1,5 +1,5 @@
-import { Eraser, Save } from 'lucide-solid'
-import { For } from 'solid-js'
+import { Eraser, Lock, Save } from 'lucide-solid'
+import { For, Show } from 'solid-js'
 import { createStore, type SetStoreFunction } from 'solid-js/store'
 import type Match from '../../libs/match/match'
 import type Player from '../../libs/player/player'
@@ -77,22 +77,33 @@ function makeClearClickHandler(props: BsPlayTimeEntryProps, setValues: SetStoreF
 /**
  * Table-entry editor for play times taken from the official match sheet.
  *
- * It must stay usable on a LOCKED match: the coach fills the sheet in after the
- * match is over, which is exactly when the match gets locked.
+ * A locked match is locked: the recorded minutes stay readable but no control
+ * writes them.
  */
 export function BsPlayTimeEntry(props: BsPlayTimeEntryProps) {
   const [values, setValues] = createStore(initialValues(props.match, props.roster))
+  const locked = () => props.match.status === 'locked'
 
   return (
     <div class="my-3 flex flex-col gap-2 rounded-lg border border-base-300 p-3">
-      <h3 class="font-bold">Temps de jeu (feuille de match)</h3>
+      <h3 class="flex items-center gap-1 font-bold">
+        Temps de jeu (feuille de match)
+        <Show when={locked()}>
+          <Lock size={16} />
+        </Show>
+      </h3>
       <p class="text-sm opacity-70">
         Temps relevés sur la feuille officielle, en minutes entières. Ces valeurs remplacent les temps calculés.
       </p>
 
+      <Show when={locked()}>
+        <p class="text-sm opacity-70">Match verrouillé : temps non modifiables.</p>
+      </Show>
+
       <For each={props.roster}>
         {(player) => (
           <BsInput
+            disabled={locked()}
             label={playerLabel(player)}
             onChange={makeValueChangeHandler(setValues, player.id)}
             placeholder="min"
@@ -102,16 +113,18 @@ export function BsPlayTimeEntry(props: BsPlayTimeEntryProps) {
         )}
       </For>
 
-      <div class="mt-2 flex flex-wrap gap-2">
-        <button class="btn btn-primary" onClick={makeSaveClickHandler(props, values)} type="button">
-          <Save />
-          Enregistrer les temps
-        </button>
-        <button class="btn btn-outline" onClick={makeClearClickHandler(props, setValues)} type="button">
-          <Eraser />
-          Tout effacer
-        </button>
-      </div>
+      <Show when={!locked()}>
+        <div class="mt-2 flex flex-wrap gap-2">
+          <button class="btn btn-primary" onClick={makeSaveClickHandler(props, values)} type="button">
+            <Save />
+            Enregistrer les temps
+          </button>
+          <button class="btn btn-outline" onClick={makeClearClickHandler(props, setValues)} type="button">
+            <Eraser />
+            Tout effacer
+          </button>
+        </div>
+      </Show>
     </div>
   )
 }

@@ -92,6 +92,7 @@ export default function BsInput(options: BsInputProps) {
       <div class={props.label ? 'w-2/3' : 'w-full'}>
         <input
           class="input w-full"
+          disabled={props.disabled}
           id={props.id}
           maxLength={props.maxLength}
           onBlur={handleBlur}

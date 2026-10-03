@@ -59,6 +59,9 @@ export function seedRealMatchDataset(): DemoDataset {
     championship: 'Démo U13',
     date: DEMO_MATCH_DATE,
     id: DEMO_MATCH_ID,
+    // The format this real match was played under, recorded as data rather than
+    // derived from a preset the committee can change after the fact.
+    matchFormat: { periodLengthMinutes: 8, periods: 4, playersOnCourt: 5 },
     opponent: 'Adversaires Démo',
     playersInTheFive: STARTING_FIVE,
     stats: [...U13_SAMPLE_MATCH.stats],

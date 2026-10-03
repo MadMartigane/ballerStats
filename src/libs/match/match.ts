@@ -1,3 +1,4 @@
+import type { MatchFormatConfig } from '../team/match-format'
 import { clone, getUniqId } from '../utils/utils'
 import type { MatchRawData, MatchStatLogEntry, MatchStatus, MatchType } from './match.d'
 
@@ -15,6 +16,7 @@ export default class Match {
   championship: string | null = null
   playersInTheFive: string[] = []
   tablePlayTimes?: Record<string, number>
+  matchFormat?: MatchFormatConfig | null
 
   constructor(data?: MatchRawData) {
     if (data) {
@@ -36,6 +38,7 @@ export default class Match {
     this.championship = data.championship ?? null
     this.playersInTheFive = data.playersInTheFive || this.playersInTheFive
     this.tablePlayTimes = data.tablePlayTimes || undefined
+    this.matchFormat = data.matchFormat || null
   }
 
   get id() {
@@ -61,6 +64,10 @@ export default class Match {
 
     if (this.tablePlayTimes) {
       data.tablePlayTimes = { ...this.tablePlayTimes }
+    }
+
+    if (this.matchFormat) {
+      data.matchFormat = { ...this.matchFormat }
     }
 
     return data

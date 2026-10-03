@@ -54,3 +54,30 @@ describe('Match — championship field', () => {
     expect(m.championship).toBeNull()
   })
 })
+
+describe('Match — matchFormat field', () => {
+  const format = { periodLengthMinutes: 8, periods: 4, playersOnCourt: 5 }
+
+  it('round-trip: matchFormat survives getRawData as an independent copy', () => {
+    const m = new Match({ matchFormat: format })
+    const raw = m.getRawData()
+
+    expect(raw.matchFormat).toEqual(format)
+    expect(raw.matchFormat).not.toBe(format)
+  })
+
+  it('defaults to null when not provided', () => {
+    expect(new Match({}).matchFormat).toBeNull()
+    expect(new Match({}).getRawData().matchFormat).toBeUndefined()
+  })
+
+  it('update sets and clears matchFormat', () => {
+    const m = new Match({})
+
+    m.update({ matchFormat: format })
+    expect(m.matchFormat).toEqual(format)
+
+    m.update({ matchFormat: null })
+    expect(m.matchFormat).toBeNull()
+  })
+})

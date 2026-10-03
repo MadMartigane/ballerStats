@@ -199,6 +199,37 @@ describe('matchs-store', () => {
     expect(getMatchById('m1')?.tablePlayTimes).toBeUndefined()
   })
 
+  it('round-trips the optional matchFormat field through update() and getMatchById()', () => {
+    addMatch(makeMatchData())
+    const matchFormat = { periodLengthMinutes: 8, periods: 4, playersOnCourt: 5 }
+
+    updateMatch('m1', makeMatchData({ matchFormat }))
+
+    expect(getMatchById('m1')?.matchFormat).toEqual(matchFormat)
+  })
+
+  it('clones matchFormat: neither the read nor the input shares a mutable nested reference', () => {
+    const matchFormat = { periodLengthMinutes: 8, periods: 4, playersOnCourt: 5 }
+    addMatch(makeMatchData({ matchFormat }))
+
+    // The caller mutating the object passed to add() must not reach the store.
+    matchFormat.periods = 99
+    expect(getRawMatchs()[0].matchFormat?.periods).toBe(4)
+
+    // Mutating the object returned by the clone getter must not reach the store.
+    const retrieved = getMatchById('m1')
+    if (retrieved?.matchFormat) {
+      retrieved.matchFormat.periodLengthMinutes = 55
+    }
+    expect(getRawMatchs()[0].matchFormat?.periodLengthMinutes).toBe(8)
+  })
+
+  it('round-trips a match without matchFormat, keeping the field undefined', () => {
+    addMatch(makeMatchData())
+
+    expect(getMatchById('m1')?.matchFormat).toBeUndefined()
+  })
+
   it('assertMatchExists() returns the matching match or throws', () => {
     hydrateMatchs([makeMatchData({ id: 'm1' })])
 

@@ -25,11 +25,13 @@ import type { StatMatchActionItem, StatMatchSummary } from '../../libs/stats/sta
 import { getStatSummary } from '../../libs/stats/stats-util'
 import { updateMatch } from '../../libs/stores/matchs-store'
 import { type ResolvedMatchFormat, resolveMatchFormat } from '../../libs/team/match-format'
+import type Team from '../../libs/team/team'
 import { TEAM_OPPONENT_ID } from '../../libs/team/team'
 import { confirmAction, goTo, toast } from '../../libs/utils/utils'
 import { vibrate } from '../../libs/vibrator/vibrator'
 import BsScoreCard from '../score-card/score-card'
 import { BsFullStatTable } from '../stats/full-stat-table'
+import { BsMatchFormatLine } from '../stats/match-format-line'
 import { BsPlayTimeEntry } from '../stats/play-time-entry'
 import { BsPlayTimePanel } from '../stats/play-time-panel'
 import { BsStatSumUpRebonds } from '../stats/sum-up-rebonds'
@@ -592,18 +594,32 @@ function renderTeamTotals(statSummary: StatMatchSummary) {
   )
 }
 
-function makePlayTimeSavedHandler(setStatSummary: SetStoreFunction<StatMatchSummary>, getMatch: () => Match) {
+function makeStatGridSavedHandler(
+  setStatSummary: SetStoreFunction<StatMatchSummary>,
+  format: MadSignal<ResolvedMatchFormat>,
+  match: Match | null,
+  team: Team | null
+) {
   return () => {
-    setStatSummary(getStatSummary(getMatch()))
+    // `match` is nullable because `orchestrator.getMatch` returns null for an
+    // unknown id; the narrowing keeps `getStatSummary` type-safe.
+    if (!match) {
+      return
+    }
+
+    setStatSummary(getStatSummary(match))
+    format.set(resolveMatchFormat(team?.getRawData() ?? null, match.getRawData()))
   }
 }
 
 function renderStatGrid(options: {
-  format: ResolvedMatchFormat
+  format: MadSignal<ResolvedMatchFormat>
   match: Match | null
+  onSaved: () => void
   roster: Player[]
   setStatSummary: SetStoreFunction<StatMatchSummary>
   statSummary: StatMatchSummary
+  team: Team | null
 }) {
   return (
     <div>
@@ -613,17 +629,24 @@ function renderStatGrid(options: {
       <Show when={options.match}>
         {(currentMatch) => (
           <div class="print:hidden">
-            <BsPlayTimeEntry
-              match={currentMatch()}
-              onSaved={makePlayTimeSavedHandler(options.setStatSummary, currentMatch)}
-              roster={options.roster}
-            />
+            <BsPlayTimeEntry match={currentMatch()} onSaved={options.onSaved} roster={options.roster} />
           </div>
         )}
       </Show>
 
+      <Show when={options.match}>
+        {(currentMatch) => (
+          <BsMatchFormatLine
+            category={options.team?.category}
+            format={options.format.get()}
+            match={currentMatch()}
+            onSaved={options.onSaved}
+          />
+        )}
+      </Show>
+
       <div class="print:break-inside-avoid">
-        <BsPlayTimePanel format={options.format} summary={options.statSummary} />
+        <BsPlayTimePanel format={options.format.get()} summary={options.statSummary} />
       </div>
 
       <div class="print:break-inside-avoid">
@@ -728,9 +751,14 @@ export default function BsMatch(props: BsMatchProps) {
 
   const team = orchestrator.getTeam(match?.teamId)
   const sortedPlayers = orchestrator.getJerseySortedPlayers(team?.playerIds)
-  const format = resolveMatchFormat(team?.getRawData() ?? null)
+  // The detached Match instance carries no reactive field, so the resolved format
+  // lives in a signal refreshed by the save handler.
+  const format: MadSignal<ResolvedMatchFormat> = new MadSignal(
+    resolveMatchFormat(team?.getRawData() ?? null, match?.getRawData())
+  )
   const playersInTheFive = new MadSignal(match?.playersInTheFive || [])
   const matchIsPlaying: MadSignal<boolean> = new MadSignal(false)
+  const onStatGridSaved = makeStatGridSavedHandler(setStatSummary, format, match, team)
 
   return (
     <div class="w-full">
@@ -928,9 +956,11 @@ export default function BsMatch(props: BsMatchProps) {
         {renderStatGrid({
           format,
           match,
+          onSaved: onStatGridSaved,
           roster: sortedPlayers,
           setStatSummary,
           statSummary,
+          team,
         })}
       </Show>
 
