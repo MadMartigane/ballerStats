@@ -19,9 +19,6 @@ const DEMO_MATCH_ID = 'match-u13'
 // Real date shifted by exactly one week so the demo never points at a real fixture.
 const DEMO_MATCH_DATE = '2026-09-12T15:30'
 
-/** U13 committee rule: four periods of 7 minutes, five players on court (theoretical 140). */
-const U13_MATCH_FORMAT = { periodLengthMinutes: 7, periods: 4, playersOnCourt: 5 } as const
-
 /** First five `fiveIn` player ids of the match, i.e. the starting five. */
 const STARTING_FIVE = ['u13-p4', 'u13-p2', 'u13-p1', 'u13-p6', 'u13-p3']
 
@@ -54,7 +51,6 @@ export function seedRealMatchDataset(): DemoDataset {
     category: 'U13',
     clubId: DEMO_CLUB_ID,
     id: DEMO_TEAM_ID,
-    matchFormat: { ...U13_MATCH_FORMAT },
     name: DEMO_TEAM_NAME,
     playerIds: [...U13_SAMPLE_MATCH.teamRosterIds],
   })

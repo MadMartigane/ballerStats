@@ -38,7 +38,7 @@ export interface SampleU13Match {
 export const U13_SAMPLE_MATCH: SampleU13Match = {
   players: [
     {
-      expectedPlayTime: 22.23,
+      expectedPlayTime: 25.95,
       expectedRawMinutes: 25.95,
       firstName: 'Léo',
       id: 'u13-p1',
@@ -46,7 +46,7 @@ export const U13_SAMPLE_MATCH: SampleU13Match = {
       lastName: 'Martin',
     },
     {
-      expectedPlayTime: 13.97,
+      expectedPlayTime: 16.31,
       expectedRawMinutes: 16.31,
       firstName: 'Hugo',
       id: 'u13-p2',
@@ -54,7 +54,7 @@ export const U13_SAMPLE_MATCH: SampleU13Match = {
       lastName: 'Bernard',
     },
     {
-      expectedPlayTime: 25.44,
+      expectedPlayTime: 29.71,
       expectedRawMinutes: 29.71,
       firstName: 'Noah',
       id: 'u13-p3',
@@ -62,7 +62,7 @@ export const U13_SAMPLE_MATCH: SampleU13Match = {
       lastName: 'Dubois',
     },
     {
-      expectedPlayTime: 14.5,
+      expectedPlayTime: 16.93,
       expectedRawMinutes: 16.93,
       firstName: 'Nathan',
       id: 'u13-p4',
@@ -70,7 +70,7 @@ export const U13_SAMPLE_MATCH: SampleU13Match = {
       lastName: 'Moreau',
     },
     {
-      expectedPlayTime: 16.37,
+      expectedPlayTime: 19.12,
       expectedRawMinutes: 19.12,
       firstName: 'Yanis',
       id: 'u13-p5',
@@ -78,7 +78,7 @@ export const U13_SAMPLE_MATCH: SampleU13Match = {
       lastName: 'Girard',
     },
     {
-      expectedPlayTime: 14.44,
+      expectedPlayTime: 16.87,
       expectedRawMinutes: 16.87,
       firstName: 'Ethan',
       id: 'u13-p6',
@@ -86,7 +86,7 @@ export const U13_SAMPLE_MATCH: SampleU13Match = {
       lastName: 'Roux',
     },
     {
-      expectedPlayTime: 19.27,
+      expectedPlayTime: 22.5,
       expectedRawMinutes: 22.5,
       firstName: 'Tom',
       id: 'u13-p7',
@@ -94,7 +94,7 @@ export const U13_SAMPLE_MATCH: SampleU13Match = {
       lastName: 'Fournier',
     },
     {
-      expectedPlayTime: 13.79,
+      expectedPlayTime: 16.1,
       expectedRawMinutes: 16.1,
       firstName: 'Enzo',
       id: 'u13-p8',

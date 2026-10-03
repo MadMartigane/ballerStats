@@ -4,7 +4,7 @@ import { getRawTeams } from '../stores/teams-store'
 import { resolveMatchFormat } from '../team/match-format'
 import { TEAM_OPPONENT_ID } from '../team/team'
 import { clone } from '../utils/utils'
-import { computePlayTimes, type PlayTimeEntry } from './play-time'
+import { computePlayTimes, type PlayTimeComputation } from './play-time'
 import type {
   FullStatSummary,
   StatMatchActionItemName,
@@ -448,15 +448,14 @@ function getFullRebondStats(match: Match, playerIds: string[]): StatMatchSummary
 }
 
 /** Reconstruct playing time once per match for the team's resolved format. */
-function getMatchPlayTimes(match: Match): Map<string, PlayTimeEntry> {
+function getMatchPlayTimes(match: Match): PlayTimeComputation {
   const team = getRawTeams().find((candidate) => candidate.id === match.teamId) ?? null
   const format = resolveMatchFormat(team)
-  const computation = computePlayTimes({ stats: match.stats, tablePlayTimes: match.tablePlayTimes }, format)
-  return new Map(computation.entries.map((entry) => [entry.playerId, entry]))
+  return computePlayTimes({ stats: match.stats, tablePlayTimes: match.tablePlayTimes }, format)
 }
 
-function getPlayersStatsByMatch(match: Match) {
-  const playTimes = getMatchPlayTimes(match)
+function getPlayersStatsByMatch(match: Match, computation: PlayTimeComputation) {
+  const playTimes = new Map(computation.entries.map((entry) => [entry.playerId, entry]))
   const playerIds = getPlayerIdsInStats(match)
   return playerIds
     .map((playerId) => {
@@ -609,7 +608,8 @@ export function getStatSummary(match: Match | null): StatMatchSummary {
   }
 
   const playerIds = getPlayerIdsInStats(match)
-  const players = getPlayersStatsByMatch(match)
+  const playTime = getMatchPlayTimes(match)
+  const players = getPlayersStatsByMatch(match, playTime)
   const rebonds = getFullRebondStats(match, playerIds)
   const teamScores = getTeamScores(players)
 
@@ -617,6 +617,7 @@ export function getStatSummary(match: Match | null): StatMatchSummary {
     opponentFouls: getOpponentFouls(match),
     opponentScore: getOpponentScore(match),
     players,
+    playTimeQuality: playTime.quality,
     rebonds,
     teamAssists: getTeamAssists(players),
     teamFouls: getTeamFouls(players),

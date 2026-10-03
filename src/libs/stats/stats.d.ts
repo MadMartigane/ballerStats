@@ -1,5 +1,5 @@
 import type { JSXElement } from 'solid-js'
-import type { PlayTimeSource } from './play-time'
+import type { PlayTimeQuality, PlayTimeSource } from './play-time'
 
 export type ScoringKey = '2pts' | '3pts' | 'free-throw'
 
@@ -80,6 +80,8 @@ export interface StatMatchSummary {
   opponentFouls: number
   opponentScore: number
   players: StatMatchSummaryPlayer[]
+  /** Sheet-vs-events agreement for this match; absent on aggregates and on the zeroed summary. */
+  playTimeQuality?: PlayTimeQuality
   rebonds: StatMatchSummaryRebonds
   teamAssists?: number
   teamFouls?: number

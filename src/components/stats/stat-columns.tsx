@@ -1,6 +1,7 @@
 import { Shirt, Users } from 'lucide-solid'
 import type { JSXElement } from 'solid-js'
 import type Player from '../../libs/player/player'
+import { PLAY_TIME_TABLE_WEIGHT, PLAY_TIME_TOLERANCE } from '../../libs/stats/play-time'
 import type { ScoringKey, StatMatchSummaryPlayer } from '../../libs/stats/stats.d'
 import { isTeamPerGameRow, isTeamTotalRow } from '../../libs/stats/stats-util'
 
@@ -13,6 +14,7 @@ export type StatColumnId =
   | 'turnover'
   | 'assists'
   | 'steals'
+  | 'playTime'
   | ScoringKey
   | 'blocks'
   | 'eff'
@@ -48,7 +50,7 @@ function renderScoreCell(value: number | string) {
 
 function renderRatioCell(key: ScoringKey, stats: StatMatchSummaryPlayer) {
   return (
-    <td class="print:whitespace-nowrap print:px-1">
+    <td class="print:px-1">
       <span class="text-lg">{`${stats.scores[key]}`}</span>
       {` ${stats.ratio[key].success}/${stats.ratio[key].total}`}
       <div>{`(${stats.ratio[key].percentage}%)`}</div>
@@ -160,6 +162,19 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
     id: 'steals',
     label: 'Steals',
     renderCell: (stats) => renderScoreCell(stats.steals),
+  },
+  {
+    glossary: {
+      explanation: `Temps de jeu estimé, arrondi à la minute. Sur un match, la valeur mélange la feuille de match officielle (${Math.round(PLAY_TIME_TABLE_WEIGHT * 100)} %) et les minutes reconstruites depuis les entrées/sorties du coach (${Math.round((1 - PLAY_TIME_TABLE_WEIGHT) * 100)} %) ; quand les minutes recalculées s'écartent de plus de ${Math.round(PLAY_TIME_TOLERANCE * 100)} % du total théorique du format, l'ensemble est rectifié pour totaliser ce total théorique. Sur /stats, la colonne affiche la moyenne par match joué. Un tiret (—) signifie qu'aucun temps n'a pu être mesuré : ce n'est pas 0 minute.`,
+      fullName: 'Temps de jeu',
+    },
+    id: 'playTime',
+    label: 'Temps',
+    renderCell: (stats) => (
+      <td class="print:px-1">
+        <span class="text-lg">{stats.playTime === null ? '—' : Math.round(stats.playTime)}</span>
+      </td>
+    ),
   },
   ...SCORING_KEYS.map<StatColumn>((key) => ({
     glossary: SCORING_COLUMN_META[key].glossary,

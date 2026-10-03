@@ -774,6 +774,11 @@ const fiveOutAt = (playerId: string, offsetMinutes: number) =>
     type: 'secondary',
   })
 
+const playIntervalStats = (playerId: string, fromMinutes: number, toMinutes: number) => [
+  fiveInAt(playerId, fromMinutes),
+  fiveOutAt(playerId, toMinutes),
+]
+
 describe('getStatSummary play time', () => {
   // U13 preset (4 x 8, ceiling 32) rather than the senior default, so a resolved
   // team format is observable through the clamp.
@@ -785,8 +790,9 @@ describe('getStatSummary play time', () => {
 
   it('sets playTime from the engine using the mocked team resolved format', () => {
     const match = makeMatch({
+      // Table-only match (no substitution events), so the source stays 'table'.
       // 50 min exceeds the U13 ceiling (4 x 8 = 32): the clamp proves the format came from the team.
-      stats: [fiveInAt('p-table'), makeStatEntry('2pts', { playerId: 'p-table', type: 'success', value: 2 })],
+      stats: [makeStatEntry('2pts', { playerId: 'p-table', type: 'success', value: 2 })],
       tablePlayTimes: { 'p-table': 50 },
       teamId: 'team-playtime',
     })
@@ -857,6 +863,56 @@ describe('getStatSummary play time', () => {
 
     expect(summary.players.find((row) => row.playerId === TEAM_OPPONENT_ID)).toBeUndefined()
   })
+
+  it('deposits the match play time quality on the summary', () => {
+    const match = makeMatch({
+      stats: [...playIntervalStats('p-both', 0, 10), ...playIntervalStats('p-events', 0, 12)],
+      tablePlayTimes: { 'p-both': 9 },
+      teamId: 'team-playtime',
+    })
+
+    const quality = getStatSummary(match).playTimeQuality
+
+    expect(quality).toBeDefined()
+    expect(quality?.tableTotalMinutes).toBe(9)
+    expect(quality?.eventsTotalMinutes).toBeCloseTo(22, 5)
+  })
+
+  it('gives a player present in both sources the blended source', () => {
+    const match = makeMatch({
+      stats: playIntervalStats('p-both', 0, 10),
+      tablePlayTimes: { 'p-both': 20 },
+      teamId: 'team-playtime',
+    })
+
+    const player = getStatSummary(match).players.find((row) => row.playerId === 'p-both')
+
+    expect(player?.playTimeSource).toBe('blended')
+  })
+
+  it('renormalises a mixed table and events match without rescaling the sheet-only player', () => {
+    // U13 format: ceiling 32, theoretical 160.
+    // Five measured players x 12 min = 60 events + one sheet-only player at 32 (clamped).
+    // The measured part targets 160 - 32 = 128, so the factor is 128 / 60.
+    const measuredIds = ['m1', 'm2', 'm3', 'm4', 'm5']
+    const match = makeMatch({
+      stats: measuredIds.flatMap((playerId) => playIntervalStats(playerId, 0, 12)),
+      tablePlayTimes: { 'sheet-only': 50 },
+      teamId: 'team-playtime',
+    })
+
+    const summary = getStatSummary(match)
+    const sheetOnly = summary.players.find((row) => row.playerId === 'sheet-only')
+
+    expect(sheetOnly?.playTimeSource).toBe('table')
+    expect(sheetOnly?.playTime).toBe(32)
+    for (const playerId of measuredIds) {
+      const player = summary.players.find((row) => row.playerId === playerId)
+      expect(player?.playTimeSource).toBe('computed')
+      // 12 * (128 / 60) = 25.6
+      expect(player?.playTime).toBeCloseTo(25.6, 5)
+    }
+  })
 })
 
 describe('getFullStats play time aggregation', () => {
@@ -864,18 +920,19 @@ describe('getFullStats play time aggregation', () => {
 
   // p1 is measured in all three matches (10 / 20 / 20); p3 is measured only in the
   // first (30) and merely has stats in the other two, i.e. an absent (null) play time.
+  // These are table-only matches, so the aggregation operates on plain sheet values.
   const matchA = makeMatch({
-    stats: [fiveInAt('p1'), makeStatEntry('2pts', { playerId: 'p3', type: 'success', value: 2 }), fiveInAt('p3')],
+    stats: [makeStatEntry('2pts', { playerId: 'p3', type: 'success', value: 2 })],
     tablePlayTimes: { p1: 10, p3: 30 },
     teamId: 'team-pt',
   })
   const matchB = makeMatch({
-    stats: [fiveInAt('p1'), makeStatEntry('2pts', { playerId: 'p3', type: 'success', value: 2 })],
+    stats: [makeStatEntry('2pts', { playerId: 'p3', type: 'success', value: 2 })],
     tablePlayTimes: { p1: 20 },
     teamId: 'team-pt',
   })
   const matchC = makeMatch({
-    stats: [fiveInAt('p1'), makeStatEntry('2pts', { playerId: 'p3', type: 'success', value: 2 })],
+    stats: [makeStatEntry('2pts', { playerId: 'p3', type: 'success', value: 2 })],
     tablePlayTimes: { p1: 20 },
     teamId: 'team-pt',
   })
@@ -950,5 +1007,11 @@ describe('getFullStats play time null semantics', () => {
     const measured = summary.players.find((row) => row.playerId === measuredId)
 
     expect(measured?.playTime).toBeCloseTo((20 + 10) / 2, 10)
+  })
+
+  it('leaves playTimeQuality undefined on the aggregate', () => {
+    const summary = getFullStats()
+
+    expect(summary.playTimeQuality).toBeUndefined()
   })
 })

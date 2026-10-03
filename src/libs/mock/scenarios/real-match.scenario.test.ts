@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { computePlayTimes } from '../../stats/play-time'
-import { resolveMatchFormat } from '../../team/match-format'
+import { AGE_CATEGORY_PRESETS, resolveMatchFormat } from '../../team/match-format'
 import { U13_SAMPLE_MATCH } from '../fixtures/u13-sample-match'
 import { seedRealMatchDataset } from './real-match.scenario'
 
@@ -54,13 +54,14 @@ describe('seedRealMatchDataset', () => {
     }
   })
 
-  it('carries the U13 category and the 4x7 team override on the team', () => {
+  it('carries the U13 category and resolves the preset, with no team override', () => {
     const [team] = seedRealMatchDataset().teams
     const raw = team.getRawData()
 
     expect(raw.category).toBe('U13')
-    expect(raw.matchFormat).toEqual({ periodLengthMinutes: 7, periods: 4, playersOnCourt: 5 })
-    expect(resolveMatchFormat(raw).source).toBe('team-override')
+    expect(raw.matchFormat).toBeUndefined()
+    expect(resolveMatchFormat(raw).source).toBe('category-preset')
+    expect(resolveMatchFormat(raw)).toEqual({ ...AGE_CATEGORY_PRESETS.U13, source: 'category-preset' })
     expect(raw.playerIds).toEqual([...U13_SAMPLE_MATCH.teamRosterIds])
   })
 
@@ -137,15 +138,15 @@ describe('computePlayTimes over the seeded real match', () => {
   const format = resolveMatchFormat(team.getRawData())
   const result = computePlayTimes(match, format)
 
-  it('measures the live interval union, dead-ball time excluded, and deviates past the tolerance', () => {
+  it('measures the live interval union, dead-ball time excluded, inside the 4x8 tolerance', () => {
     // Anchor computed by running the real engine over the real event stream with
     // the `gameStop` dead-ball windows subtracted.
-    expect(result.measuredTotalMinutes).toBeCloseTo(163.49, 2)
-    expect(result.deviationRatio).toBeCloseTo(0.1678, 3)
-    expect(result.renormalised).toBe(true)
+    expect(result.quality.eventsTotalMinutes).toBeCloseTo(163.49, 2)
+    expect(result.deviationRatio).toBeCloseTo(0.021_811, 4)
+    expect(result.renormalised).toBe(false)
   })
 
-  it('renormalises every player onto the fixture anchor', () => {
+  it('keeps every player at the interval-union anchor, untouched by renormalisation', () => {
     const byPlayerId = new Map(result.entries.map((entry) => [entry.playerId, entry]))
 
     expect(result.entries).toHaveLength(8)
@@ -157,24 +158,24 @@ describe('computePlayTimes over the seeded real match', () => {
     }
   })
 
-  it('keeps every final value under the ceiling and the total at 140', () => {
+  it('keeps every final value under the 32-minute ceiling and the total at the raw sum', () => {
     const total = result.entries.reduce((sum, entry) => sum + entry.minutes, 0)
 
-    expect(total).toBeCloseTo(140, 1)
+    expect(total).toBeCloseTo(163.49, 1)
     for (const entry of result.entries) {
-      expect(entry.minutes).toBeLessThanOrEqual(28)
+      expect(entry.minutes).toBeLessThanOrEqual(32)
     }
   })
 
-  it('preserves the raw ranking and clamps the busiest player back under the ceiling', () => {
+  it('preserves the raw ranking and leaves every final value equal to its raw value', () => {
     const byRaw = [...result.entries].sort((left, right) => right.rawMinutes - left.rawMinutes).map((e) => e.playerId)
     const byFinal = [...result.entries].sort((left, right) => right.minutes - left.minutes).map((e) => e.playerId)
 
     expect(byFinal).toEqual(byRaw)
 
     const busiest = result.entries.find((entry) => entry.playerId === 'u13-p3')
-    expect(busiest?.rawMinutes).toBeGreaterThan(28)
     expect(busiest?.rawMinutes).toBeCloseTo(29.71, 1)
-    expect(busiest?.minutes).toBeCloseTo(25.44, 1)
+    expect(busiest?.minutes).toBeCloseTo(29.71, 1)
+    expect(busiest?.source).toBe('computed')
   })
 })

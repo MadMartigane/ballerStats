@@ -11,14 +11,12 @@ import { computePlayTimes } from './play-time'
  * or of the dead-ball handling is caught immediately.
  */
 
-/** U13 4x7 format: 4 x 7 x 5 -> 28-minute ceiling, 140 theoretical minutes. */
-const U13_4X7_FORMAT: MatchFormatConfig = { periodLengthMinutes: 7, periods: 4, playersOnCourt: 5 }
-const CEILING_MINUTES = 28
-const THEORETICAL_PLAYER_MINUTES = 140
+/** U13 4x8 format: 4 x 8 x 5 -> 32-minute ceiling, 160 theoretical minutes. */
+const U13_4X8_FORMAT: MatchFormatConfig = { periodLengthMinutes: 8, periods: 4, playersOnCourt: 5 }
+const CEILING_MINUTES = 32
 
 /** `toBeCloseTo` precision 2 => |delta| < 0.005, inside the required +/- 0.01 window. */
 const ANCHOR_PRECISION = 2
-const RATIO_PRECISION = 6
 
 const EXPECTED_SUBSTITUTION_EVENTS = 49
 const EXPECTED_GAME_STOP_EVENTS = 84
@@ -32,23 +30,23 @@ interface EngineAnchor {
 
 /**
  * Hard-coded anchors keyed by jersey number: the un-renormalised interval union
- * and the final (renormalised + clamped) minutes the engine must return.
+ * and the final minutes the engine must return.
  */
 const ENGINE_ANCHORS: readonly EngineAnchor[] = [
-  { finalMinutes: 25.44, jerseyNumber: '13', rawMinutes: 29.71 },
-  { finalMinutes: 22.23, jerseyNumber: '9', rawMinutes: 25.95 },
-  { finalMinutes: 19.27, jerseyNumber: '7', rawMinutes: 22.5 },
-  { finalMinutes: 16.37, jerseyNumber: '4', rawMinutes: 19.12 },
-  { finalMinutes: 14.5, jerseyNumber: '5', rawMinutes: 16.93 },
-  { finalMinutes: 14.44, jerseyNumber: '12', rawMinutes: 16.87 },
-  { finalMinutes: 13.97, jerseyNumber: '8', rawMinutes: 16.31 },
-  { finalMinutes: 13.79, jerseyNumber: '10', rawMinutes: 16.1 },
+  { finalMinutes: 29.71, jerseyNumber: '13', rawMinutes: 29.71 },
+  { finalMinutes: 25.95, jerseyNumber: '9', rawMinutes: 25.95 },
+  { finalMinutes: 22.5, jerseyNumber: '7', rawMinutes: 22.5 },
+  { finalMinutes: 19.12, jerseyNumber: '4', rawMinutes: 19.12 },
+  { finalMinutes: 16.93, jerseyNumber: '5', rawMinutes: 16.93 },
+  { finalMinutes: 16.87, jerseyNumber: '12', rawMinutes: 16.87 },
+  { finalMinutes: 16.31, jerseyNumber: '8', rawMinutes: 16.31 },
+  { finalMinutes: 16.1, jerseyNumber: '10', rawMinutes: 16.1 },
 ]
 
 const PLAYER_ID_BY_JERSEY = new Map(U13_SAMPLE_MATCH.players.map((player) => [player.jerseyNumber, player.id]))
 
 function runEngine() {
-  return computePlayTimes({ stats: [...U13_SAMPLE_MATCH.stats] }, U13_4X7_FORMAT)
+  return computePlayTimes({ stats: [...U13_SAMPLE_MATCH.stats] }, U13_4X8_FORMAT)
 }
 
 function entryByJersey(result: ReturnType<typeof runEngine>, jerseyNumber: string) {
@@ -70,12 +68,12 @@ describe('U13 sample fixture shape', () => {
 })
 
 describe('computePlayTimes over the U13 sample fixture', () => {
-  it('measures and renormalises the whole fixture: totals and deviation anchors', () => {
+  it('measures the whole fixture: totals and deviation anchors', () => {
     const result = runEngine()
 
-    expect(result.measuredTotalMinutes).toBeCloseTo(163.4897, ANCHOR_PRECISION)
-    expect(result.deviationRatio).toBeCloseTo(0.167_783, RATIO_PRECISION)
-    expect(result.renormalised).toBe(true)
+    expect(result.quality.eventsTotalMinutes).toBeCloseTo(163.4897, ANCHOR_PRECISION)
+    expect(result.deviationRatio).toBeCloseTo(0.021_811, 5)
+    expect(result.renormalised).toBe(false)
   })
 
   it('produces one entry per fixture player with the exact per-jersey anchors', () => {
@@ -91,22 +89,24 @@ describe('computePlayTimes over the U13 sample fixture', () => {
     }
   })
 
-  it('clamps every final value to the 28-minute ceiling and sums them to 140', () => {
+  it('totals the final minutes to the raw total and keeps every value under the 32-minute ceiling', () => {
     const result = runEngine()
     const totalFinalMinutes = result.entries.reduce((sum, entry) => sum + entry.minutes, 0)
 
-    expect(totalFinalMinutes).toBeCloseTo(THEORETICAL_PLAYER_MINUTES, ANCHOR_PRECISION)
+    // The deviation stays inside the tolerance, so nothing is rescaled: the final
+    // minutes are the raw interval-union minutes.
+    expect(totalFinalMinutes).toBeCloseTo(163.4897, ANCHOR_PRECISION)
     for (const entry of result.entries) {
       expect(entry.minutes).toBeLessThanOrEqual(CEILING_MINUTES)
     }
   })
 
-  it('clamps last: the busiest jersey exceeds the ceiling raw yet lands under it final', () => {
+  it('never renormalises: every final value equals its raw value', () => {
     const result = runEngine()
-    const busiest = entryByJersey(result, '13')
 
-    expect(busiest?.rawMinutes).toBeGreaterThan(CEILING_MINUTES)
-    expect(busiest?.minutes).toBeCloseTo(25.44, ANCHOR_PRECISION)
+    for (const entry of result.entries) {
+      expect(entry.minutes).toBeCloseTo(entry.rawMinutes, ANCHOR_PRECISION)
+    }
   })
 
   it('preserves the raw ranking in the final values', () => {

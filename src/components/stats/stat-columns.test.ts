@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { GLOSSARY_COLUMNS, STAT_COLUMNS } from './stat-columns'
 
 describe('stat-columns', () => {
-  it('jersey is the only column without a glossary entry', () => {
+  it('lists the seven columns without a glossary entry', () => {
     const columnsWithoutGlossary = STAT_COLUMNS.filter((col) => col.glossary === undefined)
     expect(columnsWithoutGlossary.map((c) => c.id).sort()).toEqual([
       '2pts',
@@ -40,6 +40,7 @@ describe('stat-columns', () => {
       'turnover',
       'assists',
       'steals',
+      'playTime',
       'free-throw',
       '2pts',
       '3pts',
