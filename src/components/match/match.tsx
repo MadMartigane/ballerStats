@@ -648,6 +648,7 @@ function renderStatGrid(options: {
       <div class="print:break-inside-avoid">
         <BsPlayTimePanel format={options.format.get()} summary={options.statSummary} />
       </div>
+      <hr />
 
       <div class="print:break-inside-avoid">
         <h3>Totaux de l’équipe:</h3>
