@@ -626,13 +626,25 @@ function renderStatGrid(options: {
       <BsFullStatTable stats={options.statSummary} />
       <hr />
 
-      <Show when={options.match}>
-        {(currentMatch) => (
-          <div class="print:hidden">
-            <BsPlayTimeEntry match={currentMatch()} onSaved={options.onSaved} roster={options.roster} />
-          </div>
-        )}
-      </Show>
+      <div class="print:break-inside-avoid">
+        <h3>Totaux de l’équipe:</h3>
+        {renderTeamTotals(options.statSummary)}
+      </div>
+
+      <hr />
+
+      <div class="print:break-inside-avoid">
+        <h3>Synthèse rebonds</h3>
+        <BsStatSumUpRebonds stats={options.statSummary} />
+      </div>
+
+      <hr />
+
+      <div class="print:break-inside-avoid">
+        <BsPlayTimePanel format={options.format.get()} summary={options.statSummary} />
+      </div>
+
+      <hr />
 
       <Show when={options.match}>
         {(currentMatch) => (
@@ -645,22 +657,15 @@ function renderStatGrid(options: {
         )}
       </Show>
 
-      <div class="print:break-inside-avoid">
-        <BsPlayTimePanel format={options.format.get()} summary={options.statSummary} />
-      </div>
-      <hr />
+      <hr class="print:hidden" />
 
-      <div class="print:break-inside-avoid">
-        <h3>Totaux de l’équipe:</h3>
-        {renderTeamTotals(options.statSummary)}
-      </div>
-
-      <hr />
-
-      <div class="print:break-inside-avoid">
-        <h3>Synthèse rebonds</h3>
-        <BsStatSumUpRebonds stats={options.statSummary} />
-      </div>
+      <Show when={options.match}>
+        {(currentMatch) => (
+          <div class="print:hidden">
+            <BsPlayTimeEntry match={currentMatch()} onSaved={options.onSaved} roster={options.roster} />
+          </div>
+        )}
+      </Show>
     </div>
   )
 }
