@@ -66,6 +66,8 @@ export function seedRealMatchDataset(): DemoDataset {
     playersInTheFive: STARTING_FIVE,
     stats: [...U13_SAMPLE_MATCH.stats],
     status: 'locked',
+    // Cloned so the seeded store never shares a reference with the fixture.
+    tablePlayTimes: { ...U13_SAMPLE_MATCH.tablePlayTimes },
     teamId: DEMO_TEAM_ID,
     type: 'home',
   })

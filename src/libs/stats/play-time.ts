@@ -5,13 +5,19 @@ import { TEAM_OPPONENT_ID } from '../team/team'
 
 export type PlayTimeSource = 'table' | 'computed' | 'blended'
 
-/** Default relative tolerance: |Σevents/theoretical - 1| > 0.10 triggers renormalisation. */
-export const PLAY_TIME_TOLERANCE = 0.1
-/** Weight of the official match-sheet minutes; events carry the remainder. */
+/**
+ * Weight of the official match-sheet minutes when the data gives no preference: either source
+ * is unmeasured, or both sources score zero. The live weight comes from `computePlayTimeWeight`,
+ * clamped between the floor and the ceiling below.
+ */
 export const PLAY_TIME_TABLE_WEIGHT = 0.6
-/** Relative sheet-vs-events gap still scored at full quality. */
+/** Lower bound of the data-driven sheet weight. */
+export const PLAY_TIME_WEIGHT_FLOOR = 0.3
+/** Upper bound of the data-driven sheet weight. */
+export const PLAY_TIME_WEIGHT_CEILING = 0.7
+/** Relative source-vs-theoretical gap still scored at full quality. */
 const QUALITY_FLAT_GAP = 0.03
-/** Relative sheet-vs-events gap where quality reaches zero. */
+/** Relative source-vs-theoretical gap where quality reaches zero. */
 const QUALITY_ZERO_GAP = 0.25
 
 export interface PlayTimeEntry {
@@ -23,15 +29,25 @@ export interface PlayTimeEntry {
   source: PlayTimeSource
 }
 
+/** Concordance of one measured source against the theoretical total. */
+export interface PlayTimeSourceQuality {
+  /** |source total − theoretical| / theoretical; null when either sum is 0. */
+  gap: number | null
+  /** Fraction 0–1 from the quality curve; null when `gap` is null. */
+  percentage: number | null
+  /** Raw source sum, unclamped. */
+  totalMinutes: number
+}
+
 export interface PlayTimeQuality {
-  eventsTotalMinutes: number
+  /** Event stream measured against the theoretical total. */
+  events: PlayTimeSourceQuality
   /** |Σsheet − Σevents| / theoretical; null when either sum is 0. */
   gap: number | null
   /** Fraction 0–1; null when gap is null. */
   percentage: number | null
-  /** Raw sheet sum, unclamped: the gap measures source disagreement, and clamping a
-   *  side first would hide an over-ceiling sheet entry behind a perfect score. */
-  tableTotalMinutes: number
+  /** Raw sheet sum measured against the theoretical total. */
+  table: PlayTimeSourceQuality
 }
 
 export interface PlayTimeComputation {
@@ -214,26 +230,60 @@ function collectRawMinutes(
 }
 
 /** Quality curve: 1 while the gap is flat, then a linear descent to 0 at the zero gap. */
-function computeQuality(
-  tableTotalMinutes: number,
-  eventsTotalMinutes: number,
-  theoreticalMinutes: number
-): PlayTimeQuality {
-  const hasBothSources = tableTotalMinutes > 0 && eventsTotalMinutes > 0
-  if (!(hasBothSources && theoreticalMinutes > 0)) {
-    return { eventsTotalMinutes, gap: null, percentage: null, tableTotalMinutes }
+export function scorePlayTimeGap(gap: number): number {
+  if (gap <= QUALITY_FLAT_GAP) {
+    return 1
   }
+  return Math.max(0, (QUALITY_ZERO_GAP - gap) / (QUALITY_ZERO_GAP - QUALITY_FLAT_GAP))
+}
 
-  const gap = Math.abs(tableTotalMinutes - eventsTotalMinutes) / theoreticalMinutes
-  // Flat up to QUALITY_FLAT_GAP, then a linear descent to 0 at QUALITY_ZERO_GAP.
-  const percentage =
-    gap <= QUALITY_FLAT_GAP ? 1 : Math.max(0, (QUALITY_ZERO_GAP - gap) / (QUALITY_ZERO_GAP - QUALITY_FLAT_GAP))
-  return { eventsTotalMinutes, gap, percentage, tableTotalMinutes }
+/** Concordance of one source: null gap/score when the source or the theoretical total is empty. */
+function scoreSource(totalMinutes: number, theoreticalMinutes: number): PlayTimeSourceQuality {
+  if (totalMinutes <= 0 || theoreticalMinutes <= 0) {
+    return { gap: null, percentage: null, totalMinutes }
+  }
+  const gap = Math.abs(totalMinutes - theoreticalMinutes) / theoreticalMinutes
+  return { gap, percentage: scorePlayTimeGap(gap), totalMinutes }
+}
+
+/** Full quality block from the three measured totals: the two per-source scores plus the sheet-vs-events gap. */
+function buildQuality(eventsTotal: number, tableTotal: number, theoreticalMinutes: number): PlayTimeQuality {
+  const hasBothSources = tableTotal > 0 && eventsTotal > 0
+  const gap = hasBothSources && theoreticalMinutes > 0 ? Math.abs(tableTotal - eventsTotal) / theoreticalMinutes : null
+
+  return {
+    events: scoreSource(eventsTotal, theoreticalMinutes),
+    gap,
+    percentage: gap === null ? null : scorePlayTimeGap(gap),
+    table: scoreSource(tableTotal, theoreticalMinutes),
+  }
+}
+
+/**
+ * Data-driven sheet weight: the sheet's share of the combined source concordance, clamped to
+ * `[PLAY_TIME_WEIGHT_FLOOR, PLAY_TIME_WEIGHT_CEILING]`. When neither source carries a score the
+ * measurement gives no preference, so the historical `PLAY_TIME_TABLE_WEIGHT` stands.
+ */
+export function computePlayTimeWeight(quality: PlayTimeQuality): number {
+  // Load-bearing invariant: `?? 0` treats an unmeasured source as scored zero, which would
+  // distort a blend if it could pair with a measured other source. It cannot: an unmeasured
+  // source means its total is 0, so no blended entry exists for it and `tableWeight` only
+  // reaches `blendMinutes` through blended players, whose both sources are measured. Should
+  // `tableWeight` ever be applied outside a blend numerator (e.g. to rescale events-only or
+  // sheet-only entries), this substitution must become an explicit branch on the null scores.
+  const tableScore = quality.table.percentage ?? 0
+  const eventsScore = quality.events.percentage ?? 0
+  if (tableScore + eventsScore <= 0) {
+    return PLAY_TIME_TABLE_WEIGHT
+  }
+  return Math.min(PLAY_TIME_WEIGHT_CEILING, Math.max(PLAY_TIME_WEIGHT_FLOOR, tableScore / (tableScore + eventsScore)))
 }
 
 interface EntryInput {
   ceilingMinutes: number
   renormalisationFactor: number
+  /** Sheet share of the blend, from `computePlayTimeWeight`. */
+  tableWeight: number
 }
 
 /** Both sources measured the player; the entry blends them. */
@@ -259,8 +309,8 @@ interface SheetOnlyPlayerMinutes {
 type PlayerMinutes = BlendedPlayerMinutes | EventsOnlyPlayerMinutes | SheetOnlyPlayerMinutes
 
 /** Blend weight applied to the sheet value when both sources measured the player. */
-function blendMinutes(tableMinutes: number, eventsMinutes: number): number {
-  return PLAY_TIME_TABLE_WEIGHT * tableMinutes + (1 - PLAY_TIME_TABLE_WEIGHT) * eventsMinutes
+function blendMinutes(tableMinutes: number, eventsMinutes: number, tableWeight: number): number {
+  return tableWeight * tableMinutes + (1 - tableWeight) * eventsMinutes
 }
 
 /** Merge both sources into one map keyed by player, sorted for a stable entry order. */
@@ -288,12 +338,12 @@ function collectPlayerMinutes(
 }
 
 /** Minutes a player contributes to the renormalisable blend; sheet-only players contribute nothing here. */
-function blendableMinutesOf(minutes: PlayerMinutes): number {
+function blendableMinutesOf(minutes: PlayerMinutes, tableWeight: number): number {
   if (minutes.kind === 'sheetOnly') {
     return 0
   }
   return minutes.kind === 'blended'
-    ? blendMinutes(minutes.tableMinutes.minutes, minutes.eventsMinutes)
+    ? blendMinutes(minutes.tableMinutes.minutes, minutes.eventsMinutes, tableWeight)
     : minutes.eventsMinutes
 }
 
@@ -313,7 +363,7 @@ function buildEntries(playerMinutes: Map<string, PlayerMinutes>, input: EntryInp
     }
 
     if (minutes.kind === 'blended') {
-      const blendedMinutes = blendMinutes(minutes.tableMinutes.minutes, minutes.eventsMinutes)
+      const blendedMinutes = blendMinutes(minutes.tableMinutes.minutes, minutes.eventsMinutes, input.tableWeight)
       // Renormalisation scales the UNCLAMPED blend; the ceiling clamp runs last.
       entries.push({
         minutes: Math.min(blendedMinutes * input.renormalisationFactor, input.ceilingMinutes),
@@ -335,19 +385,29 @@ function buildEntries(playerMinutes: Map<string, PlayerMinutes>, input: EntryInp
   return entries
 }
 
+/** Every measured quantity for a match, collected once and shared by the two public entry points. */
+interface PlayTimeModel {
+  blendableMinutes: number
+  ceilingMinutes: number
+  eventsTotal: number
+  playerMinutes: Map<string, PlayerMinutes>
+  quality: PlayTimeQuality
+  remainingTheoreticalMinutes: number
+  tableWeight: number
+  theoreticalMinutes: number
+}
+
 /**
- * Reconstruct playing time from the coach's fiveIn/fiveOut stream, blending the
- * official match-sheet minutes with the events. Pure: no store, no DOM, no Solid.
+ * Collect the per-player source classification, the reference totals and the quality-derived
+ * blend weight for a match: the single internal code path behind `computePlayTimes`.
  */
-export function computePlayTimes(
+function buildPlayTimeModel(
   match: Pick<MatchRawData, 'stats' | 'tablePlayTimes'>,
-  format: MatchFormatConfig,
-  options?: { tolerance?: number }
-): PlayTimeComputation {
+  format: MatchFormatConfig
+): PlayTimeModel {
   const stats = match.stats ?? []
   const theoreticalMinutes = getTheoreticalPlayerMinutes(format)
   const ceilingMinutes = getMatchCeilingMinutes(format)
-  const tolerance = options?.tolerance ?? PLAY_TIME_TOLERANCE
   const tablePlayTimes = match.tablePlayTimes ?? {}
 
   // Non-substitution events (gameStop, fouls...) still anchor the match window.
@@ -362,6 +422,13 @@ export function computePlayTimes(
   const rawMinutesByPlayer = collectRawMinutes(playerIds, substitutionsByPlayer, eventEnd, deadBallWindows)
   const playerMinutes = collectPlayerMinutes(playerIds, tableMinutesByPlayer, rawMinutesByPlayer)
 
+  const eventsTotal = sumValues(rawMinutesByPlayer.values())
+  // The quality block reads the RAW unclamped sheet sum: an over-ceiling sheet entry must lower
+  // the table score rather than be hidden by a clamp.
+  const tableTotal = sumValues([...tableMinutesByPlayer.values()].map((entry) => entry.raw))
+  const quality = buildQuality(eventsTotal, tableTotal, theoreticalMinutes)
+  const tableWeight = computePlayTimeWeight(quality)
+
   // Sheet-only players are excluded from the renormalisation denominator: they are
   // already-measured records and are never rescaled, so the measured part targets only
   // the minutes the sheet leaves free (theoretical − Σ_sheetOnly). Counting them in the
@@ -372,34 +439,52 @@ export function computePlayTimes(
     if (minutes.kind === 'sheetOnly') {
       sheetOnlyMinutes += minutes.tableMinutes.minutes
     } else {
-      blendableMinutes += blendableMinutesOf(minutes)
+      blendableMinutes += blendableMinutesOf(minutes, tableWeight)
     }
   }
 
-  const eventsTotalMinutes = sumValues(rawMinutesByPlayer.values())
-  const remainingTheoreticalMinutes = Math.max(0, theoreticalMinutes - sheetOnlyMinutes)
+  return {
+    blendableMinutes,
+    ceilingMinutes,
+    eventsTotal,
+    playerMinutes,
+    quality,
+    remainingTheoreticalMinutes: Math.max(0, theoreticalMinutes - sheetOnlyMinutes),
+    tableWeight,
+    theoreticalMinutes,
+  }
+}
 
-  // Report the event-side deviation: on a sheet-only match it is 0, and it is the
-  // quantity the tolerance gate judges. An empty match has no measurement at all, so
-  // its deviation is 0 rather than a meaningless -1.
+/**
+ * Reconstruct playing time from the coach's fiveIn/fiveOut stream, blending the
+ * official match-sheet minutes with the events. Pure: no store, no DOM, no Solid.
+ */
+export function computePlayTimes(
+  match: Pick<MatchRawData, 'stats' | 'tablePlayTimes'>,
+  format: MatchFormatConfig
+): PlayTimeComputation {
+  const model = buildPlayTimeModel(match, format)
+
+  // Report the event-side deviation: on a sheet-only match it is 0, and an empty match has no
+  // measurement at all, so its deviation is 0 rather than a meaningless -1.
   const deviationRatio =
-    eventsTotalMinutes > 0 && theoreticalMinutes > 0 ? eventsTotalMinutes / theoreticalMinutes - 1 : 0
-  // Renormalise only when events measured real court time and the sheet left budget:
-  // rescaling a sheet-only match would project an already-measured record onto the
-  // theoretical total, and a sheet-only sum at or above it leaves nothing to target —
-  // the factor would be 0 and zero every measured entry.
-  const renormalised = eventsTotalMinutes > 0 && remainingTheoreticalMinutes > 0 && Math.abs(deviationRatio) > tolerance
+    model.eventsTotal > 0 && model.theoreticalMinutes > 0 ? model.eventsTotal / model.theoreticalMinutes - 1 : 0
+  // Renormalisation is systematic: a small-but-real gap from the theoretical total is exactly
+  // what smoothing exists to correct, and the old tolerance dead-band let a 2 % gap survive
+  // unaligned. It stands down only when no event was measured (a sheet-only match must never be
+  // projected onto the theoretical total) or when the sheet left no budget to target.
+  const renormalised = model.eventsTotal > 0 && model.remainingTheoreticalMinutes > 0
   const renormalisationFactor =
-    renormalised && blendableMinutes > 0 ? remainingTheoreticalMinutes / blendableMinutes : 1
+    renormalised && model.blendableMinutes > 0 ? model.remainingTheoreticalMinutes / model.blendableMinutes : 1
 
   return {
     deviationRatio,
-    entries: buildEntries(playerMinutes, { ceilingMinutes, renormalisationFactor }),
-    quality: computeQuality(
-      sumValues([...tableMinutesByPlayer.values()].map((entry) => entry.raw)),
-      eventsTotalMinutes,
-      theoreticalMinutes
-    ),
+    entries: buildEntries(model.playerMinutes, {
+      ceilingMinutes: model.ceilingMinutes,
+      renormalisationFactor,
+      tableWeight: model.tableWeight,
+    }),
+    quality: model.quality,
     renormalised,
   }
 }

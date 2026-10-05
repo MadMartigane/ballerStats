@@ -1,9 +1,19 @@
 import type { MatchStatLogEntry } from '../../match/match.d'
 
 export interface SampleU13MatchPlayer {
-  /** Renormalised minutes the engine must produce (regression anchor). */
+  /**
+   * Renormalised minutes the engine must produce. Measured by running the engine over this
+   * fixture's event stream and sheet at 4 decimals; a DRIFT DETECTOR, not a derivable figure.
+   * A change here that does not accompany a deliberate engine change is anchor corruption, not
+   * legitimate drift. The whole-match invariants derived independently live in
+   * `real-match.scenario.test.ts`: events union 163.4897 min, sheet sum 152 min, renormalised
+   * total 160 min.
+   */
   expectedPlayTime: number
-  /** Un-renormalised interval-union minutes (regression anchor). */
+  /**
+   * Un-renormalised blended minutes the engine must produce. Measured from the engine output
+   * over this fixture at 4 decimals; same drift-detector role as `expectedPlayTime`.
+   */
   expectedRawMinutes: number
   firstName: string
   id: string
@@ -14,6 +24,14 @@ export interface SampleU13MatchPlayer {
 export interface SampleU13Match {
   players: readonly SampleU13MatchPlayer[]
   stats: readonly MatchStatLogEntry[]
+  /**
+   * Official match-sheet minutes for the same real match: whole minutes keyed by
+   * fixture player id. Correlated to the coach substitution stream by
+   * nearest-neighbour on the coach value and deliberately tolerant of error,
+   * because a fixture need not be perfectly correlated with the events to be a
+   * useful regression anchor.
+   */
+  tablePlayTimes: Readonly<Record<string, number>>
   teamRosterIds: readonly string[]
 }
 
@@ -34,68 +52,71 @@ export interface SampleU13Match {
  *   could still correlate the two by their spacing. The offset is intentionally
  *   uniform to keep the regression anchors identical.
  * - Jersey numbers are kept verbatim: a jersey number identifies nobody on its own.
+ * - The official match sheet contributes only whole minutes keyed to the
+ *   pseudonymous fixture ids: it adds no new personal data, no real name and no
+ *   licence number, and it cannot re-identify a player on its own.
  */
 export const U13_SAMPLE_MATCH: SampleU13Match = {
   players: [
     {
-      expectedPlayTime: 25.95,
-      expectedRawMinutes: 25.95,
+      expectedPlayTime: 24.3735,
+      expectedRawMinutes: 24.0716,
       firstName: 'Léo',
       id: 'u13-p1',
       jerseyNumber: '9',
       lastName: 'Martin',
     },
     {
-      expectedPlayTime: 16.31,
-      expectedRawMinutes: 16.31,
+      expectedPlayTime: 15.4001,
+      expectedRawMinutes: 15.2093,
       firstName: 'Hugo',
       id: 'u13-p2',
       jerseyNumber: '8',
       lastName: 'Bernard',
     },
     {
-      expectedPlayTime: 29.71,
-      expectedRawMinutes: 29.71,
+      expectedPlayTime: 29.2581,
+      expectedRawMinutes: 28.8958,
       firstName: 'Noah',
       id: 'u13-p3',
       jerseyNumber: '13',
       lastName: 'Dubois',
     },
     {
-      expectedPlayTime: 16.93,
-      expectedRawMinutes: 16.93,
+      expectedPlayTime: 17.6585,
+      expectedRawMinutes: 17.4398,
       firstName: 'Nathan',
       id: 'u13-p4',
       jerseyNumber: '5',
       lastName: 'Moreau',
     },
     {
-      expectedPlayTime: 19.12,
-      expectedRawMinutes: 19.12,
+      expectedPlayTime: 19.3014,
+      expectedRawMinutes: 19.0624,
       firstName: 'Yanis',
       id: 'u13-p5',
       jerseyNumber: '4',
       lastName: 'Girard',
     },
     {
-      expectedPlayTime: 16.87,
-      expectedRawMinutes: 16.87,
+      expectedPlayTime: 17.6244,
+      expectedRawMinutes: 17.4061,
       firstName: 'Ethan',
       id: 'u13-p6',
       jerseyNumber: '12',
       lastName: 'Roux',
     },
     {
-      expectedPlayTime: 22.5,
-      expectedRawMinutes: 22.5,
+      expectedPlayTime: 22.5416,
+      expectedRawMinutes: 22.2624,
       firstName: 'Tom',
       id: 'u13-p7',
       jerseyNumber: '7',
       lastName: 'Fournier',
     },
     {
-      expectedPlayTime: 16.1,
-      expectedRawMinutes: 16.1,
+      expectedPlayTime: 13.8425,
+      expectedRawMinutes: 13.6711,
       firstName: 'Enzo',
       id: 'u13-p8',
       jerseyNumber: '10',
@@ -511,5 +532,15 @@ export const U13_SAMPLE_MATCH: SampleU13Match = {
     { name: 'offensive-rebond', playerId: 'u13-p6', timestamp: 1_789_328_166_958, type: 'success', value: 1 },
     { name: 'gameStop', playerId: null, timestamp: 1_789_328_172_869, type: 'secondary', value: 0 },
   ],
+  tablePlayTimes: {
+    'u13-p1': 22,
+    'u13-p2': 14,
+    'u13-p3': 28,
+    'u13-p4': 18,
+    'u13-p5': 19,
+    'u13-p6': 18,
+    'u13-p7': 22,
+    'u13-p8': 11,
+  },
   teamRosterIds: ['u13-p1', 'u13-p2', 'u13-p3', 'u13-p4', 'u13-p5', 'u13-p6', 'u13-p7', 'u13-p8'],
 }

@@ -91,6 +91,15 @@ describe('seedRealMatchDataset', () => {
     expect(raw.date).toBe('2026-09-12T15:30')
   })
 
+  it('seeds the official match-sheet minutes against the fixture player ids', () => {
+    const [match] = seedRealMatchDataset().matchs
+    const seeded = match.getRawData().tablePlayTimes
+
+    expect(seeded).toEqual({ ...U13_SAMPLE_MATCH.tablePlayTimes })
+    // The store must own its own copy, never the fixture object itself.
+    expect(seeded).not.toBe(U13_SAMPLE_MATCH.tablePlayTimes)
+  })
+
   it('neutralises the club, team, opponent and championship identity', () => {
     const dataset = seedRealMatchDataset()
     const [club] = dataset.clubs
@@ -137,6 +146,12 @@ describe('fixture anonymisation', () => {
     }
   })
 
+  it('sums the official match-sheet minutes to exactly 152', () => {
+    const total = Object.values(U13_SAMPLE_MATCH.tablePlayTimes).reduce((sum, minutes) => sum + minutes, 0)
+
+    expect(total).toBe(152)
+  })
+
   it('contains no email address, phone number or real licence shape', () => {
     const payload = `${serialiseDataset()}${JSON.stringify(U13_SAMPLE_MATCH)}`
 
@@ -153,44 +168,43 @@ describe('computePlayTimes over the seeded real match', () => {
   const format = resolveMatchFormat(team.getRawData(), match)
   const result = computePlayTimes(match, format)
 
-  it('measures the live interval union, dead-ball time excluded, inside the 4x8 tolerance', () => {
-    // Anchor computed by running the real engine over the real event stream with
-    // the `gameStop` dead-ball windows subtracted.
-    expect(result.quality.eventsTotalMinutes).toBeCloseTo(163.49, 2)
+  it('measures the live interval union, dead-ball time excluded', () => {
+    // Anchor computed by running the engine over the real event stream with the
+    // `gameStop` dead-ball windows subtracted. The sheet does not change the
+    // event-side measurement, so this stays the interval-union figure.
+    expect(result.quality.events.totalMinutes).toBeCloseTo(163.49, 2)
     expect(result.deviationRatio).toBeCloseTo(0.021_811, 4)
-    expect(result.renormalised).toBe(false)
   })
 
-  it('keeps every player at the interval-union anchor, untouched by renormalisation', () => {
+  it('renormalises systematically onto the 4x8 theoretical total', () => {
+    expect(result.renormalised).toBe(true)
+
+    const total = result.entries.reduce((sum, entry) => sum + entry.minutes, 0)
+    const theoreticalTotal = format.periods * format.periodLengthMinutes * format.playersOnCourt
+
+    expect(theoreticalTotal).toBe(160)
+    expect(total).toBeCloseTo(theoreticalTotal, 1)
+  })
+
+  it('blends both sources for every player and honours the physical ceiling', () => {
+    const ceiling = format.periods * format.periodLengthMinutes
+    expect(result.entries).toHaveLength(U13_SAMPLE_MATCH.players.length)
+
+    for (const entry of result.entries) {
+      expect(entry.source).toBe('blended')
+      expect(entry.minutes).toBeGreaterThan(0)
+      expect(entry.minutes).toBeLessThanOrEqual(ceiling)
+    }
+  })
+
+  it('keeps the fixture anti-drift anchors consistent with the engine output', () => {
     const byPlayerId = new Map(result.entries.map((entry) => [entry.playerId, entry]))
 
-    expect(result.entries).toHaveLength(8)
     for (const fixturePlayer of U13_SAMPLE_MATCH.players) {
       const entry = byPlayerId.get(fixturePlayer.id)
       expect(entry, `missing entry for ${fixturePlayer.id}`).toBeDefined()
-      expect(entry?.rawMinutes).toBeCloseTo(fixturePlayer.expectedRawMinutes, 1)
-      expect(entry?.minutes).toBeCloseTo(fixturePlayer.expectedPlayTime, 1)
+      expect(entry?.rawMinutes).toBeCloseTo(fixturePlayer.expectedRawMinutes, 3)
+      expect(entry?.minutes).toBeCloseTo(fixturePlayer.expectedPlayTime, 3)
     }
-  })
-
-  it('keeps every final value under the 32-minute ceiling and the total at the raw sum', () => {
-    const total = result.entries.reduce((sum, entry) => sum + entry.minutes, 0)
-
-    expect(total).toBeCloseTo(163.49, 1)
-    for (const entry of result.entries) {
-      expect(entry.minutes).toBeLessThanOrEqual(32)
-    }
-  })
-
-  it('preserves the raw ranking and leaves every final value equal to its raw value', () => {
-    const byRaw = [...result.entries].sort((left, right) => right.rawMinutes - left.rawMinutes).map((e) => e.playerId)
-    const byFinal = [...result.entries].sort((left, right) => right.minutes - left.minutes).map((e) => e.playerId)
-
-    expect(byFinal).toEqual(byRaw)
-
-    const busiest = result.entries.find((entry) => entry.playerId === 'u13-p3')
-    expect(busiest?.rawMinutes).toBeCloseTo(29.71, 1)
-    expect(busiest?.minutes).toBeCloseTo(29.71, 1)
-    expect(busiest?.source).toBe('computed')
   })
 })

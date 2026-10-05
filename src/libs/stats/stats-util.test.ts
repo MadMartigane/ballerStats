@@ -874,8 +874,26 @@ describe('getStatSummary play time', () => {
     const quality = getStatSummary(match).playTimeQuality
 
     expect(quality).toBeDefined()
-    expect(quality?.tableTotalMinutes).toBe(9)
-    expect(quality?.eventsTotalMinutes).toBeCloseTo(22, 5)
+    // Per-source scores against the theoretical U13 total (4 x 8 x 5 = 160): both sit far
+    // below it, so each source scores 0 and the sheet-vs-events gap stays null-free.
+    expect(quality?.table.totalMinutes).toBe(9)
+    expect(quality?.events.totalMinutes).toBeCloseTo(22, 5)
+    expect(quality?.table.percentage).toBe(0)
+    expect(quality?.events.percentage).toBe(0)
+  })
+
+  it('scores the sheet block as absent when the match carries no table play times', () => {
+    const match = makeMatch({
+      stats: playIntervalStats('p-events', 0, 12),
+      teamId: 'team-playtime',
+    })
+
+    const quality = getStatSummary(match).playTimeQuality
+
+    expect(quality?.table.totalMinutes).toBe(0)
+    expect(quality?.table.gap).toBeNull()
+    expect(quality?.table.percentage).toBeNull()
+    expect(quality?.events.totalMinutes).toBeCloseTo(12, 5)
   })
 
   it('gives a player present in both sources the blended source', () => {
