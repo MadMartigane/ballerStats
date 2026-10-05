@@ -1,7 +1,7 @@
 import { Shirt, Users } from 'lucide-solid'
 import type { JSXElement } from 'solid-js'
 import type Player from '../../libs/player/player'
-import { PLAY_TIME_TABLE_WEIGHT, PLAY_TIME_TOLERANCE } from '../../libs/stats/play-time'
+import { PLAY_TIME_WEIGHT_CEILING, PLAY_TIME_WEIGHT_FLOOR } from '../../libs/stats/play-time'
 import type { ScoringKey, StatMatchSummaryPlayer } from '../../libs/stats/stats.d'
 import { isTeamPerGameRow, isTeamTotalRow } from '../../libs/stats/stats-util'
 
@@ -165,7 +165,7 @@ export const STAT_COLUMNS: readonly StatColumn[] = [
   },
   {
     glossary: {
-      explanation: `Temps de jeu estimé, arrondi à la minute. Sur un match, la valeur mélange la feuille de match officielle (${Math.round(PLAY_TIME_TABLE_WEIGHT * 100)} %) et les minutes reconstruites depuis les entrées/sorties du coach (${Math.round((1 - PLAY_TIME_TABLE_WEIGHT) * 100)} %) ; quand les minutes recalculées s'écartent de plus de ${Math.round(PLAY_TIME_TOLERANCE * 100)} % du total théorique du format, l'ensemble est rectifié pour totaliser ce total théorique. Sur /stats, la colonne affiche la moyenne par match joué. Un tiret (—) signifie qu'aucun temps n'a pu être mesuré : ce n'est pas 0 minute.`,
+      explanation: `Temps de jeu estimé, arrondi à la minute. Sur un match, la valeur combine la feuille de match officielle et les minutes reconstruites depuis les entrées/sorties du coach : le poids de la feuille officielle est mesuré d'après sa propre fiabilité, borné entre ${Math.round(PLAY_TIME_WEIGHT_FLOOR * 100)} % et ${Math.round(PLAY_TIME_WEIGHT_CEILING * 100)} %, le reste revenant au suivi du coach, puis l'ensemble est aligné sur le total théorique du format. Sur /stats, la colonne affiche la moyenne par match joué. Un tiret (—) signifie qu'aucun temps n'a pu être mesuré : ce n'est pas 0 minute.`,
       fullName: 'Temps de jeu',
     },
     id: 'playTime',
