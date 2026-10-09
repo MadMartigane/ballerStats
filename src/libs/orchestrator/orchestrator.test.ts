@@ -1,17 +1,27 @@
 import { strToU8, zipSync } from 'fflate'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ContactRawData } from '../contact/contact.d'
-import { getAllPhotoEntries, storePhoto } from '../photo-store/photo-store'
+import { clearAllPhotos, getAllPhotoEntries, storePhoto } from '../photo-store/photo-store'
 import Player from '../player/player'
 import { STORAGE_PLAYERS_KEY } from '../store/store'
 import { getRawClubs } from '../stores/clubs-store'
-import { getRawPlayers } from '../stores/players-store'
+import { getRawPlayers, replaceAllPlayers } from '../stores/players-store'
+import { getRawTeams, replaceAllTeams } from '../stores/teams-store'
 import Team from '../team/team'
 import { confirmAction, toast } from '../utils/utils'
 import { isGlobalDB, Orchestrator, ParseError } from './orchestrator'
 import type { DomainDataset, GlobalDB } from './orchestrator.d'
 
-vi.mock('../utils/utils')
+// Explicit factory: the real module is kept, and only the UI side effects are stubbed.
+// A bare automock would make confirmAction resolve undefined and silently skip the import.
+vi.mock('../utils/utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../utils/utils')>()
+  return {
+    ...actual,
+    confirmAction: vi.fn(() => Promise.resolve(true)),
+    toast: vi.fn(),
+  }
+})
 
 vi.mock('../photo-store/photo-store', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../photo-store/photo-store')>()
@@ -171,8 +181,13 @@ describe('tryParseZip (zip path)', () => {
 })
 
 describe('importDB flow', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    vi.mocked(confirmAction).mockReset()
+    vi.mocked(confirmAction).mockImplementation(() => Promise.resolve(true))
     vi.clearAllMocks()
+    replaceAllPlayers([])
+    replaceAllTeams([])
+    await clearAllPhotos()
   })
 
   it('rejects a malformed archive before reaching confirmation', async () => {
@@ -185,21 +200,63 @@ describe('importDB flow', () => {
     expect(toast).toHaveBeenCalledWith('Données non valides.', 'error')
   })
 
-  it('reads a plain-JSON legacy file and parses it successfully before confirmation', async () => {
-    const uint8 = archiveBytes(validArchiveData())
+  it('imports players and teams from a plain-JSON legacy file when both confirmations are accepted', async () => {
+    await storePhoto('p-stale', new Blob(['stale'], { type: 'image/webp' }))
+    const archive = {
+      ...validArchiveData(),
+      players: [{ firstName: 'Imported', id: 'p-imported', jerseyNumber: '7', lastName: 'Player' }],
+      teams: [{ id: 't-imported', name: 'Imported Team' }],
+    }
 
-    await expect(orchestrator.importDB(fileUploadEvent(uint8))).resolves.toBeUndefined()
+    await expect(orchestrator.importDB(fileUploadEvent(archiveBytes(archive)))).resolves.toBeUndefined()
+
+    expect(confirmAction).toHaveBeenCalledTimes(2)
+    expect(await getAllPhotoEntries()).toHaveLength(0)
+    expect(vi.mocked(confirmAction).mock.calls[0][1]).toContain('1 joueurs, 1 équipes')
+    expect(vi.mocked(confirmAction).mock.calls[1][1]).toBe('Voulez-vous écraser toutes les données ?')
+    expect(getRawPlayers().map((player) => player.id)).toEqual(['p-imported'])
+    expect(getRawTeams().map((team) => team.id)).toEqual(['t-imported'])
+    expect(toast).toHaveBeenCalledWith('Import des nouvelles données réussi !', 'success')
+  })
+
+  it('imports nothing when the first confirmation is declined', async () => {
+    vi.mocked(confirmAction).mockImplementationOnce(() => Promise.resolve(false))
+    const archive = {
+      ...validArchiveData(),
+      players: [{ firstName: 'Imported', id: 'p-imported', lastName: 'Player' }],
+    }
+
+    await orchestrator.importDB(fileUploadEvent(archiveBytes(archive)))
 
     expect(confirmAction).toHaveBeenCalledTimes(1)
+    expect(getRawPlayers()).toEqual([])
     expect(toast).not.toHaveBeenCalled()
+  })
+
+  it('keeps stored photos when the overwrite confirmation is declined', async () => {
+    vi.mocked(confirmAction)
+      .mockImplementationOnce(() => Promise.resolve(true))
+      .mockImplementationOnce(() => Promise.resolve(false))
+    await storePhoto('p-existing', new Blob(['kept'], { type: 'image/webp' }))
+    const archive = {
+      ...validArchiveData(),
+      players: [{ firstName: 'Imported', id: 'p-imported', lastName: 'Player' }],
+    }
+
+    await orchestrator.importDB(fileUploadEvent(archiveBytes(archive)))
+
+    expect(confirmAction).toHaveBeenCalledTimes(2)
+    expect(await getAllPhotoEntries()).toHaveLength(1)
+    expect(toast).toHaveBeenCalledWith('Import des nouvelles données réussi !', 'success')
   })
 })
 
 const datasetOrchestrator = Object.create(Orchestrator.prototype) as Orchestrator
 
 describe('replaceDataset', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
+    await clearAllPhotos()
   })
 
   it('clears every stored photo before committing the dataset', async () => {
