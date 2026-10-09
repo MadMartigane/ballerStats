@@ -484,9 +484,9 @@ export class Orchestrator {
   }
 
   private async tryParseZip(uint8: Uint8Array): Promise<{ rawData: GlobalDB; photos: Map<string, Blob> } | null> {
-    let unzipped: Record<string, Uint8Array>
+    let unzipped: Partial<Record<string, Uint8Array>>
     try {
-      unzipped = await new Promise<Record<string, Uint8Array>>((resolve, reject) => {
+      unzipped = await new Promise<Partial<Record<string, Uint8Array>>>((resolve, reject) => {
         unzip(uint8, (err, data) => {
           if (err) {
             reject(err)

@@ -32,6 +32,14 @@ function makeDialogCloseHandler(getDialog: () => HTMLDialogElement | undefined) 
   }
 }
 
+function makeEscapeCloseHandler(getDialog: () => HTMLDialogElement | undefined) {
+  return (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      getDialog()?.close()
+    }
+  }
+}
+
 function makeBackdropClickHandler(getDialog: () => HTMLDialogElement | undefined) {
   return (event: MouseEvent) => {
     if (event.target === getDialog()) {
@@ -72,13 +80,12 @@ export function BsStatsLegend() {
         </For>
       </ul>
 
-      {/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: <dialog> is a native interactive element */}
-      {/* biome-ignore lint/a11y/useKeyWithClickEvents: <dialog> handles Escape natively and the click only dismisses on backdrop */}
       <dialog
         aria-labelledby={titleId}
         class="modal modal-middle"
         onClick={makeBackdropClickHandler(() => dialogEl)}
         onClose={makeClearSelectedEntryHandler(setSelectedEntry)}
+        onKeyDown={makeEscapeCloseHandler(() => dialogEl)}
         ref={dialogEl}
       >
         <div class="modal-box">
