@@ -1,7 +1,7 @@
 import { createStore } from 'solid-js/store'
-import { render } from 'solid-js/web'
-import { afterEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import type { ContactRawData } from '../../libs/contact/contact.d'
+import { renderView } from '../test-utils'
 import BsContactsEditor from './contacts-editor'
 
 const PLAYER_ID = 'p1'
@@ -18,22 +18,11 @@ function makeContactData(overrides: Partial<ContactRawData> = {}): ContactRawDat
 }
 
 describe('BsContactsEditor', () => {
-  let dispose: (() => void) | undefined
-
-  afterEach(() => {
-    dispose?.()
-    dispose = undefined
-    document.body.innerHTML = ''
-  })
-
   it('shows a newly added contact row without remounting', () => {
     const [contacts, setContacts] = createStore<ContactRawData[]>([])
     const onAdd = (contact: ContactRawData) => setContacts((prev) => [...prev, contact])
 
-    dispose = render(
-      () => <BsContactsEditor contacts={contacts} onAdd={onAdd} onRemove={noop} onUpdate={noop} />,
-      document.body
-    )
+    renderView(() => <BsContactsEditor contacts={contacts} onAdd={onAdd} onRemove={noop} onUpdate={noop} />)
 
     expect(document.body.textContent).toContain('Aucun contact enregistré pour ce joueur.')
 
