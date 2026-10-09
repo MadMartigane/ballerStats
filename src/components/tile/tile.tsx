@@ -16,7 +16,7 @@ function makeTileClickHandler(callback: BsTileProps['onClick']) {
 
 function makeTileKeyDownHandler(callback: BsTileProps['onClick']) {
   return (event: KeyboardEvent) => {
-    if (event.code === 'enter') {
+    if (event.key === 'Enter') {
       onClick(callback)
     }
   }
