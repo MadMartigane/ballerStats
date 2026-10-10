@@ -78,8 +78,12 @@ function onSelect(
 ) {
   const selectedId = event.currentTarget.value
 
+  // The placeholder option has an empty value and is not a player: picking it changes nothing.
+  if (selectedId === '') {
+    return
+  }
+
   if (!props.selectedIds?.includes(selectedId)) {
-    // TODO: HERE !!!!
     setProps('selectedIds', props.selectedIds?.length || 0, selectedId)
   }
 
