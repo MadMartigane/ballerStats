@@ -321,6 +321,17 @@ describe('BsMatch: opponent and game controls', () => {
     expect(lastStat()).toMatchObject({ name: 'gameStop' })
   })
 
+  it('attaches a numeric period and clockRemainingMs to every logged stat entry', () => {
+    seedMatch({ playersInTheFive: ['r1'] })
+    const { container } = renderMatch()
+    click(buttonByText(container, 'Reprise du jeu'))
+    expect(lastStat()).toMatchObject({ name: 'gameStop', period: 1 })
+    expect(typeof lastStat().clockRemainingMs).toBe('number')
+    click(benchButtons(container)[0])
+    expect(lastStat()).toMatchObject({ period: 1 })
+    expect(typeof lastStat().clockRemainingMs).toBe('number')
+  })
+
   it('keeps the clear-last-action button disabled on an empty match', () => {
     seedMatch()
     const { container } = renderMatch()
@@ -472,5 +483,163 @@ describe('BsMatch: empty and partial match stats', () => {
     const { container } = renderMatch()
     expect(container.querySelector('.divider')?.textContent).toContain('Le 5 (5)')
     expect(benchButtons(container)).toHaveLength(ROSTER.length - 5)
+  })
+})
+
+describe('BsMatch: clock and period controls', () => {
+  const GAME_START_LABEL = 'Reprise du jeu'
+  const GAME_STOP_LABEL = 'Arrêt du jeu'
+  const FULL_PERIOD_DISPLAY = '10:00'
+  const OVERTIME_PERIOD_DISPLAY = '05:00'
+  const REGULATION_PERIOD_COUNT = 4
+  const FULL_PERIOD_MS = 600_000
+  const ONE_SECOND_MS = 1000
+
+  function clockDisplay(container: HTMLElement): string | null {
+    return container.querySelector('[data-testid="clock-display"]')?.textContent?.trim() ?? null
+  }
+
+  function persistedClockRemainingMs(): number {
+    const remainingMs = lastPersistedMatch()?.clock?.remainingMs
+    if (remainingMs === undefined) {
+      throw new Error('No persisted clock')
+    }
+    return remainingMs
+  }
+
+  function gameStopCount(): number {
+    return (lastPersistedMatch()?.stats ?? []).filter((stat) => stat.name === 'gameStop').length
+  }
+
+  function buttonByAriaLabel(container: HTMLElement, label: string): HTMLButtonElement {
+    const button = container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)
+    if (!button) {
+      throw new Error(`Button with aria-label "${label}" not found`)
+    }
+    return button
+  }
+
+  it('renders the clock display at the full period length and the resume control', () => {
+    seedMatch()
+    const { container } = renderMatch()
+    expect(clockDisplay(container)).toBe(FULL_PERIOD_DISPLAY)
+    expect(hasButton(container, GAME_START_LABEL)).toBe(true)
+  })
+
+  it('logs exactly one gameStop per transition in both directions and persists each', () => {
+    seedMatch({ playersInTheFive: ['r1'] })
+    const { container } = renderMatch()
+
+    click(buttonByText(container, GAME_START_LABEL))
+    expect(hasButton(container, GAME_STOP_LABEL)).toBe(true)
+    expect(lastStat()).toMatchObject({ name: 'gameStop', period: 1 })
+    expect(typeof lastStat().clockRemainingMs).toBe('number')
+    expect(gameStopCount()).toBe(1)
+    expect(storeMatchsMock).toHaveBeenCalled()
+
+    click(buttonByText(container, GAME_STOP_LABEL))
+    expect(hasButton(container, GAME_START_LABEL)).toBe(true)
+    expect(gameStopCount()).toBe(2)
+    expect(lastPersistedMatch()?.clock?.running).toBe(false)
+  })
+
+  it('follows the live clock running state when filtering the action buttons', () => {
+    seedMatch({ playersInTheFive: ['r1'] })
+    const { container } = renderMatch()
+    expect(buttonsLabelledBy(container, '2 pts')).toHaveLength(0)
+
+    click(buttonByText(container, GAME_START_LABEL))
+    expect(buttonsLabelledBy(container, '2 pts').length).toBeGreaterThan(0)
+  })
+
+  it('initialises a clock from the resolved format and defaults the period to 1 on a legacy match', () => {
+    seedMatch({ clock: undefined, currentPeriod: undefined })
+    const { container } = renderMatch()
+    expect(clockDisplay(container)).toBe(FULL_PERIOD_DISPLAY)
+    expect(container.querySelector(`button[aria-label="Période 1"]`)?.className).not.toContain('btn-ghost')
+  })
+
+  it('attaches a numeric period and clockRemainingMs to a logged player stat while running', () => {
+    seedMatch({ playersInTheFive: ['r1'] })
+    const { container } = renderMatch()
+    click(buttonByText(container, GAME_START_LABEL))
+    click(buttonByText(container, 'Stats !'))
+    const twoPoints = [...container.querySelectorAll<HTMLButtonElement>('.grid button')].find((button) =>
+      button.textContent?.includes('2 pts')
+    )
+    if (!twoPoints) {
+      throw new Error('2 pts action not found')
+    }
+    click(twoPoints)
+    expect(lastStat()).toMatchObject({ clockRemainingMs: expect.any(Number), name: '2pts', period: 1 })
+    expect(lastStat().clockRemainingMs).toBeLessThanOrEqual(FULL_PERIOD_MS)
+  })
+
+  it('moves to the overtime period past the regulation count and resets the clock to 5 minutes, stopped', () => {
+    seedMatch({ currentPeriod: REGULATION_PERIOD_COUNT, playersInTheFive: ['r1'] })
+    const { container } = renderMatch()
+    click(buttonByAriaLabel(container, 'Prolongation'))
+    expect(lastPersistedMatch()?.currentPeriod).toBe(REGULATION_PERIOD_COUNT + 1)
+    expect(clockDisplay(container)).toBe(OVERTIME_PERIOD_DISPLAY)
+    expect(lastPersistedMatch()?.clock).toMatchObject({ remainingMs: 300_000, running: false })
+    expect(hasButton(container, GAME_START_LABEL)).toBe(true)
+  })
+
+  it('moves to a regulation period, resets the clock to its full length and logs one gameStop when running', () => {
+    seedMatch({ playersInTheFive: ['r1'] })
+    const { container } = renderMatch()
+    click(buttonByText(container, GAME_START_LABEL))
+    expect(gameStopCount()).toBe(1)
+
+    click(buttonByAriaLabel(container, 'Période 2'))
+    expect(lastPersistedMatch()?.currentPeriod).toBe(2)
+    expect(clockDisplay(container)).toBe(FULL_PERIOD_DISPLAY)
+    expect(lastPersistedMatch()?.clock).toMatchObject({ remainingMs: FULL_PERIOD_MS, running: false })
+    expect(hasButton(container, GAME_START_LABEL)).toBe(true)
+    expect(gameStopCount()).toBe(2)
+  })
+
+  it('ignores a re-selection of the current period while running and still resets on a different period', () => {
+    const RUNNING_REMAINING_MS = 300_000
+    const CURRENT_PERIOD = 2
+    const OTHER_PERIOD = 3
+    seedMatch({
+      clock: { anchorEpochMs: Date.now(), remainingMs: RUNNING_REMAINING_MS, running: true },
+      currentPeriod: CURRENT_PERIOD,
+      playersInTheFive: ['r1'],
+    })
+    const { container } = renderMatch()
+    const clockBeforeReselect = lastPersistedMatch()?.clock
+    const gameStopsBeforeReselect = gameStopCount()
+    const storeWritesBeforeReselect = storeMatchsMock.mock.calls.length
+
+    click(buttonByAriaLabel(container, `Période ${CURRENT_PERIOD}`))
+    expect(hasButton(container, GAME_STOP_LABEL)).toBe(true)
+    expect(lastPersistedMatch()?.clock).toEqual(clockBeforeReselect)
+    expect(persistedClockRemainingMs()).toBe(RUNNING_REMAINING_MS)
+    expect(gameStopCount()).toBe(gameStopsBeforeReselect)
+    expect(storeMatchsMock.mock.calls.length).toBe(storeWritesBeforeReselect)
+
+    click(buttonByAriaLabel(container, `Période ${OTHER_PERIOD}`))
+    expect(lastPersistedMatch()?.currentPeriod).toBe(OTHER_PERIOD)
+    expect(lastPersistedMatch()?.clock).toMatchObject({ remainingMs: FULL_PERIOD_MS, running: false })
+    expect(hasButton(container, GAME_START_LABEL)).toBe(true)
+    expect(gameStopCount()).toBe(gameStopsBeforeReselect + 1)
+  })
+
+  it('commits the ±1 s corrections to the store', () => {
+    seedMatch({
+      clock: { anchorEpochMs: 0, remainingMs: FULL_PERIOD_MS, running: false },
+      currentPeriod: 1,
+      playersInTheFive: ['r1'],
+    })
+    const { container } = renderMatch()
+    const initialRemainingMs = persistedClockRemainingMs()
+
+    click(buttonByAriaLabel(container, 'Retirer une seconde'))
+    expect(persistedClockRemainingMs()).toBe(initialRemainingMs - ONE_SECOND_MS)
+
+    click(buttonByAriaLabel(container, 'Ajouter une seconde'))
+    expect(persistedClockRemainingMs()).toBe(initialRemainingMs)
   })
 })
