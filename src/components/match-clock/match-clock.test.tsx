@@ -83,7 +83,7 @@ describe('BsMatchClock', () => {
     })
     const stop = buttonByText(container, 'Arrêt du jeu')
     expect(stop.className).toContain('btn-error')
-    expect(stop.className).toContain('btn-lg')
+    expect(stop.className).toContain('btn-xl')
     dispose()
   })
 

@@ -48,14 +48,14 @@ export function BsMatchClock(props: BsMatchClockProps) {
 
       <Show
         fallback={
-          <button class="btn btn-lg btn-success w-full text-xl" onClick={startClock} type="button">
+          <button class="btn btn-xl btn-success w-full text-xl" onClick={startClock} type="button">
             <Timer size={32} />
             Reprise du jeu
           </button>
         }
         when={props.clock.running}
       >
-        <button class="btn btn-lg btn-error w-full text-xl" onClick={stopClock} type="button">
+        <button class="btn btn-xl btn-error w-full text-xl" onClick={stopClock} type="button">
           <TimerOff size={32} />
           Arrêt du jeu
         </button>
@@ -63,21 +63,26 @@ export function BsMatchClock(props: BsMatchClockProps) {
 
       <div class="flex flex-col items-center justify-between gap-2 md:flex-row">
         <div class="flex items-center gap-2">
-          <button aria-label="Retirer une seconde" class="btn btn-square" onClick={removeOneSecond} type="button">
+          <button
+            aria-label="Retirer une seconde"
+            class="btn btn-square btn-lg"
+            onClick={removeOneSecond}
+            type="button"
+          >
             <Minus size={20} />
           </button>
-          <button aria-label="Ajouter une seconde" class="btn btn-square" onClick={addOneSecond} type="button">
+          <button aria-label="Ajouter une seconde" class="btn btn-square btn-lg" onClick={addOneSecond} type="button">
             <Plus size={20} />
           </button>
         </div>
 
-        <div class="flex flex-wrap items-center gap-1">
+        <div class="flex flex-wrap items-center gap-2">
           <For each={periodNumbers()}>
             {(period) => (
               <button
                 aria-label={`Période ${period}`}
                 aria-pressed={period === props.currentPeriod}
-                class="btn btn-sm"
+                class="btn btn-lg"
                 classList={{
                   'btn-ghost': period !== props.currentPeriod,
                   'btn-primary': period === props.currentPeriod,
@@ -93,7 +98,7 @@ export function BsMatchClock(props: BsMatchClockProps) {
           <button
             aria-label="Prolongation"
             aria-pressed={isOvertimeCurrent()}
-            class="btn btn-sm"
+            class="btn btn-lg"
             classList={{
               'btn-ghost': !isOvertimeCurrent(),
               'btn-primary': isOvertimeCurrent(),
