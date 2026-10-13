@@ -230,6 +230,46 @@ describe('matchs-store', () => {
     expect(getMatchById('m1')?.matchFormat).toBeUndefined()
   })
 
+  it('clones the clock: neither the read nor the input shares the clock object', () => {
+    const clock = { anchorEpochMs: 0, remainingMs: 480_000, running: false }
+    addMatch(makeMatchData({ clock, currentPeriod: 2 }))
+
+    // The caller mutating the object passed to add() must not reach the store.
+    clock.remainingMs = 1
+    expect(getRawMatchs()[0].clock?.remainingMs).toBe(480_000)
+
+    // Mutating the clock returned by the clone getter must not reach the store.
+    const retrieved = getMatchById('m1')
+    expect(retrieved?.clock).toEqual({ anchorEpochMs: 0, remainingMs: 480_000, running: false })
+    expect(retrieved?.currentPeriod).toBe(2)
+    if (retrieved?.clock) {
+      retrieved.clock.remainingMs = 55
+    }
+    expect(getRawMatchs()[0].clock?.remainingMs).toBe(480_000)
+  })
+
+  it('keeps a legacy raw without clock or currentPeriod free of spurious keys', () => {
+    hydrateMatchs([makeMatchData()])
+
+    const [legacy] = getRawMatchs()
+    expect(Object.hasOwn(legacy, 'clock')).toBe(false)
+    expect(Object.hasOwn(getMatchById('m1') ?? {}, 'clock')).toBe(false)
+    expect(storeMatchs).not.toHaveBeenCalled()
+  })
+
+  it('persists exactly once per clock update', () => {
+    addMatch(makeMatchData())
+    expect(storeMatchs).toHaveBeenCalledTimes(1)
+
+    updateMatch(
+      'm1',
+      makeMatchData({ clock: { anchorEpochMs: 0, remainingMs: 300_000, running: false }, currentPeriod: 3 })
+    )
+
+    expect(storeMatchs).toHaveBeenCalledTimes(2)
+    expect(getMatchById('m1')?.clock?.remainingMs).toBe(300_000)
+  })
+
   it('assertMatchExists() returns the matching match or throws', () => {
     hydrateMatchs([makeMatchData({ id: 'm1' })])
 

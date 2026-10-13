@@ -5,6 +5,7 @@ import { clearAllPhotos, getAllPhotoEntries, storePhoto } from '../photo-store/p
 import Player from '../player/player'
 import { STORAGE_PLAYERS_KEY } from '../store/store'
 import { getRawClubs } from '../stores/clubs-store'
+import { getRawMatchs, replaceAllMatchs } from '../stores/matchs-store'
 import { getRawPlayers, replaceAllPlayers } from '../stores/players-store'
 import { getRawTeams, replaceAllTeams } from '../stores/teams-store'
 import Team from '../team/team'
@@ -187,6 +188,7 @@ describe('importDB flow', () => {
     vi.clearAllMocks()
     replaceAllPlayers([])
     replaceAllTeams([])
+    replaceAllMatchs([])
     await clearAllPhotos()
   })
 
@@ -247,6 +249,64 @@ describe('importDB flow', () => {
 
     expect(confirmAction).toHaveBeenCalledTimes(2)
     expect(await getAllPhotoEntries()).toHaveLength(1)
+    expect(toast).toHaveBeenCalledWith('Import des nouvelles données réussi !', 'success')
+  })
+
+  it('preserves the clock snapshot and current period of a match across an archive round trip', async () => {
+    const clock = { anchorEpochMs: 0, remainingMs: 360_000, running: false }
+    const archive = {
+      ...validArchiveData(),
+      matchs: [
+        {
+          championship: null,
+          clock,
+          currentPeriod: 3,
+          date: null,
+          id: 'm-clocked',
+          opponent: 'Adversaire',
+          playersInTheFive: [],
+          stats: [],
+          status: 'unlocked',
+          teamId: 't-home',
+          type: 'home',
+        },
+      ],
+    }
+
+    await expect(orchestrator.importDB(fileUploadEvent(zipArchiveBytes(archive)))).resolves.toBeUndefined()
+
+    const [imported] = getRawMatchs()
+    expect(imported.id).toBe('m-clocked')
+    expect(imported.clock).toEqual(clock)
+    expect(imported.currentPeriod).toBe(3)
+    expect(toast).toHaveBeenCalledWith('Import des nouvelles données réussi !', 'success')
+  })
+
+  it('imports a legacy match without injecting clock or currentPeriod keys', async () => {
+    const archive = {
+      ...validArchiveData(),
+      matchs: [
+        {
+          championship: null,
+          date: null,
+          id: 'm-legacy',
+          opponent: 'Adversaire',
+          playersInTheFive: [],
+          stats: [],
+          status: 'unlocked',
+          teamId: 't-home',
+          type: 'home',
+        },
+      ],
+    }
+
+    await expect(orchestrator.importDB(fileUploadEvent(zipArchiveBytes(archive)))).resolves.toBeUndefined()
+
+    const [imported] = getRawMatchs()
+    expect(imported.id).toBe('m-legacy')
+    expect(imported.opponent).toBe('Adversaire')
+    expect(Object.hasOwn(imported, 'clock')).toBe(false)
+    expect(Object.hasOwn(imported, 'currentPeriod')).toBe(false)
     expect(toast).toHaveBeenCalledWith('Import des nouvelles données réussi !', 'success')
   })
 })

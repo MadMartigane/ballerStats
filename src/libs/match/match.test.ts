@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { MatchClockData } from './clock.d'
 import Match from './match'
 
 describe('Match — championship field', () => {
@@ -79,5 +80,62 @@ describe('Match — matchFormat field', () => {
 
     m.update({ matchFormat: null })
     expect(m.matchFormat).toBeNull()
+  })
+})
+
+describe('Match — clock and period fields', () => {
+  const clock: MatchClockData = { anchorEpochMs: 0, remainingMs: 480_000, running: false }
+
+  it('round-trip: clock survives getRawData as an independent copy', () => {
+    const raw = new Match({ clock }).getRawData()
+
+    expect(raw.clock).toEqual(clock)
+    expect(raw.clock).not.toBe(clock)
+  })
+
+  it('round-trip: currentPeriod survives getRawData and constructor', () => {
+    const raw = new Match({ currentPeriod: 2 }).getRawData()
+
+    expect(raw.currentPeriod).toBe(2)
+    expect(new Match(raw).currentPeriod).toBe(2)
+  })
+
+  it('legacy raw without clock fields yields null and loses no legacy field', () => {
+    const legacy = { championship: 'Coupe', id: 'abc', opponent: 'Team X', stats: [] }
+    const m = new Match(legacy)
+    const raw = m.getRawData()
+
+    expect(m.clock).toBeNull()
+    expect(m.currentPeriod).toBeNull()
+    expect(raw.clock).toBeUndefined()
+    expect(raw.currentPeriod).toBeUndefined()
+    expect(raw).toMatchObject({ championship: 'Coupe', id: 'abc', opponent: 'Team X' })
+  })
+
+  it('clone independence: mutating the returned clock does not mutate the instance', () => {
+    const m = new Match({ clock })
+    const raw = m.getRawData()
+
+    if (raw.clock) {
+      raw.clock.remainingMs = 1
+    }
+
+    expect(m.clock).toEqual(clock)
+    expect(m.getRawData().clock?.remainingMs).toBe(480_000)
+  })
+
+  it('rejects an invalid clock payload and stores null', () => {
+    const m = new Match({ clock: { anchorEpochMs: 0, remainingMs: -5, running: false } })
+
+    expect(m.clock).toBeNull()
+    expect(m.getRawData().clock).toBeUndefined()
+  })
+
+  it('update sets clock and currentPeriod', () => {
+    const m = new Match({})
+
+    m.update({ clock, currentPeriod: 3 })
+
+    expect(m.getRawData()).toMatchObject({ clock, currentPeriod: 3 })
   })
 })

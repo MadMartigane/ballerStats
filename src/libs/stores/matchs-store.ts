@@ -1,4 +1,5 @@
 import { createStore, reconcile } from 'solid-js/store'
+import { isClockData } from '../match/clock'
 import type { MatchRawData } from '../match/match.d'
 import { storeMatchs } from '../store/store'
 
@@ -39,6 +40,8 @@ export function getMatchById(id: string): MatchRawData | null {
 function cloneMatchRaw(raw: MatchRawData): MatchRawData {
   return {
     ...raw,
+    // An absent `clock` stays absent (no `clock: undefined` key on legacy rows).
+    ...(raw.clock === undefined ? {} : { clock: isClockData(raw.clock) ? { ...raw.clock } : null }),
     matchFormat: raw.matchFormat ? { ...raw.matchFormat } : raw.matchFormat,
     playersInTheFive: [...(raw.playersInTheFive ?? [])],
     stats: (raw.stats ?? []).map((stat) => ({ ...stat })),

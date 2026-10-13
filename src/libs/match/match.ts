@@ -1,5 +1,7 @@
 import type { MatchFormatConfig } from '../team/match-format'
 import { clone, getUniqId } from '../utils/utils'
+import { isClockData } from './clock'
+import type { MatchClockData } from './clock.d'
 import type { MatchRawData, MatchStatLogEntry, MatchStatus, MatchType } from './match.d'
 
 const defaultType: MatchType = 'home'
@@ -17,6 +19,8 @@ export default class Match {
   playersInTheFive: string[] = []
   tablePlayTimes?: Record<string, number>
   matchFormat?: MatchFormatConfig | null
+  clock?: MatchClockData | null
+  currentPeriod?: number | null
 
   constructor(data?: MatchRawData) {
     if (data) {
@@ -39,6 +43,8 @@ export default class Match {
     this.playersInTheFive = data.playersInTheFive || this.playersInTheFive
     this.tablePlayTimes = data.tablePlayTimes || undefined
     this.matchFormat = data.matchFormat || null
+    this.clock = isClockData(data.clock) ? { ...data.clock } : null
+    this.currentPeriod = data.currentPeriod ?? null
   }
 
   get id() {
@@ -68,6 +74,14 @@ export default class Match {
 
     if (this.matchFormat) {
       data.matchFormat = { ...this.matchFormat }
+    }
+
+    if (this.clock) {
+      data.clock = { ...this.clock }
+    }
+
+    if (this.currentPeriod !== null) {
+      data.currentPeriod = this.currentPeriod
     }
 
     return data
