@@ -39,7 +39,6 @@ export default function BsNostromoRestoreModal(props: BsNostromoRestoreModalProp
   }
 
   return (
-    /* biome-ignore lint/a11y/noNoninteractiveElementInteractions: <dialog> is a native interactive element, and the handler only answers Escape */
     <dialog aria-labelledby={titleId} class="modal modal-middle" onKeyDown={onKeyDown} open ref={dialogEl}>
       <div class="modal-box max-h-[calc(100dvh-4rem)] w-[calc(100%-2rem)] max-w-lg overflow-y-auto">
         <div class="flex items-start justify-between gap-2">

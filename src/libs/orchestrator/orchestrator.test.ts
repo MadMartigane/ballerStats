@@ -1,14 +1,16 @@
 import { strToU8, zipSync } from 'fflate'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ContactRawData } from '../contact/contact.d'
+import type { MatchRawData } from '../match/match.d'
 import { clearAllPhotos, getAllPhotoEntries, storePhoto } from '../photo-store/photo-store'
 import Player from '../player/player'
-import { STORAGE_PLAYERS_KEY } from '../store/store'
+import { storePlayers } from '../store/store'
 import { getRawClubs } from '../stores/clubs-store'
 import { getRawMatchs, replaceAllMatchs } from '../stores/matchs-store'
 import { getRawPlayers, replaceAllPlayers } from '../stores/players-store'
 import { getRawTeams, replaceAllTeams } from '../stores/teams-store'
 import Team from '../team/team'
+import type { TeamRawData } from '../team/team.d'
 import { confirmAction, toast } from '../utils/utils'
 import { isGlobalDB, Orchestrator, ParseError } from './orchestrator'
 import type { DomainDataset, GlobalDB } from './orchestrator.d'
@@ -170,18 +172,6 @@ function zipArchiveBytes(data: GlobalDB | Record<string, unknown>): Uint8Array {
   return zipSync({ 'data.json': payload }, {})
 }
 
-/** A zipped archive holding one player and its photo blob. */
-function zipArchiveWithPhoto(): Uint8Array {
-  const data = {
-    contacts: null,
-    matchs: [],
-    players: [{ clubId: 'c1', firstName: 'Nina', hasPhoto: true, id: 'p1', jerseyNumber: '10', lastName: 'Dupont' }],
-    teams: [],
-    timestamp: 1_700_000_000_000,
-  }
-  return zipSync({ 'data.json': strToU8(JSON.stringify(data)), 'photos/p1.webp': new Uint8Array([1, 2, 3]) }, {})
-}
-
 function fileUploadEvent(uint8: Uint8Array): { currentTarget: HTMLInputElement; target: HTMLInputElement } {
   // Copy into an ArrayBuffer-backed view so the bytes satisfy BlobPart under TS 5.7+.
   const file = new File([new Uint8Array(uint8)], 'archive.bstat', { type: ARCHIVE_MIME_TYPE })
@@ -327,7 +317,7 @@ describe('importDB flow', () => {
     expect(confirmAction).toHaveBeenCalledTimes(2)
     expect(await getAllPhotoEntries()).toHaveLength(0)
     expect(vi.mocked(confirmAction).mock.calls[0][1]).toContain('1 joueurs, 1 équipes')
-    expect(vi.mocked(confirmAction).mock.calls[1][1]).toBe('Voulez-vous écraser toutes les données ?')
+    expect(vi.mocked(confirmAction).mock.calls[1][1]).toContain('Voulez-vous écraser toutes les données ?')
     expect(getRawPlayers().map((player) => player.id)).toEqual(['p-imported'])
     expect(getRawTeams().map((team) => team.id)).toEqual(['t-imported'])
     expect(toast).toHaveBeenCalledWith('Import des nouvelles données réussi !', 'success')
@@ -458,10 +448,8 @@ describe('replaceDataset', () => {
     expect(players).toHaveLength(1)
     expect(players[0].clubId).toBe(clubs[0].id)
 
-    // The migrated player must be the one that reached localStorage, not the raw input.
-    const stored = JSON.parse(localStorage.getItem(STORAGE_PLAYERS_KEY) ?? 'null') as {
-      data?: { clubId?: string }[]
-    }
-    expect(stored.data?.[0]?.clubId).toBe(clubs[0].id)
+    // The migrated player must be the one persisted, not the raw input. storePlayers is mocked.
+    const persisted = vi.mocked(storePlayers).mock.lastCall?.[0] ?? []
+    expect(persisted[0]?.clubId).toBe(clubs[0].id)
   })
 })

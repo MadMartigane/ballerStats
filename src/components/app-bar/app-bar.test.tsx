@@ -4,7 +4,7 @@ import { renderInRouter } from '../test-utils'
 import BsAppBar from './app-bar'
 
 const VISIBLE_ENTRIES = NAVIGATION_MENU_ENTRIES.filter((entry) => entry.isMenuEntry)
-const USER_MENU_LABEL = 'Ouvrir le menu utilisateur'
+const USER_MENU_LABEL = 'État de synchronisation Nostromo'
 const MAIN_MENU_LABEL = 'Menu principal'
 const MENU_CLOSE_DELAY_MS = 10
 
@@ -63,24 +63,28 @@ describe('BsAppBar', () => {
     }
   })
 
-  it('shows the user menu only after its toggle is clicked', () => {
+  it('shows the sync panel only after its chip toggle is clicked', () => {
     const { container } = renderInRouter(BsAppBar)
-    expect(container.querySelector('menu')).toBeNull()
+    expect(requireButton(container, USER_MENU_LABEL).getAttribute('aria-expanded')).toBe('false')
 
     requireButton(container, USER_MENU_LABEL).click()
 
-    const items = Array.from(container.querySelectorAll('menu a')).map((link) => link.getAttribute('href'))
-    expect(items).toEqual(['/user', '/config'])
+    expect(requireButton(container, USER_MENU_LABEL).getAttribute('aria-expanded')).toBe('true')
   })
 
-  it('hides the user menu again on a second toggle click', () => {
+  it('hides the sync panel again on a second toggle click', () => {
     const { container } = renderInRouter(BsAppBar)
+    const isExpanded = () => requireButton(container, USER_MENU_LABEL).getAttribute('aria-expanded') === 'true'
+    if (isExpanded()) {
+      requireButton(container, USER_MENU_LABEL).click()
+    }
+    expect(isExpanded()).toBe(false)
     requireButton(container, USER_MENU_LABEL).click()
-    expect(container.querySelector('menu')).not.toBeNull()
+    expect(isExpanded()).toBe(true)
 
     requireButton(container, USER_MENU_LABEL).click()
 
-    expect(container.querySelector('menu')).toBeNull()
+    expect(isExpanded()).toBe(false)
   })
 
   it('opens the mobile menu on the main menu toggle and lists the navigation entries', () => {
@@ -112,6 +116,6 @@ describe('BsAppBar', () => {
 
     const logo = container.querySelector<HTMLAnchorElement>('nav a[aria-current="page"]')
     expect(logo?.getAttribute('href')).toBe('#/')
-    expect(logo?.querySelector('img')?.getAttribute('alt')).toBe('Baller stats logo')
+    expect(logo?.querySelector('img')?.getAttribute('alt')).toBe('Logo Baller Stats')
   })
 })

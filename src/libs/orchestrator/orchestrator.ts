@@ -446,6 +446,7 @@ export class Orchestrator {
    *   collection) and the trombi titles are persisted once afterwards.
    */
   async replaceDataset(dataset: DomainDataset): Promise<void> {
+    await this.captureServerSnapshot('jeu de démonstration')
     await clearAllPhotos()
 
     const migration = migrateClubData({
