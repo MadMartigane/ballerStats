@@ -477,7 +477,7 @@ Conventions specific to this project that an agent would not know from training 
 - **Formatting**: Biome via Ultracite preset — line width 120, indent 2 spaces, single quotes
 
 ```tsx
-// Native DaisyUI button — no wrapper component (see AGENTS.md)
+// Native DaisyUI button — no wrapper component (see docs/design-system.md)
 <button class="btn btn-primary" type="button" onClick={props.onSave}>
   <Save />
   Enregistrer

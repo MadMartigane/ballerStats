@@ -4,8 +4,6 @@ import {
   ChartLine,
   ChevronLeft,
   ChevronRight,
-  CirclePause,
-  CirclePlay,
   Eraser,
   Meh,
   MessageSquareWarning,
@@ -17,6 +15,17 @@ import {
 import { For, Show } from 'solid-js'
 import { createStore, type SetStoreFunction } from 'solid-js/store'
 import MadSignal from '../../libs/mad-signal'
+import {
+  adjustClock,
+  createInitialClock,
+  getPeriodLengthMinutes,
+  getRemainingMs,
+  isClockData,
+  nextPeriodClock,
+  startClock,
+  stopClock,
+} from '../../libs/match/clock'
+import type { MatchClockData } from '../../libs/match/clock.d'
 import type Match from '../../libs/match/match'
 import orchestrator from '../../libs/orchestrator/orchestrator'
 import type Player from '../../libs/player/player'
@@ -29,6 +38,7 @@ import type Team from '../../libs/team/team'
 import { TEAM_OPPONENT_ID } from '../../libs/team/team'
 import { confirmAction, goTo, toast } from '../../libs/utils/utils'
 import { vibrate } from '../../libs/vibrator/vibrator'
+import { BsMatchClock } from '../match-clock/match-clock'
 import BsScoreCard from '../score-card/score-card'
 import { BsFullStatTable } from '../stats/full-stat-table'
 import { BsMatchFormatLine } from '../stats/match-format-line'
@@ -36,6 +46,8 @@ import { BsPlayTimeEntry } from '../stats/play-time-entry'
 import { BsPlayTimePanel } from '../stats/play-time-panel'
 import { BsStatSumUpRebonds } from '../stats/sum-up-rebonds'
 import type { BsMatchProps } from './match.d'
+
+const MS_PER_MINUTE = 60_000
 
 function openActionMode(playerId: string | undefined, playerOnAction: MadSignal<string | null>) {
   playerOnAction.set(playerId || null)
@@ -45,6 +57,22 @@ function closeActionMode(playerOnAction: MadSignal<string | null>) {
   playerOnAction.set(null)
 }
 
+/** Live clock and period signals owned by BsMatch. */
+interface ClockState {
+  clock: MadSignal<MatchClockData>
+  currentPeriod: MadSignal<number>
+}
+
+/** Clock state captured just before a transition, so the event records the window it closes or opens. */
+interface ClockSnapshot {
+  clock: MatchClockData
+  period: number
+}
+
+function readClockSnapshot(state: ClockState): ClockSnapshot {
+  return { clock: state.clock.get(), period: state.currentPeriod.get() }
+}
+
 function registerStat(options: {
   playerId: string | null
   statAction: StatMatchActionItem
@@ -52,15 +80,20 @@ function registerStat(options: {
   statSummary: StatMatchSummary
   setStatSummary: SetStoreFunction<StatMatchSummary>
   disableClearLastAction: MadSignal<boolean>
+  clockSnapshot: ClockSnapshot
 }) {
   if (!options.match) {
     return
   }
 
+  // One time base for the event timestamp and its clock remaining, so both can be cross-checked exactly.
+  const nowMs = Date.now()
   options.match.stats.push({
+    clockRemainingMs: getRemainingMs(options.clockSnapshot.clock, nowMs),
     name: options.statAction.name,
+    period: options.clockSnapshot.period,
     playerId: options.playerId,
-    timestamp: Date.now(),
+    timestamp: nowMs,
     type: options.statAction.type,
     value: options.statAction.value,
   })
@@ -116,6 +149,7 @@ function removeLastAction(
 }
 
 function getOutFromPlayground(opts: {
+  clockState: ClockState
   playerId: string
   playersInTheFive: MadSignal<string[]>
   match: Match | null
@@ -140,6 +174,7 @@ function getOutFromPlayground(opts: {
   }
 
   registerStat({
+    clockSnapshot: readClockSnapshot(opts.clockState),
     disableClearLastAction: opts.disableClearLastAction,
     match: opts.match,
     playerId: opts.playerId,
@@ -156,6 +191,7 @@ function getOutFromPlayground(opts: {
 }
 
 function getInFromPlayground(opts: {
+  clockState: ClockState
   playerId: string
   playersInTheFive: MadSignal<string[]>
   match: Match | null
@@ -181,6 +217,7 @@ function getInFromPlayground(opts: {
   }
 
   registerStat({
+    clockSnapshot: readClockSnapshot(opts.clockState),
     disableClearLastAction: opts.disableClearLastAction,
     match: opts.match,
     playerId: opts.playerId,
@@ -196,37 +233,98 @@ function getInFromPlayground(opts: {
   }
 }
 
-function stopStartTheGame(opts: {
-  gameIsPlaying: MadSignal<boolean>
-  match: Match | null
-  statSummary: StatMatchSummary
-  setStatSummary: SetStoreFunction<StatMatchSummary>
+interface StatRegistrationContext {
+  clockState: ClockState
   disableClearLastAction: MadSignal<boolean>
-}) {
-  opts.gameIsPlaying.set(!opts.gameIsPlaying.get())
+  match: Match | null
+  setStatSummary: SetStoreFunction<StatMatchSummary>
+  statSummary: StatMatchSummary
+}
 
+interface ClockControlContext extends StatRegistrationContext {
+  format: MadSignal<ResolvedMatchFormat>
+}
+
+function logGameStop(context: StatRegistrationContext, snapshot: ClockSnapshot) {
   const statAction = STATS_MATCH_ACTIONS.find((candidate) => candidate.name === 'gameStop')
   if (!statAction) {
     throw new Error('Unable to find stat action item: "gameStop"')
   }
 
+  // registerStat persists the match, so the clock and period set beforehand ride that single write.
   registerStat({
-    disableClearLastAction: opts.disableClearLastAction,
-    match: opts.match,
+    clockSnapshot: snapshot,
+    disableClearLastAction: context.disableClearLastAction,
+    match: context.match,
     playerId: null,
-    setStatSummary: opts.setStatSummary,
+    setStatSummary: context.setStatSummary,
     statAction,
-    statSummary: opts.statSummary,
+    statSummary: context.statSummary,
   })
+}
 
+function persistMatchClock(match: Match | null) {
+  if (!match) {
+    return
+  }
+  updateMatch(match.id, match.getRawData())
+}
+
+function getCurrentPeriodLengthMs(context: ClockControlContext): number {
+  const format = context.format.get()
+  const period = context.clockState.currentPeriod.get()
+  return getPeriodLengthMinutes(period, format.periods, format.periodLengthMinutes) * MS_PER_MINUTE
+}
+
+function applyClockRunning(context: ClockControlContext, nextRunning: boolean) {
+  const previous = readClockSnapshot(context.clockState)
+  if (previous.clock.running === nextRunning) {
+    return
+  }
+
+  const nowMs = Date.now()
+  const nextClock = nextRunning ? startClock(previous.clock, nowMs) : stopClock(previous.clock, nowMs)
+  context.clockState.clock.set(nextClock)
+  context.match?.update({ clock: nextClock })
+  logGameStop(context, previous)
   orchestrator.throwUserActionFeedback('long')
 }
 
-interface StatRegistrationContext {
-  disableClearLastAction: MadSignal<boolean>
-  match: Match | null
-  setStatSummary: SetStoreFunction<StatMatchSummary>
-  statSummary: StatMatchSummary
+function applyClockAdjustment(context: ClockControlContext, deltaMs: number) {
+  const nextClock = adjustClock(context.clockState.clock.get(), deltaMs, getCurrentPeriodLengthMs(context), Date.now())
+  context.clockState.clock.set(nextClock)
+  context.match?.update({ clock: nextClock })
+  persistMatchClock(context.match)
+}
+
+function applyPeriodSelection(context: ClockControlContext, period: number) {
+  // Re-selecting the current period must not reset the running clock or close a play-time window.
+  if (period === context.clockState.currentPeriod.get()) {
+    return
+  }
+
+  // A gameStop closing a running clock belongs to the period and time being left, so capture them first.
+  const previous = readClockSnapshot(context.clockState)
+  const format = context.format.get()
+  const nextClock = nextPeriodClock(getPeriodLengthMinutes(period, format.periods, format.periodLengthMinutes))
+  context.clockState.currentPeriod.set(period)
+  context.clockState.clock.set(nextClock)
+  context.match?.update({ clock: nextClock, currentPeriod: period })
+
+  // Stopping a running clock closes a play-time window, so it logs the same gameStop as the main control.
+  if (previous.clock.running) {
+    logGameStop(context, previous)
+    return
+  }
+  persistMatchClock(context.match)
+}
+
+function createInitialMatchClock(match: Match | null, format: ResolvedMatchFormat): MatchClockData {
+  const storedClock = match?.clock
+  if (isClockData(storedClock)) {
+    return { ...storedClock }
+  }
+  return createInitialClock(format.periodLengthMinutes)
 }
 
 interface PlayerBenchRenderOptions extends StatRegistrationContext {
@@ -235,7 +333,7 @@ interface PlayerBenchRenderOptions extends StatRegistrationContext {
 }
 
 interface PlayerButtonRenderOptions extends StatRegistrationContext {
-  matchIsPlaying: MadSignal<boolean>
+  isClockRunning: () => boolean
   player: Player | null
   playerInTheFive: MadSignal<string[]>
   playerOnAction: MadSignal<string | null>
@@ -244,6 +342,7 @@ interface PlayerButtonRenderOptions extends StatRegistrationContext {
 function makePlayerBenchInClickHandler(opts: PlayerBenchRenderOptions) {
   return () => {
     getInFromPlayground({
+      clockState: opts.clockState,
       disableClearLastAction: opts.disableClearLastAction,
       match: opts.match,
       playerId: opts.player?.id || '',
@@ -257,6 +356,7 @@ function makePlayerBenchInClickHandler(opts: PlayerBenchRenderOptions) {
 function makePlayerButtonOutClickHandler(opts: PlayerButtonRenderOptions) {
   return () => {
     getOutFromPlayground({
+      clockState: opts.clockState,
       disableClearLastAction: opts.disableClearLastAction,
       match: opts.match,
       playerId: opts.player?.id || '',
@@ -270,6 +370,7 @@ function makePlayerButtonOutClickHandler(opts: PlayerButtonRenderOptions) {
 function makePlayerButtonRegisterStatHandler(opts: PlayerButtonRenderOptions, statAction: StatMatchActionItem) {
   return () => {
     registerStat({
+      clockSnapshot: readClockSnapshot(opts.clockState),
       disableClearLastAction: opts.disableClearLastAction,
       match: opts.match,
       playerId: opts.player?.id || null,
@@ -289,6 +390,7 @@ function makePlayerActionModeClickHandler(player: Player | null, playerOnAction:
 }
 
 function makeOpponentRegisterStatHandler(options: {
+  clockState: ClockState
   disableClearLastAction: MadSignal<boolean>
   match: Match | null
   setStatSummary: SetStoreFunction<StatMatchSummary>
@@ -297,6 +399,7 @@ function makeOpponentRegisterStatHandler(options: {
 }) {
   return () => {
     registerStat({
+      clockSnapshot: readClockSnapshot(options.clockState),
       disableClearLastAction: options.disableClearLastAction,
       match: options.match,
       playerId: TEAM_OPPONENT_ID,
@@ -312,18 +415,6 @@ function makeOpponentRegisterStatHandler(options: {
 function makeOpponentActionModeClickHandler(playerOnAction: MadSignal<string | null>) {
   return () => {
     openActionMode(TEAM_OPPONENT_ID, playerOnAction)
-  }
-}
-
-function makeStopStartGameClickHandler(options: {
-  disableClearLastAction: MadSignal<boolean>
-  gameIsPlaying: MadSignal<boolean>
-  match: Match | null
-  setStatSummary: SetStoreFunction<StatMatchSummary>
-  statSummary: StatMatchSummary
-}) {
-  return () => {
-    stopStartTheGame(options)
   }
 }
 
@@ -365,6 +456,7 @@ function makeOpenStatModeKeyDownHandler(isStatMode: MadSignal<boolean>) {
 
 function makePlayerOnActionStatClickHandler(
   options: {
+    clockState: ClockState
     disableClearLastAction: MadSignal<boolean>
     match: Match | null
     setStatSummary: SetStoreFunction<StatMatchSummary>
@@ -375,6 +467,7 @@ function makePlayerOnActionStatClickHandler(
 ) {
   return () => {
     registerStat({
+      clockSnapshot: readClockSnapshot(options.clockState),
       disableClearLastAction: options.disableClearLastAction,
       match: options.match,
       playerId: playerOnAction.get(),
@@ -489,8 +582,8 @@ function renderPlayerButton(opts: PlayerButtonRenderOptions) {
               when={
                 !statAction.secondaryAction &&
                 (statAction.everyTimeAction ||
-                  (opts.matchIsPlaying.get() && statAction.inGameAction) ||
-                  (!opts.matchIsPlaying.get() && !statAction.inGameAction))
+                  (opts.isClockRunning() && statAction.inGameAction) ||
+                  (!opts.isClockRunning() && !statAction.inGameAction))
               }
             >
               <div class="hidden flex-none md:block">
@@ -671,6 +764,7 @@ function renderStatGrid(options: {
 }
 
 function renderTheTeamBench(options: {
+  clockState: ClockState
   sortedPlayers: Array<Player | null>
   playersInTheFive: MadSignal<string[]>
   match: Match | null
@@ -694,6 +788,7 @@ function renderTheTeamBench(options: {
       {(player) => (
         <Show when={player && !options.playersInTheFive.get().includes(player.id)}>
           {renderPlayerBench({
+            clockState: options.clockState,
             disableClearLastAction: options.disableClearLastAction,
             match: options.match,
             player,
@@ -708,13 +803,14 @@ function renderTheTeamBench(options: {
 }
 
 function renderTheTeamFive(opts: {
+  clockState: ClockState
   sortedPlayers: Array<Player | null>
   playersInTheFive: MadSignal<string[]>
   match: Match | null
   statSummary: StatMatchSummary
   setStatSummary: SetStoreFunction<StatMatchSummary>
   disableClearLastAction: MadSignal<boolean>
-  matchIsPlaying: MadSignal<boolean>
+  isClockRunning: () => boolean
   playerOnAction: MadSignal<string | null>
 }) {
   if (opts.playersInTheFive.get().length < 1) {
@@ -731,9 +827,10 @@ function renderTheTeamFive(opts: {
         {(player) => (
           <Show when={player && opts.playersInTheFive.get().includes(player.id)}>
             {renderPlayerButton({
+              clockState: opts.clockState,
               disableClearLastAction: opts.disableClearLastAction,
+              isClockRunning: opts.isClockRunning,
               match: opts.match,
-              matchIsPlaying: opts.matchIsPlaying,
               player,
               playerInTheFive: opts.playersInTheFive,
               playerOnAction: opts.playerOnAction,
@@ -763,7 +860,21 @@ export default function BsMatch(props: BsMatchProps) {
     resolveMatchFormat(team?.getRawData() ?? null, match?.getRawData())
   )
   const playersInTheFive = new MadSignal(match?.playersInTheFive || [])
-  const matchIsPlaying: MadSignal<boolean> = new MadSignal(false)
+  const clock: MadSignal<MatchClockData> = new MadSignal(createInitialMatchClock(match, format.get()))
+  const currentPeriod: MadSignal<number> = new MadSignal(match?.currentPeriod ?? 1)
+  const clockState: ClockState = { clock, currentPeriod }
+  const isClockRunning = () => clock.get().running
+  const clockContext: ClockControlContext = {
+    clockState,
+    disableClearLastAction,
+    format,
+    match,
+    setStatSummary,
+    statSummary,
+  }
+  const onClockAdjust = (deltaMs: number) => applyClockAdjustment(clockContext, deltaMs)
+  const onClockSelectPeriod = (period: number) => applyPeriodSelection(clockContext, period)
+  const onClockToggleRunning = (nextRunning: boolean) => applyClockRunning(clockContext, nextRunning)
   const onStatGridSaved = makeStatGridSavedHandler(setStatSummary, format, match, team)
 
   return (
@@ -795,9 +906,10 @@ export default function BsMatch(props: BsMatchProps) {
         <Show when={!playerOnAction.get()}>
           <div class="w-full">
             {renderTheTeamFive({
+              clockState,
               disableClearLastAction,
+              isClockRunning,
               match,
-              matchIsPlaying,
               playerOnAction,
               playersInTheFive,
               setStatSummary,
@@ -821,14 +933,15 @@ export default function BsMatch(props: BsMatchProps) {
                       when={
                         !statAction.secondaryAction &&
                         statAction.opponentMatter &&
-                        ((matchIsPlaying.get() && statAction.inGameAction) ||
-                          (!matchIsPlaying.get() && !statAction.inGameAction))
+                        ((isClockRunning() && statAction.inGameAction) ||
+                          (!isClockRunning() && !statAction.inGameAction))
                       }
                     >
                       <div class="hidden flex-none md:inline-block">
                         <button
                           class={`btn btn-${statAction.type}`}
                           onClick={makeOpponentRegisterStatHandler({
+                            clockState,
                             disableClearLastAction,
                             match,
                             setStatSummary,
@@ -836,6 +949,7 @@ export default function BsMatch(props: BsMatchProps) {
                             statSummary,
                           })}
                           onKeyDown={makeOpponentRegisterStatHandler({
+                            clockState,
                             disableClearLastAction,
                             match,
                             setStatSummary,
@@ -866,34 +980,14 @@ export default function BsMatch(props: BsMatchProps) {
               </div>
             </div>
 
-            <button
-              class={`btn btn-lg btn-${matchIsPlaying.get() ? 'error' : 'success'} w-full text-xl`}
-              onClick={makeStopStartGameClickHandler({
-                disableClearLastAction,
-                gameIsPlaying: matchIsPlaying,
-                match,
-                setStatSummary,
-                statSummary,
-              })}
-              type="button"
-            >
-              <Show when={matchIsPlaying.get()}>
-                {
-                  <>
-                    <CirclePause size={32} />
-                    Arrêt du jeu
-                  </>
-                }
-              </Show>
-              <Show when={!matchIsPlaying.get()}>
-                {
-                  <>
-                    <CirclePlay size={32} />
-                    Reprise du jeu
-                  </>
-                }
-              </Show>
-            </button>
+            <BsMatchClock
+              clock={clock.get()}
+              currentPeriod={currentPeriod.get()}
+              onAdjust={onClockAdjust}
+              onSelectPeriod={onClockSelectPeriod}
+              onToggleRunning={onClockToggleRunning}
+              periodCount={format.get().periods}
+            />
             <hr />
 
             <button
@@ -910,6 +1004,7 @@ export default function BsMatch(props: BsMatchProps) {
 
             <div class="divider">Le Banc</div>
             {renderTheTeamBench({
+              clockState,
               disableClearLastAction,
               match,
               playersInTheFive,
@@ -942,7 +1037,7 @@ export default function BsMatch(props: BsMatchProps) {
                   <button
                     class={`btn btn-${item.type}`}
                     onClick={makePlayerOnActionStatClickHandler(
-                      { disableClearLastAction, match, setStatSummary, statSummary },
+                      { clockState, disableClearLastAction, match, setStatSummary, statSummary },
                       item,
                       playerOnAction
                     )}
