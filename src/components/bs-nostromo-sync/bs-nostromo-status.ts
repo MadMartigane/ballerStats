@@ -9,7 +9,7 @@
  */
 import type { DaisyAlert } from '../../libs/daisy/daisy.d'
 import { NostromoClientError } from '../../libs/nostromo/client'
-import type { NostromoStatus } from '../../libs/nostromo/nostromo-sync-store.d'
+import type { NostromoLogEntry, NostromoStatus } from '../../libs/nostromo/nostromo-sync-store.d'
 import type { RemoteSnapshotDescription } from '../../libs/nostromo/remote-snapshot.d'
 import type { NostromoRestoreDecision, NostromoRestorePlan, NostromoRestoreResult } from '../../libs/nostromo/restore.d'
 
@@ -64,6 +64,11 @@ export const NOSTROMO_FLUSH_MESSAGES: Record<NostromoStatus, string> = {
   pending: 'Synchronisation partielle : des données restent en attente.',
   saved: 'Synchronisation terminée.',
   saving: 'Synchronisation en cours…',
+}
+
+/** Message of the most recent `error` entry of the log, shown as the chip tooltip. */
+export function lastNostromoErrorLine(entries: readonly NostromoLogEntry[]): string | undefined {
+  return entries.findLast((entry) => entry.level === 'error')?.message
 }
 
 /** True while a push or a restore is in flight: the chip spins and the card disables its actions. */

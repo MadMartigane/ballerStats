@@ -6,6 +6,7 @@ import { hydrateMatchs } from '../stores/matchs-store'
 import { hydratePlayers } from '../stores/players-store'
 import { hydrateTeams } from '../stores/teams-store'
 import { getTitles } from '../trombi-titles-store'
+import { startNostromoAutoSync, stopNostromoAutoSync } from './auto-sync'
 import {
   createDocument,
   deleteDocument,
@@ -17,6 +18,7 @@ import {
 } from './client'
 import type { NostromoCreateDocumentInput, NostromoDocument, NostromoErrorKind } from './client.d'
 import { DIRTY_DEBOUNCE_MS, markCollectionDirty, markPhotoDirty, photoUnitName } from './dirty-marks'
+import { NOSTROMO_MAX_PHOTO_BYTES } from './limits'
 import { hydrateNostromoConfig } from './nostromo-config-store'
 import type { NostromoConfig } from './nostromo-config-store.d'
 import {
@@ -34,14 +36,14 @@ import type { NostromoBaselines, NostromoUnitName } from './nostromo-sync-store.
 import {
   clearAllNostromoConflicts,
   collectionDocId,
+  computeBackoffDelayMs,
   flushNostromoPush,
   getConflictedUnits,
-  NOSTROMO_MAX_PHOTO_BYTES,
+  isPushBackoffActive,
+  NOSTROMO_BACKOFF_MAX_MS,
   NOSTROMO_RETRY_INTERVAL_MS,
   markCollectionDirty as reExportedMarkCollectionDirty,
   resolveNostromoConflict,
-  startNostromoAutoSync,
-  stopNostromoAutoSync,
 } from './push-engine'
 
 /**
@@ -50,6 +52,8 @@ import {
  * store are the real ones, and the photo blobs go through the real photo store
  * backed by `fake-indexeddb` (installed by `vitest.setup.ts`).
  */
+vi.mock('./sync-notify', () => ({ notifySyncFailure: vi.fn(), notifySyncFailureStatus: vi.fn() }))
+
 vi.mock('./client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./client')>()
   return {
@@ -732,5 +736,50 @@ describe('push-engine auto-sync', () => {
       expect(createDocumentMock).toHaveBeenCalledTimes(1)
       expect(getDirtyUnits()).toEqual([])
     })
+  })
+
+  it('backs off exponentially after failed runs, capped, and resets on success', async () => {
+    createDocumentMock.mockRejectedValue(clientError('unknown', 503))
+    setDirtyUnits(['clubs'])
+
+    await flushNostromoPush()
+    expect(isPushBackoffActive()).toBe(true)
+    expect(getDirtyUnits()).toEqual(['clubs'])
+    expect(getBaseline('clubs')).toBeUndefined()
+
+    expect(computeBackoffDelayMs(1)).toBe(NOSTROMO_RETRY_INTERVAL_MS)
+    expect(computeBackoffDelayMs(2)).toBe(NOSTROMO_RETRY_INTERVAL_MS * 2)
+    expect(computeBackoffDelayMs(30)).toBe(NOSTROMO_BACKOFF_MAX_MS)
+
+    // A user action runs the flush regardless of the backoff, and a success resets it.
+    createDocumentMock.mockReset()
+    serveCreate()
+    await flushNostromoPush()
+    expect(isPushBackoffActive()).toBe(false)
+    expect(getDirtyUnits()).toEqual([])
+  })
+
+  it('keeps the unit queued and does not advance the baseline on a network failure', async () => {
+    setBaseline('clubs', { docId: collectionDocId('clubs'), savedAt: 1, version: 5 })
+    updateDocumentMock.mockRejectedValue(clientError('network'))
+    setDirtyUnits(['clubs'])
+
+    await flushNostromoPush()
+
+    expect(getBaseline('clubs')?.version).toBe(5)
+    expect(getDirtyUnits()).toEqual(['clubs'])
+    expect(isPushBackoffActive()).toBe(true)
+  })
+
+  it('keeps a photo queued when the stored size differs from the uploaded size', async () => {
+    getPhotoMock.mockResolvedValue(makeBlob('photo-bytes'))
+    serveCreate()
+    uploadDocumentFileMock.mockResolvedValue(makeDocument(2, { fileSize: 3 }))
+    setDirtyUnits([photoUnitName('p1')])
+
+    await flushNostromoPush()
+
+    expect(getDirtyUnits()).toEqual([photoUnitName('p1')])
+    expect(hasLog('error', 'tronquée')).toBe(true)
   })
 })

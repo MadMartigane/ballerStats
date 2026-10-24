@@ -11,6 +11,7 @@ import {
   listDocuments,
   NostromoClientError,
   photoDocId,
+  refreshAuth,
   toPocketBaseTimestamp,
   updateDocument,
   uploadDocumentFile,
@@ -483,3 +484,56 @@ async function captureError(action: () => Promise<unknown>): Promise<NostromoCli
   }
   throw new Error('Expected the call to fail, but it resolved.')
 }
+
+describe('refreshAuth', () => {
+  it('posts to auth-refresh with the raw token and returns the new one', async () => {
+    fetchMock.mockResolvedValue(mockResponse(200, { token: 'token-2' }))
+
+    await expect(refreshAuth(BASE_URL, AUTH_TOKEN)).resolves.toEqual({ token: 'token-2' })
+
+    const request = recordedRequest()
+    expect(request.method).toBe('POST')
+    expect(request.url).toBe(`${BASE_URL}/api/collections/users/auth-refresh`)
+    expect(request.headers.Authorization).toBe(AUTH_TOKEN)
+  })
+
+  it('maps a rejected token to the auth kind', async () => {
+    serveStatus(401, 'The request requires valid record authorization token.')
+
+    await expect(refreshAuth(BASE_URL, AUTH_TOKEN)).rejects.toMatchObject({ kind: 'auth', status: 401 })
+  })
+})
+
+describe('same-origin base url', () => {
+  it('builds relative paths for an empty base url', async () => {
+    fetchMock.mockResolvedValue(new Response(null, { status: 200 }))
+
+    await checkHealth('')
+
+    expect(recordedRequest().url).toBe('/api/health')
+  })
+
+  it('builds the auth route on the page origin for an empty base url', async () => {
+    fetchMock.mockResolvedValue(mockResponse(200, { record: { id: OWNER_ID }, token: 'token-1' }))
+
+    await authWithPassword('', 'a@b.test', 'secret-value')
+
+    expect(recordedRequest().url).toBe('/api/collections/users/auth-with-password')
+  })
+
+  it('keeps the absolute origin form unchanged', async () => {
+    fetchMock.mockResolvedValue(new Response(null, { status: 200 }))
+
+    await checkHealth(BASE_URL)
+
+    expect(recordedRequest().url).toBe('http://localhost:8090/api/health')
+  })
+
+  it('never produces a double slash for a trailing slash on an absolute origin', async () => {
+    fetchMock.mockResolvedValue(new Response(null, { status: 200 }))
+
+    await checkHealth(`${BASE_URL}/`)
+
+    expect(recordedRequest().url).toBe('http://localhost:8090/api/health')
+  })
+})

@@ -4,6 +4,7 @@ import { storeData } from '../store/store'
 import {
   clearConfig,
   getConfig,
+  getNostromoHostName,
   getToken,
   hydrateNostromoConfig,
   isConfigured,
@@ -116,7 +117,7 @@ describe('nostromo-config-store', () => {
     expect(isConfigured()).toBe(false)
 
     hydrateNostromoConfig(makeConfig({ baseUrl: '' }))
-    expect(isConfigured()).toBe(false)
+    expect(isConfigured()).toBe(true)
   })
 
   it('hydrateNostromoConfig() keeps the four contract fields only and never persists', () => {
@@ -154,5 +155,12 @@ describe('nostromo-config-store', () => {
     // The seeded envelope is left byte-for-byte untouched: hydration never persists.
     expect(localStorage.getItem(STORAGE_NOSTROMO_CONFIG_KEY)).toBe(raw)
     expect(storeModule.storeData).not.toHaveBeenCalled()
+  })
+
+  it('treats an empty baseUrl (same origin) as configured', () => {
+    setConfig(makeConfig({ baseUrl: '' }))
+
+    expect(isConfigured()).toBe(true)
+    expect(getNostromoHostName()).toBe(window.location.host)
   })
 })

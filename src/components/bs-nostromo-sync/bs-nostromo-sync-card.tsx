@@ -1,6 +1,7 @@
 import { CloudDownload, History, LoaderCircle, LogIn, LogOut, RefreshCw, RotateCcw, TriangleAlert } from 'lucide-solid'
 import { createMemo, createSignal, createUniqueId, onMount, Show } from 'solid-js'
 import { authWithPassword } from '../../libs/nostromo/client'
+import { type ConflictChoice, resolveConflict } from '../../libs/nostromo/conflict-resolution'
 import { getNostromoBaseUrl } from '../../libs/nostromo/env'
 import { clearConfig, getConfig, getNostromoHostName, setConfig } from '../../libs/nostromo/nostromo-config-store'
 import {
@@ -17,6 +18,7 @@ import type { RemoteSnapshotDescription } from '../../libs/nostromo/remote-snaps
 import { confirmNostromoRestore, planNostromoRestore } from '../../libs/nostromo/restore'
 import type { NostromoRestoreDecision, NostromoRestorePlan } from '../../libs/nostromo/restore.d'
 import { confirmAction, toast } from '../../libs/utils/utils'
+import BsNostromoConflictModal from './bs-nostromo-conflict-modal'
 import BsNostromoRestoreModal from './bs-nostromo-restore-modal'
 import {
   describeNostromoAuthError,
@@ -75,6 +77,8 @@ export default function BsNostromoSyncCard(props: BsNostromoSyncCardProps) {
   const [plan, setPlan] = createSignal<NostromoRestorePlan | undefined>(undefined)
   const [snapshot, setSnapshot] = createSignal<RemoteSnapshotDescription | undefined>(undefined)
   const [snapshotBusy, setSnapshotBusy] = createSignal(false)
+  const [conflictOpen, setConflictOpen] = createSignal(false)
+  const [conflictBusy, setConflictBusy] = createSignal(false)
 
   const busy = () => loginBusy() || flushBusy() || restoreBusy() || snapshotBusy() || isNostromoStatusBusy(status())
   const configured = () => Boolean(config())
@@ -115,7 +119,9 @@ export default function BsNostromoSyncCard(props: BsNostromoSyncCardProps) {
     const identity = email().trim()
     const secret = password()
 
-    if (target === '' || identity === '' || secret === '') {
+    const sameOriginAllowed = getNostromoBaseUrl() === ''
+    const missingServer = target === '' && !sameOriginAllowed
+    if (missingServer || identity === '' || secret === '') {
       setLoginError("Renseignez l'adresse du serveur, l'email et le mot de passe.")
       return
     }
@@ -168,8 +174,33 @@ export default function BsNostromoSyncCard(props: BsNostromoSyncCardProps) {
     }
   }
 
+  function closeConflictModal(): void {
+    setConflictOpen(false)
+  }
+
   function onResolveConflict(): void {
-    runDetached(openRestorePlan(true), reportRestoreFailure)
+    setConflictOpen(true)
+  }
+
+  /** Resolves one parked unit, then closes the modal once no unit stays parked. */
+  async function resolveUnit(unit: string, choice: ConflictChoice): Promise<void> {
+    setConflictBusy(true)
+    try {
+      await resolveConflict(unit, choice)
+    } catch (error) {
+      const message = describeNostromoRestoreError(error)
+      pushNostromoLog('error', `Résolution du conflit refusée : ${message}`)
+      toast(message, 'error')
+    } finally {
+      setConflictBusy(false)
+      if (getConflictedUnits().length === 0) {
+        setConflictOpen(false)
+      }
+    }
+  }
+
+  function onResolveUnit(unit: string, choice: ConflictChoice): void {
+    runDetached(resolveUnit(unit, choice), reportRestoreFailure)
   }
 
   function onRequestRestore(): void {
@@ -319,6 +350,9 @@ export default function BsNostromoSyncCard(props: BsNostromoSyncCardProps) {
                 type="url"
                 value={baseUrl()}
               />
+              <span class="mt-1 block text-base-content/60 text-xs">
+                Laissez vide pour utiliser le serveur de cette page (développement ou même domaine).
+              </span>
             </label>
 
             <label class="w-full" for={emailId}>
@@ -416,6 +450,15 @@ export default function BsNostromoSyncCard(props: BsNostromoSyncCardProps) {
               </button>
             </div>
           )}
+        </Show>
+
+        <Show when={conflictOpen() && conflictedUnits().length > 0}>
+          <BsNostromoConflictModal
+            busy={conflictBusy()}
+            onClose={closeConflictModal}
+            onResolve={onResolveUnit}
+            units={conflictedUnits()}
+          />
         </Show>
 
         <Show when={plan()}>

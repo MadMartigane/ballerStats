@@ -5,13 +5,21 @@ import './global/font-family'
 
 import { HashRouter, Route } from '@solidjs/router'
 import { CircleAlert, CircleCheckBig, Skull, TriangleAlert } from 'lucide-solid'
-import { For, lazy, Suspense } from 'solid-js'
+import { For, lazy, Show, Suspense } from 'solid-js'
 import { render } from 'solid-js/web'
 import relAppleTouchIconUrl from '/img/apple-touch-icon.png'
 import relIconUrl from '/img/favicon.ico'
 import BsAppBar from './components/app-bar/app-bar'
+import BsNostromoOpenPullModal from './components/bs-nostromo-sync/bs-nostromo-open-pull-modal'
 import { NAVIGATION_MENU_ENTRIES } from './libs/menu/menu'
-import { startNostromoSyncBoot } from './libs/nostromo/sync-boot'
+import {
+  keepLocalOnOpenPull,
+  openPullBusy,
+  openPullDecision,
+  retryOpenPull,
+  startNostromoSyncBoot,
+  takeServerOnOpenPull,
+} from './libs/nostromo/sync-boot'
 
 // DEV-only: lazy-load the demo seed initializer. The dynamic import expression
 // is dead-code-eliminated when import.meta.env.DEV is statically false.
@@ -86,6 +94,17 @@ render(
         id="bs-global-toast"
       />
       {renderTemplateStore()}
+      <Show keyed when={openPullDecision()}>
+        {(decision) => (
+          <BsNostromoOpenPullModal
+            busy={openPullBusy()}
+            onKeepLocal={keepLocalOnOpenPull}
+            onRetry={retryOpenPull}
+            onTakeServer={takeServerOnOpenPull}
+            units={decision.units}
+          />
+        )}
+      </Show>
       <Suspense>{DemoSeedInit && <DemoSeedInit />}</Suspense>
     </>
   ),

@@ -11,14 +11,17 @@
  * a whole collection back through the matching `replaceAll`: it never hydrates,
  * never persists on its own, and never subscribes to anything.
  */
-import { getRawClubs, replaceAllClubs } from '../stores/clubs-store'
-import { getRawContacts, replaceAllContacts } from '../stores/contacts-store'
-import { getRawMatchs, replaceAllMatchs } from '../stores/matchs-store'
-import { getRawPlayers, replaceAllPlayers } from '../stores/players-store'
-import { getRawTeams, replaceAllTeams } from '../stores/teams-store'
+import { storeClubs, storeContacts, storeMatchs, storePlayers, storeTeams } from '../store/store'
+import { getRawClubs, hydrateClubs, replaceAllClubs } from '../stores/clubs-store'
+import { getRawContacts, hydrateContacts, replaceAllContacts } from '../stores/contacts-store'
+import { getRawMatchs, hydrateMatchs, replaceAllMatchs } from '../stores/matchs-store'
+import { getRawPlayers, hydratePlayers, replaceAllPlayers } from '../stores/players-store'
+import { getRawTeams, hydrateTeams, replaceAllTeams } from '../stores/teams-store'
 import type { TrombiTitles } from '../trombi-titles'
 import { getTitles, persistTitles } from '../trombi-titles-store'
 import { photoDocId } from './client'
+import { cancelDirtyDebounce } from './dirty-marks'
+import { clearUnitDirtyIfUnchanged, getDirtyRevision, getDirtyUnits } from './nostromo-sync-store'
 import type { NostromoListUnitName, NostromoUnitName } from './nostromo-sync-store.d'
 import {
   buildCollectionPayload,
@@ -40,6 +43,13 @@ export interface NostromoListUnit {
    * built from them here, once per unit, and never re-validated field by field.
    */
   replaceAll: (items: NostromoCollectionItem[]) => Promise<void> | void
+  /**
+   * Replaces the whole collection and persists it locally WITHOUT marking the
+   * unit dirty: the content comes from the server, so it must never be pushed back.
+   * The store swap is synchronous, the returned promise settles when the local
+   * persistence is done.
+   */
+  replaceAllSilently: (items: NostromoCollectionItem[]) => Promise<void>
 }
 
 /** The single-object title unit: one document holding one title object. */
@@ -60,30 +70,50 @@ const LIST_UNITS: Record<NostromoListUnitName, NostromoListUnit> = {
     kind: 'list',
     readAll: getRawClubs,
     replaceAll: (items) => replaceAllClubs(items),
+    replaceAllSilently: (items) => {
+      hydrateClubs(items)
+      return storeClubs(getRawClubs())
+    },
   },
   contacts: {
     count: () => getRawContacts().length,
     kind: 'list',
     readAll: getRawContacts,
     replaceAll: (items) => replaceAllContacts(items),
+    replaceAllSilently: (items) => {
+      hydrateContacts(items)
+      return storeContacts(getRawContacts())
+    },
   },
   matchs: {
     count: () => getRawMatchs().length,
     kind: 'list',
     readAll: getRawMatchs,
     replaceAll: (items) => replaceAllMatchs(items),
+    replaceAllSilently: (items) => {
+      hydrateMatchs(items)
+      return storeMatchs(getRawMatchs())
+    },
   },
   players: {
     count: () => getRawPlayers().length,
     kind: 'list',
     readAll: getRawPlayers,
     replaceAll: (items) => replaceAllPlayers(items),
+    replaceAllSilently: (items) => {
+      hydratePlayers(items)
+      return storePlayers(getRawPlayers())
+    },
   },
   teams: {
     count: () => getRawTeams().length,
     kind: 'list',
     readAll: getRawTeams,
     replaceAll: (items) => replaceAllTeams(items),
+    replaceAllSilently: (items) => {
+      hydrateTeams(items)
+      return storeTeams(getRawTeams())
+    },
   },
 }
 
@@ -143,6 +173,34 @@ export function applyCollectionPayload(read: ValidCollectionRead): Promise<void>
     return TITLE_UNIT.replaceAll(read.titles)
   }
   return LIST_UNITS[read.unit].replaceAll(read.items)
+}
+
+/**
+ * Writes a validated payload into the store of its unit without ever marking the
+ * unit dirty (the pull path). Returns the local persistence promise. The store
+ * swap itself is synchronous, so callers can group several units in one `batch()`.
+ */
+export function applyCollectionPayloadSilently(read: ValidCollectionRead): Promise<void> {
+  if (read.kind === 'titles') {
+    return applyTitlesSilently(read.titles)
+  }
+  return LIST_UNITS[read.unit].replaceAllSilently(read.items)
+}
+
+/**
+ * The titles store has no `hydrate` variant: its only writer marks the unit
+ * dirty, synchronously. The mark that write just made is undone through the
+ * revision-aware clear, so a mark set by anyone else stays queued. The debounce
+ * is only disarmed when nothing else is pending.
+ */
+function applyTitlesSilently(titles: TrombiTitles): Promise<void> {
+  const revisionBeforeWrite = getDirtyRevision('trombiTitles')
+  persistTitles(titles)
+  clearUnitDirtyIfUnchanged('trombiTitles', revisionBeforeWrite + 1)
+  if (getDirtyUnits().length === 0) {
+    cancelDirtyDebounce()
+  }
+  return Promise.resolve()
 }
 
 /** Document id of a collection unit: derived from its name alone, identical on every machine. */

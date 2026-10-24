@@ -19,6 +19,8 @@ export type NostromoErrorKind = 'auth' | 'conflict' | 'network' | 'notfound' | '
 export interface NostromoDocument {
   /** Stored file name, absent when the document carries no file. */
   file?: string
+  /** Stored file size in bytes, when the server exposes it (optional, used for integrity checks). */
+  fileSize?: number
   /** Client-generated id, `^[a-z0-9]{15}$`, final for the document's whole life. */
   id: string
   owner: string

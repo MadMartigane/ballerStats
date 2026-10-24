@@ -97,15 +97,17 @@ export function getToken(): string | undefined {
 /**
  * True when the three fields the sync engine needs are present: baseUrl, token
  * and userId. `email` is display only and does not gate synchronization.
+ * An empty `baseUrl` is valid: it means same origin (dev proxy or the host of the page).
  */
 export function isConfigured(): boolean {
   const config = getConfig()
-  return Boolean(config?.baseUrl && config.token && config.userId)
+  return typeof config?.baseUrl === 'string' && Boolean(config.token && config.userId)
 }
 
 /**
  * Host of the configured backend (`localhost:8090`), or null when the app is not
- * configured (or the stored url is not a parseable http url).
+ * configured (or the stored url is not a parseable http url). A same-origin
+ * backend (empty `baseUrl`) reports the host of the page itself.
  *
  * Every destructive confirmation names the server its change propagates to, so
  * that the user knows a wipe reaches the backup too. That naming has one source:
@@ -113,8 +115,11 @@ export function isConfigured(): boolean {
  */
 export function getNostromoHostName(): string | null {
   const baseUrl = getConfig()?.baseUrl
-  if (!baseUrl) {
+  if (baseUrl === undefined) {
     return null
+  }
+  if (baseUrl === '') {
+    return window.location.host
   }
   try {
     return new URL(baseUrl).host

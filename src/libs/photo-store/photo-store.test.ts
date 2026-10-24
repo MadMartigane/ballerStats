@@ -1,6 +1,7 @@
-import { del, keys, set } from 'idb-keyval'
+import { del, get, keys, set } from 'idb-keyval'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { markPhotoDirty } from '../nostromo/dirty-marks'
+import { notifySyncFailure } from '../nostromo/sync-notify'
 import { toast } from '../utils/utils'
 import { clearAllPhotos, deletePhoto, getAllPhotoEntries, getPhoto, hasPhoto, storePhoto } from './photo-store'
 
@@ -16,12 +17,15 @@ vi.mock('../nostromo/dirty-marks', async (importOriginal) => {
   }
 })
 
+vi.mock('../nostromo/sync-notify', () => ({ notifySyncFailure: vi.fn() }))
+
 vi.mock('idb-keyval', async (importOriginal) => {
   const actual = await importOriginal<typeof import('idb-keyval')>()
   return {
     ...actual,
     clear: vi.fn(actual.clear),
     del: vi.fn(actual.del),
+    get: vi.fn(actual.get),
     keys: vi.fn(actual.keys),
     set: vi.fn(actual.set),
   }
@@ -167,5 +171,12 @@ describe('photo-store dirty marks', () => {
     expect(mark).toHaveBeenCalledWith('player-15')
     expect(mark).not.toHaveBeenCalledWith('player-14')
     expect(toast).toHaveBeenCalledWith(expect.stringContaining('Sauvegarde locale'), 'error')
+  })
+
+  it('rethrows and notifies when IndexedDB refuses a read', async () => {
+    vi.mocked(get).mockRejectedValueOnce(new Error('InvalidStateError'))
+
+    await expect(getPhoto('player-1')).rejects.toThrow('InvalidStateError')
+    expect(notifySyncFailure).toHaveBeenCalledWith('idb')
   })
 })

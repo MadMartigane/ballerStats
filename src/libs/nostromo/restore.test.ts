@@ -562,18 +562,18 @@ describe('applyNostromoRestore', () => {
     expect(logMessages().join(' ')).toContain('a échoué')
   })
 
-  it('mints one file token per downloaded photo', async () => {
+  it('mints one file token for the whole photo batch', async () => {
     const documents = [photoDocument(1, 'player-1'), photoDocument(1, 'player-2', 'player-2.webp')]
     serveListing(documents)
     serveDocuments(documents)
-    vi.mocked(getFileToken).mockResolvedValueOnce('token-1').mockResolvedValueOnce('token-2')
+    vi.mocked(getFileToken).mockResolvedValueOnce('token-1')
 
     const plan = await planNostromoRestore()
     await applyNostromoRestore(plan)
 
-    expect(getFileToken).toHaveBeenCalledTimes(2)
+    expect(getFileToken).toHaveBeenCalledTimes(1)
     expect(downloadFile).toHaveBeenNthCalledWith(1, BASE_URL, 'token-1', photoDocId('player-1'), PHOTO_FILE)
-    expect(downloadFile).toHaveBeenNthCalledWith(2, BASE_URL, 'token-2', photoDocId('player-2'), 'player-2.webp')
+    expect(downloadFile).toHaveBeenNthCalledWith(2, BASE_URL, 'token-1', photoDocId('player-2'), 'player-2.webp')
   })
 
   it('skips and logs a unit whose remote payload fails the runtime guard', async () => {

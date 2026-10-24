@@ -96,3 +96,21 @@ export function replacePlayerContacts(playerId: string, raws: ContactRawData[]):
   setContacts(next)
   persistContacts()
 }
+
+/**
+ * Removes the contacts whose player no longer exists and returns how many went.
+ * Persists (and marks the unit dirty, so the cleaned list syncs) only when
+ * something was removed: a second call with the same players is a no-op.
+ */
+export function removeOrphanContacts(validPlayerIds: ReadonlySet<string>): number {
+  const kept = getRawContacts().filter(
+    (contact) => contact.playerId !== undefined && validPlayerIds.has(contact.playerId)
+  )
+  const removed = contacts.length - kept.length
+  if (removed === 0) {
+    return 0
+  }
+  setContacts(reconcile(kept, { key: 'id' }))
+  persistContacts()
+  return removed
+}

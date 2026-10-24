@@ -23,9 +23,12 @@
  * stores (`./units`): it never hydrates, never persists and never subscribes.
  */
 import { getPhoto, PHOTO_FILE_EXTENSION } from '../photo-store/photo-store'
+import { ensureFreshSession } from './auth-session'
 import { deleteDocument, NostromoClientError, photoDocId, updateDocument, uploadDocumentFile } from './client'
+import type { NostromoDocument } from './client.d'
 import { armDirtyDebounce, cancelDirtyDebounce, PHOTO_UNIT_PREFIX, setDirtyFlushRunner } from './dirty-marks'
 import { createOrAdoptDocument, type DocumentStart } from './document-write'
+import { NOSTROMO_MAX_PHOTO_BYTES } from './limits'
 import { getConfig, isConfigured } from './nostromo-config-store'
 import type { NostromoConfig } from './nostromo-config-store.d'
 import {
@@ -43,6 +46,7 @@ import {
 import type { NostromoBaseline, NostromoStatus, NostromoUnitName } from './nostromo-sync-store.d'
 import { buildPhotoPayload, describeError, type NostromoCollectionPayload, type NostromoPhotoPayload } from './payload'
 import type { NostromoPushOutcome } from './push-engine.d'
+import { notifySyncFailure, notifySyncFailureStatus } from './sync-notify'
 import {
   buildUnitPayload,
   collectionDocId,
@@ -51,11 +55,13 @@ import {
   NOSTROMO_PUSH_ORDER,
 } from './units'
 
-/** Client-side ceiling for a photo upload: a bigger document file is refused before the round trip. */
-export const NOSTROMO_MAX_PHOTO_BYTES = 20 * 1024 * 1024
-
 /** Retry cadence of the auto-sync interval: a failed unit gets another chance every minute. */
 export const NOSTROMO_RETRY_INTERVAL_MS = 60_000
+
+/** First retry delay after a failed run: it doubles with each consecutive failure. */
+const BACKOFF_BASE_MS = NOSTROMO_RETRY_INTERVAL_MS
+/** Ceiling of the retry delay: a long outage never makes the engine wait more than this. */
+export const NOSTROMO_BACKOFF_MAX_MS = 15 * 60_000
 
 /**
  * The payload contract and the unit model live in their own modules (`./payload`
@@ -90,30 +96,66 @@ export function flushNostromoPush(): Promise<void> {
 
 let flushInFlight: Promise<void> | undefined
 
+/** Consecutive runs that ended on an error: in memory only, a reload starts from a clean slate. */
+let consecutiveFailures = 0
+let nextAttemptAt = 0
+
+/** Delay before the next automatic retry after `failures` consecutive failed runs. */
+export function computeBackoffDelayMs(failures: number): number {
+  return Math.min(BACKOFF_BASE_MS * 2 ** (failures - 1), NOSTROMO_BACKOFF_MAX_MS)
+}
+
+/**
+ * True while the automatic retries must wait. Only the interval honours it: a
+ * user action (the `online` event, the manual button, a new edit) always runs.
+ */
+export function isPushBackoffActive(): boolean {
+  return Date.now() < nextAttemptAt
+}
+
+function recordRunResult(failed: boolean): void {
+  if (!failed) {
+    consecutiveFailures = 0
+    nextAttemptAt = 0
+    return
+  }
+  consecutiveFailures += 1
+  const delay = computeBackoffDelayMs(consecutiveFailures)
+  nextAttemptAt = Date.now() + delay
+  pushNostromoLog('info', `Prochaine tentative automatique dans ${Math.round(delay / 1000)} s.`)
+}
+
 async function runFlush(): Promise<void> {
   try {
-    await pushDirtyUnits()
+    recordRunResult(await pushDirtyUnits())
   } catch (error) {
     pushNostromoLog('error', `La synchronisation Nostromo a échoué de façon inattendue : ${describeError(error)}`)
     setNostromoSyncStatus('error')
+    notifySyncFailure('error')
+    recordRunResult(true)
   }
 }
 
-async function pushDirtyUnits(): Promise<void> {
+/** Pushes the dirty units. Resolves to whether the run ended on an error (a reason to back off). */
+async function pushDirtyUnits(): Promise<boolean> {
   const conflicted = new Set(getConflictedUnits())
   const units = selectPushableUnits(conflicted)
   if (units.length === 0) {
-    return
+    return false
   }
 
   const config = getConfig()
   if (!(config && isConfigured())) {
     setNostromoSyncStatus('off')
     pushNostromoLog('info', "Nostromo n'est pas configuré : les changements en attente restent dans la file.")
-    return
+    return false
   }
 
   cancelDirtyDebounce()
+  if ((await ensureFreshSession()) === 'expired') {
+    notifySyncFailure('auth')
+    return false
+  }
   setNostromoSyncStatus('saving')
 
   let hadError = false
@@ -125,7 +167,8 @@ async function pushDirtyUnits(): Promise<void> {
     const outcome = await pushUnit(config, unit, revision)
     if (outcome === 'auth') {
       setNostromoSyncStatus('auth-required')
-      return
+      notifySyncFailure('auth')
+      return false
     }
     if (outcome === 'conflict') {
       parkConflictedUnit(unit)
@@ -137,6 +180,8 @@ async function pushDirtyUnits(): Promise<void> {
   }
 
   setNostromoSyncStatus(finalStatus(hadError, conflicted))
+  notifySyncFailureStatus(finalStatus(hadError, conflicted))
+  return hadError
 }
 
 /**
@@ -283,7 +328,25 @@ async function pushPhotoUnit(config: NostromoConfig, unit: string, revision: num
     file: blob,
     filename: `${playerId}${PHOTO_FILE_EXTENSION}`,
   })
+  if (!isUploadedSizeValid(uploaded, blob, playerId)) {
+    return 'error'
+  }
   return commitUnitBaseline(unit, docId, uploaded.version, revision)
+}
+
+/**
+ * Post-upload integrity check. When the server reports the stored size, a
+ * mismatch means a truncated upload: the unit stays queued.
+ */
+function isUploadedSizeValid(uploaded: NostromoDocument, blob: Blob, playerId: string): boolean {
+  if (uploaded.fileSize === undefined || uploaded.fileSize === blob.size) {
+    return true
+  }
+  pushNostromoLog(
+    'error',
+    `La photo du joueur ${playerId} a été tronquée à l'envoi (${uploaded.fileSize} octets reçus pour ${blob.size}) : elle reste en attente.`
+  )
+  return false
 }
 
 /**
@@ -448,48 +511,8 @@ setDirtyFlushRunner(launchFlush)
  * Fire-and-forget launch. A flush reports through the status and the log, so a
  * rejection could only come from a bug: it is logged as one, never swallowed.
  */
-function launchFlush(): void {
+export function launchFlush(): void {
   flushNostromoPush().catch((error: unknown) => {
     console.error('flushNostromoPush failed:', error)
   })
-}
-
-let retryTimer: ReturnType<typeof setInterval> | undefined
-
-/** Pushes only when there is something to push and a backend to push it to. */
-function flushWhenPending(): void {
-  if (getDirtyUnits().length === 0 || !isConfigured()) {
-    return
-  }
-  launchFlush()
-}
-
-function onVisibilityHidden(): void {
-  if (document.visibilityState !== 'hidden') {
-    return
-  }
-  flushWhenPending()
-}
-
-/**
- * Installs the two retries the engine runs on its own: one every
- * `NOSTROMO_RETRY_INTERVAL_MS`, and one when the tab becomes hidden (the last
- * moment the browser gives us before it freezes the page). Idempotent: calling
- * it twice installs nothing twice.
- */
-export function startNostromoAutoSync(): void {
-  if (retryTimer !== undefined) {
-    return
-  }
-  retryTimer = setInterval(flushWhenPending, NOSTROMO_RETRY_INTERVAL_MS)
-  document.addEventListener('visibilitychange', onVisibilityHidden)
-}
-
-/** Removes the interval and the visibility listener (sign-out, tests). Safe when not started. */
-export function stopNostromoAutoSync(): void {
-  if (retryTimer !== undefined) {
-    clearInterval(retryTimer)
-    retryTimer = undefined
-  }
-  document.removeEventListener('visibilitychange', onVisibilityHidden)
 }

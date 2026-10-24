@@ -9,6 +9,7 @@ import {
   getRawContacts,
   hydrateContacts,
   removeContact,
+  removeOrphanContacts,
   replacePlayerContacts,
   updateContact,
 } from './contacts-store'
@@ -182,5 +183,19 @@ describe('contacts-store dirty marks', () => {
 
     expect(markCollectionDirty).toHaveBeenCalledTimes(1)
     expect(markCollectionDirty).toHaveBeenCalledWith('contacts')
+  })
+
+  it('removeOrphanContacts() drops contacts of unknown players, persists once and is idempotent', () => {
+    hydrateContacts([makeContactData(), makeContactData({ id: 'c2', playerId: 'gone' })])
+    vi.mocked(storeContacts).mockClear()
+    vi.mocked(markCollectionDirty).mockClear()
+
+    expect(removeOrphanContacts(new Set(['p1']))).toBe(1)
+    expect(getRawContacts().map((contact) => contact.id)).toEqual(['c1'])
+    expect(storeContacts).toHaveBeenCalledTimes(1)
+    expect(markCollectionDirty).toHaveBeenCalledWith('contacts')
+
+    expect(removeOrphanContacts(new Set(['p1']))).toBe(0)
+    expect(storeContacts).toHaveBeenCalledTimes(1)
   })
 })

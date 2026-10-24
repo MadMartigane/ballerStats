@@ -35,6 +35,7 @@ const FILES_PATH = '/api/files/documents'
 const FILES_TOKEN_PATH = '/api/files/token'
 const HEALTH_PATH = '/api/health'
 const USERS_AUTH_PATH = '/api/collections/users/auth-with-password'
+const USERS_AUTH_REFRESH_PATH = '/api/collections/users/auth-refresh'
 
 const JSON_HEADERS: Record<string, string> = { 'Content-Type': 'application/json' }
 const TRAILING_SLASHES = /\/+$/
@@ -64,6 +65,7 @@ interface NostromoRequestOptions {
 /** The shape a PocketBase record or a list item is read from, before validation. */
 interface RawRecord {
   file?: unknown
+  fileSize?: unknown
   id?: unknown
   owner?: unknown
   payload?: unknown
@@ -135,6 +137,26 @@ export async function authWithPassword(baseUrl: string, email: string, password:
     throw new NostromoClientError(`${label} n'a renvoyé aucun identifiant utilisateur.`, { kind: 'auth' })
   }
   return { token: body.token, userId }
+}
+
+/**
+ * Renews the token of the signed-in user (PocketBase `auth-refresh`). The old
+ * token is sent as the auth header; the answer carries a new token. Errors map
+ * like every other call: a rejected token is `auth`.
+ */
+export async function refreshAuth(baseUrl: string, token: string): Promise<{ token: string }> {
+  const body = await requestJson<{ token?: unknown }>({
+    baseUrl,
+    method: 'POST',
+    path: USERS_AUTH_REFRESH_PATH,
+    token,
+  })
+  if (typeof body.token !== 'string' || body.token.length === 0) {
+    throw new NostromoClientError(`${requestLabel('POST', USERS_AUTH_REFRESH_PATH)} n'a renvoyé aucun jeton.`, {
+      kind: 'auth',
+    })
+  }
+  return { token: body.token }
 }
 
 /** Reads one document. A 404 means "no read access" or "gone", never just "deleted". */
@@ -451,6 +473,7 @@ function toDocument(data: unknown, label: string): NostromoDocument {
 
   return {
     file: typeof record.file === 'string' && record.file.length > 0 ? record.file : undefined,
+    fileSize: typeof record.fileSize === 'number' ? record.fileSize : undefined,
     id: record.id,
     owner: typeof record.owner === 'string' ? record.owner : '',
     payload: record.payload,

@@ -35,9 +35,7 @@ import Player from '../player/player'
 import { getPlayerById, updatePlayer } from '../stores/players-store'
 import {
   createDocument,
-  downloadFile,
   getDocument,
-  getFileToken,
   NostromoClientError,
   photoDocId,
   updateDocument,
@@ -45,6 +43,7 @@ import {
 } from './client'
 import type { NostromoDocument } from './client.d'
 import { cancelDirtyDebounce } from './dirty-marks'
+import { NOSTROMO_MAX_PHOTO_BYTES } from './limits'
 import type { NostromoConfig } from './nostromo-config-store.d'
 import {
   clearBaseline,
@@ -56,7 +55,8 @@ import {
 } from './nostromo-sync-store'
 import type { NostromoStatus, NostromoUnitName } from './nostromo-sync-store.d'
 import { buildPhotoPayload, describeError, readCollectionPayload, type ValidCollectionRead } from './payload'
-import { NOSTROMO_MAX_PHOTO_BYTES, resolveNostromoConflict } from './push-engine'
+import { createFileTokenSession, downloadPhoto, type FileTokenSession, reconcileHasPhoto } from './photo-sync'
+import { resolveNostromoConflict } from './push-engine'
 import type {
   NostromoCollectionPlanUnit,
   NostromoPhotoPlanUnit,
@@ -134,6 +134,7 @@ export async function applyNostromoRestore(plan: NostromoRestorePlan): Promise<N
   try {
     await pullCollectionUnits(config, plan, report)
     await pullPhotoUnits(config, plan, report)
+    await reconcileHasPhoto()
   } catch (error) {
     // A run aborted by a refused session still settles what it already wrote:
     // an applied unit without its baseline answers 409 on the next push, and the
@@ -276,10 +277,12 @@ function applyPendingCollectionUnit(
 
 /** Downloads the remote photos and deletes the local ones the server does not know about. */
 async function pullPhotoUnits(config: NostromoConfig, plan: NostromoRestorePlan, report: ApplyReport): Promise<void> {
+  // One file token per batch (refetched by the session on a 401/403), never stored.
+  const session = createFileTokenSession(config)
   for (const photoUnit of plan.photoUnits) {
     try {
       // biome-ignore lint/performance/noAwaitInLoops: one download at a time, each with its own file token, and a 401 aborts the remaining units.
-      const outcome = await pullPhotoUnit(config, photoUnit)
+      const outcome = await pullPhotoUnit(config, session, photoUnit)
       if (outcome === 'deleted') {
         report.deletedPhotos.push(photoUnit.unit)
         continue
@@ -438,7 +441,11 @@ type PhotoPullOutcome = 'deleted' | 'skipped' | { docId: string; version: number
  * local copy the server does not know about is deleted, and a unit already in
  * sync is left alone.
  */
-async function pullPhotoUnit(config: NostromoConfig, photoUnit: NostromoPhotoPlanUnit): Promise<PhotoPullOutcome> {
+async function pullPhotoUnit(
+  config: NostromoConfig,
+  session: FileTokenSession,
+  photoUnit: NostromoPhotoPlanUnit
+): Promise<PhotoPullOutcome> {
   const { deletionRequired, playerId, remote, unit } = photoUnit
   if (!remote) {
     if (!deletionRequired) {
@@ -459,10 +466,7 @@ async function pullPhotoUnit(config: NostromoConfig, photoUnit: NostromoPhotoPla
   // collection path does, so the baseline never ends up ahead of the blob.
   const fresh = await getDocument(config.baseUrl, config.token, remote.docId)
 
-  // A file token lives about 180 seconds: mint a fresh one per download and
-  // never reuse it across files.
-  const fileToken = await getFileToken(config.baseUrl, config.token)
-  const blob = await downloadFile(config.baseUrl, fileToken, remote.docId, remote.file)
+  const blob = await downloadPhoto(config, session, { ...fresh, file: fresh.file ?? remote.file })
   await storePulledPhoto(playerId, blob)
   pushNostromoLog('info', `Restauration Nostromo : photo du joueur ${playerId} reprise.`)
   return { docId: fresh.id, version: fresh.version }

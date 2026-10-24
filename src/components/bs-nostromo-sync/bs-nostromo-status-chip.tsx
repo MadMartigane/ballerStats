@@ -11,8 +11,10 @@ import {
 import type { JSX } from 'solid-js'
 import { Show } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
+import { getNostromoLog } from '../../libs/nostromo/nostromo-sync-store'
 import type { NostromoStatus } from '../../libs/nostromo/nostromo-sync-store.d'
 import {
+  lastNostromoErrorLine,
   NOSTROMO_STATUS_CHIP_LABEL,
   NOSTROMO_STATUS_LABELS,
   NOSTROMO_STATUS_VARIANTS,
@@ -52,12 +54,13 @@ function ChipContent(props: { status: NostromoStatus }) {
 
 export default function BsNostromoStatusChip(props: BsNostromoStatusChipProps) {
   const chipClass = () => `btn btn-sm gap-1.5 ${VARIANT_CLASSES[NOSTROMO_STATUS_VARIANTS[props.status]]}`
+  const tooltip = () => (props.status === 'saved' ? undefined : lastNostromoErrorLine(getNostromoLog()))
   const openPanel = () => props.onClick?.()
 
   return (
     <Show
       fallback={
-        <span class={chipClass()}>
+        <span class={chipClass()} title={tooltip()}>
           <ChipContent status={props.status} />
         </span>
       }
@@ -69,6 +72,7 @@ export default function BsNostromoStatusChip(props: BsNostromoStatusChipProps) {
         aria-label={NOSTROMO_STATUS_CHIP_LABEL}
         class={chipClass()}
         onClick={openPanel}
+        title={tooltip()}
         type="button"
       >
         <ChipContent status={props.status} />

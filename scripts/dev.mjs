@@ -35,6 +35,8 @@ const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 const ENV_FILE = path.join(ROOT_DIR, '.env')
 const ENV_EXAMPLE_FILE = path.join(ROOT_DIR, '.env.example')
 const ENV_KEY = 'VITE_NOSTROMO_URL'
+/** Returned by `configureEnv` for the same-origin choice (empty `VITE_NOSTROMO_URL`). */
+const SAME_ORIGIN_MARKER = ''
 const DEFAULT_BACKEND_URL = 'http://localhost:8090'
 const HEALTH_PATH = '/api/health'
 
@@ -359,6 +361,12 @@ const configureEnv = async () => {
   const content = readFileSync(ENV_FILE, 'utf8')
   const configured = readEnvValue(content)
 
+  // An explicit empty value means same origin (dev proxy): it is a valid choice, not a missing one.
+  if (configured === '') {
+    done(`${ENV_KEY} vide : même origine, proxy Vite vers le backend (.env inchangé)`)
+    return SAME_ORIGIN_MARKER
+  }
+
   if (configured) {
     if (!isHttpUrl(configured)) {
       warn(`${ENV_KEY}=${configured} ne ressemble pas à une URL http(s)`)
@@ -517,7 +525,9 @@ const main = async () => {
   }
   checkPrerequisites()
   ensureDependencies()
-  const backendUrl = await configureEnv()
+  const configuredUrl = await configureEnv()
+  // Same origin: the proxy forwards to the local backend, which must be up.
+  const backendUrl = configuredUrl === SAME_ORIGIN_MARKER ? DEFAULT_BACKEND_URL : configuredUrl
   if (backendUrl) {
     await ensureBackend(backendUrl)
   }

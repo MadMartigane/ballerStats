@@ -1,6 +1,7 @@
 import { render } from 'solid-js/web'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { authWithPassword, NostromoClientError } from '../../libs/nostromo/client'
+import { resolveConflict } from '../../libs/nostromo/conflict-resolution'
 import { clearConfig, getConfig, setConfig } from '../../libs/nostromo/nostromo-config-store'
 import type { NostromoConfig } from '../../libs/nostromo/nostromo-config-store.d'
 import {
@@ -56,6 +57,8 @@ vi.mock('../../libs/nostromo/push-engine', () => ({
   flushNostromoPush: vi.fn(() => Promise.resolve()),
   getConflictedUnits: vi.fn(() => []),
 }))
+
+vi.mock('../../libs/nostromo/conflict-resolution', () => ({ resolveConflict: vi.fn(() => Promise.resolve()) }))
 
 vi.mock('../../libs/nostromo/restore', () => ({
   confirmNostromoRestore: vi.fn(() => Promise.resolve(undefined)),
@@ -416,7 +419,7 @@ describe('BsNostromoSyncCard', () => {
     })
   })
 
-  it('shows the conflict banner with a way into the restore modal', async () => {
+  it('shows the conflict banner with a per-unit modal and resolves the chosen unit', async () => {
     vi.mocked(getConfig).mockReturnValue(CONNECTED_CONFIG)
     vi.mocked(getConflictedUnits).mockReturnValue(['players', 'matchs'])
     setNostromoSyncStatus('conflict')
@@ -428,8 +431,12 @@ describe('BsNostromoSyncCard', () => {
 
     requireButton('Résoudre le conflit').click()
 
+    expect(document.body.textContent).toContain('Conflit de synchronisation')
+    expect(document.body.textContent).toContain('toute la collection « matchs »')
+    requireButton('Prendre celles du serveur').click()
+
     await vi.waitFor(() => {
-      expect(document.body.textContent).toContain(PLAN_WARNING)
+      expect(resolveConflict).toHaveBeenCalledWith('players', 'take-server')
     })
   })
 

@@ -18,6 +18,17 @@ export const STORAGE_NOSTROMO_OUTBOX_KEY = 'BS_NOSTROMO_OUTBOX'
 /** The in-memory log is a bounded ring: past this length the oldest entry is dropped. */
 export const NOSTROMO_LOG_LIMIT = 50
 
+/**
+ * Ceiling of the outbox. The outbox is a set (6 collections plus one photo per
+ * player), so it is naturally small: the cap only guards against a runaway
+ * producer. Collection units are always accepted, a photo unit beyond the cap is
+ * refused loudly instead of growing the persisted list.
+ */
+export const NOSTROMO_OUTBOX_MAX = 500
+
+/** Same value as `PHOTO_UNIT_PREFIX` (dirty-marks.ts imports this store: importing it back would close a cycle). */
+const PHOTO_UNIT_KEY_PREFIX = 'photo:'
+
 const [nostromoSync, setNostromoSync] = createStore<NostromoSyncState>({
   baselines: {},
   log: [],
@@ -235,6 +246,10 @@ export function markUnitDirty(unit: string): void {
   ensureHydrated()
   dirtyRevisions.set(unit, getDirtyRevision(unit) + 1)
   if (isUnitDirty(unit)) {
+    return
+  }
+  if (nostromoSync.outbox.length >= NOSTROMO_OUTBOX_MAX && unit.startsWith(PHOTO_UNIT_KEY_PREFIX)) {
+    pushNostromoLog('error', `File d'attente pleine (${NOSTROMO_OUTBOX_MAX}) : « ${unit} » n'a pas été ajouté.`)
     return
   }
   setDirtyUnits([...getDirtyUnits(), unit])

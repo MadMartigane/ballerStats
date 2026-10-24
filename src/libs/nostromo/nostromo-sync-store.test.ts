@@ -16,6 +16,7 @@ import {
   isUnitDirty,
   markUnitDirty,
   NOSTROMO_LOG_LIMIT,
+  NOSTROMO_OUTBOX_MAX,
   nostromoSync,
   pushNostromoLog,
   resetNostromoSyncData,
@@ -396,6 +397,19 @@ describe('nostromo-sync-store outbox', () => {
 
     expect(clearUnitDirtyIfUnchanged('players', revision)).toBe(true)
     expect(storeData).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('nostromo-sync-store outbox bound', () => {
+  it('refuses a photo unit beyond the ceiling but still accepts a collection unit', () => {
+    const photoUnits = Array.from({ length: NOSTROMO_OUTBOX_MAX }, (_, index) => `photo:p${index}`)
+    setDirtyUnits(photoUnits)
+
+    markUnitDirty('photo:extra')
+    expect(getDirtyUnits()).toHaveLength(NOSTROMO_OUTBOX_MAX)
+
+    markUnitDirty('players')
+    expect(getDirtyUnits()).toHaveLength(NOSTROMO_OUTBOX_MAX + 1)
   })
 })
 

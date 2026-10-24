@@ -5,12 +5,14 @@
  *
  * - `BsNostromoStatusChip` and `BsNostromoLogMenu` are presentational: they get
  *   the status and the log entries through props and never read a store,
- * - `BsNostromoRestoreModal` is presentational too: it displays a plan and
- *   reports the user's decision to its parent,
+ * - `BsNostromoRestoreModal`, `BsNostromoConflictModal` and `BsNostromoOpenPullModal`
+ *   are presentational too: they display a plan or a choice and report the user's
+ *   decision to their parent,
  * - `BsNostromoSyncCard` is the adaptor: it reads the sync stores, calls the
  *   sync libs (`client`, `nostromo-config-store`, `push-engine`, `restore`) and
  *   passes plain values down.
  */
+import type { ConflictChoice } from '../../libs/nostromo/conflict-resolution'
 import type { NostromoLogEntry, NostromoStatus } from '../../libs/nostromo/nostromo-sync-store.d'
 import type { NostromoRestoreDecision, NostromoRestorePlan } from '../../libs/nostromo/restore.d'
 
@@ -52,8 +54,34 @@ export interface BsNostromoRestoreModalProps {
   plan: NostromoRestorePlan
 }
 
+/** Props of the per-unit conflict modal. */
+export interface BsNostromoConflictModalProps {
+  /** True while a resolution is in flight: every action is disabled. */
+  busy: boolean
+  /** Closes the modal without resolving anything. */
+  onClose: () => void
+  /** Reports the choice made for one parked unit; the parent confirms and resolves. */
+  onResolve: (unit: string, choice: ConflictChoice) => void
+  /** Parked units, one entry per collection. */
+  units: string[]
+}
+
 /** Props of the Administration card. The card is self-contained: only its heading is overridable. */
 export interface BsNostromoSyncCardProps {
   /** Card heading, « Synchronisation Nostromo » by default. */
   title?: string
+}
+
+/** Props of the modal shown when the open pull finds unsynced local data. */
+export interface BsNostromoOpenPullModalProps {
+  /** True while an action is in flight: every action is disabled. */
+  busy: boolean
+  /** « Garder mes données »: skips the pull and keeps the pending changes. */
+  onKeepLocal: () => void
+  /** « Envoyer d'abord (réessayer) »: flushes, then pulls again. */
+  onRetry: () => void
+  /** « Prendre celles du serveur »: the parent confirms and resolves each unit. */
+  onTakeServer: () => void
+  /** Units that still hold unsent changes. */
+  units: string[]
 }
