@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { NAVIGATION_MENU_ENTRIES } from '../../libs/menu/menu'
 import { renderInRouter } from '../test-utils'
 import BsAppBar from './app-bar'
@@ -20,23 +20,42 @@ function desktopLinkFor(container: HTMLElement, path: string): HTMLAnchorElement
   return container.querySelector<HTMLAnchorElement>(`.hidden.md\\:block a[href="${path}"]`)
 }
 
-/**
- * The open state of both menus is a module-level signal that only closes on a
- * deferred blur. Blur each toggle and wait out the close delay so no test
- * leaks an open menu into the next one.
- */
-async function resetMenus(container: HTMLElement) {
-  for (const label of [USER_MENU_LABEL, MAIN_MENU_LABEL]) {
-    container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)?.dispatchEvent(new FocusEvent('blur'))
-  }
-  await new Promise<void>((resolve) => {
+/** Wait past the deferred close delay (with margin). */
+function waitForMenuClose(): Promise<void> {
+  return new Promise<void>((resolve) => {
     setTimeout(resolve, MENU_CLOSE_DELAY_MS * 2)
   })
 }
 
+/**
+ * The open state of both menus is a module-level signal that only closes on a
+ * deferred close. Dispatch a bubbling focusout on the sync wrapper toggle (closes
+ * the sync panel via onFocusOut) and a blur on the main menu toggle (closes via
+ * onBlur=closeMainMenu), then wait out the close delay so no test leaks an open
+ * menu into the next one.
+ */
+async function resetMenus(container: HTMLElement) {
+  // The sync panel closes on a bubbling focusout from its wrapper, not on the chip blur.
+  container
+    .querySelector<HTMLButtonElement>(`button[aria-label="${USER_MENU_LABEL}"]`)
+    ?.dispatchEvent(new FocusEvent('focusout', { bubbles: true }))
+  container
+    .querySelector<HTMLButtonElement>(`button[aria-label="${MAIN_MENU_LABEL}"]`)
+    ?.dispatchEvent(new FocusEvent('blur'))
+  await waitForMenuClose()
+}
+
 describe('BsAppBar', () => {
+  let originalHash = ''
+
+  beforeEach(async () => {
+    originalHash = window.location.hash
+    await resetMenus(document.body)
+  })
+
   afterEach(async () => {
     await resetMenus(document.body)
+    window.location.hash = originalHash
   })
 
   it('renders one navigation link per visible menu entry', () => {
@@ -75,9 +94,6 @@ describe('BsAppBar', () => {
   it('hides the sync panel again on a second toggle click', () => {
     const { container } = renderInRouter(BsAppBar)
     const isExpanded = () => requireButton(container, USER_MENU_LABEL).getAttribute('aria-expanded') === 'true'
-    if (isExpanded()) {
-      requireButton(container, USER_MENU_LABEL).click()
-    }
     expect(isExpanded()).toBe(false)
     requireButton(container, USER_MENU_LABEL).click()
     expect(isExpanded()).toBe(true)
@@ -108,6 +124,22 @@ describe('BsAppBar', () => {
 
     requireButton(container, MAIN_MENU_LABEL).click()
 
+    expect(container.querySelector('#mobile-menu')).toBeNull()
+  })
+
+  it('navigates to the dashboard and closes the mobile menu from the Administration entry', async () => {
+    window.location.hash = '#/other'
+    const { container } = renderInRouter(BsAppBar)
+    requireButton(container, MAIN_MENU_LABEL).click()
+    const administrationButton = Array.from(container.querySelectorAll<HTMLButtonElement>('#mobile-menu button')).find(
+      (button) => button.textContent?.trim() === 'Administration'
+    )
+    expect(administrationButton).toBeDefined()
+
+    administrationButton?.click()
+
+    expect(window.location.hash).toBe('#/')
+    await waitForMenuClose()
     expect(container.querySelector('#mobile-menu')).toBeNull()
   })
 

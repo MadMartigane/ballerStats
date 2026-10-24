@@ -194,13 +194,13 @@ export default function BsAppBar(props: RouteSectionProps<unknown>) {
             <div class="border-gray-700 border-t pt-4 pb-3">
               <div class="mt-3 flex-row items-center gap-2 px-2">
                 <BsNostromoStatusChip onClick={goToAdministration} status={nostromoSync.status} />
-                <a
+                <button
                   class="block rounded-md px-3 py-2 font-medium text-base text-neutral-content hover:bg-primary/60 hover:text-primary-content"
-                  href="/"
-                  onClick={closeMainMenu}
+                  onClick={goToAdministration}
+                  type="button"
                 >
                   Administration
-                </a>
+                </button>
               </div>
             </div>
           </div>
